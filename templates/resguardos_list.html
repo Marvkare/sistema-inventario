@@ -1,0 +1,176 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lista de Resguardos</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background-color: #f4f4f4; color: #333; }
+        .container { max-width: 1200px; margin: auto; background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+        h1, h2 { color: #0056b3; }
+        .nav-links { text-align: center; margin-bottom: 20px; }
+        .nav-links a { display: inline-block; padding: 10px 15px; background-color: #28a745; color: white; text-decoration: none; border-radius: 4px; margin: 0 5px; }
+        .nav-links a:hover { background-color: #218838; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #e2e6ea; color: #333; cursor: pointer; }
+        tr:nth-child(even) { background-color: #f2f2f2; }
+        tr:hover { background-color: #ddd; }
+        .actions a { margin-right: 5px; text-decoration: none; color: #007bff; }
+        .actions a:hover { text-decoration: underline; }
+        .flash-messages { margin-bottom: 15px; }
+        .flash-messages .success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; padding: 10px; border-radius: 5px; margin-bottom: 5px; }
+        .flash-messages .error { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; padding: 10px; border-radius: 5px; margin-bottom: 5px; }
+        .flash-messages .warning { background-color: #fff3cd; color: #856404; border: 1px solid #ffeeba; padding: 10px; border-radius: 5px; margin-bottom: 5px; }
+    </style>
+    <script>
+        // Script para ordenar la tabla
+        function sortTable(columnIndex) {
+            const table = document.querySelector("table");
+            const tbody = table.querySelector("tbody");
+            const rows = Array.from(tbody.querySelectorAll("tr"));
+            const headers = Array.from(table.querySelectorAll("th"));
+
+            let currentSortOrder = headers[columnIndex].dataset.sortOrder || 'asc';
+            const newSortOrder = currentSortOrder === 'asc' ? 'desc' : 'asc';
+
+            // Clear previous sort indicators
+            headers.forEach(header => {
+                header.classList.remove('asc', 'desc');
+                header.textContent = header.textContent.replace(' ▲', '').replace(' ▼', '');
+            });
+
+            // Add new sort indicator
+            headers[columnIndex].classList.add(newSortOrder);
+            headers[columnIndex].dataset.sortOrder = newSortOrder;
+            headers[columnIndex].textContent += (newSortOrder === 'asc' ? ' ▲' : ' ▼');
+
+            rows.sort((a, b) => {
+                const aText = a.children[columnIndex].textContent.trim();
+                const bText = b.children[columnIndex].textContent.trim();
+
+                let comparison = 0;
+                // Try to compare as numbers if possible
+                if (!isNaN(parseFloat(aText)) && !isNaN(parseFloat(bText)) && aText !== '' && bText !== '') {
+                    comparison = parseFloat(aText) - parseFloat(bText);
+                } else {
+                    comparison = aText.localeCompare(bText);
+                }
+
+                return newSortOrder === 'asc' ? comparison : -comparison;
+            });
+
+            rows.forEach(row => tbody.appendChild(row));
+        }
+
+        // Add event listeners to table headers for sorting
+        document.addEventListener('DOMContentLoaded', function() {
+            const headers = document.querySelectorAll("th[data-sortable='true']");
+            headers.forEach((header, index) => {
+                header.addEventListener('click', () => sortTable(index));
+            });
+        });
+    </script>
+</head>
+<body>
+    {% extends "base.html" %}
+    {% block content %}
+    <div class="container">
+        <h1>Lista de Resguardos</h1>
+
+
+        <div class="flash-messages">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="{{ category }}">{{ message }}</div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+        </div>
+
+        <div style="overflow-x: auto;">
+            <table>
+                <thead>
+                    <tr>
+                        <th data-sortable='true'>No. Folio</th>
+                        <th data-sortable='true'>No. Inventario</th>
+                        <th data-sortable='true'>No. Factura</th>
+                        <th data-sortable='true'>No. Cuenta</th>
+                        <th data-sortable='true'>No. Resguardo</th>
+                        <th data-sortable='true'>No. Trabajador</th>
+                        <th data-sortable='true'>No. Nómina</th>
+                        <th data-sortable='true'>Proveedor</th>
+                        <th data-sortable='true'>Fecha Elaboración</th>
+                        <th>Descripción Del Bien</th>
+                        <th>Descripción Física</th>
+                        <th data-sortable='true'>Área</th>
+                        <th data-sortable='true'>Rubro</th>
+                        <th data-sortable='true'>Póliza</th>
+                        <th data-sortable='true'>Fecha Póliza</th>
+                        <th>Sub-Cuenta Armonizadora</th>
+                        <th data-sortable='true'>Fecha Factura</th>
+                        <th data-sortable='true'>Costo Inicial</th>
+                        <th data-sortable='true'>Depreciación Acumulada</th>
+                        <th data-sortable='true'>Costo Final Cantidad</th>
+                        <th data-sortable='true'>Cantidad</th>
+                        <th>Nombre Del Usuario</th>
+                        <th>Puesto</th>
+                        <th>Nombre Director Jefe Área</th>
+                        <th>Tipo De Resguardo</th>
+                        <th>Adscripción Dirección Área</th>
+                        <th>Nombre Del Resguardante</th>
+                        <th>Estado Del Bien</th>
+                        <th>Marca</th>
+                        <th>Modelo</th>
+                        <th>Número De Serie</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for resguardo in resguardos %}
+                    <tr>
+                        <td>{{ resguardo.No_Folio }}</td>
+                        <td>{{ resguardo.No_Inventario }}</td>
+                        <td>{{ resguardo.No_Factura }}</td>
+                        <td>{{ resguardo.No_Cuenta }}</td>
+                        <td>{{ resguardo.No_Resguardo }}</td>
+                        <td>{{ resguardo.No_Trabajador }}</td>
+                        <td>{{ resguardo.No_Nomina }}</td>
+                        <td>{{ resguardo.Proveedor }}</td>
+                        <td>{{ resguardo.Fecha_Elaboracion }}</td>
+                        <td>{{ resguardo.Descripcion_Del_Bien }}</td>
+                        <td>{{ resguardo.Descripcion_Fisica }}</td>
+                        <td>{{ resguardo.Area }}</td>
+                        <td>{{ resguardo.Rubro }}</td>
+                        <td>{{ resguardo.Poliza }}</td>
+                        <td>{{ resguardo.Fecha_Poliza }}</td>
+                        <td>{{ resguardo.Sub_Cuenta_Armonizadora }}</td>
+                        <td>{{ resguardo.Fecha_Factura }}</td>
+                        <td>{{ resguardo.Costo_Inicial }}</td>
+                        <td>{{ resguardo.Depreciacion_Acumulada }}</td>
+                        <td>{{ resguardo.Costo_Final_Cantidad }}</td>
+                        <td>{{ resguardo.Cantidad }}</td>
+                        <td>{{ resguardo.Nombre_Del_Usuario }}</td>
+                        <td>{{ resguardo.Puesto }}</td>
+                        <td>{{ resguardo.Nombre_Director_Jefe_Area }}</td>
+                        <td>{{ resguardo.Tipo_De_Resguardo }}</td>
+                        <td>{{ resguardo.Adscripcion_Direccion_Area }}</td>
+                        <td>{{ resguardo.Nombre_Del_Resguardante }}</td>
+                        <td>{{ resguardo.Estado_Del_Bien }}</td>
+                        <td>{{ resguardo.Marca }}</td>
+                        <td>{{ resguardo.Modelo }}</td>
+                        <td>{{ resguardo.Numero_De_Serie }}</td>
+                        <td class="actions">
+                            <a href="{{ url_for('edit_resguardo', folio_id=resguardo.No_Folio) }}">Editar</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endblock %}
+</body>
+</html>

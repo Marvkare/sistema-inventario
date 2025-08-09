@@ -1,0 +1,173 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container">
+    <h1>Gestión de Resguardos</h1>
+
+    <div class="flash-messages">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+    </div>
+
+    <h2 id="form_title">{% if form_data and form_data.No_Folio %}Editar Resguardo (Folio: {{ form_data.No_Folio }}){% else %}Agregar Nuevo Resguardo{% endif %}</h2>
+    <form id="resguardo_form" action="{% if form_data and form_data.No_Folio %}{{ url_for('update_resguardo', folio_id=form_data.No_Folio) }}{% else %}{{ url_for('add_resguardo') }}{% endif %}" method="POST">
+        <div class="form-grid">
+            {% if form_data and form_data.No_Folio %}
+                <label for="No_Folio">No. Folio:</label>
+                <input type="text" id="No_Folio" name="No_Folio" value="{{ form_data.No_Folio }}" readonly>
+            {% endif %}
+
+            <label for="No_Inventario">No. Inventario *:</label>
+            <input type="text" id="No_Inventario" name="No_Inventario" value="{{ form_data.No_Inventario if form_data else '' }}" required>
+
+            <label for="No_Factura">No. Factura:</label>
+            <input type="text" id="No_Factura" name="No_Factura" value="{{ form_data.No_Factura if form_data else '' }}">
+
+            <label for="No_Cuenta">No. Cuenta:</label>
+            <input type="text" id="No_Cuenta" name="No_Cuenta" value="{{ form_data.No_Cuenta if form_data else '' }}">
+
+            <label for="No_Resguardo">No. Resguardo *:</label>
+            <input type="text" id="No_Resguardo" name="No_Resguardo" value="{{ form_data.No_Resguardo if form_data else '' }}" required>
+
+            <label for="No_Trabajador">No. Trabajador:</label>
+            <input type="text" id="No_Trabajador" name="No_Trabajador" value="{{ form_data.No_Trabajador if form_data else '' }}">
+
+            <label for="No_Nomina">No. Nómina:</label>
+            <input type="text" id="No_Nomina" name="No_Nomina" value="{{ form_data.No_Nomina if form_data else '' }}">
+
+            <label for="Proveedor">Proveedor:</label>
+            <input type="text" id="Proveedor" name="Proveedor" value="{{ form_data.Proveedor if form_data else '' }}">
+
+            <label for="Fecha_Elaboracion">Fecha Elaboración (YYYY-MM-DD):</label>
+            <input type="date" id="Fecha_Elaboracion" name="Fecha_Elaboracion" value="{{ form_data.Fecha_Elaboracion if form_data else '' }}">
+
+            <label for="Area">Área:</label>
+            <input type="text" id="Area" name="Area" value="{{ form_data.Area if form_data else '' }}">
+
+            <label for="Rubro">Rubro:</label>
+            <input type="text" id="Rubro" name="Rubro" value="{{ form_data.Rubro if form_data else '' }}">
+
+            <label for="Poliza">Póliza:</label>
+            <input type="text" id="Poliza" name="Poliza" value="{{ form_data.Poliza if form_data else '' }}">
+
+            <label for="Fecha_Poliza">Fecha Póliza (YYYY-MM-DD):</label>
+            <input type="date" id="Fecha_Poliza" name="Fecha_Poliza" value="{{ form_data.Fecha_Poliza if form_data else '' }}">
+
+            <label for="Sub_Cuenta_Armonizadora">Sub-Cuenta Armonizadora:</label>
+            <input type="text" id="Sub_Cuenta_Armonizadora" name="Sub_Cuenta_Armonizadora" value="{{ form_data.Sub_Cuenta_Armonizadora if form_data else '' }}">
+
+            <label for="Fecha_Factura">Fecha Factura (YYYY-MM-DD):</label>
+            <input type="date" id="Fecha_Factura" name="Fecha_Factura" value="{{ form_data.Fecha_Factura if form_data else '' }}">
+
+            <label for="Costo_Inicial">Costo Inicial:</label>
+            <input type="text" id="Costo_Inicial" name="Costo_Inicial" value="{{ form_data.Costo_Inicial if form_data else '' }}">
+
+            <label for="Depreciacion_Acumulada">Depreciación Acumulada:</label>
+            <input type="text" id="Depreciacion_Acumulada" name="Depreciacion_Acumulada" value="{{ form_data.Depreciacion_Acumulada if form_data else '' }}">
+
+            <label for="Costo_Final_Cantidad">Costo Final Cantidad:</label>
+            <input type="text" id="Costo_Final_Cantidad" name="Costo_Final_Cantidad" value="{{ form_data.Costo_Final_Cantidad if form_data else '' }}">
+
+            <label for="Cantidad">Cantidad:</label>
+            <input type="text" id="Cantidad" name="Cantidad" value="{{ form_data.Cantidad if form_data else '' }}">
+
+            <label for="Nombre_Del_Usuario">Nombre del Usuario:</label>
+            <input type="text" id="Nombre_Del_Usuario" name="Nombre_Del_Usuario" value="{{ form_data.Nombre_Del_Usuario if form_data else '' }}">
+
+            <label for="Puesto">Puesto:</label>
+            <input type="text" id="Puesto" name="Puesto" value="{{ form_data.Puesto if form_data else '' }}">
+
+            <label for="Nombre_Director_Jefe_Area">Nombre Director/Jefe Área:</label>
+            <input type="text" id="Nombre_Director_Jefe_Area" name="Nombre_Director_Jefe_Area" value="{{ form_data.Nombre_Director_Jefe_Area if form_data else '' }}">
+
+            <label for="Tipo_De_Resguardo">Tipo de Resguardo:</label>
+            <select id="Tipo_De_Resguardo" name="Tipo_De_Resguardo">
+                <option value="">-- Seleccione --</option>
+                <option value="Resguardo" {% if form_data.Tipo_De_Resguardo == 'Resguardo' %}selected{% endif %}>Resguardo</option>
+                <option value="Sujeto de Control" {% if form_data.Tipo_De_Resguardo == 'Sujeto de Control' %}selected{% endif %}>Sujeto de Control</option>
+            </select>
+
+            <label for="Adscripcion_Direccion_Area">Adscripción Dir. Área:</label>
+            <input type="text" id="Adscripcion_Direccion_Area" name="Adscripcion_Direccion_Area" value="{{ form_data.Adscripcion_Direccion_Area if form_data else '' }}">
+
+            <label for="Nombre_Del_Resguardante">Nombre del Resguardante:</label>
+            <input type="text" id="Nombre_Del_Resguardante" name="Nombre_Del_Resguardante" value="{{ form_data.Nombre_Del_Resguardante if form_data else '' }}">
+
+            <label for="Estado_Del_Bien">Estado del Bien:</label>
+            <input type="text" id="Estado_Del_Bien" name="Estado_Del_Bien" value="{{ form_data.Estado_Del_Bien if form_data else '' }}">
+
+            <label for="Marca">Marca:</label>
+            <input type="text" id="Marca" name="Marca" value="{{ form_data.Marca if form_data else '' }}">
+
+            <label for="Modelo">Modelo:</label>
+            <input type="text" id="Modelo" name="Modelo" value="{{ form_data.Modelo if form_data else '' }}">
+
+            <label for="Numero_De_Serie">Número de Serie:</label>
+            <input type="text" id="Numero_De_Serie" name="Numero_De_Serie" value="{{ form_data.Numero_De_Serie if form_data else '' }}">
+
+            <label for="Descripcion_Del_Bien" style="grid-column: 1 / 2;">Descripción del Bien:</label>
+            <textarea id="Descripcion_Del_Bien" name="Descripcion_Del_Bien" style="grid-column: 2 / 5;">{{ form_data.Descripcion_Del_Bien if form_data else '' }}</textarea>
+
+            <label for="Descripcion_Fisica" style="grid-column: 1 / 2;">Descripción Física:</label>
+            <textarea id="Descripcion_Fisica" name="Descripcion_Fisica" style="grid-column: 2 / 5;">{{ form_data.Descripcion_Fisica if form_data else '' }}</textarea>
+
+        </div>
+        <div class="buttons">
+            <button type="submit" id="add_update_button">
+                {% if form_data and form_data.No_Folio %}Actualizar Resguardo{% else %}Agregar Resguardo{% endif %}
+            </button>
+            <button type="button" class="clear" onclick="clearForm()">Limpiar Campos</button>
+            {% if form_data and form_data.No_Folio %}
+                <form id="delete_form_main" action="{{ url_for('delete_resguardo', folio_id=form_data.No_Folio) }}" method="POST" style="display: inline;">
+                    <button type="submit" id="delete_button" style="background-color: #dc3545;" onclick="return confirm('¿Estás seguro de que deseas eliminar este resguardo?');">Eliminar Resguardo</button>
+                </form>
+            {% endif %}
+        </div>
+    </form>
+
+    <hr style="margin-top: 40px; margin-bottom: 40px;">
+
+    <h2>Carga Masiva de Resguardos (Excel)</h2>
+    <p>Sube un archivo Excel para ingresar múltiples resguardos. Asegúrate de que los nombres de las columnas en tu Excel coincidan con los nombres de las columnas de la base de datos (sensible a mayúsculas y minúsculas y guiones bajos).</p>
+    <p>La columna **"NO.POLIZA"** de tu imagen de ejemplo, se mapearía a **`Poliza`** en la base de datos.</p>
+        <form action="{{ url_for('upload_excel') }}" method="POST" enctype="multipart/form-data" class="mb-4">
+        <div class="input-group mb-3">
+            <input type="file" class="form-control" id="excelFile" name="excel_file" accept=".xlsx, .xls" required>
+            <button class="btn btn-primary" type="submit">Cargar Excel</button>
+        </div>
+    </form>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+    <script>
+        function clearForm() {
+            document.getElementById('form_title').innerText = 'Agregar Nuevo Resguardo';
+            document.getElementById('resguardo_form').action = '/add';
+            document.getElementById('add_update_button').innerText = 'Agregar Resguardo';
+            const deleteButton = document.getElementById('delete_button');
+            if (deleteButton) {
+                deleteButton.style.display = 'none';
+            }
+
+            const form = document.getElementById('resguardo_form');
+            for (let i = 0; i < form.elements.length; i++) {
+                const element = form.elements[i];
+                if (element.tagName === 'INPUT' || element.tagName === 'TEXTAREA' || element.tagName === 'SELECT') {
+                    if (element.tagName === 'SELECT') {
+                        element.value = '';
+                    } else {
+                        element.value = '';
+                    }
+                }
+            }
+            const folioInput = document.getElementById('No_Folio');
+            if (folioInput) folioInput.value = '';
+        }
+    </script>
+{% endblock %}

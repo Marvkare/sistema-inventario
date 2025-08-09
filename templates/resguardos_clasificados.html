@@ -1,0 +1,84 @@
+<!-- templates/resguardos_clasificados.html -->
+
+{% extends "base.html" %}
+
+
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Resguardos Clasificados</h2>
+    
+    <!-- Formulario para selección de columnas -->
+    <form id="columnForm" class="mb-4">
+        <div class="row">
+            {% for column in column_names %}
+            <div class="col-md-3">
+                <div class="form-check">
+                    <input class="form-check-input column-checkbox" 
+                           type="checkbox" 
+                           value="{{ column }}" 
+                           id="col_{{ column }}"
+                           checked>
+                    <label class="form-check-label" for="col_{{ column }}">
+                        {{ column|replace('_', ' ')|title }}
+                    </label>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </form>
+    
+    <!-- Botón de exportación -->
+    <form action="{{ url_for('exportar_resguardos_excel') }}" method="POST" id="exportForm">
+        <input type="hidden" name="columns" id="selectedColumns">
+        <button type="submit" class="btn btn-success mb-3">
+            <i class="fas fa-file-excel"></i> Exportar a Excel
+        </button>
+    </form>
+    
+    <!-- Tabla de resguardos -->
+    <div class="table-responsive">
+        <table class="table table-striped table-bordered" id="resguardosTable">
+            <thead class="thead-dark">
+                <tr>
+                    {% for column in column_names %}
+                    <th class="column-{{ column }}" data-column="{{ column }}">
+                        {{ column|replace('_', ' ')|title }}
+                    </th>
+                    {% endfor %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for resguardo in resguardos %}
+                <tr>
+                    {% for column in column_names %}
+                    <td class="column-{{ column }}" data-column="{{ column }}">
+                        {{ resguardo[column] }}
+                    </td>
+                    {% endfor %}
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+// Mostrar/ocultar columnas según selección
+document.querySelectorAll('.column-checkbox').forEach(checkbox => {
+    checkbox.addEventListener('change', function() {
+        const column = this.value;
+        document.querySelectorAll(`.column-${column}`).forEach(element => {
+            element.style.display = this.checked ? '' : 'none';
+        });
+    });
+});
+
+// Actualizar columnas seleccionadas antes de exportar
+document.getElementById('exportForm').addEventListener('submit', function() {
+    const selected = Array.from(document.querySelectorAll('.column-checkbox:checked'))
+                         .map(checkbox => checkbox.value);
+    document.getElementById('selectedColumns').value = selected.join(',');
+});
+</script>
+{% endblock %}
