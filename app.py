@@ -1,40 +1,31 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, send_file, jsonify, session
+from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, session
 import mysql.connector
 from datetime import date
-from io import BytesIO
-from pypdf import PdfReader, PdfWriter # Ensure this import is present!
-from pypdf.generic import NameObject, TextStringObject, NumberObject
-from weasyprint import HTML, CSS
+from pypdf import PdfReader, PdfWriter
 import os
 import re
 import traceback
-import sys
-import pypdf
 import pandas as pd
 import openpyxl
 import uuid
+from datetime import datetime
+from io import BytesIO
 
-
-print(f"--- Diagnóstico del Entorno Python ---")
-print(f"Proceso ID: {os.getpid()}")
-print(f"Ruta del ejecutable de Python: {sys.executable}")
-print(f"Ruta del módulo pypdf: {pypdf.__file__}")
-print(f"Versión de pypdf: {pypdf.__version__}")
-print(f"--- Fin del Diagnóstico ---")
+# The `temp_error_storage` is no longer used, but kept as a reminder of the old logic.
+# The new logic uses the `resguardo_errores` table.
+# temp_error_storage = {}
 
 app = Flask(__name__)
-app.secret_key = 'tu_clave_secreta_aqui' # ¡CAMBIA ESTO! Es crucial para sesiones y mensajes flash.
+app.secret_key = 'tu_clave_secreta_aqui'
 PDF_TEMPLATE_PATH = os.path.join(app.root_path, 'templates', 'PlantillaPrueba.pdf')
 
 # --- Configuración de la Base de Datos ---
 DB_CONFIG = {
-    'host': 'localhost', # O la IP de tu servidor de base de datos
-    'user': 'root', # ¡Cambia esto por tu usuario de MariaDB/MySQL!
-    'password': 'Pescadoroot', # ¡Cambia esto por tu contraseña de MariaDB/MySQL!
+    'host': 'localhost',
+    'user': 'root',
+    'password': 'Pescadoroot',
     'database': 'inventario'
 }
-
-temp_error_storage = {}
 
 def get_db_connection():
     """Establece conexión con la base de datos."""
@@ -45,18 +36,29 @@ def get_db_connection():
         flash(f"Error de Conexión a la Base de Datos: {err}. Verifica las credenciales y que MariaDB esté corriendo.", 'error')
         return None
 
+def get_table_columns():
+    """
+    Retrieves column names from the 'resguardo' table to ensure consistency.
+    This is useful for dynamic form generation and validation.
+    """
+    conn = get_db_connection()
+    if conn is None:
+        return []
+    cursor = conn.cursor()
+    columns = []
+    try:
+        cursor.execute("DESCRIBE resguardo")
+        columns = [column[0] for column in cursor.fetchall()]
+    except mysql.connector.Error as err:
+        print(f"Error getting table columns: {err}")
+    finally:
+        cursor.close()
+        conn.close()
+    return columns
+
 # Global list of valid column names from your DB schema for validation and mapping
 # This should be exactly as they appear in your database table 'resguardo'
-VALID_DB_COLUMNS = [
-    "No_Folio", "No_Inventario", "No_Factura", "No_Cuenta", "No_Resguardo",
-    "No_Trabajador", "Proveedor", "Fecha_Resguardo",
-    "Descripcion_Del_Bien", "Descripcion_Fisica", "Area", "Rubro", "Poliza",
-    "Fecha_Poliza", "Sub_Cuenta_Armonizadora", "Fecha_Factura", "Costo_Inicial",
-    "Depreciacion_Acumulada", "Costo_Final_Cantidad", "Cantidad",
-    "Nombre_Del_Usuario", "Puesto", "Nombre_Director_Jefe_Area",
-    "Tipo_De_Resguardo", "Adscripcion_Direccion_Area", "Nombre_Del_Resguardante",
-    "Estado_Del_Bien", "Marca", "Modelo", "Numero_De_Serie"
-]
+VALID_DB_COLUMNS = get_table_columns()
 
 # Mapping for common Excel column names to actual DB column names
 # Excel column names (keys) should be the exact headers in your Excel file
@@ -177,8 +179,8 @@ def generate_resguardo_pdf(folio_id):
                         field_name = annot_obj['/T']
                         if field_name in field_data:
                             annot_obj.update({
-                                NameObject("/V"): TextStringObject(field_data[field_name]),
-                                NameObject("/Ff"): NumberObject(1)
+                                pypdf.generic.NameObject("/V"): pypdf.generic.TextStringObject(field_data[field_name]),
+                                pypdf.generic.NameObject("/Ff"): pypdf.generic.NumberObject(1)
                             })
 
 
@@ -347,6 +349,7 @@ def convert_to_db_type(column_name, value):
     # Strings (default)
     return str(value)
 
+
 @app.route('/upload_excel', methods=['POST'])
 def upload_excel():
     print("\n--- INICIANDO PROCESO DE CARGA DE EXCEL ---")
@@ -373,92 +376,90 @@ def upload_excel():
             cursor = conn.cursor()
             inserted_count = 0
             skipped_count = 0
-            error_rows = [] # New list to store the full rows with errors
+            error_rows = []
+            upload_id = str(uuid.uuid4())
             
             # Get cleaned column names from the Excel file
-            excel_columns = {str(col).upper().strip(): str(col) for col in df.columns}
+            excel_columns_map = {str(col).upper().strip(): str(col) for col in df.columns}
             
             # Process each row
             for index, row in df.iterrows():
                 print(f"--- Procesando Fila {index + 2} del Excel ---")
                 insert_data = {}
-                row_data_for_errors = {}
-                try:
-                    for db_col in VALID_DB_COLUMNS:
-                        excel_header_match = None
-                        
-                        # Check for direct match first
-                        if db_col in excel_columns.values():
-                            excel_header_match = db_col
-                        # Check for mapped match
-                        elif db_col in COLUMN_MAPPING.values():
-                            for excel_header_key, mapped_db_col_name in COLUMN_MAPPING.items():
-                                if mapped_db_col_name == db_col and excel_header_key.upper().strip() in excel_columns:
-                                    excel_header_match = excel_columns[excel_header_key.upper().strip()]
-                                    break
+                raw_row_data = {'upload_id': upload_id}
+                error_msg = None
 
-                        if excel_header_match:
-                            value = row[excel_header_match]
-                            row_data_for_errors[db_col] = str(value) if pd.notna(value) else ''
-                            insert_data[db_col] = convert_to_db_type(db_col, value)
-                        else:
-                            insert_data[db_col] = None
-                            row_data_for_errors[db_col] = ''
+                # First, extract all data as text, and prepare for insertion into resguardo_errores
+                for db_col in VALID_DB_COLUMNS:
+                    excel_header_match = None
+                    # Check for direct match first
+                    if db_col in excel_columns_map.values():
+                        excel_header_match = db_col
+                    # Check for mapped match
+                    elif db_col in COLUMN_MAPPING.values():
+                        for excel_header_key, mapped_db_col_name in COLUMN_MAPPING.items():
+                            if mapped_db_col_name == db_col and excel_header_key.upper().strip() in excel_columns_map:
+                                excel_header_match = excel_columns_map[excel_header_key.upper().strip()]
+                                break
+                    
+                    value = row.get(excel_header_match, '')
+                    raw_row_data[db_col] = str(value) if pd.notna(value) else ''
+                
+                try:
+                    # Now, try to convert types for the main table insertion
+                    temp_insert_data = {}
+                    for db_col, value in raw_row_data.items():
+                        if db_col not in ['id', 'upload_id', 'error_message']: # Skip error table specific columns
+                            temp_insert_data[db_col] = convert_to_db_type(db_col, value)
 
                     # Handle mandatory fields
-                    if not insert_data.get('No_Inventario') or not insert_data.get('No_Resguardo'):
+                    if not temp_insert_data.get('No_Inventario') or not temp_insert_data.get('No_Resguardo'):
                         error_msg = f"'No_Inventario' o 'No_Resguardo' son obligatorios y no se encontraron o estaban vacíos."
-                        error_rows.append({'original_row': row_data_for_errors, 'error': error_msg})
-                        print(f"   -> OMITIDO: {error_msg}")
-                        skipped_count += 1
-                        continue
-
-                    # No_Folio is usually auto-increment, so we remove it
-                    if 'No_Folio' in insert_data:
-                        del insert_data['No_Folio']
+                        raise ValueError(error_msg)
                     
-                    # Construct INSERT query dynamically
-                    cols = ', '.join(f"`{col}`" for col in insert_data.keys())
-                    placeholders = ', '.join(['%s'] * len(insert_data))
+                    # No_Folio is usually auto-increment, so we remove it
+                    if 'No_Folio' in temp_insert_data:
+                        del temp_insert_data['No_Folio']
+                    
+                    # Construct INSERT query dynamically for the main table
+                    cols = ', '.join(f"`{col}`" for col in temp_insert_data.keys())
+                    placeholders = ', '.join(['%s'] * len(temp_insert_data))
                     query = f"INSERT INTO resguardo ({cols}) VALUES ({placeholders})"
 
                     # Execute the query
-                    cursor.execute(query, tuple(insert_data.values()))
+                    cursor.execute(query, tuple(temp_insert_data.values()))
                     inserted_count += 1
                     print(f"   -> Éxito: Fila {index + 2} insertada correctamente.")
 
-                except mysql.connector.Error as err:
-                    if err.errno == 1062:
-                        error_msg = f"Error de duplicado para No_Inventario/No_Resguardo: {err}. Se omitió la fila."
-                    else:
-                        error_msg = f"Error de base de datos: {err}. Se omitió la fila."
-                    error_rows.append({'original_row': row_data_for_errors, 'error': error_msg})
-                    print(f"   -> OMITIDO: {error_msg}")
+                except (mysql.connector.Error, ValueError, Exception) as err:
+                    if isinstance(err, mysql.connector.Error) and err.errno == 1062:
+                        error_msg = f"Error de duplicado para No_Inventario/No_Resguardo. Se omitió la fila."
+                    elif error_msg is None: # If error_msg was not set by mandatory field check
+                        error_msg = f"Error de procesamiento: {err}. Se omitió la fila."
+
+                    raw_row_data['error_message'] = error_msg
+                    error_rows.append(raw_row_data)
                     skipped_count += 1
-                except ValueError as ve:
-                    error_msg = f"Error de conversión de datos: {ve}. Se omitió la fila."
-                    error_rows.append({'original_row': row_data_for_errors, 'error': error_msg})
                     print(f"   -> OMITIDO: {error_msg}")
-                    skipped_count += 1
-                except Exception as e:
-                    error_msg = f"Error de procesamiento inesperado: {e}. Se omitió la fila."
-                    error_rows.append({'original_row': row_data_for_errors, 'error': error_msg})
-                    print(f"   -> OMITIDO: {error_msg}")
-                    skipped_count += 1
-            
+
             # Handle commit or rollback
             if inserted_count > 0:
                 conn.commit()
                 flash(f"Se importaron {inserted_count} resguardos correctamente.", 'success')
                 print(f"\n--- COMMIT EXITOSO: Se insertaron {inserted_count} filas. ---")
             else:
-                conn.rollback() # Rollback if no rows were inserted
+                conn.rollback()
                 print(f"\n--- ROLLBACK: No se insertaron filas. ---")
             
-            # If there are errors, store them in the server-side temporary storage and session
+            # If there are errors, insert them into the new table
             if error_rows:
-                upload_id = str(uuid.uuid4())
-                temp_error_storage[upload_id] = {'rows': error_rows, 'total_skipped': skipped_count}
+                cols = ', '.join(f"`{col}`" for col in error_rows[0].keys())
+                placeholders = ', '.join(['%s'] * len(error_rows[0]))
+                query = f"INSERT INTO resguardo_errores ({cols}) VALUES ({placeholders})"
+                
+                values = [tuple(row.values()) for row in error_rows]
+                cursor.executemany(query, values)
+                conn.commit()
                 session['upload_id'] = upload_id
                 
                 flash(f"Se importaron {inserted_count} resguardos correctamente. Se omitieron {skipped_count} filas debido a errores. Por favor, revisa y corrige las filas a continuación.", 'warning')
@@ -487,35 +488,63 @@ def upload_excel():
 def handle_errors():
     """Displays a page with rows that had import errors for manual editing."""
     upload_id = session.get('upload_id')
-    error_data = temp_error_storage.get(upload_id, {'rows': [], 'total_skipped': 0})
-    error_rows = error_data['rows']
-    total_skipped = error_data['total_skipped']
-    
-    # Get all possible column names to display headers
-    columns = VALID_DB_COLUMNS
-    if not error_rows:
+    if not upload_id:
         flash("No hay filas con errores para revisar.", 'info')
         return redirect(url_for('index'))
-    return render_template('handle_errors.html', error_rows=error_rows, columns=columns, total_skipped=total_skipped, upload_id=upload_id)
 
-@app.route('/save_error_row/<string:upload_id>/<int:row_index>', methods=['POST'])
-def save_error_row(upload_id, row_index):
+    conn = get_db_connection()
+    if conn is None:
+        return redirect(url_for('index'))
+
+    cursor = conn.cursor(dictionary=True)
+    error_rows = []
+    try:
+        cursor.execute("SELECT * FROM resguardo_errores WHERE upload_id = %s", (upload_id,))
+        error_rows = cursor.fetchall()
+    except mysql.connector.Error as err:
+        flash(f"Error al obtener filas de error: {err}", 'error')
+    finally:
+        cursor.close()
+        conn.close()
+    
+    total_skipped = len(error_rows)
+    columns = VALID_DB_COLUMNS
+    if not error_rows:
+        # If there are no rows, remove the upload_id from the session
+        session.pop('upload_id', None)
+        flash("No hay filas con errores para revisar.", 'info')
+        return redirect(url_for('index'))
+
+    # Prepare a dictionary for the template to have a similar structure
+    template_error_rows = []
+    for row in error_rows:
+        original_row = {col: row.get(col, '') for col in columns}
+        template_error_rows.append({
+            'id': row.get('id'), # Pass the ID of the error row for saving
+            'original_row': original_row,
+            'error': row.get('error_message', 'Error desconocido')
+        })
+
+    return render_template('handle_errors.html', error_rows=template_error_rows, columns=columns, total_skipped=total_skipped, upload_id=upload_id)
+
+
+@app.route('/save_error_row/<string:upload_id>/<int:row_id>', methods=['POST'])
+def save_error_row(upload_id, row_id):
     """Saves a single row with errors after being manually corrected."""
-    if upload_id not in temp_error_storage or row_index >= len(temp_error_storage[upload_id]['rows']):
-        return jsonify({'success': False, 'message': 'Fila no encontrada o sesión expirada.'}), 404
-
-    row_to_save = request.form.to_dict()
     conn = get_db_connection()
     if conn is None:
         return jsonify({'success': False, 'message': 'Error de conexión a la base de datos.'}), 500
 
     cursor = conn.cursor()
     try:
+        row_to_save = request.form.to_dict()
+        
         # Perform validation and type conversion for the corrected data
         insert_data = {}
         for db_col in VALID_DB_COLUMNS:
             value = row_to_save.get(db_col)
             try:
+                # Use the helper function to convert the cleaned data
                 insert_data[db_col] = convert_to_db_type(db_col, value)
             except ValueError as ve:
                 conn.rollback()
@@ -533,13 +562,12 @@ def save_error_row(upload_id, row_index):
         placeholders = ', '.join(['%s'] * len(insert_data))
         query = f"INSERT INTO resguardo ({cols}) VALUES ({placeholders})"
         cursor.execute(query, tuple(insert_data.values()))
-        conn.commit()
-
-        # Remove the successfully saved row from the temporary storage
-        temp_error_storage[upload_id]['rows'].pop(row_index)
-        temp_error_storage[upload_id]['total_skipped'] -= 1
         
-        return jsonify({'success': True, 'message': 'Fila guardada correctamente.'}), 200
+        # If successful, delete the row from the errors table
+        cursor.execute("DELETE FROM resguardo_errores WHERE id = %s AND upload_id = %s", (row_id, upload_id))
+        
+        conn.commit()
+        return jsonify({'success': True, 'message': 'Fila guardada correctamente.', 'row_id': row_id}), 200
 
     except mysql.connector.Error as err:
         conn.rollback()
@@ -551,77 +579,82 @@ def save_error_row(upload_id, row_index):
         cursor.close()
         conn.close()
 
+
 @app.route('/save_all_error_rows/<string:upload_id>', methods=['POST'])
 def save_all_error_rows(upload_id):
     """Saves all error rows that have been corrected."""
-    if upload_id not in temp_error_storage or not temp_error_storage[upload_id]['rows']:
-        return jsonify({'success': False, 'message': 'No hay filas con errores para guardar.'}), 404
-
     conn = get_db_connection()
     if conn is None:
         return jsonify({'success': False, 'message': 'Error de conexión a la base de datos.'}), 500
 
-    cursor = conn.cursor()
+    cursor = conn.cursor(dictionary=True)
     saved_count = 0
     errors = []
     
-    # Get all form data from the request, which is a dictionary of dictionaries
+    # Get all form data from the request
     all_form_data = request.form.to_dict()
-    
-    error_indices_to_remove = []
 
-    for index, error_row in enumerate(temp_error_storage[upload_id]['rows']):
-        try:
-            insert_data = {}
-            for db_col in VALID_DB_COLUMNS:
-                # The form data comes in with a key like 'Nombre_Del_Usuario-0', so we need to rebuild
-                form_key = f"{db_col}-{index}"
-                value = all_form_data.get(form_key)
-                if value is None:
-                    continue
+    try:
+        # Fetch all error rows for this upload ID
+        cursor.execute("SELECT * FROM resguardo_errores WHERE upload_id = %s", (upload_id,))
+        error_rows_from_db = cursor.fetchall()
+        
+        # Iterate over the original error rows from the DB
+        for index, db_error_row in enumerate(error_rows_from_db):
+            try:
+                insert_data = {}
+                for db_col in VALID_DB_COLUMNS:
+                    # The form data uses keys like 'No_Inventario-0', so we build the key
+                    form_key = f"{db_col}-{index}"
+                    # Use the corrected value from the form if it exists, otherwise use the original from the DB
+                    value = all_form_data.get(form_key, db_error_row.get(db_col))
+                    
+                    if value is None:
+                        continue
+                    
+                    # Convert the corrected value
+                    insert_data[db_col] = convert_to_db_type(db_col, value)
+
+                if not insert_data.get('No_Inventario') or not insert_data.get('No_Resguardo'):
+                    raise ValueError("'No_Inventario' o 'No_Resguardo' son obligatorios.")
+
+                if 'No_Folio' in insert_data:
+                    del insert_data['No_Folio']
                 
-                insert_data[db_col] = convert_to_db_type(db_col, value)
+                cols = ', '.join(f"`{col}`" for col in insert_data.keys())
+                placeholders = ', '.join(['%s'] * len(insert_data))
+                query = f"INSERT INTO resguardo ({cols}) VALUES ({placeholders})"
+                cursor.execute(query, tuple(insert_data.values()))
+                
+                # If insertion is successful, delete from the errors table
+                cursor.execute("DELETE FROM resguardo_errores WHERE id = %s", (db_error_row['id'],))
+                saved_count += 1
 
-            if not insert_data.get('No_Inventario') or not insert_data.get('No_Resguardo'):
-                raise ValueError("'No_Inventario' o 'No_Resguardo' son obligatorios.")
-
-            if 'No_Folio' in insert_data:
-                del insert_data['No_Folio']
-            
-            cols = ', '.join(f"`{col}`" for col in insert_data.keys())
-            placeholders = ', '.join(['%s'] * len(insert_data))
-            query = f"INSERT INTO resguardo ({cols}) VALUES ({placeholders})"
-            cursor.execute(query, tuple(insert_data.values()))
-            
-            saved_count += 1
-            error_indices_to_remove.append(index)
-
-        except (mysql.connector.Error, ValueError) as err:
-            errors.append(f"Fila {index + 1}: {err}")
-            continue
-
-    if saved_count > 0:
-        conn.commit()
-        # Clean up the session by removing the saved rows
-        for index in sorted(error_indices_to_remove, reverse=True):
-            temp_error_storage[upload_id]['rows'].pop(index)
-            temp_error_storage[upload_id]['total_skipped'] -= 1
+            except (mysql.connector.Error, ValueError) as err:
+                errors.append(f"Fila {index + 1}: {err}")
+                continue
         
-        message = f"Se guardaron {saved_count} filas correctamente."
-        flash(message, 'success')
-    else:
+        if saved_count > 0:
+            conn.commit()
+            message = f"Se guardaron {saved_count} filas correctamente."
+            flash(message, 'success')
+        else:
+            conn.rollback()
+            message = "No se pudo guardar ninguna fila."
+            flash(message, 'warning')
+            
+        if errors:
+            for err_msg in errors:
+                flash(err_msg, 'warning')
+        
+    except Exception as e:
         conn.rollback()
-        message = "No se pudo guardar ninguna fila."
-        flash(message, 'warning')
+        flash(f"Ocurrió un error inesperado al guardar todas las filas: {str(e)}", 'error')
+    finally:
+        cursor.close()
+        conn.close()
         
-    if errors:
-        for err_msg in errors:
-            flash(err_msg, 'warning')
-
-    cursor.close()
-    conn.close()
     return redirect(url_for('index'))
-
 
 
 @app.route('/add', methods=['POST'])
@@ -752,12 +785,17 @@ def update_resguardo(folio_id):
                     else:
                         update_data[key] = value
 
-            set_clause = ', '.join([f"`{col}` = %s" for col in update_data.keys()])
-            query = f"UPDATE resguardo SET {set_clause} WHERE `No_Folio` = %s"
+            # No_Folio should not be updated as it's the primary key
+            if 'No_Folio' in update_data:
+                del update_data['No_Folio']
             
-            params = list(update_data.values()) + [folio_id]
+            set_clauses = ', '.join([f"`{col}` = %s" for col in update_data.keys()])
+            query = f"UPDATE resguardo SET {set_clauses} WHERE No_Folio = %s"
             
-            cursor.execute(query, tuple(params))
+            values = list(update_data.values())
+            values.append(folio_id)
+            
+            cursor.execute(query, tuple(values))
             conn.commit()
             flash("Resguardo actualizado correctamente.", 'success')
         except mysql.connector.Error as err:
@@ -767,40 +805,3 @@ def update_resguardo(folio_id):
             cursor.close()
             conn.close()
     return redirect(url_for('index'))
-
-@app.route('/delete/<int:folio_id>', methods=['POST'])
-def delete_resguardo(folio_id):
-    """Elimina un registro de la base de datos."""
-    conn = get_db_connection()
-    if conn is None:
-        return redirect(url_for('index'))
-
-    cursor = conn.cursor()
-    try:
-        query = "DELETE FROM resguardo WHERE No_Folio = %s"
-        cursor.execute(query, (folio_id,))
-        conn.commit()
-        flash("Resguardo eliminado correctamente.", 'success')
-    except mysql.connector.Error as err:
-        flash(f"Error al eliminar resguardo: {err}", 'error')
-        conn.rollback()
-    finally:
-        cursor.close()
-        conn.close()
-    return redirect(url_for('index'))
-
-def get_table_columns():
-    """Retorna una lista de los nombres de las columnas de la tabla resguardo."""
-    return [
-        "No_Folio", "No_Inventario", "No_Factura", "No_Cuenta", "No_Resguardo",
-        "No_Trabajador", "Proveedor", "Fecha_Resguardo",
-        "Descripcion_Del_Bien", "Descripcion_Fisica", "Area", "Rubro", "Poliza",
-        "Fecha_Poliza", "Sub_Cuenta_Armonizadora", "Fecha_Factura", "Costo_Inicial",
-        "Depreciacion_Acumulada", "Costo_Final_Cantidad", "Cantidad",
-        "Nombre_Del_Usuario", "Puesto", "Nombre_Director_Jefe_Area",
-        "Tipo_De_Resguardo", "Adscripcion_Direccion_Area", "Nombre_Del_Resguardante",
-        "Estado_Del_Bien", "Marca", "Modelo", "Numero_De_Serie"
-    ]
-
-if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0')
