@@ -36,14 +36,12 @@
             <label for="No_Trabajador">No. Trabajador:</label>
             <input type="text" id="No_Trabajador" name="No_Trabajador" value="{{ form_data.No_Trabajador if form_data else '' }}">
 
-            <label for="No_Nomina">No. Nómina:</label>
-            <input type="text" id="No_Nomina" name="No_Nomina" value="{{ form_data.No_Nomina if form_data else '' }}">
-
+            
             <label for="Proveedor">Proveedor:</label>
             <input type="text" id="Proveedor" name="Proveedor" value="{{ form_data.Proveedor if form_data else '' }}">
 
-            <label for="Fecha_Elaboracion">Fecha Elaboración (YYYY-MM-DD):</label>
-            <input type="date" id="Fecha_Elaboracion" name="Fecha_Elaboracion" value="{{ form_data.Fecha_Elaboracion if form_data else '' }}">
+            <label for="Fecha_Resguardo">Fecha Elaboración (YYYY-MM-DD):</label>
+            <input type="date" id="Fecha_Resguardo" name="Fecha_Resguardo" value="{{ form_data.Fecha_Resguardo if form_data else '' }}">
 
             <label for="Area">Área:</label>
             <input type="text" id="Area" name="Area" value="{{ form_data.Area if form_data else '' }}">
@@ -134,7 +132,9 @@
     <h2>Carga Masiva de Resguardos (Excel)</h2>
     <p>Sube un archivo Excel para ingresar múltiples resguardos. Asegúrate de que los nombres de las columnas en tu Excel coincidan con los nombres de las columnas de la base de datos (sensible a mayúsculas y minúsculas y guiones bajos).</p>
     <p>La columna **"NO.POLIZA"** de tu imagen de ejemplo, se mapearía a **`Poliza`** en la base de datos.</p>
-        <form action="{{ url_for('upload_excel') }}" method="POST" enctype="multipart/form-data" class="mb-4">
+    <P>¡ADVERTENCIA ! El nombre de las colmnas es importante para que sean reconocidas, las columnas que soporta el sistemas son las siguientes </P>
+    <p>NO.POLIZA | FECHA POLIZA | SUB-CTA. ARMONIZADORA	| NO. DE CUENTA	| NO. DE INVENTARIO	| NO. DE RESGUARDO	| PROVEEDOR	| FACTURA	| FECHA FACTURA | COSTO INICIAL	| DEPRECIACION ACUMULADA	| COSTO FINAL	| CANTIDAD	| DESCRIPCION FISICAS DEL BIEN	| AREA	| RUBRO	| NOMBRE DEL USUARIO	| PUESTO	| NO. DE TRABAJADOR	| NOMBRE DIRECTOR/JEFE AREA	| FECHA RESGUARDO</p>
+    <form action="{{ url_for('upload_excel') }}" method="POST" enctype="multipart/form-data" class="mb-4">
         <div class="input-group mb-3">
             <input type="file" class="form-control" id="excelFile" name="excel_file" accept=".xlsx, .xls" required>
             <button class="btn btn-primary" type="submit">Cargar Excel</button>

@@ -1,0 +1,143 @@
+{% extends "base.html" %}
+{% block content %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Revisar Errores de Carga</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/htmx/1.9.10/htmx.min.js" xintegrity="sha512-RzWf2J/L4f/b5vD2a3Ww6k6b7hGvXn7Jm7n2+l4jP4Q7uW2zH4i5e7vN+q8O7/F2A7m6n9u5D7Xj/X7Y6g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 p-8">
+
+    <div class="max-w-7xl mx-auto bg-white rounded-xl shadow-lg p-8">
+        <h1 class="text-3xl font-bold text-gray-800 mb-6">Revisar Filas con Errores</h1>
+        <p class="text-gray-600 mb-6">Se omitieron {{ total_skipped }} filas. Por favor, corrige los valores y guarda cada fila o todas a la vez.</p>
+
+        <!-- Mensajes Flash de Flask -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="p-4 mb-4 rounded-lg
+                    {% if category == 'success' %} bg-green-100 text-green-700 {% endif %}
+                    {% if category == 'warning' %} bg-yellow-100 text-yellow-700 {% endif %}
+                    {% if category == 'error' %} bg-red-100 text-red-700 {% endif %}
+                    {% if category == 'info' %} bg-blue-100 text-blue-700 {% endif %}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <form id="save-all-form" action="{{ url_for('save_all_error_rows', upload_id=upload_id) }}" method="POST" class="space-y-6">
+            <div class="overflow-x-auto rounded-xl shadow-md">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Fila
+                            </th>
+                            {% for col in columns %}
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                {{ col.replace('_', ' ') }}
+                            </th>
+                            {% endfor %}
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Error
+                            </th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Acción
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        {% for error_row in error_rows %}
+                        <tr id="row-{{ loop.index0 }}">
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ loop.index0 + 1 }}</td>
+                            {% for col in columns %}
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <input type="text"
+                                       name="{{ col }}-{{ loop.index0 }}"
+                                       value="{{ error_row.original_row.get(col, '') }}"
+                                       class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                            </td>
+                            {% endfor %}
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-red-500">
+                                {{ error_row.error }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                <button type="button" 
+                                        onclick="saveSingleRow('{{ upload_id }}', {{ loop.index0 }})"
+                                        class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                                    Guardar
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="mt-6 flex justify-end">
+                <button type="submit"
+                        class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                    Guardar Todas las Filas
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        function saveSingleRow(uploadId, rowIndex) {
+            const rowElement = document.getElementById(`row-${rowIndex}`);
+            const formData = new FormData();
+            
+            // Collect all input values from the specific row
+            rowElement.querySelectorAll('input').forEach(input => {
+                // Remove the row index suffix from the input name to match the backend logic
+                const originalName = input.name.split('-')[0];
+                formData.append(originalName, input.value);
+            });
+
+            // Send data to the new endpoint
+            fetch(`/save_error_row/${uploadId}/${rowIndex}`, {
+                method: 'POST',
+                body: formData,
+            })
+            .then(response => {
+                // If the response is not OK (e.g., a 404 or 500 error),
+                // read the response as text to get the HTML and log it
+                if (!response.ok) {
+                    return response.text().then(text => {
+                        throw new Error(text);
+                    });
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    // Remove the row from the table on success
+                    rowElement.remove();
+                    // Optional: show a flash message with JavaScript
+                    alert(data.message);
+                } else {
+                    alert(data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Ocurrió un error al guardar la fila.');
+            });
+        }
+    </script>
+</body>
+</html>
+{% endblock %}
