@@ -1,143 +1,374 @@
 {% extends "base.html" %}
+
 {% block content %}
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Revisar Errores de Carga</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/htmx/1.9.10/htmx.min.js" xintegrity="sha512-RzWf2J/L4f/b5vD2a3Ww6k6b7hGvXn7Jm7n2+l4jP4Q7uW2zH4i5e7vN+q8O7/F2A7m6n9u5D7Xj/X7Y6g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <!-- Tailwind CSS (ya cargado por base.html) y estilos específicos -->
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f3f4f6;
+        .flash-message {
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+        }
+        .flash-success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .flash-error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+        .modal-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .modal-content {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 0.5rem;
+            width: 90%;
+            max-width: 800px;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+        }
+        #modal-form{
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+        }
+        .loading-spinner {
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-top: 4px solid #fff;
+            border-radius: 50%;
+            width: 16px;
+            height: 16px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        body.modal-open {
+            overflow: hidden;
         }
     </style>
-</head>
-<body class="bg-gray-100 p-8">
 
-    <div class="max-w-7xl mx-auto bg-white rounded-xl shadow-lg p-8">
-        <h1 class="text-3xl font-bold text-gray-800 mb-6">Revisar Filas con Errores</h1>
-        <p class="text-gray-600 mb-6">Se omitieron {{ total_skipped }} filas. Por favor, corrige los valores y guarda cada fila o todas a la vez.</p>
+    <div class="bg-white rounded-xl shadow-lg p-8 w-full max-w-7xl">
+        <h2 class="text-3xl font-bold text-gray-900 mb-6 text-center">
+            Errores de Carga ({{ total_skipped }})
+        </h2>
+        <div class="mb-4">
+            <p class="text-gray-600">Se omitieron {{ total_skipped }} filas debido a errores. Haz clic en una fila para editar y guardar el registro.</p>
+        </div>
 
-        <!-- Mensajes Flash de Flask -->
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                {% for category, message in messages %}
-                    <div class="p-4 mb-4 rounded-lg
-                    {% if category == 'success' %} bg-green-100 text-green-700 {% endif %}
-                    {% if category == 'warning' %} bg-yellow-100 text-yellow-700 {% endif %}
-                    {% if category == 'error' %} bg-red-100 text-red-700 {% endif %}
-                    {% if category == 'info' %} bg-blue-100 text-blue-700 {% endif %}">
-                        {{ message }}
-                    </div>
-                {% endfor %}
-            {% endif %}
-        {% endwith %}
+        <!-- Contenedor para mensajes flash dinámicos -->
+        <div id="dynamic-flash-messages" class="mb-4"></div>
 
-        <form id="save-all-form" action="{{ url_for('save_all_error_rows', upload_id=upload_id) }}" method="POST" class="space-y-6">
-            <div class="overflow-x-auto rounded-xl shadow-md">
-                <table class="min-w-full divide-y divide-gray-200">
-                    <thead class="bg-gray-50">
-                        <tr>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Fila
-                            </th>
-                            {% for col in columns %}
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                {{ col.replace('_', ' ') }}
-                            </th>
-                            {% endfor %}
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Error
-                            </th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Acción
-                            </th>
-                        </tr>
-                    </thead>
-                    <tbody class="bg-white divide-y divide-gray-200">
-                        {% for error_row in error_rows %}
-                        <tr id="row-{{ loop.index0 }}">
-                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ loop.index0 + 1 }}</td>
-                            {% for col in columns %}
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <input type="text"
-                                       name="{{ col }}-{{ loop.index0 }}"
-                                       value="{{ error_row.original_row.get(col, '') }}"
-                                       class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
-                            </td>
-                            {% endfor %}
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-red-500">
-                                {{ error_row.error }}
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                <button type="button" 
-                                        onclick="saveSingleRow('{{ upload_id }}', {{ loop.index0 }})"
-                                        class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                                    Guardar
-                                </button>
-                            </td>
-                        </tr>
+        <div id="error-table-container" class="overflow-x-auto rounded-lg shadow-inner">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        {% for column in columns %}
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            {{ column.replace('_', ' ') }}
+                        </th>
                         {% endfor %}
-                    </tbody>
-                </table>
-            </div>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Error
+                        </th>
+                    </tr>
+                </thead>
+                <tbody id="error-table-body" class="bg-white divide-y divide-gray-200">
+                    {% for row in error_rows %}
+                    <tr id="row-{{ row.id }}" data-row-id="{{ row.id }}" class="hover:bg-gray-50 cursor-pointer">
+                        {% for column in columns %}
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {{ row.original_row[column] }}
+                        </td>
+                        {% endfor %}
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-red-600">
+                            {{ row.error }}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
 
-            <div class="mt-6 flex justify-end">
-                <button type="submit"
-                        class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
-                    Guardar Todas las Filas
-                </button>
-            </div>
-        </form>
+        <div id="loading-indicator" class="flex justify-center my-4 hidden">
+            <div class="loading-spinner"></div>
+        </div>
+
+        <div class="mt-8 flex justify-end gap-4">
+            <a href="{{ url_for('index') }}" class="inline-flex items-center px-6 py-3 border border-gray-300 shadow-sm text-base font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                Cancelar
+            </a>
+        </div>
     </div>
+    
+    <!-- Modal para edición de errores -->
+    <div id="edit-modal" class="modal-overlay" aria-modal="true" role="dialog" aria-labelledby="modal-title">
+        <div class="modal-content">
+            <h3 id="modal-title" class="text-2xl font-bold mb-4 text-gray-900">Corregir Registro</h3>
+            <p class="text-red-600 mb-4" id="modal-error-message"></p>
+            <form id="modal-form" class="space-y-4">
+                <input type="hidden" id="modal-row-id" name="id">
+                {% for column in columns %}
+                <div>
+                    <label for="input-{{ column }}" class="block text-sm font-medium text-gray-700">
+                        {{ column.replace('_', ' ') }}
+                    </label>
+                    <div class="mt-1">
+                        <input type="text" id="input-{{ column }}" name="{{ column }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                    </div>
+                </div>
+                {% endfor %}
+                <div class="flex justify-end space-x-4 mt-6">
+                    <button type="button" id="close-modal-btn" class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                        Cancelar
+                    </button>
+                    <button type="submit" id="save-modal-btn" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                        Guardar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+{% endblock %}
 
+{% block scripts %}
     <script>
-        function saveSingleRow(uploadId, rowIndex) {
-            const rowElement = document.getElementById(`row-${rowIndex}`);
-            const formData = new FormData();
-            
-            // Collect all input values from the specific row
-            rowElement.querySelectorAll('input').forEach(input => {
-                // Remove the row index suffix from the input name to match the backend logic
-                const originalName = input.name.split('-')[0];
-                formData.append(originalName, input.value);
+        const tableBody = document.getElementById('error-table-body');
+        const loadingIndicator = document.getElementById('loading-indicator');
+        const uploadId = '{{ upload_id }}';
+        let currentOffset = {{ initial_limit }};
+        let hasMore = {{ 'true' if has_more else 'false' }};
+        const loadLimit = 20;
+        const columns = {{ columns | tojson | safe }};
+
+        // Cachea los datos de las filas para no tener que parsear el DOM cada vez
+        const errorRowsData = {};
+        document.querySelectorAll('#error-table-body tr').forEach(tr => {
+            const rowId = tr.dataset.rowId;
+            const rowData = {};
+            tr.querySelectorAll('td').forEach((td, index) => {
+                if (index < columns.length) {
+                    rowData[columns[index]] = td.textContent.trim();
+                } else {
+                    rowData['error'] = td.textContent.trim();
+                }
+            });
+            errorRowsData[rowId] = rowData;
+        });
+
+        // Modal elements
+        const modal = document.getElementById('edit-modal');
+        const closeModalBtn = document.getElementById('close-modal-btn');
+        const saveModalBtn = document.getElementById('save-modal-btn');
+        const modalForm = document.getElementById('modal-form');
+        const modalErrorMessage = document.getElementById('modal-error-message');
+
+        function showFlashMessage(message, type) {
+            const container = document.getElementById('dynamic-flash-messages');
+            const alert = document.createElement('div');
+            alert.className = `flash-message flash-${type}`;
+            alert.innerHTML = `
+                <div class="flex-grow">
+                    ${message}
+                </div>
+                <button type="button" class="ml-auto -mx-1.5 -my-1.5 rounded-lg p-1.5 text-white inline-flex h-8 w-8 flash-close-btn">
+                    <span class="sr-only">Cerrar</span>
+                    <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
+                </button>
+            `;
+            container.appendChild(alert);
+
+            alert.querySelector('.flash-close-btn').addEventListener('click', () => {
+                alert.remove();
             });
 
-            // Send data to the new endpoint
-            fetch(`/save_error_row/${uploadId}/${rowIndex}`, {
-                method: 'POST',
-                body: formData,
-            })
-            .then(response => {
-                // If the response is not OK (e.g., a 404 or 500 error),
-                // read the response as text to get the HTML and log it
-                if (!response.ok) {
-                    return response.text().then(text => {
-                        throw new Error(text);
-                    });
-                }
-                return response.json();
-            })
-            .then(data => {
-                if (data.success) {
-                    // Remove the row from the table on success
-                    rowElement.remove();
-                    // Optional: show a flash message with JavaScript
-                    alert(data.message);
-                } else {
-                    alert(data.message);
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('Ocurrió un error al guardar la fila.');
-            });
+            setTimeout(() => {
+                alert.remove();
+            }, 6000);
         }
+
+        function renderRows(rows) {
+            const fragment = document.createDocumentFragment();
+            rows.forEach(row => {
+                const tr = document.createElement('tr');
+                tr.id = `row-${row.id}`;
+                tr.className = 'hover:bg-gray-50 cursor-pointer';
+                tr.setAttribute('data-row-id', row.id);
+                
+                // Almacenar los datos de la fila en el caché
+                const rowData = {};
+                
+                columns.forEach(column => {
+                    const td = document.createElement('td');
+                    td.className = 'px-6 py-4 whitespace-nowrap text-sm text-gray-500';
+                    td.textContent = row.original_row[column];
+                    tr.appendChild(td);
+                    rowData[column] = row.original_row[column];
+                });
+
+                const errorTd = document.createElement('td');
+                errorTd.className = 'px-6 py-4 whitespace-nowrap text-sm text-red-600';
+                errorTd.textContent = row.error;
+                tr.appendChild(errorTd);
+
+                rowData['error'] = row.error;
+                errorRowsData[row.id] = rowData;
+
+                fragment.appendChild(tr);
+            });
+            tableBody.appendChild(fragment);
+        }
+
+        async function loadMoreRows() {
+            if (!hasMore || loadingIndicator.classList.contains('flex')) return;
+
+            loadingIndicator.classList.remove('hidden');
+            loadingIndicator.classList.add('flex');
+
+            try {
+                const response = await fetch(`/get_error_rows_paginated/${uploadId}?offset=${currentOffset}&limit=${loadLimit}`);
+                const data = await response.json();
+
+                if (data.success) {
+                    renderRows(data.rows);
+                    currentOffset = data.next_offset;
+                    hasMore = data.has_more;
+                } else {
+                    console.error('Error al cargar más registros:', data.message);
+                }
+            } catch (error) {
+                console.error('Error de red:', error);
+            } finally {
+                loadingIndicator.classList.remove('flex');
+                loadingIndicator.classList.add('hidden');
+            }
+        }
+
+        window.addEventListener('scroll', () => {
+            if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 500) {
+                loadMoreRows();
+            }
+        });
+
+        function openModal(rowId) {
+            const rowData = errorRowsData[rowId];
+            if (!rowData) {
+                showFlashMessage('No se encontraron datos para esta fila.', 'error');
+                return;
+            }
+
+            document.getElementById('modal-row-id').value = rowId;
+            modalErrorMessage.textContent = rowData.error;
+
+            columns.forEach(column => {
+                const input = document.getElementById(`input-${column}`);
+                if (input) {
+                    input.value = rowData[column] || '';
+                }
+            });
+
+            document.body.classList.add('modal-open');
+            modal.classList.add('active');
+            modal.removeAttribute('aria-hidden');
+            
+            // Enfocar el primer elemento interactivo
+            document.querySelector('#edit-modal input').focus();
+        }
+
+        function closeModal() {
+            document.body.classList.remove('modal-open');
+            modal.classList.remove('active');
+            modal.setAttribute('aria-hidden', 'true');
+        }
+
+        // Event listener for opening modal on row click
+        tableBody.addEventListener('click', (e) => {
+            const row = e.target.closest('tr');
+            if (row) {
+                const rowId = row.dataset.rowId;
+                if (rowId) {
+                    openModal(rowId);
+                }
+            }
+        });
+        
+        // Listener para cerrar el modal al hacer clic en el overlay (fondo)
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                closeModal();
+            }
+        });
+
+        // Event listeners for modal buttons
+        closeModalBtn.addEventListener('click', closeModal);
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && modal.classList.contains('active')) {
+                closeModal();
+            }
+        });
+
+        modalForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const rowId = document.getElementById('modal-row-id').value;
+            const formData = new FormData(modalForm);
+            
+            // Agregamos un indicador de carga al botón
+            saveModalBtn.disabled = true;
+            saveModalBtn.innerHTML = `
+                <span class="loading-spinner w-4 h-4 mr-2"></span>
+                Guardando...
+            `;
+            
+            try {
+                const response = await fetch(`/save_error_row/${uploadId}/${rowId}`, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+
+                if (result.success) {
+                    document.getElementById(`row-${rowId}`).remove();
+                    delete errorRowsData[rowId]; // Eliminar del caché
+                    showFlashMessage(result.message, 'success');
+                    closeModal();
+                } else {
+                    modalErrorMessage.textContent = `Error: ${result.message}`;
+                    showFlashMessage(`Error: ${result.message}`, 'error');
+                }
+            } catch (error) {
+                console.error('Error al guardar la fila:', error);
+                modalErrorMessage.textContent = 'Error al guardar la fila. Revisa la consola del navegador.';
+                showFlashMessage('Error al guardar la fila. Revisa la consola del navegador para más detalles.', 'error');
+            } finally {
+                // Removemos el indicador de carga y habilitamos el botón
+                saveModalBtn.disabled = false;
+                saveModalBtn.innerHTML = 'Guardar';
+            }
+        });
     </script>
-</body>
-</html>
 {% endblock %}

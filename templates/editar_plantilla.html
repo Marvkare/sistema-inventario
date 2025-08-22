@@ -1,0 +1,297 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <div class="bg-white rounded-xl shadow-lg p-8 w-full max-w-4xl mx-auto">
+        <h2 class="text-3xl font-bold text-gray-900 mb-6 text-center">
+            Editar Plantilla de Consulta: <span class="text-indigo-600">{{ template.name }}</span>
+        </h2>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} mb-4 p-3 rounded text-center
+                                {% if category == 'success' %} bg-green-100 text-green-800
+                                {% elif category == 'danger' %} bg-red-100 text-red-800
+                                {% endif %}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <form id="template-form" action="{{ url_for('plantillas.editar_plantilla', template_id=template.id) }}" method="post" class="space-y-6">
+            <div>
+                <label for="template_name" class="block text-sm font-medium text-gray-700">Nombre de la Plantilla</label>
+                <input type="text" name="template_name" id="template_name" value="{{ template.name }}" required
+                       class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+            </div>
+            <div>
+                <label for="template_description" class="block text-sm font-medium text-gray-700">Descripción</label>
+                <textarea name="template_description" id="template_description" rows="3"
+                          class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">{{ template.description }}</textarea>
+            </div>
+
+            <div class="border-t border-gray-200 pt-6">
+                <h3 class="text-xl font-semibold mb-4 text-gray-800">Seleccionar Columnas</h3>
+                <div id="columns-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {% for column in columns %}
+                    <div class="flex items-center">
+                        <input id="column-{{ column }}" name="columns" type="checkbox" value="{{ column }}"
+                               {% if column in template_columns %}checked{% endif %}
+                               class="h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500">
+                        <label for="column-{{ column }}" class="ml-2 block text-sm text-gray-900">
+                            {{ column.replace('_', ' ').title() }}
+                        </label>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="border-t border-gray-200 pt-6">
+                <h3 class="text-xl font-semibold mb-4 text-gray-800">Definir Filtros</h3>
+                <div id="filters-container" class="space-y-4">
+                    {# Filters will be populated by JavaScript based on template_filters #}
+                </div>
+                <button type="button" id="add-filter-btn"
+                        class="mt-4 inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                    <i class="fas fa-plus mr-2"></i> Añadir Filtro
+                </button>
+            </div>
+            
+            <div class="border-t border-gray-200 pt-6">
+                <h3 class="text-xl font-semibold mb-4 text-gray-800">Vista Previa de la Tabla</h3>
+                <div id="preview-table-container" class="w-full overflow-x-auto shadow-md rounded-lg">
+                    <p class="text-center text-gray-500 p-4">Selecciona columnas y añade filtros para ver la vista previa.</p>
+                </div>
+            </div>
+
+            <div class="flex justify-end space-x-4 mt-8">
+                <a href="{{ url_for('plantillas.ver_plantillas') }}" class="inline-flex items-center px-6 py-3 border border-gray-300 shadow-sm text-base font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                    Cancelar
+                </a>
+                <button type="submit"
+                        class="inline-flex items-center px-6 py-3 border border-transparent rounded-md shadow-sm text-base font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                    Actualizar Plantilla
+                </button>
+            </div>
+        </form>
+    </div>
+{% endblock %}
+
+{% block scripts %}
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const addFilterBtn = document.getElementById('add-filter-btn');
+            const filtersContainer = document.getElementById('filters-container');
+            const columnsContainer = document.getElementById('columns-container');
+            const previewTableContainer = document.getElementById('preview-table-container');
+            const availableColumns = {{ columns | tojson | safe }};
+            let availableAreas = [];
+            const initialTemplateFilters = {{ template_filters | tojson | safe }}; // Load initial filters
+
+            const fetchAreas = async () => {
+                try {
+                    const response = await fetch('{{ url_for("areas.get_areas") }}');
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    const data = await response.json();
+                    availableAreas = data;
+                } catch (error) {
+                    console.error('Error fetching areas:', error);
+                    availableAreas = ['Error fetching areas']; // Fallback
+                }
+            };
+            
+            function createFilterGroup(filterData = null) {
+                const filterGroup = document.createElement('div');
+                filterGroup.className = 'flex items-center space-x-4';
+                
+                const columnOptions = availableColumns.map(col => 
+                    `<option value="${col}" ${filterData && filterData.field === col ? 'selected' : ''}>${col.replace('_', ' ').charAt(0).toUpperCase() + col.replace('_', ' ').slice(1)}</option>`
+                ).join('');
+
+                filterGroup.innerHTML = `
+                    <div class="flex-1">
+                        <label class="block text-sm font-medium text-gray-700">Campo</label>
+                        <select name="filter_field[]" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm">
+                            <option value="">Seleccionar campo...</option>
+                            ${columnOptions}
+                        </select>
+                    </div>
+                    <div class="flex-1">
+                        <label class="block text-sm font-medium text-gray-700">Operador</label>
+                        <select name="filter_operator[]" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm">
+                            <option value="==" ${filterData && filterData.operator === '==' ? 'selected' : ''}>Igual a</option>
+                            <option value="!=" ${filterData && filterData.operator === '!=' ? 'selected' : ''}>Diferente de</option>
+                            <option value=">" ${filterData && filterData.operator === '>' ? 'selected' : ''}>Mayor que</option>
+                            <option value="<" ${filterData && filterData.operator === '<' ? 'selected' : ''}>Menor que</option>
+                            <option value="contains" ${filterData && filterData.operator === 'contains' ? 'selected' : ''}>Contiene</option>
+                        </select>
+                    </div>
+                    <div class="flex-1 filter-value-container">
+                        <label class="block text-sm font-medium text-gray-700">Valor</label>
+                        <input type="text" name="filter_value[]" value="${filterData ? filterData.value : ''}"
+                               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm" placeholder="Valor del filtro">
+                    </div>
+                    <div>
+                        <button type="button" class="remove-filter-btn mt-6 text-red-600 hover:text-red-800">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    </div>
+                `;
+
+                filterGroup.querySelector('.remove-filter-btn').addEventListener('click', () => {
+                    filterGroup.remove();
+                    updatePreviewTable();
+                });
+
+                const fieldSelect = filterGroup.querySelector('[name="filter_field[]"]');
+                const valueContainer = filterGroup.querySelector('.filter-value-container');
+                let valueInput = filterGroup.querySelector('[name="filter_value[]"]');
+
+                const updateValueInputType = (initialValue = '') => {
+                    const selectedField = fieldSelect.value;
+                    let newValueInput;
+
+                    if (selectedField === 'Area') {
+                        const areaOptions = availableAreas.map(area => 
+                            `<option value="${area}" ${initialValue === area ? 'selected' : ''}>${area}</option>`
+                        ).join('');
+                        newValueInput = document.createElement('select');
+                        newValueInput.name = 'filter_value[]';
+                        newValueInput.className = 'mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm';
+                        newValueInput.innerHTML = `<option value="">Seleccionar área...</option>${areaOptions}`;
+                    } else {
+                        newValueInput = document.createElement('input');
+                        newValueInput.type = 'text';
+                        newValueInput.name = 'filter_value[]';
+                        newValueInput.className = 'mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm';
+                        newValueInput.placeholder = 'Valor del filtro';
+                        newValueInput.value = initialValue;
+                    }
+
+                    valueContainer.replaceChild(newValueInput, valueInput);
+                    valueInput = newValueInput;
+                    
+                    valueInput.addEventListener('change', updatePreviewTable);
+                    if (selectedField !== 'Area') {
+                        valueInput.addEventListener('keyup', updatePreviewTable);
+                    }
+                };
+
+                // Initialize input type based on filterData or default
+                updateValueInputType(filterData ? filterData.value : '');
+
+                fieldSelect.addEventListener('change', () => {
+                    updateValueInputType(''); // Reset value when field changes
+                    updatePreviewTable();
+                });
+                
+                filterGroup.querySelector('[name="filter_operator[]"]').addEventListener('change', updatePreviewTable);
+                
+                return filterGroup;
+            }
+
+            async function updatePreviewTable() {
+                const selectedColumns = Array.from(document.querySelectorAll('input[name="columns"]:checked')).map(el => el.value);
+                const filterGroups = Array.from(document.querySelectorAll('#filters-container > div'));
+                const filters = filterGroups.map(group => ({
+                    field: group.querySelector('[name="filter_field[]"]').value,
+                    operator: group.querySelector('[name="filter_operator[]"]').value,
+                    value: group.querySelector('[name="filter_value[]"]').value
+                })).filter(f => f.field && f.operator && f.value); // Only include complete filters
+
+                if (selectedColumns.length === 0) {
+                    previewTableContainer.innerHTML = '<p class="text-center text-gray-500 p-4">Selecciona columnas y añade filtros para ver la vista previa.</p>';
+                    return;
+                }
+
+                previewTableContainer.innerHTML = '<p class="text-center text-indigo-500 p-4">Cargando datos...</p>';
+
+                try {
+                    const response = await fetch('{{ url_for("plantillas.preview_query") }}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            columns: selectedColumns,
+                            filters: filters
+                        })
+                    });
+                    
+                    if (!response.ok) {
+                        const error = await response.json();
+                        previewTableContainer.innerHTML = `<p class="text-center text-red-500 p-4">Error: ${error.error}</p>`;
+                        return;
+                    }
+
+                    const filteredData = await response.json();
+
+                    let tableHTML = `
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    ${selectedColumns.map(col => `<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">${col.replace('_', ' ').charAt(0).toUpperCase() + col.replace('_', ' ').slice(1)}</th>`).join('')}
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200">
+                    `;
+
+                    if (filteredData.length === 0) {
+                        tableHTML += `
+                            <tr>
+                                <td colspan="${selectedColumns.length}" class="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500">
+                                    No se encontraron resultados.
+                                </td>
+                            </tr>
+                        `;
+                    } else {
+                        tableHTML += filteredData.map(item => `
+                            <tr>
+                                ${selectedColumns.map(col => `<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${item[col] !== null && item[col] !== undefined ? item[col] : ''}</td>`).join('')}
+                            </tr>
+                        `).join('');
+                    }
+
+                    tableHTML += `
+                            </tbody>
+                        </table>
+                    `;
+
+                    previewTableContainer.innerHTML = tableHTML;
+
+                } catch (error) {
+                    console.error('Error fetching data:', error);
+                    previewTableContainer.innerHTML = `<p class="text-center text-red-500 p-4">Error al obtener los datos. Por favor, revisa la consola para más detalles.</p>`;
+                }
+            }
+
+            fetchAreas().then(() => {
+                // Populate existing filters on load
+                initialTemplateFilters.forEach(filter => {
+                    filtersContainer.appendChild(createFilterGroup(filter));
+                });
+
+                // Add an initial empty filter if no existing filters were loaded
+                if (filtersContainer.children.length === 0) {
+                    filtersContainer.appendChild(createFilterGroup());
+                }
+            
+                addFilterBtn.addEventListener('click', () => {
+                    const newFilter = createFilterGroup();
+                    filtersContainer.appendChild(newFilter);
+                    updatePreviewTable();
+                });
+            
+                columnsContainer.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+                    checkbox.addEventListener('change', updatePreviewTable);
+                });
+                
+                // Initial update on page load after areas and filters are loaded
+                updatePreviewTable();
+            });
+        });
+    </script>
+{% endblock %}

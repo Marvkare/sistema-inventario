@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+
+{% block title %}Detalles del Resguardo{% endblock %}
+
+{% block content %}
+<div class="flex-grow flex flex-col items-center p-8">
+    <div class="container bg-white p-8 rounded-xl shadow-lg border border-gray-200 w-full max-w-4xl">
+        <h1 class="text-3xl font-bold text-gray-800 mb-6 text-center">Detalles del Resguardo</h1>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+            <div class="md:col-span-1 flex flex-col items-center justify-center p-4 bg-gray-50 rounded-lg">
+                {% if resguardo.Imagen_Path %}
+                    <img src="{{ url_for('static', filename=resguardo.Imagen_Path) }}" 
+                         alt="Imagen del Bien" 
+                         class="rounded-lg shadow-md max-h-96 w-auto object-contain">
+                {% else %}
+                    <div class="w-full max-h-96 h-full flex items-center justify-center bg-gray-200 rounded-lg text-gray-500">
+                        No hay imagen disponible
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="md:col-span-1">
+                <div class="bg-gray-50 p-6 rounded-lg shadow-sm space-y-4">
+                    <h2 class="text-xl font-semibold text-gray-700 border-b pb-2">Información Principal</h2>
+                    <div><strong class="text-gray-800">No. de Resguardo:</strong> {{ resguardo.No_Resguardo }}</div>
+                    <div><strong class="text-gray-800">No. de Inventario:</strong> {{ resguardo.No_Inventario }}</div>
+                    <div><strong class="text-gray-800">Área:</strong> {{ resguardo.area_nombre }}</div>
+                    <div><strong class="text-gray-800">Fecha de Resguardo:</strong> {{ resguardo.Fecha_Resguardo }}</div>
+                    <div><strong class="text-gray-800">Descripción del Bien:</strong> {{ resguardo.Descripcion_Del_Bien }}</div>
+                    <div><strong class="text-gray-800">Descripción Corta del Bien:</strong> {{ resguardo.Descripcion_Corta_Del_Bien }}</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bg-white p-6 rounded-lg border border-gray-200">
+            <h2 class="text-xl font-semibold text-gray-700 mb-4 border-b pb-2">Detalles Completos del Bien y Resguardo</h2>
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        <tr>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">No. de Factura:</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ resguardo.No_Factura }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">No. de Cuenta:</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ resguardo.No_Cuenta }}</td>
+                        </tr>
+                        <tr>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Proveedor:</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ resguardo.Proveedor }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Rubro:</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ resguardo.Rubro }}</td>
+                        </tr>
+                        <tr>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Póliza:</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ resguardo.Poliza }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Fecha de Póliza:</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ resguardo.Fecha_Poliza }}</td>
+                        </tr>
+                        <tr>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Sub-Cuenta Armonizadora:</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ resguardo.Sub_Cuenta_Armonizadora }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Fecha de Factura:</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ resguardo.Fecha_Factura }}</td>
+                        </tr>
+                        <tr>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Costo Inicial:</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ resguardo.Costo_Inicial }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Depreciación Acumulada:</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ resguardo.Depreciacion_Acumulada }}</td>
+                        </tr>
+                        <tr>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Costo Final:</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ resguardo.Costo_Final_Cantidad }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Cantidad:</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ resguardo.Cantidad }}</td>
+                        </tr>
+                        <tr>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">No. de Trabajador:</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ resguardo.No_Trabajador }}</td>
+                        </tr>
+                        <tr>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Puesto:</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ resguardo.Puesto }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Nombre Director/Jefe de Área:</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ resguardo.Nombre_Director_Jefe_De_Area }}</td>
+                        </tr>
+                        <tr>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Tipo de Resguardo:</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                {% if resguardo.Tipo_De_Resguardo == 1 %}Sujeto de Control{% else %}Resguardo Normal{% endif %}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Nombre del Resguardante:</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ resguardo.Nombre_Del_Resguardante }}</td>
+                        </tr>
+                        <tr>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Estado del Bien:</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ resguardo.Estado_Del_Bien }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Marca:</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ resguardo.Marca }}</td>
+                        </tr>
+                        <tr>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Modelo:</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ resguardo.Modelo }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Número de Serie:</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ resguardo.Numero_De_Serie }}</td>
+                        </tr>
+                        <tr>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Fecha de Registro:</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ resguardo.Fecha_Registro }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900"></td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="mt-8 flex justify-center space-x-4">
+            <a href="{{ url_for('resguardos.edit_resguardo', id=resguardo.id) }}" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 transition-colors">
+                <i class="fas fa-edit mr-2"></i> Editar Resguardo
+            </a>
+            <a href="{{ url_for('resguardos.ver_resguardos') }}" class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 transition-colors">
+                <i class="fas fa-arrow-left mr-2"></i> Volver
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

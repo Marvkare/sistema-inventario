@@ -1,47 +1,210 @@
-
+<!DOCTYPE html>
+<html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Sistema de Resguardos{% endblock %}</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    </head>
-<body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-        <div class="container-fluid">
-            <a class="navbar-brand" href="{{ url_for('index') }}">Sistema de Resguardos</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('index') }}">Formulario de Resguardo</a>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+            display: flex;
+            min-height: 100vh;
+            transition: margin-left 0.3s ease; /* Transición para el contenido principal */
+        }
+        .container {
+            max-width: 100%;
+            padding: 1rem;
+            margin: auto;
+        }
+        .flash-message {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            z-index: 1000;
+            padding: 0.75rem 1.25rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            animation: fadein 0.5s, fadeout 0.5s 5.5s forwards;
+        }
+        .flash-success {
+            background-color: #d1e7dd;
+            color: #0f5132;
+            border: 1px solid #badbcc;
+        }
+        .flash-error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .flash-warning {
+            background-color: #fff3cd;
+            color: #664d03;
+            border: 1px solid #ffeeba;
+        }
+        @keyframes fadein {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes fadeout {
+            from { opacity: 1; }
+            to { opacity: 0; display: none; }
+        }
+        .no-data {
+            text-align: center;
+            padding: 2rem;
+            color: #6b7280;
+            font-size: 1.125rem;
+        }
+
+        /* Estilos para el menú y el botón de alternancia */
+        .sidebar {
+            width: 16rem; /* 64 * 0.25 = 16rem (corresponde a w-64) */
+            transition: transform 0.3s ease;
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            z-index: 900;
+        }
+        
+        .sidebar-toggle-btn {
+            position: fixed;
+            top: 1rem;
+            left: 1rem;
+            z-index: 950;
+            transition: transform 0.3s ease;
+        }
+
+        .main-content {
+            margin-left: 16rem; /* Margen para el contenido principal, igual al ancho del sidebar */
+            flex-grow: 1;
+            transition: margin-left 0.3s ease;
+            padding: 2rem;
+        }
+        
+        /* Estado del menú oculto */
+        body.menu-hidden .sidebar {
+            transform: translateX(-16rem);
+        }
+        
+        body.menu-hidden .sidebar-toggle-btn {
+            transform: translateX(0);
+        }
+        
+        body.menu-hidden .main-content {
+            margin-left: 0;
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+    <!-- Botón para mostrar/ocultar el menú -->
+    <button id="menu-toggle" class="sidebar-toggle-btn p-3 bg-blue-600 text-white rounded-full shadow-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+        <i class="fas fa-bars"></i>
+    </button>
+
+    <!-- Sidebar -->
+    <aside id="sidebar" class="sidebar bg-white text-gray-800 p-6 flex flex-col justify-between border-r border-gray-200">
+        <div class="flex-grow">
+            <h1 class="text-2xl font-bold mb-6 text-gray-900">Menú de Resguardos</h1>
+            <nav>
+                <ul class="space-y-2">
+                    <li>
+                        <a href="{{ url_for('index') }}" class="flex items-center p-3 text-lg font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors">
+                            <i class="fas fa-plus mr-3"></i>
+                            Formulario de Resguardo
+                        </a>
                     </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('resguardos_list') }}">Ver Todos los Resguardos</a>
+                    <li>
+                        <a href="{{ url_for('resguardos.ver_resguardos') }}" class="flex items-center p-3 text-lg font-medium text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors">
+                            <i class="fas fa-list-ul mr-3"></i>
+                            Ver Todos los Resguardos
+                        </a>
                     </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('resguardos_clasificados') }}">Tabla Sujeto Control</a>
+                    <li>
+                        <a href="{{ url_for('resguardos.resguardos_clasificados') }}" class="flex items-center p-3 text-lg font-medium text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors">
+                            <i class="fas fa-sort-amount-down-alt mr-3"></i>
+                            Tabla Sujeto Control
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ url_for('errors.handle_errors') }}" class="flex items-center p-3 text-lg font-medium text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors">
+                            <i class="fas fa-exclamation-triangle mr-3"></i>
+                            Revisar Errores
+                        </a>
+                    </li>
+                    <!-- Enlace para la nueva ruta -->
+                    <li>
+                        <a href="{{ url_for('plantillas.crear_plantilla') }}" class="flex items-center p-3 text-lg font-medium text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors">
+                            <i class="fas fa-magic mr-3"></i>
+                            Crear Plantilla de Consulta
+                        </a>
+                    </li>
+                     <li>
+                        <a href="{{ url_for('plantillas.ver_plantillas') }}" class="flex items-center p-3 text-lg font-medium text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors">
+                            <i class="fas fa-magic mr-3"></i>
+                            Lista de plantillas
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ url_for('areas.manage_areas') }}" class="flex items-center p-3 text-lg font-medium text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors">
+                            <i class="fas fa-building mr-3"></i>
+                            Manage areas
+                        </a>
                     </li>
                 </ul>
-            </div>
+            </nav>
         </div>
-    </nav>
+    </aside>
 
-    <div class="container mt-4">
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                {% for category, message in messages %}
-                    <div class="alert alert-{{ category }} mt-3">
-                        {{ message }}
-                    </div>
-                {% endfor %}
-            {% endif %}
-        {% endwith %}
+    <!-- Main content -->
+    <div id="main-content" class="main-content flex-grow flex flex-col items-center">
+        <div class="container bg-white p-8 rounded-xl shadow-lg border border-gray-200 w-full max-w-4xl">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="flash-message flash-{{ category }}">{{ message }}</div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
 
-        {% block content %}{% endblock %}
+            {% block content %}{% endblock %}
+        </div>
     </div>
+    
+    <script>
+        // JavaScript para ocultar los mensajes flash después de 6 segundos
+        document.addEventListener('DOMContentLoaded', () => {
+            const flashMessages = document.querySelectorAll('.flash-message');
+            flashMessages.forEach(msg => {
+                setTimeout(() => {
+                    msg.style.opacity = '0';
+                    msg.style.display = 'none';
+                }, 6000);
+            });
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+            // Lógica para el botón de alternar el menú
+            const menuToggleBtn = document.getElementById('menu-toggle');
+            const body = document.body;
+
+            menuToggleBtn.addEventListener('click', () => {
+                body.classList.toggle('menu-hidden');
+                
+                // Cambia el icono del botón
+                const icon = menuToggleBtn.querySelector('i');
+                if (body.classList.contains('menu-hidden')) {
+                    icon.classList.remove('fa-bars');
+                    icon.classList.add('fa-times');
+                } else {
+                    icon.classList.remove('fa-times');
+                    icon.classList.add('fa-bars');
+                }
+            });
+        });
+    </script>
     {% block scripts %}{% endblock %}
+</body>
+</html>

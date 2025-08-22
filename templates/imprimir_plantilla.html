@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Imprimir Reporte: {{ template.name }}</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20mm; /* Standard print margins */
+            font-size: 10pt;
+            color: #333;
+        }
+        h1, h2, h3 {
+            color: #1a202c;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        h1 { font-size: 20pt; }
+        h2 { font-size: 16pt; }
+        p { margin-bottom: 5px; }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            page-break-inside: auto; /* Allow table to break across pages */
+        }
+        thead {
+            display: table-header-group; /* Repeat header on each page */
+            background-color: #f3f4f6; /* Light gray background for header */
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+            vertical-align: top;
+            font-size: 9pt;
+        }
+        th {
+            font-weight: bold;
+            color: #4a5568;
+        }
+        tr:nth-child(even) {
+            background-color: #f9f9f9; /* Zebra striping for readability */
+        }
+        .section-header {
+            font-size: 12pt;
+            font-weight: bold;
+            margin-top: 20px;
+            margin-bottom: 10px;
+            border-bottom: 1px solid #ccc;
+            padding-bottom: 5px;
+        }
+        .info-block {
+            margin-bottom: 15px;
+            background-color: #f0f8ff; /* Light blue background for info */
+            border-left: 5px solid #a0cffc;
+            padding: 10px;
+        }
+        .info-block ul {
+            list-style: none; /* Remove bullet points */
+            padding-left: 0;
+        }
+        .info-block li {
+            margin-bottom: 3px;
+        }
+
+        /* Styles for printing (e.g., hide elements not needed in print) */
+        @media print {
+            /* You can add specific print styles here if needed */
+            /* For example, if you had a header/footer on screen you want to hide: */
+            /* .no-print { display: none; } */
+        }
+    </style>
+</head>
+<body>
+    <h1>Reporte de Inventario</h1>
+    <h2>Plantilla: {{ template.name }}</h2>
+    <p style="text-align: center;">{{ template.description or 'Sin descripción para esta plantilla.' }}</p>
+
+    <div class="info-block">
+        <div class="section-header">Filtros Aplicados</div>
+        {% if filters %} {# Use the 'filters' variable passed explicitly #}
+            <ul>
+                {% for filter in filters %} {# Loop directly over the 'filters' list #}
+                    <li><strong>{{ filter.field.replace('_', ' ').title() }}:</strong> {{ filter.operator }} "{{ filter.value }}"</li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p>Ningún filtro aplicado.</p>
+        {% endif %}
+    </div>
+
+    <div class="section-header">Datos de la Consulta</div>
+    <table>
+        <thead>
+            <tr>
+                {% for column in selected_columns %}
+                    <th>{{ column.replace('_', ' ').title() }}</th>
+                {% endfor %}
+            </tr>
+        </thead>
+        <tbody>
+            {% if filtered_data %}
+                {% for item in filtered_data %}
+                    <tr>
+                        {% for column in selected_columns %}
+                            <td>{{ item[column] if item[column] is not none else '' }}</td>
+                        {% endfor %}
+                    </tr>
+                {% endfor %}
+            {% else %}
+                <tr>
+                    <td colspan="{{ selected_columns|length }}" style="text-align: center;">
+                        No se encontraron resultados para esta plantilla.
+                    </td>
+                </tr>
+            {% endif %}
+        </tbody>
+    </table>
+
+    <script>
+        // Optional: Trigger print dialog automatically when loaded
+        // window.onload = function() {
+        //     window.print();
+        // };
+    </script>
+</body>
+</html>
