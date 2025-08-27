@@ -1,8 +1,18 @@
 <h1>Crear Nuevo Usuario</h1>
-<form method="POST" action="{{ url_for('admin_users.create_user') }}">
-    {{ form.hidden_tag() }}
-    {{ form.username.label }} {{ form.username() }}<br>
-    {{ form.password.label }} {{ form.password() }}<br>
-    {{ form.confirm_password.label }} {{ form.confirm_password() }}<br>
-    {{ form.submit() }}
+<form method="POST">
+    <label for="username">Nombre de Usuario:</label><br>
+    <input type="text" id="username" name="username" required><br><br>
+
+    <label for="password">Contraseña:</label><br>
+    <input type="password" id="password" name="password" required><br><br>
+
+    <label>Roles:</label><br>
+    {% for role in all_roles %}
+        <div>
+            <input type="checkbox" id="role-{{ role.id }}" name="roles" value="{{ role.id }}">
+            <label for="role-{{ role.id }}">{{ role.name }}</label>
+        </div>
+    {% endfor %}
+    <br>
+    <button type="submit">Crear Usuario</button>
 </form>

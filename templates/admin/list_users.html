@@ -1,7 +1,30 @@
-<h1>Administrar Usuarios</h1>
-<a href="{{ url_for('admin_users.create_user') }}">Crear Nuevo Usuario</a>
-<ul>
-    {% for user in users %}
-        <li>{{ user.username }}</li>
-    {% endfor %}
-</ul>
+<h1>Administrar Usuarios y Roles</h1>
+<a href="{{ url_for('admin_users.create_user') }}" class="btn btn-primary">Crear Nuevo Usuario</a>
+<a href="{{ url_for('admin_users.create_role') }}" class="btn btn-primary">Crear Nuevo Rol</a>
+<a href="{{ url_for('admin_users.list_roles') }}" class="btn btn-secondary">Ver Roles</a>
+<br><br>
+<table class="table">
+    <thead>
+        <tr>
+            <th>Nombre de Usuario</th>
+            <th>Roles</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for user in users %}
+        <tr>
+            <td>{{ user.username }}</td>
+            <td>
+                {% for role in user.roles %}
+                    <span class="badge bg-secondary">{{ role.name }}</span>
+                {% endfor %}
+            </td>
+            <td>
+                <a href="{{ url_for('admin_users.edit_user', user_id=user.id) }}" class="btn btn-sm btn-primary">Editar Usuario</a>
+                <a href="{{ url_for('admin_users.delete_user', user_id=user.id) }}" onclick="return confirm('¿Estás seguro de que quieres eliminar a este usuario?');" class="btn btn-sm btn-danger">Eliminar</a>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>

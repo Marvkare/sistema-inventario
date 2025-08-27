@@ -1,0 +1,22 @@
+<h1>Editar Usuario: {{ user.username }}</h1>
+<form method="POST">
+    <label for="username">Nombre de Usuario:</label><br>
+    <input type="text" id="username" name="username" value="{{ user.username }}"><br><br>
+
+    <label for="password">Nueva Contraseña (dejar en blanco para no cambiar):</label><br>
+    <input type="password" id="password" name="password"><br><br>
+
+    <label for="roles">Roles:</label><br>
+    {% for role in all_roles %}
+        <div>
+            <input type="checkbox"
+                   id="role-{{ role.id }}"
+                   name="roles"
+                   value="{{ role.id }}"
+                   {% if role in user.roles %}checked{% endif %}>
+            <label for="role-{{ role.id }}">{{ role.name }}</label>
+        </div>
+    {% endfor %}
+    <br>
+    <button type="submit">Guardar Cambios</button>
+</form>

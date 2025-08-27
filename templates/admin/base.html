@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Panel de Administración</title>
+</head>
+<body>
+    <nav>
+        <ul>
+            <li><a href="{{ url_for('admin.admin_dashboard') }}">Dashboard</a></li>
+            <li><a href="{{ url_for('admin_users.list_users') }}">Usuarios</a></li>
+            <li><a href="{{ url_for('admin_users.list_roles') }}">Roles</a></li>
+        </ul>
+    </nav>
+    <div class="content">
+        {% block content %}{% endblock %}
+    </div>
+</body>
+</html>

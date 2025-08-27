@@ -1,0 +1,15 @@
+<h1>Editar Permisos del Rol: {{ role.name }}</h1>
+<form method="POST">
+    {% for permission in all_permissions %}
+        <div>
+            <input type="checkbox"
+                   id="perm-{{ permission.id }}"
+                   name="permissions"
+                   value="{{ permission.id }}"
+                   {% if permission in role.permissions %}checked{% endif %}>
+            <label for="perm-{{ permission.id }}">{{ permission.endpoint }}</label>
+        </div>
+    {% endfor %}
+    <br>
+    <button type="submit">Guardar Cambios</button>
+</form>

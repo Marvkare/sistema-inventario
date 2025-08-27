@@ -1,14 +1,15 @@
 # routes/admin.py
-from flask import Blueprint, redirect, url_for, flash, request
-from flask_login import current_user
+from flask import Blueprint, redirect, url_for, flash, request, render_template
+from flask_login import login_required,  current_user
 from flask_admin.contrib.sqla import ModelView
 from extensions import db
 from models import User, Role
 from wtforms import StringField, validators, PasswordField
 from flask_admin.contrib.sqla.fields import QuerySelectField
+from decorators import admin_required
 
 # Define the blueprint for your custom admin routes.
-admin_routes_bp = Blueprint('admin_routes', __name__, url_prefix='/admin_routes')
+admin_bp = Blueprint('admin', __name__, url_prefix='/admin')
 
 # Define the Flask-Admin model views for managing User and Role
 class AdminUserView(ModelView):
@@ -53,3 +54,14 @@ class AdminRoleView(ModelView):
     def inaccessible_callback(self, name, **kwargs):
         flash('No tienes permiso para acceder a esta página.', 'danger')
         return redirect(url_for('login', next=request.url))
+
+@admin_bp.route('/')
+@login_required
+def admin_dashboard():
+    # You can pass data to the template here, e.g., statistics
+    return render_template('admin/dashboard.html')
+
+@admin_bp.route('/settings')
+@login_required
+def admin_settings():
+    return render_template('admin/settings.html')

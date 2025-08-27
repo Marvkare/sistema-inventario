@@ -1,0 +1,27 @@
+<h1>Lista de Roles</h1>
+<a href="{{ url_for('admin_users.create_role') }}" class="btn btn-primary">Crear Nuevo Rol</a>
+<a href="{{ url_for('admin_users.list_users') }}" class="btn btn-secondary">Ver Usuarios</a>
+<a href="{{ url_for('admin_users.manage_permissions') }}" class="btn btn-info">Gestionar Permisos</a>
+<br><br>
+<table class="table">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Nombre del Rol</th>
+            <th>Descripción</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for role in roles %}
+        <tr>
+            <td>{{ role.id }}</td>
+            <td>{{ role.name }}</td>
+            <td>{{ role.description }}</td>
+            <td>
+                <a href="{{ url_for('admin_users.edit_role_permissions', role_id=role.id) }}" class="btn btn-sm btn-info">Editar Permisos</a>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>

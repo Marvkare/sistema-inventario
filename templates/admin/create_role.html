@@ -1,0 +1,14 @@
+<h1>Crear Nuevo Rol</h1>
+<form method="POST" action="{{ url_for('admin_users.create_role') }}">
+    <div>
+        <label for="name">Nombre del Rol:</label>
+        <input type="text" id="name" name="name" required>
+    </div>
+    <br>
+    <div>
+        <label for="description">Descripción:</label>
+        <textarea id="description" name="description"></textarea>
+    </div>
+    <br>
+    <button type="submit">Crear Rol</button>
+</form>

@@ -1,0 +1,33 @@
+<h1>Gestionar Permisos de Roles</h1>
+<p>Se han detectado y añadido automáticamente nuevos permisos del servidor. Selecciona un rol y asigna sus permisos.</p>
+<hr>
+<form method="POST">
+    <div>
+        <label for="role_id">Seleccionar Rol:</label>
+        <select id="role_id" name="role_id" required>
+            <option value="">-- Selecciona un Rol --</option>
+            {% for role in all_roles %}
+                <option value="{{ role.id }}">{{ role.name }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <br>
+    <div>
+        <h3>Lista de Permisos Disponibles</h3>
+        {% for permission in all_permissions %}
+            <div>
+                <input type="checkbox"
+                       id="perm-{{ permission.id }}"
+                       name="permissions"
+                       value="{{ permission.id }}">
+                <label for="perm-{{ permission.id }}">
+                    <strong>{{ permission.endpoint }}</strong>
+                    <br>
+                    <small>{{ permission.description }}</small>
+                </label>
+            </div>
+        {% endfor %}
+    </div>
+    <br>
+    <button type="submit" class="btn btn-success">Asignar Permisos</button>
+</form>

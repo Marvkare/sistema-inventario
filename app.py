@@ -2,9 +2,6 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, session, send_file, send_from_directory
 import os
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user, UserMixin
-from flask_sqlalchemy import SQLAlchemy
-from flask_admin import Admin
-from flask_admin.contrib.sqla import ModelView
 from werkzeug.security import generate_password_hash
 
 # Importar la configuración de la base de datos y otras configuraciones
@@ -39,9 +36,8 @@ from routes.areas import areas_bp
 from routes.excel_import import excel_import_bp
 from routes.handle_errors import handle_errors_bp
 from routes.plantillas import plantillas_bp
-from routes.admin import admin_routes_bp
-from routes.admin_users import admin_users_bp
-# Configuración de Flask-Login
+from routes.admin_users import admin_users_bp # No necesitas admin_routes_bp, admin_users_bp lo reemplaza
+from routes.admin import admin_bp# Configuración de Flask-Login
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
@@ -50,12 +46,6 @@ login_manager.login_view = 'login'
 def load_user(user_id):
     return User.query.get(int(user_id))
 
-# Configuración de Flask-Admin
-admin = Admin(app, name='Panel de Administración', template_mode='bootstrap3')
-from routes.admin import AdminUserView, AdminRoleView
-admin.add_view(AdminUserView(User, db.session, name='Usuarios'))
-admin.add_view(AdminRoleView(Role, db.session, name='Roles'))
-
 # Registro de Blueprints
 app.register_blueprint(main_bp)
 app.register_blueprint(resguardos_bp)
@@ -63,8 +53,8 @@ app.register_blueprint(areas_bp)
 app.register_blueprint(excel_import_bp)
 app.register_blueprint(handle_errors_bp)
 app.register_blueprint(plantillas_bp)
-app.register_blueprint(admin_routes_bp)
 app.register_blueprint(admin_users_bp)
+app.register_blueprint(admin_bp)
 
 # Rutas de Autenticación
 @app.route('/login', methods=['GET', 'POST'])
@@ -99,7 +89,6 @@ def index():
         return redirect(url_for('login'))
     return redirect(url_for('resguardos.ver_resguardos'))
     
-
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in app.config['ALLOWED_EXTENSIONS']
 
