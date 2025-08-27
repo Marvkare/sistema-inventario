@@ -8,7 +8,7 @@ import uuid
 import traceback
 from datetime import datetime, date
 from io import BytesIO
-
+from flask_login import login_required, current_user
 from database import get_db_connection, get_full_db_columns
 from config import VALID_DB_COLUMNS, COLUMN_MAPPING, FULL_DB_COLUMNS, BIENES_COLUMNS, RESGUARDOS_COLUMNS, EXCEL_AREA_COL_NAME # Import VALID_DB_COLUMNS and COLUMN_MAPPING
 
@@ -88,6 +88,7 @@ def get_or_create_area(cursor, area_name):
         raise Exception(f"Error al procesar el área: {err}")
 
 @excel_import_bp.route('/upload_excel', methods=['POST'])
+@login_required
 def upload_excel():
     print("\n--- INICIANDO PROCESO DE CARGA DE EXCEL ---")
     if 'excel_file' not in request.files:
@@ -245,6 +246,7 @@ def upload_excel():
     return redirect(url_for('index'))
 
 @excel_import_bp.route('/handle_errors')
+@login_required
 def handle_errors():
     """Displays a page with rows that had import errors for manual editing."""
     upload_id = session.get('upload_id')
@@ -298,6 +300,7 @@ def handle_errors():
     )
 
 @excel_import_bp.route('/get_error_rows_paginated/<string:upload_id>')
+@login_required
 def get_error_rows_paginated(upload_id):
     """Fetches paginated error rows via AJAX."""
     conn, cursor = get_db() # Use dictionary cursor
@@ -337,6 +340,7 @@ def get_error_rows_paginated(upload_id):
     })
 
 @excel_import_bp.route('/save_error_row/<string:upload_id>/<int:row_id>', methods=['POST'])
+@login_required
 def save_error_row(upload_id, row_id):
     """Saves a single row with errors after being manually corrected."""
     conn = get_db_connection()
@@ -395,6 +399,7 @@ def save_error_row(upload_id, row_id):
 
 # Add a route to delete an error row
 @excel_import_bp.route('/delete_error_row/<string:upload_id>/<int:row_id>', methods=['POST'])
+@login_required
 def delete_error_row(upload_id, row_id):
     conn = get_db_connection()
     if conn is None:
@@ -415,6 +420,7 @@ def delete_error_row(upload_id, row_id):
             conn.close()
 
 @excel_import_bp.route('/exportar_resguardos_excel', methods=['POST'])
+@login_required
 def exportar_resguardos_excel():
     try:
         selected_columns = request.form.getlist('columns')

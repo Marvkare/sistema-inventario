@@ -10,6 +10,30 @@ CREATE DATABASE IF NOT EXISTS inventario;
 USE inventario;
 
 -- Crear la tabla areas (note: using lowercase consistently)
+
+-- Tabla para almacenar la información de los usuarios
+CREATE TABLE user (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(64) UNIQUE NOT NULL,
+    password_hash VARCHAR(255) NOT NULL
+);
+
+-- Tabla para almacenar los roles
+CREATE TABLE role (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(80) UNIQUE NOT NULL,
+    description VARCHAR(255)
+);
+
+-- Tabla de unión para vincular usuarios con roles (muchos a muchos)
+CREATE TABLE roles_users (
+    user_id INT NOT NULL,
+    role_id INT NOT NULL,
+    PRIMARY KEY (user_id, role_id),
+    FOREIGN KEY (user_id) REFERENCES user(id) ON DELETE CASCADE,
+    FOREIGN KEY (role_id) REFERENCES role(id) ON DELETE CASCADE
+);
+
 CREATE TABLE areas (
     `id` INT PRIMARY KEY NOT NULL AUTO_INCREMENT,
     nombre VARCHAR(255) NOT NULL,
@@ -72,6 +96,7 @@ CREATE TABLE resguardos (
     `Nombre_Del_Resguardante` VARCHAR(255),
     `Fecha_Registro` DATETIME DEFAULT CURRENT_TIMESTAMP,
     `Fecha_Ultima_Modificacion` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    `Activo` BOOLEAN NOT NULL DEFAULT TRUE, 
 
     CONSTRAINT fk_resguardos_bien
         FOREIGN KEY (`id_bien`)
@@ -96,23 +121,35 @@ CREATE TABLE IF NOT EXISTS query_templates (
 CREATE DATABASE IF NOT EXISTS inventario;
 
 
+
 CREATE TABLE IF NOT EXISTS oficio_traspaso (
-    id INT PRIMARY KEY NOT NULL AUTO_INCREMENT,
-    'Dependencia'
-    'Area'
-    'Oficio_clave' varchar
-    `Asunto`
-    `Lugar_Fecha`
-    'Secretaria_General_Municipal'
-    'No_Inventario',
-    'Cantidad',
-    'Descripcion',
-    'Area',
-    'Tipo'
-    'id_resguardo_anterior'
-    'id_resguardo_actual'
-    'Fecha_Traspaso_DB'
-);
+    `id` INT PRIMARY KEY NOT NULL AUTO_INCREMENT,
+    `Dependencia` VARCHAR(255),
+    `Area` VARCHAR(255),
+    `Oficio_clave` VARCHAR(255),
+    `Asunto` TEXT,
+    `Lugar_Fecha` DATE,
+    `Secretaria_General_Municipal` VARCHAR(255),
+    `No_Inventario` VARCHAR(50),
+    `Cantidad` INT,
+    `Descripcion` TEXT,
+    `Tipo` VARCHAR(50),
+    `id_resguardo_anterior` INT NOT NULL,
+    `id_resguardo_actual` INT NOT NULL,
+    `Fecha_Traspaso_DB` DATETIME DEFAULT CURRENT_TIMESTAMP,
+    `Fecha_Ultima_Modificacion` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+
+    CONSTRAINT fk_traspaso_resguardo_anterior
+        FOREIGN KEY (`id_resguardo_anterior`)
+        REFERENCES resguardos(`id`)
+        ON DELETE RESTRICT,
+
+    CONSTRAINT fk_traspaso_resguardo_actual
+        FOREIGN KEY (`id_resguardo_actual`)
+        REFERENCES resguardos(`id`)
+        ON DELETE RESTRICT
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 --
 -- Estructura de tabla para la tabla `resguardo_errores`
 --

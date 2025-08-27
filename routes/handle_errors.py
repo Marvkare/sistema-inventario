@@ -1,6 +1,7 @@
 # your_flask_app/routes/resguardos.py
 # app.py
 from flask import Blueprint, render_template, request, redirect, url_for, flash, current_app, send_file,jsonify
+from flask_login import login_required, current_user 
 import mysql.connector
 import os
 import traceback
@@ -14,6 +15,7 @@ handle_errors_bp = Blueprint('errors', __name__)
 
 
 @handle_errors_bp.route('/handle_errors')
+@login_required
 def handle_errors():
     """Displays a page with rows that had import errors for manual editing."""
     upload_id = session.get('upload_id')
@@ -67,6 +69,7 @@ def handle_errors():
     )
 
 @handle_errors_bp.route('/get_error_rows_paginated/<string:upload_id>')
+@login_required
 def get_error_rows_paginated(upload_id):
     """Fetches paginated error rows via AJAX."""
     conn = get_db_connection()
@@ -108,6 +111,7 @@ def get_error_rows_paginated(upload_id):
 
 
 @handle_errors_bp.route('/save_error_row/<string:upload_id>/<int:row_id>', methods=['POST'])
+@login_required
 def save_error_row(upload_id, row_id):
     """Saves a single row with errors after being manually corrected."""
     conn = get_db_connection()
@@ -153,6 +157,7 @@ def save_error_row(upload_id, row_id):
 
 
 @handle_errors_bp.route('/save_all_error_rows/<string:upload_id>', methods=['POST'])
+@login_required
 def save_all_error_rows(upload_id):
     """Saves all error rows that have been corrected."""
     conn = get_db_connection()

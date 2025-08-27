@@ -65,60 +65,171 @@ def get_full_db_columns(table_name="resguardo"):
         conn.close()
     return columns
 
+def map_operator_to_sql(operator):
+    """Mapea operadores del frontend a operadores SQL válidos"""
+    operator_map = {
+        '==': '=',
+        '!=': '!=',
+        '>': '>',
+        '<': '<',
+        '>=': '>=',
+        '<=': '<=',
+        'contains': 'LIKE'
+    }
+    return operator_map.get(operator, '=')
 # --- Core Helper Function (get_filtered_resguardo_data) ---
 # This function MUST be defined before any route or function that calls it.
-def get_filtered_resguardo_data(selected_columns, filters, limit=None):
+def get_image_paths(table_name, foreign_key_col, record_id):
+    """
+    Helper function to get all image paths for a record ID.
+    """
     conn = None
+    paths = []
     try:
         conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True) # Use dictionary=True for dict-like rows
-        
-        where_clauses = []
-        params = []
-        for f in filters:
-            field = f.get('field')
-            operator = f.get('operator')
-            value = f.get('value')
-
-            if not (field and operator and value):
-                continue
-
-            if field not in AVAILABLE_COLUMNS:
-                continue
-
-            # Use %s for placeholders in MySQL queries
-            if operator == '==':
-                where_clauses.append(f"`{field}` = %s")
-                params.append(value)
-            elif operator == '!=':
-                where_clauses.append(f"`{field}` != %s")
-                params.append(value)
-            elif operator == '>':
-                where_clauses.append(f"`{field}` > %s")
-                params.append(value)
-            elif operator == '<':
-                where_clauses.append(f"`{field}` < %s")
-                params.append(value)
-            elif operator == 'contains':
-                where_clauses.append(f"`{field}` LIKE %s")
-                params.append(f"%{value}%")
-        
-        columns_sql = ", ".join([f"`{col}`" for col in selected_columns])
-        query = f"SELECT {columns_sql} FROM resguardo"
-        
-        if where_clauses:
-            query += " WHERE " + " AND ".join(where_clauses)
-        
-        if limit:
-            query += f" LIMIT {limit}"
-
-        cursor.execute(query, params)
-        results = cursor.fetchall() # With dictionary=True, fetchall() already returns list of dictionaries
-        
-        return results
+        cursor = conn.cursor(dictionary=True)
+        query = f"SELECT ruta_imagen FROM {table_name} WHERE {foreign_key_col} = %s ORDER BY id"
+        cursor.execute(query, (record_id,))
+        results = cursor.fetchall()
+        paths = [row['ruta_imagen'] for row in results]
+        print(f"Found {len(paths)} images in {table_name} for {foreign_key_col}={record_id}")
+    except mysql.connector.Error as err:
+        print(f"Database error in get_image_paths: {err}")
     except Exception as e:
-        raise Exception(f"Error al obtener datos de resguardo: {e}") # Re-raise to be caught by the calling route
+        print(f"An unexpected error occurred in get_image_paths: {e}")
+        import traceback
+        traceback.print_exc()
     finally:
         if conn:
             conn.close()
+    return paths
 
+def get_filtered_resguardo_data(selected_columns, filters):
+    """
+    Gets filtered data from the resguardos and bienes tables.
+    """
+    conn = None
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+
+        # Separar columnas reales de columnas virtuales (imágenes)
+        real_columns = [col for col in selected_columns if col not in ['imagenPath_bien', 'imagenPath_resguardo']]
+        image_columns = [col for col in selected_columns if col in ['imagenPath_bien', 'imagenPath_resguardo']]
+        
+        # Build the SELECT clause solo con columnas reales
+        select_clause = ", ".join(real_columns) if real_columns else "*"
+        
+        # Siempre incluir los IDs necesarios para recuperar imágenes
+        id_columns = []
+        if 'imagenPath_bien' in image_columns and 'b.id' not in real_columns and 'id_bien' not in real_columns:
+            select_clause += ", b.id AS id_bien"
+            id_columns.append('id_bien')
+        
+        if 'imagenPath_resguardo' in image_columns and 'r.id' not in real_columns and 'id_resguardo' not in real_columns:
+            select_clause += ", r.id AS id_resguardo"
+            id_columns.append('id_resguardo')
+
+        # Build the JOINs
+        query_tables = "resguardos r JOIN bienes b ON r.id_bien = b.id JOIN areas a ON r.id_area = a.id"
+
+        # Build the WHERE clause from filters
+        where_clause = ""
+        filter_values = []
+        if filters:
+            where_clauses = []
+            for f in filters:
+                field_name = f.get('field', '')
+                field_value = f.get('value', '')
+                field_operator = f.get('operator', '==')
+                
+                if field_name == 'No_Inventario':
+                    where_clauses.append("b.No_Inventario LIKE %s")
+                    filter_values.append(f"%{field_value}%")
+                elif field_name == 'No_Resguardo':
+                    where_clauses.append("r.No_Resguardo LIKE %s")
+                    filter_values.append(f"%{field_value}%")
+                elif field_name == 'Nombre_Del_Resguardante':
+                    where_clauses.append("r.Nombre_Del_Resguardante LIKE %s")
+                    filter_values.append(f"%{field_value}%")
+                elif field_name == 'Area':
+                    where_clauses.append("a.id = %s")
+                    filter_values.append(field_value)
+            if where_clauses:
+                where_clause = " WHERE " + " AND ".join(where_clauses)
+
+        # Final query
+        query = f"SELECT {select_clause} FROM {query_tables} {where_clause}"
+        print(f"Executing query: {query}")
+        print(f"With parameters: {filter_values}")
+
+        cursor.execute(query, tuple(filter_values))
+        data = cursor.fetchall()
+        print(f"Query returned {len(data)} rows.")
+
+        if not data:
+            print("No data found for the given filters.")
+            return []
+
+        # Obtener el máximo número de imágenes por tipo para determinar cuántas columnas necesitamos
+        max_bien_images = 0
+        max_resguardo_images = 0
+        
+        for row in data:
+            id_bien = row.get('id_bien')
+            id_resguardo = row.get('id_resguardo')
+            
+            if id_bien and 'imagenPath_bien' in image_columns:
+                bien_images = get_image_paths('imagenes_bien', 'id_bien', id_bien)
+                max_bien_images = max(max_bien_images, len(bien_images))
+            
+            if id_resguardo and 'imagenPath_resguardo' in image_columns:
+                resguardo_images = get_image_paths('imagenes_resguardo', 'id_resguardo', id_resguardo)
+                max_resguardo_images = max(max_resguardo_images, len(resguardo_images))
+
+        # Agregar las imágenes a cada registro
+        for row in data:
+            # Para imágenes de bienes
+            if 'imagenPath_bien' in image_columns:
+                id_bien = row.get('id_bien')
+                if id_bien:
+                    bien_images = get_image_paths('imagenes_bien', 'id_bien', id_bien)
+                    # Crear columnas individuales para cada imagen
+                    for i, image_path in enumerate(bien_images):
+                        row[f'imagen_bien_{i+1}'] = image_path
+                    # También guardar la lista completa para referencia
+                    row['imagenPath_bien'] = bien_images
+                else:
+                    row['imagenPath_bien'] = []
+
+            # Para imágenes de resguardos
+            if 'imagenPath_resguardo' in image_columns:
+                id_resguardo = row.get('id_resguardo')
+                if id_resguardo:
+                    resguardo_images = get_image_paths('imagenes_resguardo', 'id_resguardo', id_resguardo)
+                    # Crear columnas individuales para cada imagen
+                    for i, image_path in enumerate(resguardo_images):
+                        row[f'imagen_resguardo_{i+1}'] = image_path
+                    # También guardar la lista completa para referencia
+                    row['imagenPath_resguardo'] = resguardo_images
+                else:
+                    row['imagenPath_resguardo'] = []
+
+            # Remover las columnas de ID temporales si no se solicitaron originalmente
+            for id_col in id_columns:
+                if id_col not in selected_columns:
+                    row.pop(id_col, None)
+
+        return data, max_bien_images, max_resguardo_images
+        
+    except mysql.connector.Error as err:
+        print(f"Database error: {err}")
+        return [], 0, 0
+    except Exception as e:
+        print(f"An unexpected error occurred: {e}")
+        import traceback
+        traceback.print_exc()
+        return [], 0, 0
+    finally:
+        if conn:
+            conn.close()

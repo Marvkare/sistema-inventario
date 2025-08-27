@@ -47,6 +47,8 @@
                 </div>
             </div>
 
+            
+
             <div class="border-t border-gray-200 pt-6">
                 <h3 class="text-xl font-semibold mb-4 text-gray-800">Definir Filtros</h3>
                 <div id="filters-container" class="space-y-4">
@@ -61,7 +63,48 @@
             <div class="border-t border-gray-200 pt-6">
                 <h3 class="text-xl font-semibold mb-4 text-gray-800">Vista Previa de la Tabla</h3>
                 <div id="preview-table-container" class="w-full overflow-x-auto shadow-md rounded-lg">
-                    <p class="text-center text-gray-500 p-4">Selecciona columnas y añade filtros para ver la vista previa.</p>
+                    {% if preview_data and template_columns %}
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                {% for col in template_columns %}
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    {{ col.replace('_', ' ').title() }}
+                                </th>
+                                {% endfor %}
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            {% for item in preview_data %}
+                            <tr>
+                                {% for col in template_columns %}
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                    {% if col == 'imagenPath_bien' or col == 'imagenPath_resguardo' %}
+                                        <div class="flex flex-wrap gap-1">
+                                            {% for img_path in item[col] %}
+                                                {% if img_path %}
+                                                <img src="{{ url_for('static', filename=img_path) }}" 
+                                                     alt="Imagen" 
+                                                     class="h-12 w-12 object-cover rounded border"
+                                                     onerror="this.style.display='none'">
+                                                {% endif %}
+                                            {% endfor %}
+                                            {% if not item[col] %}
+                                                <span class="text-gray-500">Sin imágenes</span>
+                                            {% endif %}
+                                        </div>
+                                    {% else %}
+                                        {{ item[col] if item[col] is not none else '' }}
+                                    {% endif %}
+                                </td>
+                                {% endfor %}
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    {% else %}
+                    <p class="text-center text-gray-500 p-4">Selecciona columnas para ver la vista previa.</p>
+                    {% endif %}
                 </div>
             </div>
 
@@ -87,7 +130,16 @@
             const previewTableContainer = document.getElementById('preview-table-container');
             const availableColumns = {{ columns | tojson | safe }};
             let availableAreas = [];
-            const initialTemplateFilters = {{ template_filters | tojson | safe }}; // Load initial filters
+            const initialTemplateFilters = {{ template_filters | tojson | safe }};
+            const initialTemplateColumns = {{ template_columns | tojson | safe }};
+
+            // Marcar las columnas seleccionadas inicialmente
+            initialTemplateColumns.forEach(col => {
+                const checkbox = document.getElementById(`column-${col}`);
+                if (checkbox) {
+                    checkbox.checked = true;
+                }
+            });
 
             const fetchAreas = async () => {
                 try {
@@ -99,7 +151,7 @@
                     availableAreas = data;
                 } catch (error) {
                     console.error('Error fetching areas:', error);
-                    availableAreas = ['Error fetching areas']; // Fallback
+                    availableAreas = [{'id': 'error', 'nombre': 'Error al cargar áreas'}];
                 }
             };
             
@@ -156,7 +208,7 @@
 
                     if (selectedField === 'Area') {
                         const areaOptions = availableAreas.map(area => 
-                            `<option value="${area}" ${initialValue === area ? 'selected' : ''}>${area}</option>`
+                            `<option value="${area.id}" ${initialValue == area.id ? 'selected' : ''}>${area.nombre}</option>`
                         ).join('');
                         newValueInput = document.createElement('select');
                         newValueInput.name = 'filter_value[]';
@@ -180,11 +232,14 @@
                     }
                 };
 
-                // Initialize input type based on filterData or default
-                updateValueInputType(filterData ? filterData.value : '');
+                if (filterData) {
+                    updateValueInputType(filterData.value);
+                } else {
+                    updateValueInputType('');
+                }
 
                 fieldSelect.addEventListener('change', () => {
-                    updateValueInputType(''); // Reset value when field changes
+                    updateValueInputType('');
                     updatePreviewTable();
                 });
                 
@@ -200,7 +255,7 @@
                     field: group.querySelector('[name="filter_field[]"]').value,
                     operator: group.querySelector('[name="filter_operator[]"]').value,
                     value: group.querySelector('[name="filter_value[]"]').value
-                })).filter(f => f.field && f.operator && f.value); // Only include complete filters
+                })).filter(f => f.field && f.operator && f.value);
 
                 if (selectedColumns.length === 0) {
                     previewTableContainer.innerHTML = '<p class="text-center text-gray-500 p-4">Selecciona columnas y añade filtros para ver la vista previa.</p>';
@@ -233,7 +288,9 @@
                         <table class="min-w-full divide-y divide-gray-200">
                             <thead class="bg-gray-50">
                                 <tr>
-                                    ${selectedColumns.map(col => `<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">${col.replace('_', ' ').charAt(0).toUpperCase() + col.replace('_', ' ').slice(1)}</th>`).join('')}
+                                    ${selectedColumns.map(col => 
+                                        `<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">${formatColumnName(col)}</th>`
+                                    ).join('')}
                                 </tr>
                             </thead>
                             <tbody class="bg-white divide-y divide-gray-200">
@@ -250,7 +307,36 @@
                     } else {
                         tableHTML += filteredData.map(item => `
                             <tr>
-                                ${selectedColumns.map(col => `<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${item[col] !== null && item[col] !== undefined ? item[col] : ''}</td>`).join('')}
+                                ${selectedColumns.map(col => {
+                                    if (col === 'imagenPath_bien' || col === 'imagenPath_resguardo') {
+                                        const images = item[col] || [];
+                                        return `
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <div class="flex flex-wrap gap-1">
+                                                    ${images.length > 0 ? 
+                                                        images.map(img => {
+                                                            const filename = img.split('/').pop();
+                                                            return `
+                                                                <img src="/static/uploads/${filename}" 
+                                                                     alt="Imagen" 
+                                                                     class="h-12 w-12 object-cover rounded border"
+                                                                     onerror="this.style.display='none'">
+                                                            `;
+                                                        }).join('') : 
+                                                        '<span class="text-gray-500">Sin imágenes</span>'
+                                                    }
+                                                </div>
+                                            </td>
+                                        `;
+                                    } else {
+                                        const value = item[col];
+                                        return `
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                                ${value !== null && value !== undefined ? escapeHtml(value.toString()) : ''}
+                                            </td>
+                                        `;
+                                    }
+                                }).join('')}
                             </tr>
                         `).join('');
                     }
@@ -268,13 +354,27 @@
                 }
             }
 
+            function formatColumnName(column) {
+                return column.replace(/_/g, ' ')
+                            .split(' ')
+                            .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+                            .join(' ');
+            }
+
+            function escapeHtml(unsafe) {
+                return unsafe
+                    .replace(/&/g, "&amp;")
+                    .replace(/</g, "&lt;")
+                    .replace(/>/g, "&gt;")
+                    .replace(/"/g, "&quot;")
+                    .replace(/'/g, "&#039;");
+            }
+
             fetchAreas().then(() => {
-                // Populate existing filters on load
                 initialTemplateFilters.forEach(filter => {
                     filtersContainer.appendChild(createFilterGroup(filter));
                 });
 
-                // Add an initial empty filter if no existing filters were loaded
                 if (filtersContainer.children.length === 0) {
                     filtersContainer.appendChild(createFilterGroup());
                 }
@@ -289,7 +389,6 @@
                     checkbox.addEventListener('change', updatePreviewTable);
                 });
                 
-                // Initial update on page load after areas and filters are loaded
                 updatePreviewTable();
             });
         });

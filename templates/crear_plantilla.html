@@ -82,6 +82,7 @@
             // Function to fetch areas from the server
             const fetchAreas = async () => {
                 try {
+                    // La ruta ahora debe devolver un JSON de objetos con id y nombre
                     const response = await fetch('{{ url_for("areas.get_areas") }}');
                     if (!response.ok) {
                         throw new Error('Network response was not ok');
@@ -90,8 +91,8 @@
                     availableAreas = data;
                 } catch (error) {
                     console.error('Error fetching areas:', error);
-                    // Fallback to a predefined list if the fetch fails
-                    availableAreas = ['Error fetching areas']; 
+                    // Fallback a una lista vacía si la petición falla
+                    availableAreas = []; 
                 }
             };
             
@@ -150,8 +151,8 @@
                     let newValueInput;
 
                     if (selectedField === 'Area') {
-                        // Crear un select para las áreas
-                        const areaOptions = availableAreas.map(area => `<option value="${area}">${area}</option>`).join('');
+                        // Crear un select para las áreas, usando el ID como valor
+                        const areaOptions = availableAreas.map(area => `<option value="${area.id}">${area.nombre}</option>`).join('');
                         newValueInput = document.createElement('select');
                         newValueInput.name = 'filter_value[]';
                         newValueInput.className = 'mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm';
@@ -188,82 +189,141 @@
                 return filterGroup;
             }
 
-            // Función para actualizar la tabla de vista previa con datos reales
-            async function updatePreviewTable() {
-                const selectedColumns = Array.from(document.querySelectorAll('input[name="columns"]:checked')).map(el => el.value);
-                const filterGroups = Array.from(document.querySelectorAll('#filters-container > div'));
-                const filters = filterGroups.map(group => ({
-                    field: group.querySelector('[name="filter_field[]"]').value,
-                    operator: group.querySelector('[name="filter_operator[]"]').value,
-                    value: group.querySelector('[name="filter_value[]"]').value
-                }));
+// Función para actualizar la tabla de vista previa con datos reales
+async function updatePreviewTable() {
+    const selectedColumns = Array.from(document.querySelectorAll('input[name="columns"]:checked')).map(el => el.value);
+    const filterGroups = Array.from(document.querySelectorAll('#filters-container > div'));
+    const filters = filterGroups.map(group => {
+        const fieldSelect = group.querySelector('[name="filter_field[]"]');
+        const operatorSelect = group.querySelector('[name="filter_operator[]"]');
+        const valueInput = group.querySelector('[name="filter_value[]"]');
+        
+        return {
+            field: fieldSelect ? fieldSelect.value : '',
+            operator: operatorSelect ? operatorSelect.value : '',
+            value: valueInput ? valueInput.value : ''
+        };
+    }).filter(filter => filter.field && filter.value);
 
-                if (selectedColumns.length === 0) {
-                    previewTableContainer.innerHTML = '<p class="text-center text-gray-500 p-4">Selecciona columnas y añade filtros para ver la vista previa.</p>';
-                    return;
-                }
+    if (selectedColumns.length === 0) {
+        previewTableContainer.innerHTML = '<p class="text-center text-gray-500 p-4">Selecciona columnas para ver la vista previa.</p>';
+        return;
+    }
 
-                previewTableContainer.innerHTML = '<p class="text-center text-indigo-500 p-4">Cargando datos...</p>';
+    previewTableContainer.innerHTML = '<p class="text-center text-indigo-500 p-4">Cargando datos...</p>';
+    console.log(selectedColumns)
+    try {
+        const response = await fetch('{{ url_for("plantillas.preview_query") }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                columns: selectedColumns,
+                filters: filters
+            })
+        });
+        
+        if (!response.ok) {
+            const error = await response.json();
+            previewTableContainer.innerHTML = `<p class="text-center text-red-500 p-4">Error: ${error.error}</p>`;
+            return;
+        }
 
-                try {
-                    const response = await fetch('{{ url_for("plantillas.preview_query") }}', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({
-                            columns: selectedColumns,
-                            filters: filters
-                        })
-                    });
-                    
-                    if (!response.ok) {
-                        const error = await response.json();
-                        previewTableContainer.innerHTML = `<p class="text-center text-red-500 p-4">Error: ${error.error}</p>`;
-                        return;
-                    }
+        const filteredData = await response.json();
+        console.log('Datos recibidos:', filteredData);
 
-                    const filteredData = await response.json();
+        // Construir la tabla
+        let tableHTML = `
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        ${selectedColumns.map(col => 
+                            `<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">${formatColumnName(col)}</th>`
+                        ).join('')}
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+        `;
 
-                    // Construir la tabla
-                    let tableHTML = `
-                        <table class="min-w-full divide-y divide-gray-200">
-                            <thead class="bg-gray-50">
-                                <tr>
-                                    ${selectedColumns.map(col => `<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">${col.replace('_', ' ').charAt(0).toUpperCase() + col.replace('_', ' ').slice(1)}</th>`).join('')}
-                                </tr>
-                            </thead>
-                            <tbody class="bg-white divide-y divide-gray-200">
-                    `;
-
-                    if (filteredData.length === 0) {
-                        tableHTML += `
-                            <tr>
-                                <td colspan="${selectedColumns.length}" class="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500">
-                                    No se encontraron resultados.
+        if (filteredData.length === 0) {
+            tableHTML += `
+                <tr>
+                    <td colspan="${selectedColumns.length}" class="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500">
+                        No se encontraron resultados con los filtros aplicados.
+                    </td>
+                </tr>
+            `;
+        } else {
+            tableHTML += filteredData.map(item => `
+                <tr>
+                    ${selectedColumns.map(col => {
+                        if (col === 'imagenPath_bien' || col === 'imagenPath_resguardo') {
+                            // Mostrar imágenes como miniaturas
+                            const images = item[col] || [];
+                            return `
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="flex flex-wrap gap-1">
+                                        ${images.length > 0 ? 
+                                            images.map(img => {
+                                                // Extraer solo el nombre del archivo de la ruta completa
+                                                const filename = img.split('/').pop();
+                                                return `
+                                                    <img src="/static/uploads/${filename}" 
+                                                         alt="Imagen" 
+                                                         class="h-12 w-12 object-cover rounded border"
+                                                         onerror="this.style.display='none'">
+                                                `;
+                                            }).join('') : 
+                                            '<span class="text-gray-500">Sin imágenes</span>'
+                                        }
+                                    </div>
                                 </td>
-                            </tr>
-                        `;
-                    } else {
-                        tableHTML += filteredData.map(item => `
-                            <tr>
-                                ${selectedColumns.map(col => `<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${item[col] || ''}</td>`).join('')}
-                            </tr>
-                        `).join('');
-                    }
+                            `;
+                        } else {
+                            // Mostrar texto normal
+                            const value = item[col];
+                            return `
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                    ${value !== null && value !== undefined ? escapeHtml(value.toString()) : ''}
+                                </td>
+                            `;
+                        }
+                    }).join('')}
+                </tr>
+            `).join('');
+        }
 
-                    tableHTML += `
-                            </tbody>
-                        </table>
-                    `;
+        tableHTML += `
+                </tbody>
+            </table>
+        `;
 
-                    previewTableContainer.innerHTML = tableHTML;
+        previewTableContainer.innerHTML = tableHTML;
 
-                } catch (error) {
-                    console.error('Error fetching data:', error);
-                    previewTableContainer.innerHTML = `<p class="text-center text-red-500 p-4">Error al obtener los datos. Por favor, revisa la consola para más detalles.</p>`;
-                }
-            }
+    } catch (error) {
+        console.error('Error fetching data:', error);
+        previewTableContainer.innerHTML = `<p class="text-center text-red-500 p-4">Error al obtener los datos. Por favor, revisa la consola para más detalles.</p>`;
+    }
+}
+
+// Función auxiliar para formatear nombres de columnas
+function formatColumnName(column) {
+    return column.replace(/_/g, ' ')
+                .split(' ')
+                .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+                .join(' ');
+}
+
+// Función auxiliar para escapar HTML (seguridad)
+function escapeHtml(unsafe) {
+    return unsafe
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
 
             // Fetch areas and then proceed with creating the initial filter
             fetchAreas().then(() => {

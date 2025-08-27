@@ -1,5 +1,6 @@
 # your_flask_app/routes/main.py
 from flask import Blueprint, render_template, flash, redirect, url_for
+from flask_login import login_required, current_user
 from database import get_db # Import get_table_columns
 
 main_bp = Blueprint('main', __name__)
@@ -13,6 +14,7 @@ main_bp = Blueprint('main', __name__)
 #     return render_template('index.html', form_data=empty_resguardo)
 
 @main_bp.route('/resguardos_list')
+@login_required
 def resguardos_list():
     conn, cursor = get_db()
     if not conn:
@@ -34,6 +36,7 @@ def resguardos_list():
 
 
 @main_bp.route('/resguardos_clasificados')
+@login_required
 def resguardos_clasificados():
     conn, cursor = get_db()
     if not conn:

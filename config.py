@@ -13,7 +13,7 @@ DB_CONFIG = {
 # app.root_path es la raíz de tu aplicación Flask
 PDF_TEMPLATE_PATH = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'templates', 'PlantillaPrueba.pdf')
 UPLOAD_FOLDER = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'static', 'uploads')
-
+print(UPLOAD_FOLDER)
 # --- Extensiones Permitidas para Subidas ---
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
 
@@ -109,7 +109,8 @@ AVAILABLE_COLUMNS = [
     'Marca',
     'Modelo',
     'Numero_De_Serie',
-    'Imagen_Path'
+    'imagenPath_bien',
+    'imagenPath_resguardo'
 ]
 
 # The name of the Area column in the Excel file
@@ -123,3 +124,22 @@ BIENES_COLUMNS = {'No_Inventario', 'No_Factura', 'No_Cuenta', 'Proveedor', 'Desc
 
 RESGUARDOS_COLUMNS = {'No_Resguardo', 'Tipo_De_Resguardo', 'Fecha_Resguardo', 'No_Trabajador', 
                       'Puesto', 'Nombre_Director_Jefe_De_Area', 'Nombre_Del_Resguardante'}
+
+
+def map_operator_to_sql(operator):
+    """
+    Convierte operadores del formulario a operadores SQL.
+    """
+    operator_map = {
+        '==': '=',
+        '!=': '!=',
+        '>': '>',
+        '>=': '>=',
+        '<': '<',
+        '<=': '<=',
+        'contains': 'LIKE',
+        'not_contains': 'NOT LIKE',
+        'starts_with': 'LIKE',
+        'ends_with': 'LIKE'
+    }
+    return operator_map.get(operator, '=')

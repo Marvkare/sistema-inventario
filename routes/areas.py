@@ -1,6 +1,7 @@
 # your_flask_app/routes/resguardos.py
 # app.py
 from flask import Blueprint, render_template, request, redirect, url_for, flash, current_app, send_file,jsonify
+from flask_login import login_required, current_user
 import mysql.connector
 import os
 import traceback
@@ -14,24 +15,36 @@ areas_bp = Blueprint('areas', __name__)
 
 
 @areas_bp.route('/get_areas', methods=['GET'])
+@login_required
 def get_areas():
     """
-    API route to fetch all unique area names from the 'areas' table.
-    Returns a JSON array of strings.
+    API route to fetch all unique areas (id and name) from the 'areas' table.
+    Returns a JSON array of objects.
     """
-    # Use the existing get_db function
-    conn, cursor = get_db()
-    if not conn:
-        return jsonify({"error": "Failed to fetch areas"}), 500
+    conn = None
+    cursor = None
     try:
-        # Select all unique area names
-        cursor.execute("SELECT DISTINCT nombre FROM areas")
-        areas = [row['nombre'] for row in cursor.fetchall()]
-        # Return the list as a JSON response
+        # Use a dictionary cursor to get results as key-value pairs
+        conn = get_db_connection()
+        if not conn:
+            return jsonify({"error": "Failed to connect to the database"}), 500
+        
+        cursor = conn.cursor(dictionary=True)
+        
+        # Select both id and name from the areas table
+        cursor.execute("SELECT id, nombre FROM areas ORDER BY nombre ASC")
+        areas = cursor.fetchall()
+        
+        # The cursor returns a list of dictionaries, which is the format
+        # the frontend needs to populate the dropdown with both ID and name.
         return jsonify(areas)
+    
     except mysql.connector.Error as e:
         print(f"Database error fetching areas: {e}")
         return jsonify({"error": "Failed to fetch areas"}), 500
+    except Exception as e:
+        print(f"Unexpected error: {e}")
+        return jsonify({"error": "An unexpected error occurred"}), 500
     finally:
         if conn and conn.is_connected():
             cursor.close()
@@ -39,6 +52,7 @@ def get_areas():
 
 
 @areas_bp.route('/add_area', methods=['POST'])
+@login_required
 def add_area():
     """
     API route to add a new area to the 'areas' table.
@@ -93,6 +107,7 @@ def add_area():
 # ... your get_db() function and app configuration ...
 
 @areas_bp.route('/manage_areas', methods=['GET', 'POST'])
+@login_required
 def manage_areas():
     conn, cursor = get_db()
     if not conn:
@@ -177,6 +192,7 @@ def manage_areas():
 
 
 @areas_bp.route('/delete_area/<int:area_id>', methods=['POST'])
+@login_required
 def delete_area(area_id):
     conn, cursor = get_db()
     if not conn:

@@ -1,3 +1,5 @@
+{% extends "base.html" %}
+{% block content %}
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -158,8 +160,8 @@
                     <td>${resguardo.Modelo || ''}</td>
                     <td>${resguardo.Numero_De_Serie || ''}</td>
                     <td class="actions">
-                        <a href="{{ url_for('resguardos.edit_resguardo', id=0) }}".replace('/0', '/' + resguardo.id)>Editar</a>
-                        <a href="{{ url_for('resguardos.ver_resguardo', id=0) }}".replace('/0', '/' + resguardo.id)>Ver detalles</a>
+                        <a href="/resguardos/editar_resguardo/${resguardo.id}">Editar</a>
+                        <a href="/resguardos/ver_resguardo/${resguardo.id}">Ver detalles</a>
                     </td>
                 `;
                 tbody.appendChild(row);
@@ -237,8 +239,6 @@
     </script>
 </head>
 <body>
-    {% extends "base.html" %}
-    {% block content %}
     <div class="container">
         <h1>Lista de Resguardos</h1>
 
@@ -338,9 +338,9 @@
                         <td>{{ resguardo.Numero_De_Serie if resguardo.Numero_De_Serie is not none else '' }}</td>
                         <td class="actions">
                             {% if resguardo.id %}
-                            <a href="{{ url_for('resguardos.edit_resguardo', id=resguardo.id) }}">Editar</a>
-                             <a href="{{ url_for('resguardos.ver_resguardo', id=resguardo.id) }}">Ver detalles</a>
+                            <a href="{{ url_for('resguardos.editar_resguardo', id_resguardo=resguardo.id) }}">Editar</a>
                             
+                            <a href="{{ url_for('resguardos.ver_resguardo', id_resguardo=resguardo.id) }}">Ver detalles</a>
                             {% else %}
                             <span>N/A</span>
                             {% endif %}
@@ -353,6 +353,6 @@
             <div id="no-more-data">No hay más datos para mostrar.</div>
         </div>
     </div>
-    {% endblock %}
 </body>
 </html>
+{% endblock %}
