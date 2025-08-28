@@ -8,7 +8,7 @@ import traceback
 from pypdf import PdfReader, PdfWriter
 import pypdf.generic
 from werkzeug.utils import secure_filename
-
+from decorators import permission_required
 from database import get_db, get_db_connection, get_table_columns
 
 areas_bp = Blueprint('areas', __name__)
@@ -16,6 +16,7 @@ areas_bp = Blueprint('areas', __name__)
 
 @areas_bp.route('/get_areas', methods=['GET'])
 @login_required
+@permission_required('resguardos.crear_resguardo')
 def get_areas():
     """
     API route to fetch all unique areas (id and name) from the 'areas' table.
@@ -53,6 +54,7 @@ def get_areas():
 
 @areas_bp.route('/add_area', methods=['POST'])
 @login_required
+@permission_required('resguardos.crear_resguardo')
 def add_area():
     """
     API route to add a new area to the 'areas' table.
@@ -108,6 +110,7 @@ def add_area():
 
 @areas_bp.route('/manage_areas', methods=['GET', 'POST'])
 @login_required
+@permission_required('resguardos.crear_resguardo')
 def manage_areas():
     conn, cursor = get_db()
     if not conn:
@@ -193,6 +196,7 @@ def manage_areas():
 
 @areas_bp.route('/delete_area/<int:area_id>', methods=['POST'])
 @login_required
+@permission_required('resguardos.crear_resguardo')
 def delete_area(area_id):
     conn, cursor = get_db()
     if not conn:

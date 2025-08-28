@@ -1,5 +1,5 @@
 from functools import wraps
-from flask import Blueprint, render_template, redirect, url_for, flash, request
+from flask import Blueprint, render_template, redirect, url_for, flash, request, current_app
 from flask_login import login_required, current_user
 from extensions import db
 from models import User, Role,Permission
@@ -47,6 +47,7 @@ def permission_required(endpoint_name):
 
 @admin_users_bp.route('/roles')
 @login_required
+@permission_required('resguardos.crear_resguardo')
 @admin_required
 def list_roles():
     """Renders a page with a list of all roles."""
@@ -56,6 +57,7 @@ def list_roles():
 @admin_users_bp.route('/roles/create', methods=['GET', 'POST'])
 @login_required
 @admin_required
+@permission_required('resguardos.crear_resguardo')
 def create_role():
     """Handles the creation of a new role."""
     if request.method == 'POST':
@@ -79,6 +81,7 @@ def create_role():
 @admin_users_bp.route('/')
 @login_required
 @admin_required
+@permission_required('resguardos.crear_resguardo')
 def list_users():
     """Renders a page with a list of all users."""
     users = User.query.all()
@@ -87,6 +90,7 @@ def list_users():
 @admin_users_bp.route('/create', methods=['GET', 'POST'])
 @login_required
 @admin_required
+@permission_required('resguardos.crear_resguardo')
 def create_user():
     """Handles the creation of a new user and assigns roles."""
     all_roles = Role.query.all() # Get all roles from the database
@@ -121,6 +125,7 @@ def create_user():
 @admin_users_bp.route('/edit/<int:user_id>', methods=['GET', 'POST'])
 @login_required
 @admin_required
+@permission_required('resguardos.crear_resguardo')
 def edit_user(user_id):
     """Handles the editing of an existing user and their roles."""
     user = User.query.get_or_404(user_id)
@@ -150,6 +155,7 @@ def edit_user(user_id):
 
 @admin_users_bp.route('/delete/<int:user_id>')
 @login_required
+@permission_required('resguardos.crear_resguardo')
 @admin_required
 def delete_user(user_id):
     """Deletes a user from the database."""
@@ -166,6 +172,7 @@ def delete_user(user_id):
 @admin_users_bp.route('/roles/edit_permissions/<int:role_id>', methods=['GET', 'POST'])
 @login_required
 @admin_required
+@permission_required('resguardos.crear_resguardo')
 def edit_role_permissions(role_id):
     """Handles the assignment of permissions to a specific role."""
     role = Role.query.get_or_404(role_id)
@@ -193,6 +200,7 @@ def edit_role_permissions(role_id):
 @admin_users_bp.route('/permissions/manage', methods=['GET', 'POST'])
 @login_required
 @admin_required
+@permission_required('resguardos.crear_resguardo')
 def manage_permissions():
     all_roles = Role.query.all()
     
@@ -236,3 +244,5 @@ def manage_permissions():
         return redirect(url_for('admin_users.list_roles'))
     
     return render_template('admin/manage_permissions.html', all_roles=all_roles, all_permissions=all_permissions)
+
+

@@ -14,7 +14,7 @@ import pandas as pd
 from io import BytesIO
 plantillas_bp = Blueprint('plantillas', __name__)
 from helpers import map_operator_to_sql
-
+from decorators import permission_required
 @plantillas_bp.route('/crear_plantilla', methods=['GET', 'POST'])
 @login_required
 def crear_plantilla():
@@ -82,6 +82,7 @@ def crear_plantilla():
 # --- New Route: View All Templates (Corrected to use cursor) ---
 @plantillas_bp.route('/ver_plantillas')
 @login_required
+@permission_required('resguardos.crear_resguardo')
 def ver_plantillas():
     """
     Ruta para ver todas las plantillas de consulta guardadas.
@@ -103,6 +104,7 @@ def ver_plantillas():
 
 @plantillas_bp.route('/editar_plantilla/<int:template_id>', methods=['GET', 'POST'])
 @login_required
+@permission_required('resguardos.crear_resguardo')
 def editar_plantilla(template_id):
     """
     Ruta para editar una plantilla de consulta existente.
@@ -241,6 +243,7 @@ def editar_plantilla(template_id):
 # --- New Route: Delete Template (Optional but recommended) ---
 @plantillas_bp.route('/eliminar_plantilla/<int:template_id>', methods=['POST'])
 @login_required
+@permission_required('resguardos.crear_resguardo')
 def eliminar_plantilla(template_id):
     """
     Ruta para eliminar una plantilla de consulta.
@@ -259,6 +262,7 @@ def eliminar_plantilla(template_id):
 
 @plantillas_bp.route('/exportar_excel/<int:template_id>')
 @login_required
+@permission_required('resguardos.crear_resguardo')
 def exportar_excel(template_id):
     """
     Ruta para exportar los datos de una plantilla a Excel, incluyendo imágenes.
@@ -440,6 +444,7 @@ def exportar_excel(template_id):
             
 @plantillas_bp.route('/preview_query', methods=['POST'])
 @login_required
+@permission_required('resguardos.crear_resguardo')
 def preview_query():
     data = request.get_json()
     columns = data.get('columns', [])

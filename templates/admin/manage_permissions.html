@@ -14,20 +14,30 @@
     <br>
     <div>
         <h3>Lista de Permisos Disponibles</h3>
-        {% for permission in all_permissions %}
-            <div>
-                <input type="checkbox"
-                       id="perm-{{ permission.id }}"
-                       name="permissions"
-                       value="{{ permission.id }}">
-                <label for="perm-{{ permission.id }}">
-                    <strong>{{ permission.endpoint }}</strong>
-                    <br>
-                    <small>{{ permission.description }}</small>
-                </label>
-            </div>
-        {% endfor %}
+        <div class="permissions-grid">
+            {% for permission in all_permissions %}
+                <div>
+                    <input type="checkbox"
+                           id="perm-{{ permission.id }}"
+                           name="permissions"
+                           value="{{ permission.id }}">
+                    <label for="perm-{{ permission.id }}">
+                        <strong>{{ permission.endpoint }}</strong>
+                        <br>
+                        <small>{{ permission.description }}</small>
+                    </label>
+                </div>
+            {% endfor %}
+        </div>
     </div>
     <br>
     <button type="submit" class="btn btn-success">Asignar Permisos</button>
 </form>
+<style>
+    /* style.css o en un bloque <style> */
+.permissions-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr); /* Crea 3 columnas de igual tamaño */
+    gap: 10px; /* Espacio entre los elementos */
+}
+</style>

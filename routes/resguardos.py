@@ -11,6 +11,7 @@ from datetime import date,datetime
 import uuid
 from database import get_db, get_db_connection, AVAILABLE_COLUMNS
 from config import UPLOAD_FOLDER;
+from decorators import permission_required
 
 resguardos_bp = Blueprint('resguardos', __name__)
 
@@ -36,6 +37,7 @@ def get_areas_data():
 
 @resguardos_bp.route('/crear_resguardo', methods=['GET', 'POST'])
 @login_required
+@permission_required('resguardos.crear_resguardo')
 def crear_resguardo():
     conn = None
     cursor = None
@@ -150,6 +152,7 @@ def crear_resguardo():
 
 @resguardos_bp.route('/editar_resguardo/<int:id_resguardo>', methods=['GET', 'POST'])
 @login_required
+@permission_required('resguardos.crear_resguardo')
 def editar_resguardo(id_resguardo):
     conn = None
     cursor = None
@@ -375,6 +378,7 @@ def editar_resguardo(id_resguardo):
 
 @resguardos_bp.route('/ver_resguardo/<int:id_resguardo>', methods=['GET'])
 @login_required
+@permission_required('resguardos.crear_resguardo')
 def ver_resguardo(id_resguardo):
     """
     Muestra los detalles completos de un resguardo específico, incluyendo sus imágenes.
@@ -461,6 +465,7 @@ def ver_resguardo(id_resguardo):
 
 @resguardos_bp.route('/generate_resguardo_pdf/<int:id_resguardo>')
 @login_required
+@permission_required('resguardos.crear_resguardo')
 def generate_resguardo_pdf(id_resguardo):
     conn, cursor = get_db() # Using get_db for dictionary cursor
     if not conn:
@@ -548,6 +553,7 @@ def generate_resguardo_pdf(id_resguardo):
 
 @resguardos_bp.route('/ver_resguardos')
 @login_required
+@permission_required('resguardos.crear_resguardo')
 def ver_resguardos():
     conn = None
     resguardos_data = []
@@ -696,6 +702,7 @@ def ver_resguardos():
 
 @resguardos_bp.route('/resguardos_clasificados')
 @login_required
+@permission_required('resguardos.crear_resguardo')
 def resguardos_clasificados():
     conn = get_db_connection()
     if conn is None:
@@ -734,6 +741,7 @@ def resguardos_clasificados():
         
 @resguardos_bp.route('/exportar_resguardos_excel', methods=['POST'])
 @login_required
+@permission_required('resguardos.crear_resguardo')
 def exportar_resguardos_excel():
     try:
         selected_columns = request.form.getlist('columns')
@@ -801,6 +809,7 @@ def get_areas_list_from_db():
 
 @resguardos_bp.route('/delete/<int:id>', methods=['POST'])
 @login_required
+@permission_required('resguardos.crear_resguardo')
 def delete_resguardo(id):
     """Elimina un registro de la base de datos."""
     conn = get_db_connection()
