@@ -2,17 +2,24 @@
 <html>
 <head>
     <title>Panel de Administración</title>
+    <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
-    <nav>
-        <ul>
-            <li><a href="{{ url_for('admin.admin_dashboard') }}">Dashboard</a></li>
-            <li><a href="{{ url_for('admin_users.list_users') }}">Usuarios</a></li>
-            <li><a href="{{ url_for('admin_users.list_roles') }}">Roles</a></li>
-        </ul>
-    </nav>
-    <div class="content">
+<body class="bg-gray-100 text-gray-800 font-sans">
+    <header class="bg-gray-900 text-white p-4 flex justify-between items-center">
+        <h1 class="text-2xl font-bold">Panel Admin</h1>
+        <nav>
+            <ul class="flex space-x-4">
+                <li><a href="{{ url_for('admin.admin_dashboard') }}" class="hover:text-gray-400">Dashboard</a></li>
+                <li><a href="{{ url_for('admin_users.list_users') }}" class="hover:text-gray-400">Usuarios</a></li>
+                
+                <li><a href="{{ url_for('admin_users.list_roles') }}" class="hover:text-gray-400">Roles</a></li>
+
+                <li><a href="{{ url_for('resguardos.ver_resguardos') }}" class="hover:text-gray-400">Ver Todos los Resguardos</a></li>
+            </ul>
+        </nav>
+    </header>
+    <main class="container mx-auto mt-4 p-4">
         {% block content %}{% endblock %}
-    </div>
+    </main>
 </body>
 </html>

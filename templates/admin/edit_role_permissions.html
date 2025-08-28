@@ -1,15 +1,34 @@
-<h1>Editar Permisos del Rol: {{ role.name }}</h1>
-<form method="POST">
-    {% for permission in all_permissions %}
-        <div>
-            <input type="checkbox"
-                   id="perm-{{ permission.id }}"
-                   name="permissions"
-                   value="{{ permission.id }}"
-                   {% if permission in role.permissions %}checked{% endif %}>
-            <label for="perm-{{ permission.id }}">{{ permission.endpoint }}</label>
-        </div>
-    {% endfor %}
-    <br>
-    <button type="submit">Guardar Cambios</button>
-</form>
+{% extends "admin/base.html" %}
+{% block content %}
+<div class="container mx-auto p-4">
+    <div class="max-w-xl mx-auto bg-white p-8 rounded-lg shadow-md">
+        <h1 class="text-2xl font-bold mb-6 text-center">Editar Permisos del Rol: {{ role.name }}</h1>
+        <form method="POST" class="space-y-6">
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                {% for permission in all_permissions %}
+                    <div class="bg-gray-100 p-4 rounded-lg border border-gray-200 hover:shadow-sm transition-shadow">
+                        <input type="checkbox"
+                               id="perm-{{ permission.id }}"
+                               name="permissions"
+                               value="{{ permission.id }}"
+                               class="form-checkbox text-blue-600"
+                               {% if permission in role.permissions %}checked{% endif %}>
+                        <label for="perm-{{ permission.id }}" class="ml-2 text-gray-800 cursor-pointer">
+                            <strong class="block font-medium">{{ permission.endpoint }}</strong>
+                            <small class="text-gray-500">{{ permission.description }}</small>
+                        </label>
+                    </div>
+                {% endfor %}
+            </div>
+            
+            <div class="mt-8">
+                <button type="submit" 
+                        class="w-full bg-blue-600 text-white font-bold py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-150">
+                    Guardar Cambios
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% endblock %}
