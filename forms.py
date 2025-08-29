@@ -4,6 +4,7 @@ from wtforms import StringField, PasswordField, SubmitField
 from wtforms.validators import DataRequired, EqualTo
 from flask_wtf.db import QuerySelectMultipleField
 
+
 # Función para obtener todos los roles, usada por el formulario
 def get_all_roles():
     from models import Role
