@@ -12,7 +12,10 @@ DB_CONFIG = {
 # --- Rutas de Archivos ---
 # app.root_path es la raíz de tu aplicación Flask
 PDF_TEMPLATE_PATH = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'templates', 'PlantillaPrueba.pdf')
-UPLOAD_FOLDER = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'static', 'uploads')
+# Si quieres un directorio al mismo nivel que tu proyecto
+project_dir = os.path.dirname(os.path.abspath(__file__))
+parent_dir = os.path.dirname(project_dir)
+UPLOAD_FOLDER = os.path.join(parent_dir, 'uploads')
 print(UPLOAD_FOLDER)
 # --- Extensiones Permitidas para Subidas ---
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}

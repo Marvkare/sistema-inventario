@@ -572,6 +572,10 @@
             const form = event.target;
             const formData = new FormData(form);
             
+            // Eliminar los archivos originales del formulario
+            formData.delete('imagenes_bien');
+            formData.delete('imagenes_resguardo');
+            
             if (selectedFilesBien.length > 0) {
                 formData.append('imagenes_bien', selectedFilesBien[0]);
             }

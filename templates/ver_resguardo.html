@@ -110,14 +110,14 @@
                 {% if imagenes_bien or imagenes_resguardo %}
                     {% for img_path in imagenes_bien %}
                     <div class="relative w-full h-48 rounded-lg overflow-hidden shadow-md">
-                        <img src="{{ url_for('static', filename=img_path.replace('static/', '')) }}" 
+                        <img src="{{ url_for('serve_uploaded_file', filename=img_path) }}" 
                              alt="Imagen del bien" 
                              class="w-full h-full object-cover">
                     </div>
                     {% endfor %}
                     {% for img_path in imagenes_resguardo %}
                     <div class="relative w-full h-48 rounded-lg overflow-hidden shadow-md">
-                        <img src="{{ url_for('static', filename=img_path.replace('static/', '')) }}" 
+                        <img src="{{ url_for('serve_uploaded_file', filename=img_path) }}" 
                              alt="Imagen del resguardo" 
                              class="w-full h-full object-cover">
                     </div>

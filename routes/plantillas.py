@@ -15,6 +15,8 @@ from io import BytesIO
 plantillas_bp = Blueprint('plantillas', __name__)
 from helpers import map_operator_to_sql
 from decorators import permission_required
+from config import UPLOAD_FOLDER
+from PIL import Image
 @plantillas_bp.route('/crear_plantilla', methods=['GET', 'POST'])
 @login_required
 def crear_plantilla():
@@ -74,8 +76,6 @@ def crear_plantilla():
 
     # Para una solicitud GET, renderizar el formulario
     return render_template('crear_plantilla.html', columns=AVAILABLE_COLUMNS)
-
-
 
 
 
@@ -166,7 +166,7 @@ def editar_plantilla(template_id):
 
         template_columns = json.loads(template['columns']) if template['columns'] else []
         template_filters = json.loads(template['filters']) if template['filters'] else []
-
+        print(template_columns)
         # Generar datos de vista previa para mostrar imágenes
         preview_data = []
         if template_columns:
@@ -294,6 +294,9 @@ def exportar_excel(template_id):
             flash("No se encontraron datos para los filtros seleccionados.", 'warning')
             return redirect(url_for('plantillas.ver_plantillas'))
 
+        # Configurar la ruta de uploads (la misma que usas en toda la aplicación)
+        
+        
         # Crear lista de todas las columnas para el Excel
         all_columns = []
         
@@ -379,34 +382,49 @@ def exportar_excel(template_id):
                     value = row_data.get(col_name, '')
                     
                     if col_name in image_bien_columns or col_name in image_resguardo_columns:
-                        # Es una columna de imagen
                         if value:
                             try:
-                                # Construir ruta correcta de la imagen
-                                if value.startswith('uploads/'):
-                                    image_path = os.path.join(current_app.root_path, 'static', value)
-                                else:
-                                    image_path = os.path.join(current_app.root_path, 'static', 'uploads', os.path.basename(value))
+                                filename = os.path.basename(str(value))
+                                image_path = os.path.join(UPLOAD_FOLDER, filename)
                                 
                                 if os.path.exists(image_path):
-                                    # Insertar imagen en la celda
+                                    # 1. Obtener dimensiones de la imagen
+                                    img = Image.open(image_path)
+                                    img_width, img_height = img.size
+
+                                    # 2. Definir las dimensiones máximas de la celda
+                                    # Ancho de la columna 25 (en unidades de Excel)
+                                    cell_width_excel_units = 25 
+                                    cell_width_pixels = cell_width_excel_units * 7.5 # Conversión aproximada
+                                    
+                                    # Altura de la fila 120 (en puntos)
+                                    cell_height_pixels = 120 * 96/72 # Conversión a píxeles (72 ppp es el estándar para puntos)
+
+                                    # 3. Calcular los factores de escala para ancho y alto
+                                    x_scale = cell_width_pixels / img_width
+                                    y_scale = cell_height_pixels / img_height
+                                    
+                                    # Usar el factor de escala más pequeño para que la imagen quepa dentro de la celda
+                                    scale_factor = min(x_scale, y_scale)
+
+                                    # 4. Insertar la imagen con las escalas calculadas
                                     worksheet.insert_image(
-                                        excel_row, col_num, image_path, 
+                                        excel_row, col_num, image_path,
                                         {
-                                            'x_scale': 0.25, 
-                                            'y_scale': 0.25, 
-                                            'x_offset': 5, 
-                                            'y_offset': 5,
-                                            'object_position': 1  # Mover con celdas
+                                            'x_scale': scale_factor,
+                                            'y_scale': scale_factor,
+                                            'x_offset': 5,
+                                            'y_offset': 5
                                         }
                                     )
+                                    
                                     # Escribir nombre del archivo como texto también
-                                    worksheet.write(excel_row, col_num, os.path.basename(value), image_cell_format)
+                                    worksheet.write(excel_row, col_num, filename, image_cell_format)
                                 else:
-                                    worksheet.write(excel_row, col_num, f'No encontrada: {os.path.basename(value)}', data_format)
+                                    worksheet.write(excel_row, col_num, f'No encontrada: {filename}', data_format)
                             except Exception as e:
                                 print(f"Error inserting image {value}: {e}")
-                                worksheet.write(excel_row, col_num, f'Error: {os.path.basename(value)}', data_format)
+                                worksheet.write(excel_row, col_num, f'Error: {os.path.basename(str(value))}', data_format)
                         else:
                             worksheet.write(excel_row, col_num, 'Sin imagen', data_format)
                     else:
@@ -441,7 +459,7 @@ def exportar_excel(template_id):
     finally:
         if conn:
             conn.close()
-            
+
 @plantillas_bp.route('/preview_query', methods=['POST'])
 @login_required
 @permission_required('resguardos.crear_resguardo')

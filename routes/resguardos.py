@@ -108,9 +108,11 @@ def crear_resguardo():
                     filename = secure_filename(file.filename)
                     unique_filename = f"{uuid.uuid4()}-{filename}"
                     file_path = os.path.join(UPLOAD_FOLDER, unique_filename)
+                    print("File path")
+                    print(file_path)
                     file.save(file_path)
                     
-                    cursor.execute(sql_insert_bien_img, (id_bien, file_path))
+                    cursor.execute(sql_insert_bien_img, (id_bien, unique_filename))
 
             # 4. Manejar las imágenes del resguardo y guardarlas en la base de datos
             imagenes_resguardo = request.files.getlist('imagenes_resguardo')
@@ -123,7 +125,7 @@ def crear_resguardo():
                     file_path = os.path.join(UPLOAD_FOLDER, unique_filename)
                     file.save(file_path)
 
-                    cursor.execute(sql_insert_resguardo_img, (id_resguardo, file_path))
+                    cursor.execute(sql_insert_resguardo_img, (id_resguardo, unique_filename))
             
             conn.commit()
             
@@ -166,7 +168,6 @@ def editar_resguardo(id_resguardo):
 
         if request.method == 'POST':
             form_data = request.form.to_dict()
-            
             cursor.execute("SELECT id_bien FROM resguardos WHERE id = %s", (id_resguardo,))
             resguardo = cursor.fetchone()
             if not resguardo:
@@ -266,55 +267,92 @@ def editar_resguardo(id_resguardo):
             
             cursor.execute(sql_update_resguardo, resguardo_values)
 
-            # 3. Manejo de imágenes
-            # Eliminar imágenes del bien seleccionadas
-            imagenes_bien_a_eliminar = request.form.getlist('eliminar_imagen_bien[]')
-            if imagenes_bien_a_eliminar:
-                cursor.execute("SELECT ruta_imagen FROM imagenes_bien WHERE id IN (%s)" % ','.join(['%s'] * len(imagenes_bien_a_eliminar)), tuple(imagenes_bien_a_eliminar))
-                rutas_a_eliminar = [row['ruta_imagen'] for row in cursor.fetchall()]
-                cursor.execute("DELETE FROM imagenes_bien WHERE id IN (%s)" % ','.join(['%s'] * len(imagenes_bien_a_eliminar)), tuple(imagenes_bien_a_eliminar))
-                for ruta in rutas_a_eliminar:
-                    try:
-                        # Asegúrate de que STATIC_FOLDER esté bien configurado en tu app
-                        os.remove(os.path.join(current_app.root_path, 'static', ruta))
-                    except OSError:
-                        pass # Ignorar errores si el archivo no existe
-            
-            # Eliminar imágenes del resguardo seleccionadas
-            imagenes_resguardo_a_eliminar = request.form.getlist('eliminar_imagen_resguardo[]')
-            if imagenes_resguardo_a_eliminar:
-                cursor.execute("SELECT ruta_imagen FROM imagenes_resguardo WHERE id IN (%s)" % ','.join(['%s'] * len(imagenes_resguardo_a_eliminar)), tuple(imagenes_resguardo_a_eliminar))
-                rutas_a_eliminar = [row['ruta_imagen'] for row in cursor.fetchall()]
-                cursor.execute("DELETE FROM imagenes_resguardo WHERE id IN (%s)" % ','.join(['%s'] * len(imagenes_resguardo_a_eliminar)), tuple(imagenes_resguardo_a_eliminar))
-                for ruta in rutas_a_eliminar:
-                    try:
-                        os.remove(os.path.join(current_app.root_path, 'static', ruta))
-                    except OSError:
-                        pass
 
-            # Subir nuevas imágenes del bien
+                        # 3. Procesar eliminación de imágenes
+            eliminar_imagenes_bien = request.form.getlist('eliminar_imagen_bien[]')
+            eliminar_imagenes_resguardo = request.form.getlist('eliminar_imagen_resguardo[]')
+
+            print(f"Imágenes bien a eliminar: {eliminar_imagenes_bien}")
+            print(f"Imágenes resguardo a eliminar: {eliminar_imagenes_resguardo}")
+
+            # Eliminar imágenes del bien
+            for img_id in eliminar_imagenes_bien:
+                if img_id:
+                    try:
+                        # Primero obtener la ruta para eliminar el archivo físico
+                        cursor.execute("SELECT ruta_imagen FROM imagenes_bien WHERE id = %s", (img_id,))
+                        imagen = cursor.fetchone()
+                        if imagen:
+                            # Eliminar archivo físico
+                            file_path = os.path.join(UPLOAD_FOLDER, imagen['ruta_imagen'])
+                            if os.path.exists(file_path):
+                                os.remove(file_path)
+                                print(f"Archivo eliminado: {file_path}")
+                            
+                            # Eliminar registro de la base de datos
+                            cursor.execute("DELETE FROM imagenes_bien WHERE id = %s", (img_id,))
+                            print(f"Imagen de bien eliminada de BD: {img_id}")
+                    except Exception as e:
+                        print(f"Error al eliminar imagen de bien {img_id}: {e}")
+
+            # Eliminar imágenes del resguardo
+            for img_id in eliminar_imagenes_resguardo:
+                if img_id:
+                    try:
+                        # Primero obtener la ruta para eliminar el archivo físico
+                        cursor.execute("SELECT ruta_imagen FROM imagenes_resguardo WHERE id = %s", (img_id,))
+                        imagen = cursor.fetchone()
+                        if imagen:
+                            # Eliminar archivo físico
+                            file_path = os.path.join(UPLOAD_FOLDER, imagen['ruta_imagen'])
+                            if os.path.exists(file_path):
+                                os.remove(file_path)
+                                print(f"Archivo eliminado: {file_path}")
+                            
+                            # Eliminar registro de la base de datos
+                            cursor.execute("DELETE FROM imagenes_resguardo WHERE id = %s", (img_id,))
+                            print(f"Imagen de resguardo eliminada de BD: {img_id}")
+                    except Exception as e:
+                        print(f"Error al eliminar imagen de resguardo {img_id}: {e}")
+
+            # 4. Procesar nuevas imágenes del bien - SOLO SI HAY ARCHIVOS CON CONTENIDO
             imagenes_bien = request.files.getlist('imagenes_bien')
+            print(f"Imágenes bien recibidas: {[img.filename for img in imagenes_bien]}")
+
             for file in imagenes_bien:
-                if file.filename:
+                # VERIFICAR QUE EL ARCHIVO TENGA NOMBRE Y CONTENIDO
+                if file and file.filename and file.filename != '':
                     filename = secure_filename(file.filename)
                     unique_filename = f"{uuid.uuid4()}-{filename}"
-                    # Asegúrate de que UPLOAD_FOLDER esté dentro de 'static' y use '/'
-                    file_save_path = os.path.join(current_app.root_path, 'static', 'uploads', unique_filename)
-                    file.save(file_save_path)
-                    db_path = os.path.join('uploads', unique_filename).replace('\\', '/')
-                    cursor.execute("INSERT INTO imagenes_bien (id_bien, ruta_imagen) VALUES (%s, %s)", (id_bien, db_path))
-            
-            # Subir nuevas imágenes del resguardo
-            imagenes_resguardo = request.files.getlist('imagenes_resguardo')
-            for file in imagenes_resguardo:
-                if file.filename:
-                    filename = secure_filename(file.filename)
-                    unique_filename = f"{uuid.uuid4()}-{filename}"
-                    file_save_path = os.path.join(current_app.root_path, 'static', 'uploads', unique_filename)
-                    file.save(file_save_path)
-                    db_path = os.path.join('uploads', unique_filename).replace('\\', '/')
-                    cursor.execute("INSERT INTO imagenes_resguardo (id_resguardo, ruta_imagen) VALUES (%s, %s)", (id_resguardo, db_path))
                     
+                    # Guardar en la nueva ubicación (UPLOAD_FOLDER)
+                    file_save_path = os.path.join(UPLOAD_FOLDER, unique_filename)
+                    file.save(file_save_path)
+                    
+                    # Guardar solo el nombre del archivo en la base de datos
+                    cursor.execute("INSERT INTO imagenes_bien (id_bien, ruta_imagen) VALUES (%s, %s)", 
+                                (id_bien, unique_filename))
+                    print(f"Imagen de bien guardada: {unique_filename}")
+
+            # 5. Procesar nuevas imágenes del resguardo - SOLO SI HAY ARCHIVOS CON CONTENIDO
+            imagenes_resguardo = request.files.getlist('imagenes_resguardo')
+            print(f"Imágenes resguardo recibidas: {[img.filename for img in imagenes_resguardo]}")
+
+            for file in imagenes_resguardo:
+                # VERIFICAR QUE EL ARCHIVO TENGA NOMBRE Y CONTENIDO
+                if file and file.filename and file.filename != '':
+                    filename = secure_filename(file.filename)
+                    unique_filename = f"{uuid.uuid4()}-{filename}"
+                    
+                    # Guardar en la nueva ubicación (UPLOAD_FOLDER)
+                    file_save_path = os.path.join(UPLOAD_FOLDER, unique_filename)
+                    file.save(file_save_path)
+                    
+                    # Guardar solo el nombre del archivo en la base de datos
+                    cursor.execute("INSERT INTO imagenes_resguardo (id_resguardo, ruta_imagen) VALUES (%s, %s)", 
+                                (id_resguardo, unique_filename))
+                    print(f"Imagen de resguardo guardada: {unique_filename}")
+        
             conn.commit()
             
             return jsonify({
@@ -599,7 +637,9 @@ def ver_resguardos():
         sql_params = []
 
         if search_query:
+            print(search_query)
             if search_column == 'all':
+                
                 all_columns_search_clauses = []
                 # Use a specific list of columns for "all" search for better performance
                 searchable_cols = [
@@ -614,7 +654,7 @@ def ver_resguardos():
             else:
                 # Find the correct table prefix for the search column
                 col_mapping = {
-                    'Area_Nombre': 'a.nombre',
+                    'Area': 'a.nombre',
                     'No_Inventario': 'b.No_Inventario',
                     'No_Factura': 'b.No_Factura',
                     'No_Cuenta': 'b.No_Cuenta',

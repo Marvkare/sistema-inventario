@@ -127,3 +127,7 @@ if __name__ == '__main__':
         create_default_admin()
         
     app.run(debug=True)
+
+@app.route('/uploads/<filename>')
+def serve_uploaded_file(filename):
+    return send_from_directory(UPLOAD_FOLDER, filename)

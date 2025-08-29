@@ -47,7 +47,6 @@ def permission_required(endpoint_name):
 
 @admin_users_bp.route('/roles')
 @login_required
-@permission_required('resguardos.crear_resguardo')
 @admin_required
 def list_roles():
     """Renders a page with a list of all roles."""
@@ -200,7 +199,6 @@ def edit_role_permissions(role_id):
 @admin_users_bp.route('/permissions/manage', methods=['GET', 'POST'])
 @login_required
 @admin_required
-@permission_required('resguardos.crear_resguardo')
 def manage_permissions():
     all_roles = Role.query.all()
     
