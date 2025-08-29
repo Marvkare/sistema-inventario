@@ -27,6 +27,7 @@ class UserForm(FlaskForm):
         blank_text='Ninguno'
     )
     submit = SubmitField('Crear Usuario')
+    
 
 class EditUserForm(FlaskForm):
     username = StringField('Nombre de Usuario', validators=[DataRequired()])
