@@ -25,7 +25,7 @@
                 </div>
                 <div>
                     <label for="area_numero" class="block text-sm font-medium text-gray-700">Número de Área (Opcional)</label>
-                    <input type="number" id="area_numero" name="area_numero"class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 border">
+                    <input type="number" id="area_numero" name="area_numero" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 border">
                 </div>
                 <div class="flex justify-end space-x-2">
                     <button type="submit" class="bg-blue-600 text-white px-6 py-2 rounded-lg shadow-md hover:bg-blue-700 transition-colors font-medium flex items-center">
@@ -46,8 +46,9 @@
                 <table class="min-w-full divide-y divide-gray-200">
                     <thead class="bg-gray-100">
                         <tr>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID DB</th>
                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nombre</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Número</th>
                             <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
                         </tr>
                     </thead>
@@ -56,15 +57,13 @@
                         <tr id="area-row-{{ area.id }}">
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ area.id }}</td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900" data-name="{{ area.name }}">{{ area.name }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ area.numero | default('N/A') }}</td>
                             <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
-                                <button type="button" onclick="editArea({{ area.id }}, '{{ area.name }}')"
+                                <button type="button" onclick="editArea({{ area.id }}, '{{ area.name }}', '{{ area.numero | default('') }}')"
                                         class="text-indigo-600 hover:text-indigo-900 mr-4" title="Editar">
                                     <i class="fas fa-edit"></i>
                                 </button>
-                                <button type="button" onclick="deleteArea({{ area.id }}, '{{ area.name }}')"
-                                        class="text-red-600 hover:text-red-900" title="Eliminar">
-                                    <i class="fas fa-trash"></i>
-                                </button>
+                                
                             </td>
                         </tr>
                         {% endfor %}
@@ -95,13 +94,15 @@
     const areaForm = document.getElementById('area-form');
     const areaIdInput = document.getElementById('area_id');
     const areaNameInput = document.getElementById('area_name');
+    const areaNumeroInput = document.getElementById('area_numero'); // New input
     const saveButton = areaForm.querySelector('button[type="submit"]');
     const cancelButton = document.getElementById('cancel-edit-btn');
 
-    function editArea(id, name) {
+    function editArea(id, name, numero) {
         formTitle.textContent = 'Editar Área';
         areaIdInput.value = id;
         areaNameInput.value = name;
+        areaNumeroInput.value = numero; // Set the value for the number input
         saveButton.innerHTML = '<i class="fas fa-save mr-2"></i> Actualizar Área';
         cancelButton.classList.remove('hidden');
         window.scrollTo({ top: 0, behavior: 'smooth' }); // Scroll to form
@@ -115,6 +116,7 @@
         formTitle.textContent = 'Agregar Nueva Área';
         areaIdInput.value = '';
         areaNameInput.value = '';
+        areaNumeroInput.value = ''; // Reset the number input
         saveButton.innerHTML = '<i class="fas fa-save mr-2"></i> Guardar Área';
         cancelButton.classList.add('hidden');
     }

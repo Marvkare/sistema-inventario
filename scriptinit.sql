@@ -18,6 +18,7 @@ CREATE TABLE user (
     password_hash VARCHAR(255) NOT NULL
 );
 
+
 -- Tabla para almacenar los roles
 CREATE TABLE role (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -33,6 +34,18 @@ CREATE TABLE roles_users (
     FOREIGN KEY (user_id) REFERENCES user(id) ON DELETE CASCADE,
     FOREIGN KEY (role_id) REFERENCES role(id) ON DELETE CASCADE
 );
+
+
+CREATE TABLE activity_log (
+    id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    action VARCHAR(255) NOT NULL,
+    resource VARCHAR(255) NOT NULL,
+    resource_id INT,
+    timestamp DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    details TEXT,
+    FOREIGN KEY (user_id) REFERENCES user(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE areas (
     `id` INT PRIMARY KEY NOT NULL AUTO_INCREMENT,

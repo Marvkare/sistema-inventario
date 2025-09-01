@@ -3,7 +3,7 @@ from flask import Blueprint, render_template, redirect, url_for, flash, request,
 from flask_login import login_required, current_user
 from extensions import db
 from models import User, Role,Permission
-
+from log_activity import log_activity
 # Define the blueprint for user administration.
 admin_users_bp = Blueprint('admin_users', __name__, url_prefix='/admin/users')
 
@@ -70,6 +70,7 @@ def create_role():
         new_role = Role(name=name, description=description)
         db.session.add(new_role)
         db.session.commit()
+        log_activity("Se agrego nuevo rol","Roles",details="Se agrego un nuevo rol "+name)
         flash('Rol creado exitosamente.', 'success')
         return redirect(url_for('admin_users.list_roles'))
         
@@ -116,6 +117,7 @@ def create_user():
         
         db.session.add(user)
         db.session.commit()
+        log_activity("Se creo un nuevo usuario","Usuarios",details="Se agrego un nuevo usuario")
         flash('Usuario creado exitosamente.', 'success')
         return redirect(url_for('admin_users.list_users'))
 
@@ -147,6 +149,7 @@ def edit_user(user_id):
                 user.roles.append(role)
         
         db.session.commit()
+        log_activity("Se edito el usuario","Usuarios",details="Se edito el  usuario",resource_id=user_id)
         flash('Usuario actualizado exitosamente.', 'success')
         return redirect(url_for('admin_users.list_users'))
 
@@ -165,6 +168,7 @@ def delete_user(user_id):
 
     db.session.delete(user)
     db.session.commit()
+    log_activity("Se elimino el usuario","Usuarios",details="Se elimino el usuario",resource_id=user_id)
     flash('Usuario eliminado exitosamente.', 'success')
     return redirect(url_for('admin_users.list_users'))
 
@@ -190,6 +194,7 @@ def edit_role_permissions(role_id):
                 role.permissions.append(permission)
         
         db.session.commit()
+        log_activity("Se edito el role","Roles",details="Se edito el rol", resource_id=role_id)
         flash(f'Permisos del rol {role.name} actualizados exitosamente.', 'success')
         return redirect(url_for('admin_users.list_roles'))
         
@@ -239,6 +244,7 @@ def manage_permissions():
         
         db.session.commit()
         flash(f'Permisos del rol "{role.name}" actualizados exitosamente.', 'success')
+        log_activity(f'Permisos del rol "{role.name}" actualizados exitosamente.',"Role-permisos",details="Se agrego un nuevo usuario", resource_id=selected_role_id)
         return redirect(url_for('admin_users.list_roles'))
     
     return render_template('admin/manage_permissions.html', all_roles=all_roles, all_permissions=all_permissions)

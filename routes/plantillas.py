@@ -17,6 +17,8 @@ from helpers import map_operator_to_sql
 from decorators import permission_required
 from config import UPLOAD_FOLDER
 from PIL import Image
+from log_activity import log_activity
+
 @plantillas_bp.route('/crear_plantilla', methods=['GET', 'POST'])
 @login_required
 def crear_plantilla():
@@ -444,6 +446,7 @@ def exportar_excel(template_id):
 
         excel_file_buffer.seek(0)
         filename = f"reporte_{template['name'].replace(' ', '_')}.xlsx"
+        log_activity("Se exporto una plantilla","Plantillas",details="Se exporto una plantilla excell",resource_id=template_id)
         return send_file(
             excel_file_buffer,
             download_name=filename,

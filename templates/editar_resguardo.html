@@ -3,267 +3,607 @@
 {% block title %}{{ "Editar Resguardo" if resguardo_data.resguardo_id else "Agregar Resguardo" }}{% endblock %}
 
 {% block content %}
-<div class="flex-grow flex justify-center items-start p-8">
-    <div class="container bg-white p-8 rounded-xl shadow-lg border border-gray-200 w-full max-w-4xl">
-        <h1 class="text-3xl font-bold text-gray-800 mb-6 text-center">
-            {{ "Editar Resguardo" if resguardo_data.resguardo_id else "Agregar Resguardo" }}
-        </h1>
-        <div class="mb-4 text-gray-500 text-center">
-            ID del Resguardo: {{ resguardo_data.resguardo_id }} | ID del Bien: {{ resguardo_data.bien_id }}
-        </div>
-        
-        <form id="resguardoForm" action="{{ url_for('resguardos.editar_resguardo', id_resguardo=resguardo_data.resguardo_id) }}" method="post" enctype="multipart/form-data">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+<div class="min-h-screen bg-gray-100 py-8">
+    <div class="container mx-auto px-4">
+        <div class="bg-white rounded-xl shadow-lg border border-gray-200 p-6 md:p-8 max-w-4xl mx-auto">
+            
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="flash-message flash-{{ category }} mb-6 p-4 rounded-lg border-l-4 {% if category == 'success' %}bg-green-100 border-green-500 text-green-700{% elif category == 'error' %}bg-red-100 border-red-500 text-red-700{% else %}bg-blue-100 border-blue-500 text-blue-700{% endif %}">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
 
-                <div class="col-span-1 md:col-span-2 bg-gray-50 p-6 rounded-lg shadow-sm">
-                    <h2 class="text-xl font-semibold text-gray-700 mb-4 border-b pb-2">Datos del Resguardo</h2>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div>
-                            <label for="No_Resguardo" class="block text-sm font-medium text-gray-700">No. de Resguardo:</label>
-                            <input type="text" id="No_Resguardo" name="No_Resguardo" value="{{ resguardo_data.No_Resguardo or '' }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
-                        </div>
-                        <div>
-                            <label for="Fecha_Resguardo" class="block text-sm font-medium text-gray-700">Fecha de Resguardo:</label>
-                            <input type="date" id="Fecha_Resguardo" name="Fecha_Resguardo" value="{{ resguardo_data.Fecha_Resguardo or '' }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
-                        </div>
-                        <div>
-                            <label for="Tipo_De_Resguardo" class="block text-sm font-medium text-gray-700">Tipo de Resguardo:</label>
-                            <select id="Tipo_De_Resguardo" name="Tipo_De_Resguardo" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
-                                <option value="1" {% if resguardo_data.Tipo_De_Resguardo == 1 %}selected{% endif %}>Sujeto de Control</option>
-                                <option value="0" {% if resguardo_data.Tipo_De_Resguardo == 0 %}selected{% endif %}>Resguardo Normal</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label for="No_Trabajador" class="block text-sm font-medium text-gray-700">No. de Trabajador:</label>
-                            <input type="text" id="No_Trabajador" name="No_Trabajador" value="{{ resguardo_data.No_Trabajador or '' }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
-                        </div>
-                        <div>
-                            <label for="Puesto" class="block text-sm font-medium text-gray-700">Puesto:</label>
-                            <input type="text" id="Puesto" name="Puesto" value="{{ resguardo_data.Puesto or '' }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
-                        </div>
-                        <div>
-                            <label for="Nombre_Director_Jefe_De_Area" class="block text-sm font-medium text-gray-700">Nombre del Director/Jefe de Área:</label>
-                            <input type="text" id="Nombre_Director_Jefe_De_Area" name="Nombre_Director_Jefe_De_Area" value="{{ resguardo_data.Nombre_Director_Jefe_De_Area or '' }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
-                        </div>
-                        <div>
-                            <label for="Nombre_Del_Resguardante" class="block text-sm font-medium text-gray-700">Nombre del Resguardante:</label>
-                            <input type="text" id="Nombre_Del_Resguardante" name="Nombre_Del_Resguardante" value="{{ resguardo_data.Nombre_Del_Resguardante or '' }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
-                        </div>
-                        <div>
-                            <label for="Area" class="block text-sm font-medium text-gray-700">Área:</label>
-                            <select id="Area" name="Area" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
-                                {% for area in areas %}
-                                    <option value="{{ area }}" {% if resguardo_data.Area == area %}selected{% endif %}>{{ area }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                    </div>
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
+                <h2 class="text-2xl md:text-3xl font-bold text-gray-800 mb-4 md:mb-0">
+                    {% if resguardo_data.resguardo_id %}
+                        Editar Resguardo: {{ resguardo_data.No_Inventario if resguardo_data.No_Inventario is not none else resguardo_data.resguardo_id }}
+                    {% else %}
+                        Agregar Nuevo Resguardo
+                    {% endif %}
+                </h2>
+                <div class="flex space-x-2">
+                    <a href="{{ url_for('resguardos.ver_resguardos') }}" class="text-gray-600 hover:text-gray-900 transition-colors flex items-center bg-gray-100 px-3 py-2 rounded-lg">
+                        <i class="fas fa-arrow-left mr-1"></i> Volver a Resguardos
+                    </a>
                 </div>
+            </div>
 
-                <div class="col-span-1 md:col-span-2 bg-gray-50 p-6 rounded-lg shadow-sm">
-                    <h2 class="text-xl font-semibold text-gray-700 mb-4 border-b pb-2">Datos del Bien</h2>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div>
-                            <label for="No_Inventario" class="block text-sm font-medium text-gray-700">No. de Inventario:</label>
-                            <input type="text" id="No_Inventario" name="No_Inventario" value="{{ resguardo_data.No_Inventario or '' }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
-                        </div>
-                        <div>
-                            <label for="Descripcion_Del_Bien" class="block text-sm font-medium text-gray-700">Descripción del Bien:</label>
-                            <textarea id="Descripcion_Del_Bien" name="Descripcion_Del_Bien" rows="3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">{{ resguardo_data.Descripcion_Del_Bien or '' }}</textarea>
-                        </div>
-                        <div>
-                            <label for="Descripcion_Corta_Del_Bien" class="block text-sm font-medium text-gray-700">Descripción Corta del Bien:</label>
-                            <input type="text" id="Descripcion_Corta_Del_Bien" name="Descripcion_Corta_Del_Bien" value="{{ resguardo_data.Descripcion_Corta_Del_Bien or '' }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
-                        </div>
-                        <div>
-                            <label for="No_Factura" class="block text-sm font-medium text-gray-700">No. de Factura:</label>
-                            <input type="text" id="No_Factura" name="No_Factura" value="{{ resguardo_data.No_Factura or '' }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
-                        </div>
-                        <div>
-                            <label for="Fecha_Factura" class="block text-sm font-medium text-gray-700">Fecha de Factura:</label>
-                            <input type="date" id="Fecha_Factura" name="Fecha_Factura" value="{{ resguardo_data.Fecha_Factura or '' }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
-                        </div>
-                        <div>
-                            <label for="Proveedor" class="block text-sm font-medium text-gray-700">Proveedor:</label>
-                            <input type="text" id="Proveedor" name="Proveedor" value="{{ resguardo_data.Proveedor or '' }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
-                        </div>
-                        <div>
-                            <label for="No_Cuenta" class="block text-sm font-medium text-gray-700">No. de Cuenta:</label>
-                            <input type="text" id="No_Cuenta" name="No_Cuenta" value="{{ resguardo_data.No_Cuenta or '' }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
-                        </div>
-                        <div>
-                            <label for="Rubro" class="block text-sm font-medium text-gray-700">Rubro:</label>
-                            <input type="text" id="Rubro" name="Rubro" value="{{ resguardo_data.Rubro or '' }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
-                        </div>
-                        <div>
-                            <label for="Sub_Cuenta_Armonizadora" class="block text-sm font-medium text-gray-700">Sub-Cuenta Armonizadora:</label>
-                            <input type="text" id="Sub_Cuenta_Armonizadora" name="Sub_Cuenta_Armonizadora" value="{{ resguardo_data.Sub_Cuenta_Armonizadora or '' }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
-                        </div>
-                        <div>
-                            <label for="Poliza" class="block text-sm font-medium text-gray-700">Póliza:</label>
-                            <input type="text" id="Poliza" name="Poliza" value="{{ resguardo_data.Poliza or '' }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
-                        </div>
-                        <div>
-                            <label for="Fecha_Poliza" class="block text-sm font-medium text-gray-700">Fecha de Póliza:</label>
-                            <input type="date" id="Fecha_Poliza" name="Fecha_Poliza" value="{{ resguardo_data.Fecha_Poliza or '' }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
-                        </div>
-                        <div>
-                            <label for="Costo_Inicial" class="block text-sm font-medium text-gray-700">Costo Inicial:</label>
-                            <input type="number" id="Costo_Inicial" name="Costo_Inicial" value="{{ resguardo_data.Costo_Inicial or '' }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
-                            
-                        </div>
-                        <div>
-                            <label for="Depreciacion_Acumulada" class="block text-sm font-medium text-gray-700">Depreciación Acumulada:</label>
-                            <input type="number" id="Depreciacion_Acumulada" name="Depreciacion_Acumulada" value="{{ resguardo_data.Depreciacion_Acumulada or '' }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
-                        </div>
-                        <div>
-                            <label for="Costo_Final_Cantidad" class="block text-sm font-medium text-gray-700">Costo Final Cantidad:</label>
-                            <input type="number" id="Costo_Final_Cantidad" name="Costo_Final_Cantidad" value="{{ resguardo_data.Costo_Final_Cantidad or '' }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
-                        </div>
-                        <div>
-                            <label for="Cantidad" class="block text-sm font-medium text-gray-700">Cantidad:</label>
-                            <input type="number" id="Cantidad" name="Cantidad" value="{{ resguardo_data.Cantidad or '' }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
-                        </div>
-                        <div>
-                            <label for="Estado_Del_Bien" class="block text-sm font-medium text-gray-700">Estado del Bien:</label>
-                            <input type="text" id="Estado_Del_Bien" name="Estado_Del_Bien" value="{{ resguardo_data.Estado_Del_Bien or '' }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
-                        </div>
-                        <div>
-                            <label for="Marca" class="block text-sm font-medium text-gray-700">Marca:</label>
-                            <input type="text" id="Marca" name="Marca" value="{{ resguardo_data.Marca or '' }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
-                        </div>
-                        <div>
-                            <label for="Modelo" class="block text-sm font-medium text-gray-700">Modelo:</label>
-                            <input type="text" id="Modelo" name="Modelo" value="{{ resguardo_data.Modelo or '' }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
-                        </div>
-                        <div>
-                            <label for="Numero_De_Serie" class="block text-sm font-medium text-gray-700">Número de Serie:</label>
-                            <input type="text" id="Numero_De_Serie" name="Numero_De_Serie" value="{{ resguardo_data.Numero_De_Serie or '' }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
-                        </div>
-                    </div>
-                </div>
+            <form id="resguardoForm" method="post" enctype="multipart/form-data" class="space-y-6">
+                <input type="hidden" name="resguardo_id" value="{{ resguardo_data.resguardo_id if resguardo_data.resguardo_id else '' }}">
+                <input type="hidden" name="bien_id" value="{{ resguardo_data.bien_id if resguardo_data.bien_id else '' }}">
                 
-                <div class="col-span-1 md:col-span-2 bg-gray-50 p-6 rounded-lg shadow-sm">
-                    <h2 class="text-xl font-semibold text-gray-700 mb-4 border-b pb-2">Imágenes</h2>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                            <label for="imagenes_bien" class="block text-sm font-medium text-gray-700">Imágenes del Bien:</label>
-                            <input type="file" id="imagenes_bien" name="imagenes_bien" multiple class="mt-1 block w-full text-sm text-gray-500
-                                file:mr-4 file:py-2 file:px-4
-                                file:rounded-full file:border-0
-                                file:text-sm file:font-semibold
-                                file:bg-blue-50 file:text-blue-700
-                                hover:file:bg-blue-100">
-                            {% if imagenes_bien_db %}
-                                <div class="mt-4 grid grid-cols-2 gap-2">
-                                    {% for img in imagenes_bien_db %}
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    
+                    <div class="md:col-span-2 bg-gray-50 p-6 rounded-lg shadow-sm">
+                        <h2 class="text-xl font-semibold text-gray-700 mb-4 border-b pb-2">Datos del Resguardo</h2>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label for="No_Resguardo" class="block text-sm font-medium text-gray-700 mb-1">No. de Resguardo</label>
+                                <input type="text" id="No_Resguardo" name="No_Resguardo" value="{{ resguardo_data.No_Resguardo if resguardo_data.No_Resguardo is not none else '' }}" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+                            </div>
+
+                            <div>
+                                <label for="Fecha_Resguardo" class="block text-sm font-medium text-gray-700 mb-1">Fecha de Resguardo</label>
+                                <input type="date" id="Fecha_Resguardo" name="Fecha_Resguardo" value="{{ resguardo_data.Fecha_Resguardo if resguardo_data.Fecha_Resguardo is not none else '' }}" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+                            </div>
+
+                            <div>
+                                <label for="Tipo_De_Resguardo" class="block text-sm font-medium text-gray-700 mb-1">Tipo de Resguardo</label>
+                                <select id="Tipo_De_Resguardo" name="Tipo_De_Resguardo" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+                                    <option value="1" {% if resguardo_data.Tipo_De_Resguardo == 1 %}selected{% endif %}>Sujeto de Control</option>
+                                    <option value="0" {% if resguardo_data.Tipo_De_Resguardo == 0 %}selected{% endif %}>Resguardo Normal</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label for="No_Trabajador" class="block text-sm font-medium text-gray-700 mb-1">No. de Trabajador</label>
+                                <input type="text" id="No_Trabajador" name="No_Trabajador" value="{{ resguardo_data.No_Trabajador if resguardo_data.No_Trabajador is not none else '' }}" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+                            </div>
+
+                            <div>
+                                <label for="Puesto" class="block text-sm font-medium text-gray-700 mb-1">Puesto</label>
+                                <input type="text" id="Puesto" name="Puesto" value="{{ resguardo_data.Puesto if resguardo_data.Puesto is not none else '' }}" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+                            </div>
+
+                            <div>
+                                <label for="Nombre_Director_Jefe_De_Area" class="block text-sm font-medium text-gray-700 mb-1">Nombre del Director/Jefe de Área</label>
+                                <input type="text" id="Nombre_Director_Jefe_De_Area" name="Nombre_Director_Jefe_De_Area" value="{{ resguardo_data.Nombre_Director_Jefe_De_Area if resguardo_data.Nombre_Director_Jefe_De_Area is not none else '' }}" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+                            </div>
+
+                            <div>
+                                <label for="Nombre_Del_Resguardante" class="block text-sm font-medium text-gray-700 mb-1">Nombre del Resguardante</label>
+                                <input type="text" id="Nombre_Del_Resguardante" name="Nombre_Del_Resguardante" value="{{ resguardo_data.Nombre_Del_Resguardante if resguardo_data.Nombre_Del_Resguardante is not none else '' }}" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+                            </div>
+
+                            <div>
+                                <label for="Area" class="block text-sm font-medium text-gray-700 mb-1">Área</label>
+                                <select id="Area" name="Area" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+                                    <option value="">Selecciona un área</option>
+                                    {% for area in areas %}
+                                        <option value="{{ area }}" {% if resguardo_data.Area == area %}selected{% endif %}>{{ area }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="md:col-span-2 bg-gray-50 p-6 rounded-lg shadow-sm">
+                        <h2 class="text-xl font-semibold text-gray-700 mb-4 border-b pb-2">Datos del Bien</h2>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label for="No_Inventario" class="block text-sm font-medium text-gray-700 mb-1">No. de Inventario</label>
+                                <input type="text" id="No_Inventario" name="No_Inventario" value="{{ resguardo_data.No_Inventario if resguardo_data.No_Inventario is not none else '' }}" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+                            </div>
+
+                            <div>
+                                <label for="Descripcion_Del_Bien" class="block text-sm font-medium text-gray-700 mb-1">Descripción del Bien</label>
+                                <textarea id="Descripcion_Del_Bien" name="Descripcion_Del_Bien" rows="3" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">{{ resguardo_data.Descripcion_Del_Bien if resguardo_data.Descripcion_Del_Bien is not none else '' }}</textarea>
+                            </div>
+
+                            <div>
+                                <label for="Descripcion_Corta_Del_Bien" class="block text-sm font-medium text-gray-700 mb-1">Descripción Corta del Bien</label>
+                                <input type="text" id="Descripcion_Corta_Del_Bien" name="Descripcion_Corta_Del_Bien" value="{{ resguardo_data.Descripcion_Corta_Del_Bien if resguardo_data.Descripcion_Corta_Del_Bien is not none else '' }}" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+                            </div>
+
+                            <div>
+                                <label for="No_Factura" class="block text-sm font-medium text-gray-700 mb-1">No. de Factura</label>
+                                <input type="text" id="No_Factura" name="No_Factura" value="{{ resguardo_data.No_Factura if resguardo_data.No_Factura is not none else '' }}" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+                            </div>
+
+                            <div>
+                                <label for="Fecha_Factura" class="block text-sm font-medium text-gray-700 mb-1">Fecha de Factura</label>
+                                <input type="date" id="Fecha_Factura" name="Fecha_Factura" value="{{ resguardo_data.Fecha_Factura if resguardo_data.Fecha_Factura is not none else '' }}" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+                            </div>
+
+                            <div>
+                                <label for="Proveedor" class="block text-sm font-medium text-gray-700 mb-1">Proveedor</label>
+                                <input type="text" id="Proveedor" name="Proveedor" value="{{ resguardo_data.Proveedor if resguardo_data.Proveedor is not none else '' }}" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+                            </div>
+
+                            <div>
+                                <label for="No_Cuenta" class="block text-sm font-medium text-gray-700 mb-1">No. de Cuenta</label>
+                                <input type="text" id="No_Cuenta" name="No_Cuenta" value="{{ resguardo_data.No_Cuenta if resguardo_data.No_Cuenta is not none else '' }}" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+                            </div>
+
+                            <div>
+                                <label for="Rubro" class="block text-sm font-medium text-gray-700 mb-1">Rubro</label>
+                                <input type="text" id="Rubro" name="Rubro" value="{{ resguardo_data.Rubro if resguardo_data.Rubro is not none else '' }}" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+                            </div>
+
+                            <div>
+                                <label for="Sub_Cuenta_Armonizadora" class="block text-sm font-medium text-gray-700 mb-1">Sub-Cuenta Armonizadora</label>
+                                <input type="text" id="Sub_Cuenta_Armonizadora" name="Sub_Cuenta_Armonizadora" value="{{ resguardo_data.Sub_Cuenta_Armonizadora if resguardo_data.Sub_Cuenta_Armonizadora is not none else '' }}" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+                            </div>
+
+                            <div>
+                                <label for="Poliza" class="block text-sm font-medium text-gray-700 mb-1">Póliza</label>
+                                <input type="text" id="Poliza" name="Poliza" value="{{ resguardo_data.Poliza if resguardo_data.Poliza is not none else '' }}" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+                            </div>
+
+                            <div>
+                                <label for="Fecha_Poliza" class="block text-sm font-medium text-gray-700 mb-1">Fecha de Póliza</label>
+                                <input type="date" id="Fecha_Poliza" name="Fecha_Poliza" value="{{ resguardo_data.Fecha_Poliza if resguardo_data.Fecha_Poliza is not none else '' }}" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+                            </div>
+
+                            <div>
+                                <label for="Costo_Inicial" class="block text-sm font-medium text-gray-700 mb-1">Costo Inicial</label>
+                                <input type="number" step="0.01" id="Costo_Inicial" name="Costo_Inicial" value="{{ resguardo_data.Costo_Inicial if resguardo_data.Costo_Inicial is not none else '' }}" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+                            </div>
+
+                            <div>
+                                <label for="Depreciacion_Acumulada" class="block text-sm font-medium text-gray-700 mb-1">Depreciación Acumulada</label>
+                                <input type="number" step="0.01" id="Depreciacion_Acumulada" name="Depreciacion_Acumulada" value="{{ resguardo_data.Depreciacion_Acumulada if resguardo_data.Depreciacion_Acumulada is not none else '' }}" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+                            </div>
+
+                            <div>
+                                <label for="Costo_Final_Cantidad" class="block text-sm font-medium text-gray-700 mb-1">Costo Final Cantidad</label>
+                                <input type="number" step="0.01" id="Costo_Final_Cantidad" name="Costo_Final_Cantidad" value="{{ resguardo_data.Costo_Final_Cantidad if resguardo_data.Costo_Final_Cantidad is not none else '' }}" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+                            </div>
+
+                            <div>
+                                <label for="Cantidad" class="block text-sm font-medium text-gray-700 mb-1">Cantidad</label>
+                                <input type="number" id="Cantidad" name="Cantidad" value="{{ resguardo_data.Cantidad if resguardo_data.Cantidad is not none else '' }}" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+                            </div>
+
+                            <div>
+                                <label for="Estado_Del_Bien" class="block text-sm font-medium text-gray-700 mb-1">Estado del Bien</label>
+                                <input type="text" id="Estado_Del_Bien" name="Estado_Del_Bien" value="{{ resguardo_data.Estado_Del_Bien if resguardo_data.Estado_Del_Bien is not none else '' }}" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+                            </div>
+
+                            <div>
+                                <label for="Marca" class="block text-sm font-medium text-gray-700 mb-1">Marca</label>
+                                <input type="text" id="Marca" name="Marca" value="{{ resguardo_data.Marca if resguardo_data.Marca is not none else '' }}" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+                            </div>
+
+                            <div>
+                                <label for="Modelo" class="block text-sm font-medium text-gray-700 mb-1">Modelo</label>
+                                <input type="text" id="Modelo" name="Modelo" value="{{ resguardo_data.Modelo if resguardo_data.Modelo is not none else '' }}" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+                            </div>
+
+                            <div>
+                                <label for="Numero_De_Serie" class="block text-sm font-medium text-gray-700 mb-1">Número de Serie</label>
+                                <input type="text" id="Numero_De_Serie" name="Numero_De_Serie" value="{{ resguardo_data.Numero_De_Serie if resguardo_data.Numero_De_Serie is not none else '' }}" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="md:col-span-2 bg-gray-50 p-6 rounded-lg shadow-sm">
+                        <h2 class="text-xl font-semibold text-gray-700 mb-4 border-b pb-2">Imágenes</h2>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <!-- Imágenes del Bien -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Imágenes del Bien:</label>
+                                <div class="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center">
+                                    <label for="imagenes_bien" class="cursor-pointer flex flex-col items-center">
+                                        <i class="fas fa-camera text-blue-500 text-3xl mb-2"></i>
+                                        <span class="text-blue-500 font-medium">Seleccionar imagen para recortar</span>
+                                    </label>
+                                    <input type="file" id="imagenes_bien" name="imagenes_bien" accept="image/*" class="hidden">
+                                    <p class="text-xs text-gray-500 mt-2">Selecciona una imagen para el bien. Se abrirá el editor de recorte.</p>
+                                </div>
+                                <div id="preview-bien" class="mt-4 flex flex-wrap gap-2"></div>
+                                
+                                {% if imagenes_bien_db %}
+                                <div class="mt-4">
+                                    <h3 class="text-sm font-medium text-gray-700 mb-2">Imágenes existentes:</h3>
+                                    <div class="grid grid-cols-2 gap-2">
+                                        {% for img in imagenes_bien_db %}
                                         <div class="relative w-full h-24 image-container">
-                                            <img src="{{ url_for('serve_uploaded_file', filename=img.ruta_imagen) }}" alt="Imagen del bien" class="w-full h-full object-cover rounded-md shadow-sm">
+                                            <img src="{{ url_for('serve_uploaded_file', filename=img.ruta_imagen) }}" 
+                                                 alt="Imagen del bien" 
+                                                 class="w-full h-full object-cover rounded-md shadow-sm">
                                             <label class="absolute top-1 right-1 bg-red-500 text-white text-xs px-2 py-1 rounded-full cursor-pointer hover:bg-red-700">
                                                 <input type="checkbox" name="eliminar_imagen_bien[]" value="{{ img.id }}" class="hidden image-checkbox">
                                                 <i class="fas fa-trash"></i>
                                             </label>
                                         </div>
-                                    {% endfor %}
+                                        {% endfor %}
+                                    </div>
                                 </div>
-                            {% endif %}
-                        </div>
-                        <div>
-                            <label for="imagenes_resguardo" class="block text-sm font-medium text-gray-700">Imágenes del Resguardo:</label>
-                            <input type="file" id="imagenes_resguardo" name="imagenes_resguardo" multiple class="mt-1 block w-full text-sm text-gray-500
-                                file:mr-4 file:py-2 file:px-4
-                                file:rounded-full file:border-0
-                                file:text-sm file:font-semibold
-                                file:bg-blue-50 file:text-blue-700
-                                hover:file:bg-blue-100">
-                            {% if imagenes_resguardo_db %}
-                                <div class="mt-4 grid grid-cols-2 gap-2">
-                                    {% for img in imagenes_resguardo_db %}
+                                {% endif %}
+                            </div>
+
+                            <!-- Imágenes del Resguardo -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Imágenes del Resguardo:</label>
+                                <div class="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center">
+                                    <label for="imagenes_resguardo" class="cursor-pointer flex flex-col items-center">
+                                        <i class="fas fa-images text-blue-500 text-3xl mb-2"></i>
+                                        <span class="text-blue-500 font-medium">Seleccionar imágenes para recortar</span>
+                                    </label>
+                                    <input type="file" id="imagenes_resguardo" name="imagenes_resguardo" accept="image/*" multiple class="hidden">
+                                    <p class="text-xs text-gray-500 mt-2">Puedes seleccionar una o más imágenes para el resguardo. Cada una se recortará individualmente.</p>
+                                </div>
+                                <div id="preview-resguardo" class="mt-4 flex flex-wrap gap-2"></div>
+                                
+                                {% if imagenes_resguardo_db %}
+                                <div class="mt-4">
+                                    <h3 class="text-sm font-medium text-gray-700 mb-2">Imágenes existentes:</h3>
+                                    <div class="grid grid-cols-2 gap-2">
+                                        {% for img in imagenes_resguardo_db %}
                                         <div class="relative w-full h-24 image-container">
-                                            <img src="{{ url_for('serve_uploaded_file', filename=img.ruta_imagen) }}" alt="Imagen del resguardo" class="w-full h-full object-cover rounded-md shadow-sm">
+                                            <img src="{{ url_for('serve_uploaded_file', filename=img.ruta_imagen) }}" 
+                                                 alt="Imagen del resguardo" 
+                                                 class="w-full h-full object-cover rounded-md shadow-sm">
                                             <label class="absolute top-1 right-1 bg-red-500 text-white text-xs px-2 py-1 rounded-full cursor-pointer hover:bg-red-700">
                                                 <input type="checkbox" name="eliminar_imagen_resguardo[]" value="{{ img.id }}" class="hidden image-checkbox">
                                                 <i class="fas fa-trash"></i>
                                             </label>
                                         </div>
-                                    {% endfor %}
+                                        {% endfor %}
+                                    </div>
                                 </div>
-                            {% endif %}
+                                {% endif %}
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <div class="mt-8 flex justify-end space-x-4">
-                <button type="submit" class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors">
-                    <i class="fas fa-save mr-2"></i> Guardar Cambios
-                </button>
-                <a href="{{ url_for('resguardos.ver_resguardos') }}" class="inline-flex items-center px-6 py-3 border border-gray-300 text-base font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors">
-                    <i class="fas fa-ban mr-2"></i> Cancelar
-                </a>
-            </div>
-        </form>
+                <div class="mt-8 flex justify-end space-x-4">
+                    <button type="submit" class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors">
+                        <i class="fas fa-save mr-2"></i> 
+                        {% if resguardo_data.resguardo_id %}
+                            Guardar Cambios
+                        {% else %}
+                            Agregar Resguardo
+                        {% endif %}
+                    </button>
+                    <a href="{{ url_for('resguardos.ver_resguardos') }}" class="inline-flex items-center px-6 py-3 border border-gray-300 text-base font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors">
+                        <i class="fas fa-ban mr-2"></i> Cancelar
+                    </a>
+                </div>
+            </form>
+        </div>
     </div>
 </div>
+
+<!-- Modal para recorte de imagen -->
+<div id="imageCropModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center hidden z-50">
+    <div class="bg-white rounded-lg shadow-xl w-11/12 md:w-3/4 lg:w-2/3 max-h-screen overflow-auto">
+        <div class="flex justify-between items-center border-b px-6 py-4">
+            <h3 class="text-xl font-semibold text-gray-800" id="modalTitle">Recortar Imagen</h3>
+            <button type="button" class="close-modal text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
+        </div>
+        <div class="p-6">
+            <div class="w-full h-96 mb-4">
+                <img id="imageToCrop" src="" class="max-w-full h-full mx-auto">
+            </div>
+            <div class="flex justify-end space-x-3">
+                <button type="button" id="cancelCrop" class="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600">Cancelar</button>
+                <button type="button" id="cropImage" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Recortar y Guardar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Incluir Cropper.js -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+
 <style>
 /* Estilos para la imagen seleccionada para eliminar */
 .image-container.selected {
-    border: 3px solid #ef4444; /* Borde rojo */
-    box-shadow: 0 0 10px rgba(239, 68, 68, 0.5); /* Sombra roja sutil */
-    border-radius: 0.5rem; /* Asegura que el borde coincida con el borde del div */
+    border: 3px solid #ef4444;
+    box-shadow: 0 0 10px rgba(239, 68, 68, 0.5);
+    border-radius: 0.5rem;
+}
+
+/* Estilos para las previsualizaciones de imágenes */
+#preview-bien, #preview-resguardo {
+    min-height: 100px;
+}
+
+#preview-bien > div, #preview-resguardo > div {
+    transition: all 0.3s ease;
+}
+
+/* Estilos para el modal de recorte */
+#imageCropModal {
+    backdrop-filter: blur(5px);
+}
+
+#imageToCrop {
+    max-height: 70vh;
+}
+
+.flash-message {
+    transition: opacity 0.3s ease;
 }
 </style>
 
 <script>
-
-    // Debug: Verificar que los elementos existen
-console.log("Elementos encontrados:");
-console.log("Form:", document.getElementById('resguardoForm'));
-console.log("Input bien:", document.getElementById('imagenes_bien'));
-console.log("Input resguardo:", document.getElementById('imagenes_resguardo'));
-console.log("Checkboxes:", document.querySelectorAll('.image-checkbox').length);
 document.addEventListener('DOMContentLoaded', function() {
-    // Variables para almacenar las imágenes seleccionadas
+    // Variables
     let selectedFilesBien = [];
     let selectedFilesResguardo = [];
+    let cropperInstance = null;
+    let currentCropMode = null; // 'bien' o 'resguardo'
+    let currentResguardoFiles = [];
+    let currentResguardoIndex = 0;
     
-    // Escuchar cambios en los inputs de archivo
-    document.getElementById('imagenes_bien').addEventListener('change', function(event) {
-        // Filtrar solo archivos con contenido real
-        selectedFilesBien = Array.from(event.target.files).filter(file => 
-            file && file.name && file.size > 0
-        );
-        console.log("Imágenes de bien seleccionadas:", selectedFilesBien.map(f => f.name));
+    // Elementos del DOM
+    const imagenBienInput = document.getElementById('imagenes_bien');
+    const imagenResguardoInput = document.getElementById('imagenes_resguardo');
+    const imageCropModal = document.getElementById('imageCropModal');
+    const imageToCrop = document.getElementById('imageToCrop');
+    const modalTitle = document.getElementById('modalTitle');
+    const cropImageBtn = document.getElementById('cropImage');
+    const cancelCropBtn = document.getElementById('cancelCrop');
+    const closeModalBtn = document.querySelector('.close-modal');
+    const resguardoForm = document.getElementById('resguardoForm');
+    
+    // Configurar los labels como disparadores de los inputs de archivo
+    document.querySelector('label[for="imagenes_bien"]').addEventListener('click', function() {
+        imagenBienInput.click();
     });
     
-    document.getElementById('imagenes_resguardo').addEventListener('change', function(event) {
-        // Filtrar solo archivos con contenido real
-        selectedFilesResguardo = Array.from(event.target.files).filter(file => 
-            file && file.name && file.size > 0
-        );
-        console.log("Imágenes de resguardo seleccionadas:", selectedFilesResguardo.map(f => f.name));
-    });
-    
-    // Escuchar el evento de cambio en los checkboxes de las imágenes
-    const imageCheckboxes = document.querySelectorAll('.image-checkbox');
-    
-    imageCheckboxes.forEach(checkbox => {
-        checkbox.addEventListener('change', function() {
-            console.log("Checkbox cambiado - ID:", this.value, "Estado:", this.checked);
-            const imageContainer = this.closest('.image-container');
-            if (this.checked) {
-                imageContainer.classList.add('selected');
-            } else {
-                imageContainer.classList.remove('selected');
-            }
-        });
+    document.querySelector('label[for="imagenes_resguardo"]').addEventListener('click', function() {
+        imagenResguardoInput.click();
     });
 
-    // Modificar el envío del formulario
-    document.getElementById('resguardoForm').addEventListener('submit', function(event) {
+    // Ocultar mensajes flash después de 6 segundos
+    const flashMessages = document.querySelectorAll('.flash-message');
+    flashMessages.forEach(msg => {
+        setTimeout(() => {
+            msg.style.opacity = '0';
+            setTimeout(() => {
+                msg.style.display = 'none';
+            }, 300);
+        }, 6000);
+    });
+
+    // Funciones auxiliares
+    function showFlashMessage(message, category) {
+        const flashContainer = document.querySelector('.container');
+        const newMessageDiv = document.createElement('div');
+        newMessageDiv.classList.add('flash-message', 'p-4', 'rounded-lg', 'border-l-4', 'mb-6');
+        
+        if (category === 'success') {
+            newMessageDiv.classList.add('bg-green-100', 'border-green-500', 'text-green-700');
+        } else if (category === 'error') {
+            newMessageDiv.classList.add('bg-red-100', 'border-red-500', 'text-red-700');
+        } else {
+            newMessageDiv.classList.add('bg-blue-100', 'border-blue-500', 'text-blue-700');
+        }
+        
+        newMessageDiv.textContent = message;
+        flashContainer.insertBefore(newMessageDiv, flashContainer.firstChild);
+        
+        setTimeout(() => {
+            newMessageDiv.style.opacity = '0';
+            setTimeout(() => {
+                newMessageDiv.style.display = 'none';
+                newMessageDiv.remove();
+            }, 300);
+        }, 6000);
+    }
+
+    function renderPreviews(fileArray, containerId) {
+        const container = document.getElementById(containerId);
+        container.innerHTML = '';
+        
+        fileArray.forEach((file, index) => {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const previewItem = document.createElement('div');
+                previewItem.className = 'relative w-24 h-24 rounded-lg overflow-hidden shadow-md border';
+                
+                const img = document.createElement('img');
+                img.src = e.target.result;
+                img.className = 'w-full h-full object-cover';
+                
+                const removeBtn = document.createElement('button');
+                removeBtn.innerHTML = '<i class="fas fa-times"></i>';
+                removeBtn.title = 'Eliminar imagen';
+                removeBtn.className = 'absolute top-0 right-0 bg-white bg-opacity-70 text-red-500 rounded-full p-1 m-1 hover:text-red-700';
+                removeBtn.onclick = function(event) {
+                    event.preventDefault();
+                    fileArray.splice(index, 1);
+                    renderPreviews(fileArray, containerId);
+                };
+                
+                previewItem.appendChild(img);
+                previewItem.appendChild(removeBtn);
+                container.appendChild(previewItem);
+            };
+            reader.readAsDataURL(file);
+        });
+    }
+    
+    // Función para mostrar el modal de recorte
+    function showCropModal() {
+        imageCropModal.classList.remove('hidden');
+    }
+    
+    // Función para ocultar el modal de recorte
+    function hideCropModal() {
+        imageCropModal.classList.add('hidden');
+        if (cropperInstance) {
+            cropperInstance.destroy();
+            cropperInstance = null;
+        }
+    }
+    
+    // Evento cuando se selecciona una imagen para el bien
+    imagenBienInput.addEventListener('change', function(event) {
+        const file = event.target.files[0];
+        if (file) {
+            currentCropMode = 'bien';
+            modalTitle.textContent = 'Recortar Imagen del Bien';
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                imageToCrop.src = e.target.result;
+                showCropModal();
+                
+                // Inicializar Cropper.js después de que la imagen se cargue
+                imageToCrop.onload = function() {
+                    if (cropperInstance) {
+                        cropperInstance.destroy();
+                    }
+                    
+                    cropperInstance = new Cropper(imageToCrop, {
+                        aspectRatio: NaN,
+                        viewMode: 1,
+                        responsive: true,
+                        dragMode: 'move',
+                        autoCropArea: 0.8,
+                    });
+                };
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+    
+    // Evento cuando se seleccionan imágenes para el resguardo
+    imagenResguardoInput.addEventListener('change', function(event) {
+        const files = Array.from(event.target.files);
+        if (files.length > 0) {
+            currentCropMode = 'resguardo';
+            currentResguardoFiles = files;
+            currentResguardoIndex = 0;
+            
+            // Procesar la primera imagen
+            processNextResguardoImage();
+        }
+    });
+    
+    // Función para procesar la siguiente imagen de resguardo
+    function processNextResguardoImage() {
+        if (currentResguardoIndex < currentResguardoFiles.length) {
+            const file = currentResguardoFiles[currentResguardoIndex];
+            modalTitle.textContent = `Recortar Imagen de Resguardo (${currentResguardoIndex + 1}/${currentResguardoFiles.length})`;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                imageToCrop.src = e.target.result;
+                showCropModal();
+                
+                // Inicializar Cropper.js después de que la imagen se cargue
+                imageToCrop.onload = function() {
+                    if (cropperInstance) {
+                        cropperInstance.destroy();
+                    }
+                    
+                    cropperInstance = new Cropper(imageToCrop, {
+                        aspectRatio: NaN,
+                        viewMode: 1,
+                        responsive: true,
+                        dragMode: 'move',
+                        autoCropArea: 0.8,
+                    });
+                };
+            };
+            reader.readAsDataURL(file);
+        }
+    }
+    
+    // Evento para recortar la imagen
+    cropImageBtn.addEventListener('click', function() {
+        if (cropperInstance) {
+            cropperInstance.getCroppedCanvas({
+                width: 500,
+                height: 500
+            }).toBlob(function(blob) {
+                const fileName = currentCropMode === 'bien' ? 'cropped_bien.png' : `cropped_resguardo_${currentResguardoIndex + 1}.png`;
+                const file = new File([blob], fileName, { type: 'image/png' });
+                
+                if (currentCropMode === 'bien') {
+                    selectedFilesBien = [file];
+                    renderPreviews(selectedFilesBien, 'preview-bien');
+                    hideCropModal();
+                } else if (currentCropMode === 'resguardo') {
+                    selectedFilesResguardo.push(file);
+                    renderPreviews(selectedFilesResguardo, 'preview-resguardo');
+                    
+                    // Procesar la siguiente imagen
+                    currentResguardoIndex++;
+                    if (currentResguardoIndex < currentResguardoFiles.length) {
+                        processNextResguardoImage();
+                    } else {
+                        hideCropModal();
+                    }
+                }
+            }, 'image/png');
+        }
+    });
+    
+    // Eventos para cerrar el modal
+    cancelCropBtn.addEventListener('click', function() {
+        if (currentCropMode === 'resguardo') {
+            // Si estamos en modo resguardo, pasar a la siguiente imagen sin guardar la actual
+            currentResguardoIndex++;
+            if (currentResguardoIndex < currentResguardoFiles.length) {
+                processNextResguardoImage();
+            } else {
+                hideCropModal();
+            }
+        } else {
+            hideCropModal();
+        }
+    });
+    
+    closeModalBtn.addEventListener('click', function() {
+        if (currentCropMode === 'resguardo') {
+            // Si estamos en modo resguardo, cancelar todo el proceso
+            currentResguardoIndex = currentResguardoFiles.length;
+        }
+        hideCropModal();
+    });
+    
+    // Cerrar modal al hacer clic fuera del contenido
+    window.addEventListener('click', function(event) {
+        if (event.target === imageCropModal) {
+            if (currentCropMode === 'resguardo') {
+                // Si estamos en modo resguardo, cancelar todo el proceso
+                currentResguardoIndex = currentResguardoFiles.length;
+            }
+            hideCropModal();
+        }
+    });
+    
+    // Evento para enviar el formulario
+    resguardoForm.addEventListener('submit', async function(event) {
         event.preventDefault();
+        
         const form = event.target;
         const formData = new FormData(form);
+        
+        // Eliminar los archivos originales del formulario
+        formData.delete('imagenes_bien');
+        formData.delete('imagenes_resguardo');
+        
+        if (selectedFilesBien.length > 0) {
+            formData.append('imagenes_bien', selectedFilesBien[0]);
+        }
+        
+        selectedFilesResguardo.forEach(file => {
+            formData.append('imagenes_resguardo', file);
+        });
         
         // Verificar si hay imágenes marcadas para eliminar
         const imagenesAEliminarBien = document.querySelectorAll('input[name="eliminar_imagen_bien[]"]:checked');
@@ -275,76 +615,65 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
         
-        // ELIMINAR LOS ARCHIVOS ORIGINALES DEL FORMULARIO
-        formData.delete('imagenes_bien');
-        formData.delete('imagenes_resguardo');
-        
-        // AGREGAR SOLO LAS IMÁGENES SELECCIONADAS QUE TENGAN CONTENIDO
-        selectedFilesBien.forEach(file => {
-            if (file && file.name && file.size > 0) {
-                formData.append('imagenes_bien', file);
-                console.log("Agregando imagen de bien:", file.name);
-            }
-        });
-        
-        selectedFilesResguardo.forEach(file => {
-            if (file && file.name && file.size > 0) {
-                formData.append('imagenes_resguardo', file);
-                console.log("Agregando imagen de resguardo:", file.name);
-            }
-        });
-        
-        // Mostrar contenido del FormData para debugging
-        console.log("Contenido del FormData:");
-        for (let [key, value] of formData.entries()) {
-            if (value instanceof File) {
-                console.log(`${key}: ${value.name} (${value.size} bytes)`);
-            } else {
-                console.log(`${key}: ${value}`);
-            }
-        }
-        
         // Mostrar loading state
         const submitButton = form.querySelector('button[type="submit"]');
         const originalText = submitButton.innerHTML;
         submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
         submitButton.disabled = true;
         
-        // Enviar el formulario
-        fetch(form.action, {
-            method: 'POST',
-            body: formData,
-        })
-        .then(response => {
-            const contentType = response.headers.get('content-type');
-            if (contentType && contentType.includes('application/json')) {
-                return response.json();
-            }
-            throw new Error('Respuesta no JSON recibida');
-        })
-        .then(data => {
-            if (data.redirect_url) {
-                console.log("Redireccionando a:", data.redirect_url);
-                window.location.href = data.redirect_url;
-            } else {
-                alert(`${data.category === 'success' ? '✅' : '❌'} ${data.message}`);
-                // Recargar la página si fue exitoso para ver los cambios
-                if (data.category === 'success') {
+        try {
+            const response = await fetch(form.action, {
+                method: 'POST',
+                body: formData,
+            });
+            
+            const result = await response.json();
+            if (response.ok) {
+                showFlashMessage(result.message || 'Resguardo guardado con éxito.', 'success');
+                // Redirigir o recargar según sea necesario
+                if (result.redirect_url) {
+                    setTimeout(() => {
+                        window.location.href = result.redirect_url;
+                    }, 1500);
+                } else {
                     setTimeout(() => {
                         window.location.reload();
                     }, 1500);
                 }
+            } else {
+                showFlashMessage(result.message || 'Error al guardar el resguardo.', 'error');
             }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('Ocurrió un error al guardar los cambios. Por favor, intenta nuevamente.');
-        })
-        .finally(() => {
+        } catch (error) {
+            console.error('Error durante la solicitud:', error);
+            showFlashMessage('Error en la conexión con el servidor.', 'error');
+        } finally {
             // Restaurar el botón
             submitButton.innerHTML = originalText;
             submitButton.disabled = false;
+        }
+    });
+    
+    // Manejar la selección de imágenes para eliminar
+    const imageCheckboxes = document.querySelectorAll('.image-checkbox');
+    imageCheckboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+            const imageContainer = this.closest('.image-container');
+            if (this.checked) {
+                imageContainer.classList.add('selected');
+            } else {
+                imageContainer.classList.remove('selected');
+            }
         });
+        
+        // Hacer que el label sea clickeable para mostrar la selección visual
+        const label = checkbox.closest('label');
+        if (label) {
+            label.addEventListener('click', function(e) {
+                e.preventDefault();
+                checkbox.checked = !checkbox.checked;
+                checkbox.dispatchEvent(new Event('change'));
+            });
+        }
     });
 });
 </script>

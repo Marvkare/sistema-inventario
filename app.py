@@ -4,6 +4,8 @@ import os
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user, UserMixin
 from werkzeug.security import generate_password_hash
 
+from log_activity import log_activity
+
 # Importar la configuración de la base de datos y otras configuraciones
 from config import DB_CONFIG, PDF_TEMPLATE_PATH, UPLOAD_FOLDER, ALLOWED_EXTENSIONS
 
@@ -71,6 +73,8 @@ def login():
             login_user(user)
             flash('¡Inicio de sesión exitoso!', 'success')
             next_page = request.args.get('next')
+            print(user)
+            log_activity("Inicio sesion el usuario: "+username, "Login", "Inicio de sesion por el usuario"+username)
             return redirect(next_page or url_for('resguardos.ver_resguardos'))
         else:
             flash('Usuario o contraseña incorrectos.', 'danger')
@@ -80,7 +84,11 @@ def login():
 @app.route('/logout')
 @login_required
 def logout():
+    print(current_user)
+    log_activity("Cerro sesion el usuario: ", "Logout")
     logout_user()
+    
+   
     return redirect(url_for('login'))
 
 @app.route('/')

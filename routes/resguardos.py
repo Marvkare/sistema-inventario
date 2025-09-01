@@ -12,7 +12,7 @@ import uuid
 from database import get_db, get_db_connection, AVAILABLE_COLUMNS
 from config import UPLOAD_FOLDER;
 from decorators import permission_required
-
+from log_activity import log_activity
 resguardos_bp = Blueprint('resguardos', __name__)
 
 def get_areas_data():
@@ -37,6 +37,7 @@ def get_areas_data():
 
 @resguardos_bp.route('/crear_resguardo', methods=['GET', 'POST'])
 @login_required
+
 @permission_required('resguardos.crear_resguardo')
 def crear_resguardo():
     conn = None
@@ -128,13 +129,13 @@ def crear_resguardo():
                     cursor.execute(sql_insert_resguardo_img, (id_resguardo, unique_filename))
             
             conn.commit()
-            
+            log_activity(action='Resguardos', resource='Resguardo', resource_id=id_resguardo, details=f'Se registró un nuevo resguardo y bien, ID: {id_resguardo}')
             return jsonify({
                 "message": "Resguardo y bien creado exitosamente.",
                 "category": "success",
                 "redirect_url": url_for('resguardos.ver_resguardos')
             }), 200
-
+           
         return render_template('crear_resguardo.html', areas=areas_list, form_data=form_data, available_columns=AVAILABLE_COLUMNS)
 
     except mysql.connector.Error as err:
@@ -354,7 +355,7 @@ def editar_resguardo(id_resguardo):
                     print(f"Imagen de resguardo guardada: {unique_filename}")
         
             conn.commit()
-            
+            log_activity(action='Resguardos', resource='Resguardo', resource_id=id_resguardo, details=f'Se Actualizo un nuevo resguardo y bien, ID: {id_resguardo}')
             return jsonify({
                 "message": "Resguardo actualizado exitosamente.",
                 "category": "success",
@@ -591,7 +592,7 @@ def generate_resguardo_pdf(id_resguardo):
 
 @resguardos_bp.route('/ver_resguardos')
 @login_required
-@permission_required('resguardos.crear_resguardo')
+@permission_required('resguardos.ver_resguardo')
 def ver_resguardos():
     conn = None
     resguardos_data = []
@@ -861,6 +862,7 @@ def delete_resguardo(id):
         query = "DELETE FROM resguardo WHERE No_Folio = %s"
         cursor.execute(query, (id,))
         conn.commit()
+        log_activity(action='Resguardos', resource='Resguardo', resource_id=id, details=f'Se elimino resguardo y bien, ID: {id}')
         flash("Resguardo eliminado correctamente.", 'success')
     except mysql.connector.Error as err:
         flash(f"Error al eliminar resguardo: {err}", 'error')

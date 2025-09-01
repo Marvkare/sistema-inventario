@@ -10,6 +10,7 @@ import pypdf.generic
 from werkzeug.utils import secure_filename
 from decorators import permission_required
 from database import get_db, get_db_connection, get_table_columns
+from log_activity import log_activity
 
 areas_bp = Blueprint('areas', __name__)
 
@@ -150,11 +151,13 @@ def manage_areas():
             if area_id: # Update existing area
                 # Ensure correct parameter order for UPDATE
                 cursor.execute("UPDATE areas SET nombre = %s, numero = %s WHERE id = %s", (area_name, area_numero, area_id))
+                log_activity("Actualizar nueva area","Areas",details="Se actualizo una nueva area")
                 flash(f"Área '{area_name}' actualizada correctamente.", 'success')
             else: # Add new area
                 # Ensure correct parameter order for INSERT
-                print("UWU nueva area")
+                
                 cursor.execute("INSERT INTO areas (nombre, numero) VALUES (%s, %s)", (area_name, area_numero))
+                log_activity("Agreagar nueva area","Areas",details="Se agrego una nueva area")
                 flash(f"Área '{area_name}' agregada correctamente.", 'success')
             
             conn.commit()
