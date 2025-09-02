@@ -9,12 +9,14 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-        body {
+        html, body {
             font-family: 'Inter', sans-serif;
             background-color: #f3f4f6;
-            display: flex;
             min-height: 100vh;
-            transition: margin-left 0.3s ease; /* Transición para el contenido principal */
+            overflow: hidden; /* Esto previene el scroll de la página principal */
+        }
+        body {
+            display: flex;
         }
         .container {
             max-width: 100%;
@@ -60,10 +62,10 @@
             color: #6b7280;
             font-size: 1.125rem;
         }
-
+        
         /* Estilos para el menú y el botón de alternancia */
         .sidebar {
-            width: 16rem; /* 64 * 0.25 = 16rem (corresponde a w-64) */
+            width: 16rem;
             transition: transform 0.3s ease;
             position: fixed;
             top: 0;
@@ -81,10 +83,12 @@
         }
 
         .main-content {
-            margin-left: 16rem; /* Margen para el contenido principal, igual al ancho del sidebar */
+            margin-left: 16rem;
             flex-grow: 1;
             transition: margin-left 0.3s ease;
             padding: 2rem;
+            height: 100vh; /* Altura completa para que sea scrollable */
+            overflow-y: auto; /* Aquí se agrega el scroll de la tabla */
         }
         
         /* Estado del menú oculto */
@@ -93,75 +97,117 @@
         }
         
         body.menu-hidden .sidebar-toggle-btn {
-            transform: translateX(0);
+            left: 1rem;
         }
         
         body.menu-hidden .main-content {
             margin-left: 0;
         }
+
+        /* Estilos de barra de desplazamiento personalizada (Webkit) */
+        /* Para el menú lateral */
+        .sidebar .flex-grow.overflow-y-auto::-webkit-scrollbar {
+            width: 8px; /* Ancho de la barra */
+        }
+
+        .sidebar .flex-grow.overflow-y-auto::-webkit-scrollbar-track {
+            background: #2d3748; /* Fondo de la pista (gris oscuro) */
+            border-radius: 10px;
+        }
+
+        .sidebar .flex-grow.overflow-y-auto::-webkit-scrollbar-thumb {
+            background: #4a5568; /* Color del "pulgar" de la barra (gris más claro) */
+            border-radius: 10px;
+        }
+
+        .sidebar .flex-grow.overflow-y-auto::-webkit-scrollbar-thumb:hover {
+            background: #5a67d8; /* Color del "pulgar" al pasar el ratón (azul/morado) */
+        }
+
+        /* Para el contenido principal (donde está la tabla) */
+        .main-content::-webkit-scrollbar {
+            width: 10px; /* Ancho de la barra */
+        }
+
+        .main-content::-webkit-scrollbar-track {
+            background: #e2e8f0; /* Fondo de la pista (gris claro) */
+            border-radius: 10px;
+        }
+
+        .main-content::-webkit-scrollbar-thumb {
+            background: #a0aec0; /* Color del "pulgar" de la barra (gris medio) */
+            border-radius: 10px;
+        }
+
+        .main-content::-webkit-scrollbar-thumb:hover {
+            background: #667eea; /* Color del "pulgar" al pasar el ratón (azul) */
+        }
     </style>
 </head>
 <body class="bg-gray-100">
-    <!-- Botón para mostrar/ocultar el menú -->
     <button id="menu-toggle" class="sidebar-toggle-btn p-3 bg-blue-600 text-white rounded-full shadow-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
         <i class="fas fa-bars"></i>
     </button>
 
-    <!-- Sidebar -->
-    <aside id="sidebar" class="sidebar bg-white text-gray-800 p-6 flex flex-col justify-between border-r border-gray-200">
-        <div class="flex-grow">
-            <h1 class="text-2xl font-bold mb-6 text-gray-900">Menú de Resguardos</h1>
-            <nav>
-                <ul class="space-y-2">
+    <aside id="sidebar" class="sidebar bg-gray-900 text-white p-6 flex flex-col justify-between border-r border-gray-700 shadow-xl">
+        <div class="flex-grow flex flex-col h-full">
+            <h1 class="text-2xl font-bold mb-6 text-indigo-400">Control de Resguardos</h1>
+            
+            <div class="flex-grow overflow-y-auto pr-2">
+                <ul class="space-y-4">
                     <li>
-                        <a href="{{ url_for('resguardos.crear_resguardo') }}" class="flex items-center p-3 text-lg font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors">
-                            <i class="fas fa-plus mr-3"></i>
-                            Formulario de Resguardo
+                        <a href="{{ url_for('resguardos.crear_resguardo') }}" class="flex items-center p-3 font-medium text-gray-300 rounded-lg hover:bg-gray-700 hover:text-white transition-colors duration-200 transform hover:scale-105">
+                            <i class="fas fa-plus mr-4 w-6 text-center"></i>
+                            <span>Formulario de Resguardo</span>
                         </a>
                     </li>
                     <li>
-                        <a href="{{ url_for('resguardos.ver_resguardos') }}" class="flex items-center p-3 text-lg font-medium text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors">
-                            <i class="fas fa-list-ul mr-3"></i>
-                            Ver Todos los Resguardos
+                        <a href="{{ url_for('resguardos.ver_resguardos') }}" class="flex items-center p-3 font-medium text-gray-300 rounded-lg hover:bg-gray-700 hover:text-white transition-colors duration-200 transform hover:scale-105">
+                            <i class="fas fa-list-ul mr-4 w-6 text-center"></i>
+                            <span>Ver Todos los Resguardos</span>
                         </a>
                     </li>
                     <li>
-                        <a href="{{ url_for('resguardos.resguardos_clasificados') }}" class="flex items-center p-3 text-lg font-medium text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors">
-                            <i class="fas fa-sort-amount-down-alt mr-3"></i>
-                            Tabla Sujeto Control
+                        <a href="{{ url_for('resguardos.ver_resguardos_sujeto_control') }}" class="flex items-center p-3 font-medium text-gray-300 rounded-lg hover:bg-gray-700 hover:text-white transition-colors duration-200 transform hover:scale-105">
+                            <i class="fas fa-sort-amount-down-alt mr-4 w-6 text-center"></i>
+                            <span>Tabla Sujeto Control</span>
                         </a>
                     </li>
                     <li>
-                        <a href="{{ url_for('errors.handle_errors') }}" class="flex items-center p-3 text-lg font-medium text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors">
-                            <i class="fas fa-exclamation-triangle mr-3"></i>
-                            Revisar Errores
-                        </a>
-                    </li>
-                    <!-- Enlace para la nueva ruta -->
-                    <li>
-                        <a href="{{ url_for('plantillas.crear_plantilla') }}" class="flex items-center p-3 text-lg font-medium text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors">
-                            <i class="fas fa-magic mr-3"></i>
-                            Crear Plantilla de Consulta
-                        </a>
-                    </li>
-                     <li>
-                        <a href="{{ url_for('plantillas.ver_plantillas') }}" class="flex items-center p-3 text-lg font-medium text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors">
-                            <i class="fas fa-magic mr-3"></i>
-                            Lista de plantillas
+                        <a href="{{ url_for('errors.handle_errors') }}" class="flex items-center p-3 font-medium text-gray-300 rounded-lg hover:bg-gray-700 hover:text-white transition-colors duration-200 transform hover:scale-105">
+                            <i class="fas fa-exclamation-triangle mr-4 w-6 text-center"></i>
+                            <span>Revisar Errores</span>
                         </a>
                     </li>
                     <li>
-                        <a href="{{ url_for('areas.manage_areas') }}" class="flex items-center p-3 text-lg font-medium text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors">
-                            <i class="fas fa-building mr-3"></i>
-                            Manage areas
+                        <a href="{{ url_for('plantillas.crear_plantilla') }}" class="flex items-center p-3 font-medium text-gray-300 rounded-lg hover:bg-gray-700 hover:text-white transition-colors duration-200 transform hover:scale-105">
+                            <i class="fas fa-magic mr-4 w-6 text-center"></i>
+                            <span>Crear Plantilla de Consulta</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ url_for('plantillas.ver_plantillas') }}" class="flex items-center p-3 font-medium text-gray-300 rounded-lg hover:bg-gray-700 hover:text-white transition-colors duration-200 transform hover:scale-105">
+                            <i class="fas fa-file-alt mr-4 w-6 text-center"></i>
+                            <span>Lista de Plantillas</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ url_for('areas.manage_areas') }}" class="flex items-center p-3 font-medium text-gray-300 rounded-lg hover:bg-gray-700 hover:text-white transition-colors duration-200 transform hover:scale-105">
+                            <i class="fas fa-building mr-4 w-6 text-center"></i>
+                            <span>Gestionar Áreas</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ url_for('areas.manage_areas') }}" class="flex items-center p-3 font-medium text-gray-300 rounded-lg hover:bg-gray-700 hover:text-white transition-colors duration-200 transform hover:scale-105">
+                            <i class="fas fa-tag mr-4 w-6 text-center"></i>
+                            <span>Generador de Etiquetas</span>
                         </a>
                     </li>
                 </ul>
-            </nav>
+            </div>
         </div>
     </aside>
 
-    <!-- Main content -->
     <div id="main-content" class="main-content flex-grow flex flex-col items-center">
         <div class="container bg-white p-8 rounded-xl shadow-lg border border-gray-200 w-full max-w-4xl">
             {% with messages = get_flashed_messages(with_categories=true) %}
@@ -177,7 +223,6 @@
     </div>
     
     <script>
-        // JavaScript para ocultar los mensajes flash después de 6 segundos
         document.addEventListener('DOMContentLoaded', () => {
             const flashMessages = document.querySelectorAll('.flash-message');
             flashMessages.forEach(msg => {
@@ -187,20 +232,18 @@
                 }, 6000);
             });
 
-            // Lógica para el botón de alternar el menú
             const menuToggleBtn = document.getElementById('menu-toggle');
             const body = document.body;
 
             menuToggleBtn.addEventListener('click', () => {
                 body.classList.toggle('menu-hidden');
                 
-                // Cambia el icono del botón
                 const icon = menuToggleBtn.querySelector('i');
                 if (body.classList.contains('menu-hidden')) {
                     icon.classList.remove('fa-bars');
-                    icon.classList.add('fa-times');
+                    icon.classList.add('fa-arrow-right');
                 } else {
-                    icon.classList.remove('fa-times');
+                    icon.classList.remove('fa-arrow-right');
                     icon.classList.add('fa-bars');
                 }
             });

@@ -37,7 +37,6 @@ def get_areas_data():
 
 @resguardos_bp.route('/crear_resguardo', methods=['GET', 'POST'])
 @login_required
-
 @permission_required('resguardos.crear_resguardo')
 def crear_resguardo():
     conn = None
@@ -501,6 +500,147 @@ def ver_resguardo(id_resguardo):
             cursor.close()
             conn.close()
 
+@resguardos_bp.route('/resguardos_sujeto_control')
+@login_required
+@permission_required('resguardos.ver_resguardo')
+def ver_resguardos_sujeto_control():
+    conn = None
+    resguardos_data = []
+    
+    # Pagination parameters
+    page = request.args.get('page', 1, type=int)
+    limit = request.args.get('limit', 100, type=int)
+    offset = (page - 1) * limit
+
+    # Search parameters
+    search_column = request.args.get('search_column', 'all')
+    search_query = request.args.get('search_query', '').strip()
+    
+    # Check if this is an AJAX request for infinite scroll
+    is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+
+        sql_select_columns = """
+            r.id,
+            b.No_Inventario, b.No_Factura, b.No_Cuenta, b.Descripcion_Del_Bien,
+            b.Descripcion_Corta_Del_Bien, a.nombre AS Area_Nombre,
+            b.Rubro, b.Poliza, b.Fecha_Poliza, b.Sub_Cuenta_Armonizadora,
+            b.Fecha_Factura, b.Costo_Inicial, b.Depreciacion_Acumulada,
+            b.Costo_Final_Cantidad, b.Cantidad, b.Estado_Del_Bien, b.Marca,
+            b.Modelo, b.Numero_De_Serie,
+            r.No_Resguardo, r.Tipo_De_Resguardo, r.Fecha_Resguardo, r.No_Trabajador,
+            r.Puesto, r.Nombre_Director_Jefe_De_Area,
+            r.Nombre_Del_Resguardante,
+            b.Proveedor
+        """
+        
+        sql_query = f"""
+            SELECT {sql_select_columns}
+            FROM resguardos r
+            JOIN bienes b ON r.id_bien = b.id
+            JOIN areas a ON r.id_area = a.id
+        """
+        
+        where_clauses = ["r.Tipo_De_Resguardo = 1"] # Filtro clave
+        sql_params = []
+
+        if search_query:
+            if search_column == 'all':
+                all_columns_search_clauses = []
+                searchable_cols = [
+                    'b.No_Inventario', 'b.No_Factura', 'b.No_Cuenta', 'b.Descripcion_Del_Bien',
+                    'a.nombre', 'b.Proveedor', 'b.Rubro', 'r.No_Resguardo',
+                    'r.Nombre_Del_Resguardante'
+                ]
+                for col in searchable_cols:
+                    all_columns_search_clauses.append(f"{col} LIKE %s")
+                    sql_params.append(f"%{search_query}%")
+                where_clauses.append("(" + " OR ".join(all_columns_search_clauses) + ")")
+            else:
+                col_mapping = {
+                    'Area': 'a.nombre',
+                    'No_Inventario': 'b.No_Inventario',
+                    'No_Factura': 'b.No_Factura',
+                    'No_Cuenta': 'b.No_Cuenta',
+                    'Descripcion_Del_Bien': 'b.Descripcion_Del_Bien',
+                    'Descripcion_Corta_Del_Bien': 'b.Descripcion_Corta_Del_Bien',
+                    'Rubro': 'b.Rubro',
+                    'Poliza': 'b.Poliza',
+                    'Fecha_Poliza': 'b.Fecha_Poliza',
+                    'Sub_Cuenta_Armonizadora': 'b.Sub_Cuenta_Armonizadora',
+                    'Fecha_Factura': 'b.Fecha_Factura',
+                    'Costo_Inicial': 'b.Costo_Inicial',
+                    'Depreciacion_Acumulada': 'b.Depreciacion_Acumulada',
+                    'Costo_Final_Cantidad': 'b.Costo_Final_Cantidad',
+                    'Cantidad': 'b.Cantidad',
+                    'Estado_Del_Bien': 'b.Estado_Del_Bien',
+                    'Marca': 'b.Marca',
+                    'Modelo': 'b.Modelo',
+                    'Numero_De_Serie': 'b.Numero_De_Serie',
+                    'No_Resguardo': 'r.No_Resguardo',
+                    'No_Trabajador': 'r.No_Trabajador',
+                    'Fecha_Resguardo': 'r.Fecha_Resguardo',
+                    'Puesto': 'r.Puesto',
+                    'Nombre_Director_Jefe_De_Area': 'r.Nombre_Director_Jefe_De_Area',
+                    'Tipo_De_Resguardo': 'r.Tipo_De_Resguardo',
+                    'Nombre_Del_Resguardante': 'r.Nombre_Del_Resguardante',
+                    'Proveedor': 'b.Proveedor'
+                }
+
+                db_col = col_mapping.get(search_column)
+                if db_col:
+                    where_clauses.append(f"{db_col} LIKE %s")
+                    sql_params.append(f"%{search_query}%")
+                else:
+                    flash("Columna de búsqueda inválida.", 'error')
+                    search_column = 'all'
+
+        if where_clauses:
+            sql_query += " WHERE " + " AND ".join(where_clauses)
+
+        sql_query += f" ORDER BY r.id DESC LIMIT %s OFFSET %s"
+        sql_params.extend([limit, offset])
+
+        cursor.execute(sql_query, sql_params)
+        resguardos_data = cursor.fetchall()
+        
+        available_columns_for_search = [col for col in AVAILABLE_COLUMNS if col not in [
+            'Descripcion_Del_Bien', 'Descripcion_Corta_Del_Bien', 'Puesto', 'Tipo_De_Resguardo', 'Estado_Del_Bien'
+        ]]
+
+        if is_ajax:
+            for row in resguardos_data:
+                for key, value in row.items():
+                    if isinstance(value, (date, datetime)):
+                        row[key] = value.isoformat()
+            
+            return jsonify(resguardos_data)
+        else:
+            return render_template(
+                'resguardos_sujeto_control.html',
+                resguardos=resguardos_data,
+                search_column=search_column,
+                search_query=search_query,
+                available_columns_for_search=available_columns_for_search,
+                current_page=page,
+                limit=limit
+            )
+
+    except mysql.connector.Error as err:
+        flash(f"Error al obtener resguardos: {err}", 'error')
+        print(f"Error: {err}")
+        return render_template('resguardos_sujeto_control.html', resguardos=[], search_column=search_column, search_query=search_query, available_columns_for_search=AVAILABLE_COLUMNS, current_page=page, limit=limit)
+    except Exception as e:
+        flash(f"Ocurrió un error inesperado: {e}", 'error')
+        print(f"Unexpected error: {e}")
+        return render_template('resguardos_sujeto_control.html', resguardos=[], search_column=search_column, search_query=search_query, available_columns_for_search=AVAILABLE_COLUMNS, current_page=page, limit=limit)
+    finally:
+        if conn and conn.is_connected():
+            cursor.close()
+            conn.close()
 
 @resguardos_bp.route('/generate_resguardo_pdf/<int:id_resguardo>')
 @login_required

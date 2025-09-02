@@ -138,7 +138,8 @@ CREATE DATABASE IF NOT EXISTS inventario;
 CREATE TABLE IF NOT EXISTS oficio_traspaso (
     `id` INT PRIMARY KEY NOT NULL AUTO_INCREMENT,
     `Dependencia` VARCHAR(255),
-    `Area` VARCHAR(255),
+    `id_area` INT NOT NULL,
+    `id_bien` INT NOT NULL, 
     `Oficio_clave` VARCHAR(255),
     `Asunto` TEXT,
     `Lugar_Fecha` DATE,

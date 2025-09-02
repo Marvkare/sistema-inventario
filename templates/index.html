@@ -3,88 +3,142 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Resguardos</title>
+    <title>Sistema de Control de Resguardo de Bienes</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f3f4f6;
-        }
-        .container {
-            max-width: 100%;
-            padding: 1rem;
-            margin: auto;
-        }
-        .flash-message {
-            position: fixed;
-            top: 1rem;
-            right: 1rem;
-            z-index: 1000;
-            padding: 0.75rem 1.25rem;
-            border-radius: 0.5rem;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            animation: fadein 0.5s, fadeout 0.5s 5.5s forwards;
-        }
-        .flash-success {
-            background-color: #d1e7dd;
-            color: #0f5132;
-            border: 1px solid #badbcc;
-        }
-        .flash-error {
-            background-color: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
-        }
-        .flash-warning {
-            background-color: #fff3cd;
-            color: #664d03;
-            border: 1px solid #ffeeba;
-        }
-        @keyframes fadein {
-            from { opacity: 0; transform: translateY(-20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        @keyframes fadeout {
-            from { opacity: 1; }
-            to { opacity: 0; display: none; }
-        }
-        .no-data {
-            text-align: center;
-            padding: 2rem;
-            color: #6b7280;
-            font-size: 1.125rem;
-        }
-        /* Estilos para el modal */
-        .modal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 2000;
-        }
-        .modal-content {
-            background-color: white;
-            padding: 2rem;
-            border-radius: 0.75rem;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            width: 90%;
-            max-width: 400px;
+        /* Opcional: Estilos personalizados si es necesario */
+        .module-icon {
+            font-size: 3rem;
+            color: #4f46e5; /* Color morado de Tailwind (indigo-600) */
         }
     </style>
 </head>
-<body class="bg-gray-100 flex min-h-screen">
-    {% extends "base.html" %}
-    {% block content %}
+<body class="bg-gray-100 text-gray-800 font-sans">
 
-    
+    <header class="bg-white py-12 px-4 sm:px-6 lg:px-8 text-center shadow-lg">
+        <div class="max-w-7xl mx-auto">
+            <h1 class="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-gray-900">
+                Sistema de Control de Resguardo de Bienes
+            </h1>
+            <p class="mt-4 text-xl text-gray-500">
+                Optimiza la gestión y la trazabilidad de los bienes asignados a personal y áreas de tu organización.
+            </p>
+        </div>
+    </header>
 
-    {% endblock %}
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+
+        <section class="py-16">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl sm:text-4xl font-bold text-gray-800">Digitaliza tus Resguardos, Maximiza tu Control</h2>
+                <p class="mt-4 max-w-2xl mx-auto text-lg text-gray-600">
+                    Garantizar la correcta asignación y estado de los bienes institucionales es fundamental. Nuestro sistema está diseñado para simplificar este proceso, proporcionando una solución robusta que centraliza la información, facilita la documentación y asegura la responsabilidad sobre cada activo. Con nuestra plataforma, puedes decir adiós a los procesos manuales y dar la bienvenida a una gestión de resguardos inteligente y digital.
+                </p>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8 text-center">
+                <div class="bg-white p-6 rounded-lg shadow-md transition transform hover:scale-105 hover:shadow-xl">
+                    <i class="fas fa-file-contract module-icon mb-4"></i>
+                    <h3 class="font-semibold text-lg">Control Riguroso</h3>
+                    <p class="mt-2 text-gray-600">Documenta y verifica la asignación de cada bien con precisión.</p>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-md transition transform hover:scale-105 hover:shadow-xl">
+                    <i class="fas fa-search-location module-icon mb-4"></i>
+                    <h3 class="font-semibold text-lg">Trazabilidad Total</h3>
+                    <p class="mt-2 text-gray-600">Sigue el historial de resguardo de cada activo a lo largo del tiempo.</p>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-md transition transform hover:scale-105 hover:shadow-xl">
+                    <i class="fas fa-user-check module-icon mb-4"></i>
+                    <h3 class="font-semibold text-lg">Asignación Clara</h3>
+                    <p class="mt-2 text-gray-600">Ten un registro exacto de quién es responsable de cada bien.</p>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-md transition transform hover:scale-105 hover:shadow-xl">
+                    <i class="fas fa-shield-alt module-icon mb-4"></i>
+                    <h3 class="font-semibold text-lg">Seguridad y Respaldo</h3>
+                    <p class="mt-2 text-gray-600">Mantén un respaldo seguro y accesible de toda la información de tus bienes.</p>
+                </div>
+            </div>
+        </section>
+
+        <hr class="my-12 border-gray-300">
+
+        <section class="py-16">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl sm:text-4xl font-bold text-gray-800">Módulos del Sistema</h2>
+            </div>
+
+            <div class="bg-white p-8 rounded-lg shadow-md mb-8 md:flex md:items-center">
+                <div class="md:w-1/3 text-center mb-6 md:mb-0">
+                    <i class="fas fa-file-invoice module-icon"></i>
+                </div>
+                <div class="md:w-2/3 md:pl-8">
+                    <h3 class="text-2xl font-bold mb-2">Módulo de Resguardos</h3>
+                    <p class="text-gray-600">
+                        El módulo de resguardos es el corazón del sistema, diseñado para documentar y administrar la asignación de activos fijos a personas o áreas específicas. Permite crear y editar resguardos, adjuntando la información detallada del bien y del responsable.
+                    </p>
+                    <ul class="mt-4 space-y-2 text-gray-700">
+                        <li><i class="fas fa-check-circle text-green-500 mr-2"></i> **Creación de Resguardos:** Registra nuevos resguardos con datos completos como el número de inventario, descripción del bien, costo, y la información del resguardante.</li>
+                        <li><i class="fas fa-check-circle text-green-500 mr-2"></i> **Edición de Resguardos:** Actualiza la información de un resguardo existente de forma sencilla.</li>
+                        <li><i class="fas fa-check-circle text-green-500 mr-2"></i> **Gestión de Imágenes:** Adjunta y recorta imágenes de los bienes directamente en la plataforma, lo que facilita la identificación visual y el control del estado del activo.</li>
+                        <li><i class="fas fa-check-circle text-green-500 mr-2"></i> **Búsqueda y Filtro:** Encuentra cualquier resguardo de manera instantánea utilizando filtros por número de resguardo, nombre del trabajador, o área.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="bg-white p-8 rounded-lg shadow-md mb-8 md:flex md:items-center">
+                <div class="md:w-1/3 text-center mb-6 md:mb-0">
+                    <i class="fas fa-boxes module-icon"></i>
+                </div>
+                <div class="md:w-2/3 md:pl-8">
+                    <h3 class="text-2xl font-bold mb-2">Módulo de Bienes</h3>
+                    <p class="text-gray-600">
+                        Este módulo centraliza toda la información técnica y administrativa de cada activo físico. Es tu base de datos maestra para todos los bienes de la organización.
+                    </p>
+                    <ul class="mt-4 space-y-2 text-gray-700">
+                        <li><i class="fas fa-check-circle text-green-500 mr-2"></i> **Registro de Bienes:** Almacena todos los detalles del bien, como la marca, modelo, número de serie, y el estado actual.</li>
+                        <li><i class="fas fa-check-circle text-green-500 mr-2"></i> **Historial del Activo:** Visualiza el historial completo de cada bien, incluyendo a quién ha sido asignado y los resguardos asociados a lo largo del tiempo.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="bg-white p-8 rounded-lg shadow-md md:flex md:items-center">
+                <div class="md:w-1/3 text-center mb-6 md:mb-0">
+                    <i class="fas fa-chart-line module-icon"></i>
+                </div>
+                <div class="md:w-2/3 md:pl-8">
+                    <h3 class="text-2xl font-bold mb-2">Módulo de Reportes</h3>
+                    <p class="text-gray-600">
+                        Transforma tus datos en conocimiento útil. El módulo de reportes te permite generar informes personalizados para tener una visión clara y actualizada del estado de tus resguardos y bienes.
+                    </p>
+                    <ul class="mt-4 space-y-2 text-gray-700">
+                        <li><i class="fas fa-check-circle text-green-500 mr-2"></i> **Reporte de Resguardos:** Obtén una visión completa de todos los resguardos activos y su información.</li>
+                        <li><i class="fas fa-check-circle text-green-500 mr-2"></i> **Reportes por Área o Resguardante:** Analiza la distribución de bienes por departamento o por persona.</li>
+                        <li><i class="fas fa-check-circle text-green-500 mr-2"></i> **Exportación de Datos:** Descarga los reportes en formatos comunes como PDF o CSV para su uso fuera de la plataforma.</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+        
+        <hr class="my-12 border-gray-300">
+
+        <section class="bg-indigo-600 text-white text-center py-16 rounded-xl shadow-lg mb-12">
+            <h2 class="text-3xl sm:text-4xl font-bold">¿Listo para Transformar tu Gestión de Resguardos?</h2>
+            <p class="mt-4 text-lg max-w-2xl mx-auto">
+                No pierdas más tiempo en procesos manuales. Centraliza, optimiza y controla tus bienes de manera eficiente.
+            </p>
+            <a href="#contact" class="mt-8 inline-block px-8 py-4 text-lg font-semibold bg-white text-indigo-600 rounded-full shadow-lg transition transform hover:scale-105 hover:shadow-xl">
+                Contáctanos para una demostración
+            </a>
+            <p class="mt-4 text-sm text-indigo-200">
+                O, si eres un usuario registrado, <a href="#" class="underline hover:text-white transition-colors">inicia sesión aquí</a>.
+            </p>
+        </section>
+
+    </main>
+
+    <footer class="bg-gray-800 text-gray-400 py-6 text-center">
+        <p>&copy; 2024 Tu Proyecto. Todos los derechos reservados.</p>
+    </footer>
+
 </body>
 </html>

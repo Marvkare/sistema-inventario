@@ -95,7 +95,7 @@ def logout():
 def index():
     if not current_user.is_authenticated:
         return redirect(url_for('login'))
-    return redirect(url_for('resguardos.ver_resguardos'))
+    return  render_template('index.html')
     
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in app.config['ALLOWED_EXTENSIONS']
