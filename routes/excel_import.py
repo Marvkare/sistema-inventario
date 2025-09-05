@@ -89,7 +89,7 @@ def get_or_create_area(cursor, area_name):
 
 @excel_import_bp.route('/upload_excel', methods=['POST'])
 @login_required
-@permission_required('resguardos.crear_resguardo')
+@permission_required('excel_import.upload_excel')
 def upload_excel():
     print("\n--- INICIANDO PROCESO DE CARGA DE EXCEL ---")
     if 'excel_file' not in request.files:
@@ -156,10 +156,7 @@ def upload_excel():
                     if not id_area:
                         raise ValueError("El campo 'Area' es obligatorio y no se encontró o estaba vacío.")
                     
-                    # 4. Insert the foreign keys into the resguardo_data
-                    if not resguardo_data.get('No_Resguardo'):
-                         raise ValueError("'No_Resguardo' es un campo obligatorio y no se encontró o estaba vacío.")
-
+                   
                     resguardo_data['id_bien'] = id_bien
                     resguardo_data['id_area'] = id_area
 

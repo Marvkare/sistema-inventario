@@ -762,7 +762,7 @@ def ver_resguardos():
             b.Costo_Final_Cantidad, b.Cantidad, b.Estado_Del_Bien, b.Marca,
             b.Modelo, b.Numero_De_Serie,
             r.No_Resguardo, r.Tipo_De_Resguardo, r.Fecha_Resguardo, r.No_Trabajador,
-            r.Puesto, r.Nombre_Director_Jefe_De_Area,
+            r.Puesto_Trabajador, r.Nombre_Director_Jefe_De_Area,
             r.Nombre_Del_Resguardante,
             b.Proveedor
         """

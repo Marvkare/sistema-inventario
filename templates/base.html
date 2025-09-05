@@ -143,6 +143,15 @@
             background: #667eea; /* Color del "pulgar" al pasar el ratón (azul) */
         }
     </style>
+    <style type="text/tailwindcss">
+        @theme {
+            --color-verde-mexicano-oscuro: #006B3D;
+            --color-verde-mexicano-medio: #008542;
+            --color-verde-mexicano-claro: #78BB42;
+            --color-rojo-mexicano: #BF0A30;
+            --color-blanco-mexicano: #FFFFFF;
+        }
+</style>
 </head>
 <body class="bg-gray-100">
     <button id="menu-toggle" class="sidebar-toggle-btn p-3 bg-blue-600 text-white rounded-full shadow-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
@@ -155,6 +164,12 @@
             
             <div class="flex-grow overflow-y-auto pr-2">
                 <ul class="space-y-4">
+                    <li>
+                        <a href="{{ url_for('bienes.agregar_bien') }}" class="flex items-center p-3 font-medium text-gray-300 rounded-lg hover:bg-gray-700 hover:text-white transition-colors duration-200 transform hover:scale-105">
+                            <i class="fas fa-plus mr-4 w-6 text-center"></i>
+                            <span>Formulario de Bienes</span>
+                        </a>
+                    </li>
                     <li>
                         <a href="{{ url_for('resguardos.crear_resguardo') }}" class="flex items-center p-3 font-medium text-gray-300 rounded-lg hover:bg-gray-700 hover:text-white transition-colors duration-200 transform hover:scale-105">
                             <i class="fas fa-plus mr-4 w-6 text-center"></i>
@@ -195,6 +210,12 @@
                         <a href="{{ url_for('areas.manage_areas') }}" class="flex items-center p-3 font-medium text-gray-300 rounded-lg hover:bg-gray-700 hover:text-white transition-colors duration-200 transform hover:scale-105">
                             <i class="fas fa-building mr-4 w-6 text-center"></i>
                             <span>Gestionar Áreas</span>
+                        </a>
+                    </li>
+                     <li>
+                        <a href="{{ url_for('areas.manage_areas') }}" class="flex items-center p-3 font-medium text-gray-300 rounded-lg hover:bg-gray-700 hover:text-white transition-colors duration-200 transform hover:scale-105">
+                            <i class="fas fa-building mr-4 w-6 text-center"></i>
+                            <span>Gestionar Ubicaciones</span>
                         </a>
                     </li>
                     <li>

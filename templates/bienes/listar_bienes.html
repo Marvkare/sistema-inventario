@@ -1,0 +1,48 @@
+{% extends 'base.html' %} 
+{% block content %}
+<div class="container mt-4">
+    <h2>Listado de Bienes</h2>
+    <a href="{{ url_for('bienes.agregar_bien') }}" class="btn btn-primary mb-3">Agregar Nuevo Bien</a>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <table class="table table-bordered table-striped">
+        <thead>
+            <tr>
+                <th>No. de Inventario</th>
+                <th>Descripción</th>
+                <th>Ubicación</th>
+                <th>Área</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for bien in bienes %}
+            <tr>
+                <td>{{ bien.No_Inventario }}</td>
+                <td>{{ bien.Descripcion_Del_Bien }}</td>
+                <td>{{ bien.Ubicacion }}</td>
+                <td>{{ bien.Area }}</td>
+                <td>
+                    <a href="{{ url_for('bienes.ver_detalles_bien', bien_id=bien.id) }}" class="btn btn-info btn-sm">Ver Detalles</a>
+                    <a href="{{ url_for('bienes.editar_bien', bien_id=bien.id) }}" class="btn btn-warning btn-sm">Editar</a>
+                    <form action="{{ url_for('bienes.eliminar_bien', bien_id=bien.id) }}" method="POST" style="display:inline;">
+                        <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('¿Estás seguro de que quieres eliminar este bien?');">Eliminar</button>
+                    </form>
+                </td> 
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="5">No hay bienes registrados.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

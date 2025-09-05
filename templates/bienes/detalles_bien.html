@@ -1,0 +1,115 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="bg-white shadow-lg rounded-xl overflow-hidden">
+        <div class="px-6 py-4 bg-verde-mexicano-oscuro text-blanco-mexicano">
+            <h2 class="text-3xl font-bold">Detalles del Bien</h2>
+            <p class="text-xl font-light mt-1">{{ bien.No_Inventario }}</p>
+        </div>
+        <div class="p-6">
+
+            <!-- Sección de Información del Bien -->
+            <h3 class="text-2xl font-semibold mb-4 text-verde-mexicano-medio border-b-2 border-verde-mexicano-claro pb-2">Información del Bien</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-4">
+                <div class="space-y-2">
+                    <p><strong>No. de Inventario:</strong> <span class="text-gray-700">{{ bien.No_Inventario }}</span></p>
+                    <p><strong>No. Factura:</strong> <span class="text-gray-700">{{ bien.No_Factura }}</span></p>
+                    <p><strong>No. Cuenta:</strong> <span class="text-gray-700">{{ bien.No_Cuenta }}</span></p>
+                    <p><strong>No. Resguardo:</strong> <span class="text-gray-700">{{ bien.No_Resguardo }}</span></p>
+                    <p><strong>Proveedor:</strong> <span class="text-gray-700">{{ bien.Proveedor }}</span></p>
+                    <p><strong>Descripción del Bien:</strong> <span class="text-gray-700">{{ bien.Descripcion_Del_Bien }}</span></p>
+                    <p><strong>Descripción Corta:</strong> <span class="text-gray-700">{{ bien.Descripcion_Corta_Del_Bien }}</span></p>
+                    <p><strong>Área:</strong> <span class="text-gray-700">{{ bien.Area }}</span></p>
+                    <p><strong>Rubro:</strong> <span class="text-gray-700">{{ bien.Rubro }}</span></p>
+                    <p><strong>Póliza:</strong> <span class="text-gray-700">{{ bien.Poliza }}</span></p>
+                    <p><strong>Fecha Póliza:</strong> <span class="text-gray-700">{{ bien.Fecha_Poliza }}</span></p>
+                    <p><strong>Subcuenta Armonizadora:</strong> <span class="text-gray-700">{{ bien.Sub_Cuenta_Armonizadora }}</span></p>
+                </div>
+                <div class="space-y-2">
+                    <p><strong>Fecha Factura:</strong> <span class="text-gray-700">{{ bien.Fecha_Factura }}</span></p>
+                    <p><strong>Costo Inicial:</strong> <span class="text-gray-700">{{ bien.Costo_Inicial }}</span></p>
+                    <p><strong>Depreciación Acumulada:</strong> <span class="text-gray-700">{{ bien.Depreciacion_Acumulada }}</span></p>
+                    <p><strong>Costo Final:</strong> <span class="text-gray-700">{{ bien.Costo_Final_Cantidad }}</span></p>
+                    <p><strong>Cantidad:</strong> <span class="text-gray-700">{{ bien.Cantidad }}</span></p>
+                    <p><strong>Estado del Bien:</strong> <span class="text-gray-700">{{ bien.Estado_Del_Bien }}</span></p>
+                    <p><strong>Marca:</strong> <span class="text-gray-700">{{ bien.Marca }}</span></p>
+                    <p><strong>Modelo:</strong> <span class="text-gray-700">{{ bien.Modelo }}</span></p>
+                    <p><strong>No. Serie:</strong> <span class="text-gray-700">{{ bien.Numero_De_Serie }}</span></p>
+                    <p><strong>Ubicación:</strong> <span class="text-gray-700">{{ bien.Ubicacion }}</span></p>
+                    <p><strong>Tipo de Alta:</strong> <span class="text-gray-700">{{ bien.Tipo_De_Alta }}</span></p>
+                    <p><strong>Clasificación:</strong> <span class="text-gray-700">{{ bien.Clasificacion }}</span></p>
+                    <p><strong>Partida Presupuestal:</strong> <span class="text-gray-700">{{ bien.Partida_Presupuestal }}</span></p>
+                </div>
+            </div>
+
+            <hr class="my-8">
+
+            <!-- Sección de Resguardos Asociados -->
+            <h3 class="text-2xl font-semibold mb-4 text-verde-mexicano-medio border-b-2 border-verde-mexicano-claro pb-2">Resguardos Asociados</h3>
+            {% if resguardos %}
+            <div class="space-y-4">
+                {% for resguardo in resguardos %}
+                <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg shadow-sm">
+                    <div>
+                        <p class="font-semibold text-lg">No. de Resguardo: {{ resguardo.No_Resguardo }}</p>
+                        <p class="text-sm text-gray-500">Asignado a: {{ resguardo.Nombre_Del_Resguardante }}</p>
+                    </div>
+                     <a href="{{ url_for('resguardos.editar_resguardo', id_resguardo=resguardo.id) }}" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-blanco-mexicano bg-verde-mexicano-oscuro hover:bg-verde-mexicano-medio focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-verde-mexicano-claro transition duration-150 ease-in-out">
+                    <i class="fas fa-edit mr-2"></i> Editar Resguardo
+                    </a>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 rounded-lg" role="alert">
+                <p class="font-bold">Atención</p>
+                <p>Este bien no tiene resguardos asociados.</p>
+            </div>
+            {% endif %}
+
+            <hr class="my-8">
+
+            <!-- Sección de Imágenes (Movida al final) -->
+            <div class="mb-8">
+                <h3 class="text-2xl font-semibold mb-4 text-verde-mexicano-medio border-b-2 border-verde-mexicano-claro pb-2">Imágenes del Bien</h3>
+                {% if bien.imagenes %}
+                    <div id="imageCarousel" class="carousel slide" data-ride="carousel">
+                        <div class="carousel-inner rounded-lg shadow-md">
+                            {% for imagen in bien.imagenes %}
+                            <div class="carousel-item {% if loop.first %}active{% endif %}">
+                                <img src="{{ url_for('serve_uploaded_file', filename=imagen.ruta_imagen) }}" class="d-block w-full h-96 object-cover" alt="Imagen del Bien">
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% if bien.imagenes | length > 1 %}
+                        <a class="carousel-control-prev" href="#imageCarousel" role="button" data-slide="prev">
+                            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                            <span class="sr-only">Anterior</span>
+                        </a>
+                        <a class="carousel-control-next" href="#imageCarousel" role="button" data-slide="next">
+                            <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                            <span class="sr-only">Siguiente</span>
+                        </a>
+                        {% endif %}
+                    </div>
+                {% else %}
+                    <div class="bg-blue-100 border-l-4 border-blue-500 text-blue-700 p-4 rounded-lg" role="alert">
+                        <p class="font-bold">Información</p>
+                        <p>Este bien no tiene imágenes adjuntas.</p>
+                    </div>
+                {% endif %}
+            </div>
+
+        </div>
+        
+       <div class="p-6 bg-gray-50 border-t border-gray-200 flex justify-end space-x-4">
+            <a href="{{ url_for('bienes.editar_bien', bien_id=bien.id) }}" class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-blanco-mexicano bg-verde-mexicano-medio hover:bg-verde-mexicano-oscuro focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-verde-mexicano-claro transition duration-150 ease-in-out">
+                <i class="fas fa-edit mr-2"></i> Editar Bien
+            </a>
+            <a href="{{ url_for('bienes.listar_bienes') }}" class="inline-flex items-center px-6 py-3 border border-gray-300 text-base font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition duration-150 ease-in-out">
+                <i class="fas fa-arrow-left mr-2"></i> Volver al listado
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

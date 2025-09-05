@@ -1,0 +1,200 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="bg-white shadow-lg rounded-lg overflow-hidden">
+        <div class="px-6 py-4 bg-verde-mexicano-oscuro text-blanco-mexicano">
+            <h1 class="text-3xl font-bold">Registrar Nuevo Bien</h1>
+        </div>
+        <div class="p-6">
+            <form method="POST" enctype="multipart/form-data">
+                
+                <h2 class="text-2xl font-semibold mb-4 text-verde-mexicano-medio border-b-2 border-verde-mexicano-claro pb-2">Información General</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                    <div>
+                        <label for="No_Inventario" class="block text-sm font-medium text-gray-700 mb-1">No. de Inventario</label>
+                        <input type="text" class="form-input block w-full rounded-md border-gray-300 shadow-sm focus:border-verde-mexicano-claro focus:ring focus:ring-verde-mexicano-claro focus:ring-opacity-50" id="No_Inventario" name="No_Inventario" required>
+                    </div>
+                </div>
+
+                <h2 class="text-2xl font-semibold mb-4 text-verde-mexicano-medio border-b-2 border-verde-mexicano-claro pb-2">Datos Financieros</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                    <div>
+                        <label for="No_Factura" class="block text-sm font-medium text-gray-700 mb-1">No. de Factura</label>
+                        <input type="text" class="form-input block w-full rounded-md border-gray-300 shadow-sm focus:border-verde-mexicano-claro focus:ring focus:ring-verde-mexicano-claro focus:ring-opacity-50" id="No_Factura" name="No_Factura">
+                    </div>
+                    <div>
+                        <label for="Fecha_Factura" class="block text-sm font-medium text-gray-700 mb-1">Fecha de Factura</label>
+                        <input type="date" class="form-input block w-full rounded-md border-gray-300 shadow-sm focus:border-verde-mexicano-claro focus:ring focus:ring-verde-mexicano-claro focus:ring-opacity-50" id="Fecha_Factura" name="Fecha_Factura">
+                    </div>
+                    <div>
+                        <label for="Costo_Inicial" class="block text-sm font-medium text-gray-700 mb-1">Costo Inicial</label>
+                        <input type="number" step="0.01" class="form-input block w-full rounded-md border-gray-300 shadow-sm focus:border-verde-mexicano-claro focus:ring focus:ring-verde-mexicano-claro focus:ring-opacity-50" id="Costo_Inicial" name="Costo_Inicial" min="0">
+                    </div>
+                    <div>
+                        <label for="Poliza" class="block text-sm font-medium text-gray-700 mb-1">Póliza</label>
+                        <input type="text" class="form-input block w-full rounded-md border-gray-300 shadow-sm focus:border-verde-mexicano-claro focus:ring focus:ring-verde-mexicano-claro focus:ring-opacity-50" id="Poliza" name="Poliza">
+                    </div>
+                    <div>
+                        <label for="Fecha_Poliza" class="block text-sm font-medium text-gray-700 mb-1">Fecha de Póliza</label>
+                        <input type="date" class="form-input block w-full rounded-md border-gray-300 shadow-sm focus:border-verde-mexicano-claro focus:ring focus:ring-verde-mexicano-claro focus:ring-opacity-50" id="Fecha_Poliza" name="Fecha_Poliza">
+                    </div>
+                </div>
+
+                <h2 class="text-2xl font-semibold mb-4 text-verde-mexicano-medio border-b-2 border-verde-mexicano-claro pb-2">Detalles Técnicos y Descripción</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                    <div>
+                        <label for="Estado_Del_Bien" class="block text-sm font-medium text-gray-700 mb-1">Estado del Bien</label>
+                        <select class="form-select block w-full rounded-md border-gray-300 shadow-sm focus:border-verde-mexicano-claro focus:ring focus:ring-verde-mexicano-claro focus:ring-opacity-50" id="Estado_Del_Bien" name="Estado_Del_Bien">
+                            <option value="" disabled selected>Seleccione...</option>
+                            <option>Nuevo</option>
+                            <option>Bueno</option>
+                            <option>Regular</option>
+                            <option>Malo</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="Marca" class="block text-sm font-medium text-gray-700 mb-1">Marca</label>
+                        <input type="text" class="form-input block w-full rounded-md border-gray-300 shadow-sm focus:border-verde-mexicano-claro focus:ring focus:ring-verde-mexicano-claro focus:ring-opacity-50" id="Marca" name="Marca">
+                    </div>
+                    <div>
+                        <label for="Modelo" class="block text-sm font-medium text-gray-700 mb-1">Modelo</label>
+                        <input type="text" class="form-input block w-full rounded-md border-gray-300 shadow-sm focus:border-verde-mexicano-claro focus:ring focus:ring-verde-mexicano-claro focus:ring-opacity-50" id="Modelo" name="Modelo">
+                    </div>
+                    <div>
+                        <label for="Numero_De_Serie" class="block text-sm font-medium text-gray-700 mb-1">Número de Serie</label>
+                        <input type="text" class="form-input block w-full rounded-md border-gray-300 shadow-sm focus:border-verde-mexicano-claro focus:ring focus:ring-verde-mexicano-claro focus:ring-opacity-50" id="Numero_De_Serie" name="Numero_De_Serie">
+                    </div>
+                </div>
+                <div class="mb-6">
+                    <label for="Descripcion_Del_Bien" class="block text-sm font-medium text-gray-700 mb-1">Descripción Completa del Bien</label>
+                    <textarea class="form-textarea block w-full rounded-md border-gray-300 shadow-sm focus:border-verde-mexicano-claro focus:ring focus:ring-verde-mexicano-claro focus:ring-opacity-50" id="Descripcion_Del_Bien" name="Descripcion_Del_Bien" rows="3"></textarea>
+                </div>
+                <div class="mb-6">
+                    <label for="Descripcion_Corta_Del_Bien" class="block text-sm font-medium text-gray-700 mb-1">Descripción Corta del Bien</label>
+                    <textarea class="form-textarea block w-full rounded-md border-gray-300 shadow-sm focus:border-verde-mexicano-claro focus:ring focus:ring-verde-mexicano-claro focus:ring-opacity-50" id="Descripcion_Corta_Del_Bien" name="Descripcion_Corta_Del_Bien" rows="1"></textarea>
+                </div>
+
+
+                <h2 class="text-2xl font-semibold mb-4 text-verde-mexicano-medio border-b-2 border-verde-mexicano-claro pb-2">Información Contable </h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                    <div>
+                        <label for="No_Cuenta" class="block text-sm font-medium text-gray-700 mb-1">No. de Cuenta</label>
+                        <input type="text" class="form-input block w-full rounded-md border-gray-300 shadow-sm focus:border-verde-mexicano-claro focus:ring focus:ring-verde-mexicano-claro focus:ring-opacity-50" id="No_Cuenta" name="No_Cuenta">
+                    </div>
+                    <div>
+                        <label for="Sub_Cuenta_Armonizadora" class="block text-sm font-medium text-gray-700 mb-1">Subcuenta Armonizadora</label>
+                        <input type="text" class="form-input block w-full rounded-md border-gray-300 shadow-sm focus:border-verde-mexicano-claro focus:ring focus:ring-verde-mexicano-claro focus:ring-opacity-50" id="Sub_Cuenta_Armonizadora" name="Sub_Cuenta_Armonizadora">
+                    </div>
+                    <div>
+                        <label for="Proveedor" class="block text-sm font-medium text-gray-700 mb-1">Proveedor</label>
+                        <input type="text" class="form-input block w-full rounded-md border-gray-300 shadow-sm focus:border-verde-mexicano-claro focus:ring focus:ring-verde-mexicano-claro focus:ring-opacity-50" id="Proveedor" name="Proveedor">
+                    </div>
+                    <div>
+                        <label for="Rubro" class="block text-sm font-medium text-gray-700 mb-1">Rubro</label>
+                        <input type="text" class="form-input block w-full rounded-md border-gray-300 shadow-sm focus:border-verde-mexicano-claro focus:ring focus:ring-verde-mexicano-claro focus:ring-opacity-50" id="Rubro" name="Rubro">
+                    </div>
+                     <div>
+                        <label for="Depreciacion_Acumulada" class="block text-sm font-medium text-gray-700 mb-1">Depreciación Acumulada</label>
+                        <input type="number" step="0.01" class="form-input block w-full rounded-md border-gray-300 shadow-sm focus:border-verde-mexicano-claro focus:ring focus:ring-verde-mexicano-claro focus:ring-opacity-50" id="Depreciacion_Acumulada" name="Depreciacion_Acumulada" min="0">
+                    </div>
+                    <div>
+                        <label for="Costo_Final_Cantidad" class="block text-sm font-medium text-gray-700 mb-1">Costo Final</label>
+                        <input type="number" step="0.01" class="form-input block w-full rounded-md border-gray-300 shadow-sm focus:border-verde-mexicano-claro focus:ring focus:ring-verde-mexicano-claro focus:ring-opacity-50" id="Costo_Final_Cantidad" name="Costo_Final_Cantidad" min="0">
+                    </div>
+                     <div>
+                        <label for="Tipo_De_Alta" class="block text-sm font-medium text-gray-700 mb-1">Tipo de Alta</label>
+                        <select class="form-select block w-full rounded-md border-gray-300 shadow-sm focus:border-verde-mexicano-claro focus:ring focus:ring-verde-mexicano-claro focus:ring-opacity-50" id="Tipo_De_Alta" name="Tipo_De_Alta" required>
+                            <option value="" disabled selected>Seleccione...</option>
+                            <option>Compra</option>
+                            <option>Comodato</option>
+                            <option>Donacion</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="Cantidad" class="block text-sm font-medium text-gray-700 mb-1">Cantidad</label>
+                        <input type="number" class="form-input block w-full rounded-md border-gray-300 shadow-sm focus:border-verde-mexicano-claro focus:ring focus:ring-verde-mexicano-claro focus:ring-opacity-50" id="Cantidad" name="Cantidad" min="1">
+                    </div>
+                </div>
+                
+                <h2 class="text-2xl font-semibold mb-4 text-verde-mexicano-medio border-b-2 border-verde-mexicano-claro pb-2">Imágenes del Bien</h2>
+                <div class="mb-6">
+                    <label for="imagenes_bien" class="block text-sm font-medium text-gray-700 mb-1">Seleccionar Imágenes</label>
+                    <input 
+                        type="file" 
+                        id="imagenes_bien" 
+                        name="imagenes_bien" 
+                        class="form-input block w-full rounded-md border-gray-300 shadow-sm"
+                        accept="image/*" 
+                        multiple
+                    >
+                    <div id="preview_imagenes" class="flex flex-wrap gap-2 mt-2"></div>
+                </div>
+
+                <hr class="my-8 border-gray-300">
+
+                <div class="flex justify-end space-x-4">
+                    <button type="submit" class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-blanco-mexicano bg-verde-mexicano-oscuro hover:bg-verde-mexicano-medio focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-verde-mexicano-claro transition duration-150 ease-in-out">
+                        <i class="fas fa-save mr-2"></i> Guardar Bien
+                    </button>
+                    <a href="{{ url_for('bienes.listar_bienes') }}" class="inline-flex items-center px-6 py-3 border border-gray-300 text-base font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition duration-150 ease-in-out">
+                        <i class="fas fa-times mr-2"></i> Cancelar
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+const inputImagenes = document.getElementById('imagenes_bien');
+const preview = document.getElementById('preview_imagenes');
+let archivosSeleccionados = [];
+
+inputImagenes.addEventListener('change', function(event) {
+    archivosSeleccionados = Array.from(event.target.files);
+    mostrarPreview();
+});
+
+// Función para mostrar las imágenes y agregar botón de eliminar
+function mostrarPreview() {
+    preview.innerHTML = '';
+    archivosSeleccionados.forEach((file, idx) => {
+        if (file.type.startsWith('image/')) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const contenedor = document.createElement('div');
+                contenedor.className = "relative inline-block";
+                const img = document.createElement('img');
+                img.src = e.target.result;
+                img.className = "h-24 w-24 object-cover rounded border";
+                // Botón eliminar
+                const btn = document.createElement('button');
+                btn.type = "button";
+                btn.innerHTML = '&times;';
+                btn.className = "absolute top-0 right-0 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center shadow hover:bg-red-700";
+                btn.title = "Eliminar imagen";
+                btn.onclick = function() {
+                    archivosSeleccionados.splice(idx, 1);
+                    actualizarInputFiles();
+                    mostrarPreview();
+                };
+                contenedor.appendChild(img);
+                contenedor.appendChild(btn);
+                preview.appendChild(contenedor);
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+}
+
+// Actualiza el input file con los archivos seleccionados restantes
+function actualizarInputFiles() {
+    const dataTransfer = new DataTransfer();
+    archivosSeleccionados.forEach(file => dataTransfer.items.add(file));
+    inputImagenes.files = dataTransfer.files;
+}
+</script>
+{% endblock %}

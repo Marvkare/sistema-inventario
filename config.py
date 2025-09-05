@@ -20,38 +20,38 @@ print(UPLOAD_FOLDER)
 # --- Extensiones Permitidas para Subidas ---
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
 
-# --- Mapeo de Columnas (si es extenso, podría ir a un archivo separado como mappings.py) ---
+# Mapeo de columnas del Excel a la base de datos
 COLUMN_MAPPING = {
+    "NO. DE INVENTARIO": "No_Inventario",
+    "NO. FACTURA": "No_Factura",
+    "NO. DE CUENTA": "No_Cuenta",
+    "NO. DE RESGUARDO": "No_Resguardo",
+    "PROVEEDOR": "Proveedor",
+    "DESCRIPCION DEL BIEN": "Descripcion_Del_Bien",
+    "DESCRIPCION CORTA DEL BIEN": "Descripcion_Corta_Del_Bien",
+    "RUBRO": "Rubro",
     "NO.POLIZA": "Poliza",
     "FECHA POLIZA": "Fecha_Poliza",
     "SUB-CTA. ARMONIZADORA": "Sub_Cuenta_Armonizadora",
-    "FECHA RESGUARDO":"Fecha_Resguardo",
-    "NO. DE CUENTA": "No_Cuenta",
-    "NO. DE INVENTARIO": "No_Inventario",
-    "NO. DE RESGUARDO": "No_Resguardo",
-    "PROVEEDOR": "Proveedor",
-    "FACTURA": "No_Factura",
     "FECHA FACTURA": "Fecha_Factura",
     "COSTO INICIAL": "Costo_Inicial",
     "DEPRECIACION ACUMULADA": "Depreciacion_Acumulada",
     "COSTO FINAL": "Costo_Final_Cantidad",
     "CANTIDAD": "Cantidad",
-    "DESCRIPCION FISICAS DEL BIEN": "Descripcion_Del_Bien",
-    "DESCRIPCION FISICA": "Descripcion_Fisica",
-    "AREA": "Area",
-    "RUBRO": "Rubro",
-    "PUESTO": "Puesto",
-    "NO. DE TRABAJADOR": "No_Trabajador",
-    "NOMBRE DIRECTOR/JEFES DE AREA": "Nombre_Director_Jefe_De_Area",
-    "TIPO DE RESGUARDO": "Tipo_De_Resguardo",
-    "ADSCRIPCION DIRECCION AREA": "Adscripcion_Direccion_Area",
-    "NOMBRE DEL RESGUARDANTE": "Nombre_Del_Resguardante",
     "ESTADO DEL BIEN": "Estado_Del_Bien",
     "MARCA": "Marca",
     "MODELO": "Modelo",
     "NUMERO DE SERIE": "Numero_De_Serie",
+    "TIPO DE ALTA": "Tipo_De_Alta",
+    "UBICACION": "Ubicacion",
+    "AREA": "id_area_nombre", # Se usará para buscar o crear el id_area
+    "TIPO DE RESGUARDO": "Tipo_De_Resguardo",
+    "FECHA DE RESGUARDO": "Fecha_Resguardo",
+    "NO. DE TRABAJADOR": "No_Trabajador",
+    "PUESTO TRABAJADOR": "Puesto_Trabajador",
+    "NOMBRE DEL RESGUARDANTE": "Nombre_Del_Resguardante",
+    "NOMBRE DIRECTOR/JEFES DE AREA": "Nombre_Director_Jefe_De_Area"
 }
-
 # Columnas de la base de datos (se pueden obtener dinámicamente o definir aquí)
 # Si las obtienes dinámicamente, considera mover esa lógica a database.py
 # Para simplificar ahora, las pondremos aquí.
@@ -120,14 +120,22 @@ AVAILABLE_COLUMNS = [
 EXCEL_AREA_COL_NAME = 'Area'
 
 # Define which columns belong to each table for a cleaner insertion process
-BIENES_COLUMNS = {'No_Inventario', 'No_Factura', 'No_Cuenta', 'Proveedor', 'Descripcion_Del_Bien',
-                  'Descripcion_Corta_Del_Bien', 'Rubro', 'Poliza', 'Fecha_Poliza', 'Sub_Cuenta_Armonizadora',
-                  'Fecha_Factura', 'Costo_Inicial', 'Depreciacion_Acumulada', 'Costo_Final_Cantidad', 'Cantidad',
-                  'Estado_Del_Bien', 'Marca', 'Modelo', 'Numero_De_Serie', 'Imagen_Path'}
+BIENES_COLUMNS = [
+    'No_Inventario', 'No_Factura', 'No_Cuenta',  'Proveedor',
+    'Descripcion_Del_Bien', 'Descripcion_Corta_Del_Bien', 'Rubro', 'Poliza',
+    'Fecha_Poliza', 'Sub_Cuenta_Armonizadora', 'Fecha_Factura', 'Costo_Inicial',
+    'Depreciacion_Acumulada', 'Costo_Final_Cantidad', 'Cantidad', 'Estado_Del_Bien',
+    'Marca', 'Modelo', 'Numero_De_Serie', 'Tipo_De_Alta'
+]
 
-RESGUARDOS_COLUMNS = {'No_Resguardo', 'Tipo_De_Resguardo', 'Fecha_Resguardo', 'No_Trabajador', 
-                      'Puesto', 'Nombre_Director_Jefe_De_Area', 'Nombre_Del_Resguardante'}
+RESGUARDOS_COLUMNS = [
+    'No_Resguardo', 'Ubicacion', 'Tipo_De_Resguardo', 'Fecha_Resguardo',
+    'No_Trabajador', 'Puesto_Trabajador', 'Nombre_Del_Resguardante',
+    'Nombre_Director_Jefe_De_Area'
+]
 
+# Unir todas las columnas para el manejo de errores
+FULL_DB_COLUMNS = BIENES_COLUMNS + RESGUARDOS_COLUMNS + ['error_message', 'upload_id']
 
 def map_operator_to_sql(operator):
     """

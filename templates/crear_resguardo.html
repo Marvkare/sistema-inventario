@@ -20,7 +20,7 @@
                     {% if form_data.id %}
                         Editar Resguardo: {{ form_data.No_Inventario if form_data.No_Inventario is not none else form_data.id }}
                     {% else %}
-                        Agregar Nuevo Resguardo
+                        Formulario de nuevo bien, resguardo 
                     {% endif %}
                 </h2>
                 <div class="flex space-x-2">
@@ -29,7 +29,10 @@
                     </a>
                 </div>
             </div>
-
+            <div>
+                <p style="color: red;">Para crear un nuevo bien resguardo es obligatorio el numero de factura  y de inventario</p>
+            </div>
+            
             <form id="resguardoForm" method="post" enctype="multipart/form-data" class="space-y-6">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     
@@ -234,27 +237,35 @@
             <p class="text-sm text-gray-600 mb-4">La columna <strong>"NO.POLIZA"</strong> de tu imagen de ejemplo, se mapearía a <strong>`Poliza`</strong> en la base de datos.</p>
             <p class="text-sm font-semibold text-red-600 mb-2">¡ADVERTENCIA! El nombre de las columnas es importante para que sean reconocidas. Las columnas que soporta el sistema son las siguientes:</p>
             <ul class="list-disc list-inside text-sm text-gray-700 mb-4">
+                <li>NO. DE INVENTARIO</li>
+                <li>NO. FACTURA</li>
+                <li>NO. DE CUENTA</li>
+                <li>NO. DE RESGUARDO</li>
+                <li>PROVEEDOR</li>
+                <li>DESCRIPCION DEL BIEN</li>
+                <li>DESCRIPCION CORTA DEL BIEN</li>
+                <li>RUBRO</li>
                 <li>NO.POLIZA</li>
                 <li>FECHA POLIZA</li>
                 <li>SUB-CTA. ARMONIZADORA</li>
-                <li>NO. DE CUENTA</li>
-                <li>NO. DE INVENTARIO</li>
-                <li>NO. DE RESGUARDO</li>
-                <li>PROVEEDOR</li>
-                <li>FACTURA</li>
                 <li>FECHA FACTURA</li>
                 <li>COSTO INICIAL</li>
                 <li>DEPRECIACION ACUMULADA</li>
                 <li>COSTO FINAL</li>
                 <li>CANTIDAD</li>
-                <li>DESCRIPCION FISICAS DEL BIEN</li>
+                <li>ESTADO DEL BIEN</li>
+                <li>MARCA</li>
+                <li>MODELO</li>
+                <li>NUMERO DE SERIE</li>
+                <li>TIPO DE ALTA</li>
+                <li>UBICACION</li>
                 <li>AREA</li>
-                <li>RUBRO</li>
-                <li>PUESTO</li>
+                <li>TIPO DE RESGUARDO</li>
+                <li>FECHA DE RESGUARDO</li>
                 <li>NO. DE TRABAJADOR</li>
-                <li>NOMBRE DIRECTOR/JEFES DE AREA</li>
-                <li>FECHA RESGUARDO</li>
+                <li>PUESTO TRABAJADOR</li>
                 <li>NOMBRE DEL RESGUARDANTE</li>
+                <li>NOMBRE DIRECTOR/JEFES DE AREA</li>
             </ul>
 
             <form action="{{ url_for('excel_import.upload_excel') }}" method="post" enctype="multipart/form-data" class="flex flex-col md:flex-row items-start md:items-center space-y-4 md:space-y-0 md:space-x-4">

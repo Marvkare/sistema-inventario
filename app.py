@@ -40,6 +40,7 @@ from routes.handle_errors import handle_errors_bp
 from routes.plantillas import plantillas_bp
 from routes.admin_users import admin_users_bp # No necesitas admin_routes_bp, admin_users_bp lo reemplaza
 from routes.admin import admin_bp# Configuración de Flask-Login
+from routes.bienes import bienes_bp
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
@@ -57,6 +58,7 @@ app.register_blueprint(handle_errors_bp)
 app.register_blueprint(plantillas_bp)
 app.register_blueprint(admin_users_bp)
 app.register_blueprint(admin_bp)
+app.register_blueprint(bienes_bp)
 
 # Rutas de Autenticación
 @app.route('/login', methods=['GET', 'POST'])
@@ -136,6 +138,3 @@ if __name__ == '__main__':
         
     app.run(debug=True)
 
-@app.route('/uploads/<filename>')
-def serve_uploaded_file(filename):
-    return send_from_directory(UPLOAD_FOLDER, filename)
