@@ -9,7 +9,8 @@ from werkzeug.utils import secure_filename
 import uuid
 import os
 import traceback
-
+from database import get_db_connection
+import mysql.connector
 bienes_bp = Blueprint('bienes', __name__)
 
 def allowed_file(filename):
@@ -24,9 +25,41 @@ def allowed_file(filename):
 @login_required
 @permission_required('bienes.listar_bienes') # Asume un permiso para ver bienes
 def listar_bienes():
-    """Muestra una lista de todos los bienes."""
-    bienes = Bienes.query.order_by(Bienes.id.desc()).all()
-    return render_template('bienes/listar_bienes.html', bienes=bienes)
+    conn = None
+    cursor = None
+    bienes_data = []
+
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+
+        # Consulta SQL corregida para unir las tres tablas
+        sql_query = """
+                SELECT 
+                    b.id,
+                    b.No_Inventario, 
+                    b.Descripcion_Del_Bien,
+                    r.id AS resguardo_id, -- AQUI AGREGAMOS EL ID DEL RESGUARDO
+                    a.Nombre AS Area_Nombre,
+                    b.Estado_Del_Bien,
+                    CASE WHEN r.id IS NOT NULL THEN TRUE ELSE FALSE END AS tiene_resguardo
+                FROM bienes b
+                LEFT JOIN resguardos r ON b.id = r.id_bien
+                LEFT JOIN areas a ON r.id_area = a.id
+                ORDER BY b.id DESC
+            """
+        cursor.execute(sql_query)
+        bienes_data = cursor.fetchall()
+        
+        return render_template('bienes/listar_bienes.html', bienes=bienes_data)
+        
+    except mysql.connector.Error as err:
+        flash(f"Error al obtener los bienes: {err}", 'error')
+        return render_template('bienes/listar_bienes.html', bienes=[])
+    finally:
+        if conn and conn.is_connected():
+            cursor.close()
+            conn.close()
 
 @bienes_bp.route('/bienes/agregar', methods=['GET', 'POST'])
 @login_required

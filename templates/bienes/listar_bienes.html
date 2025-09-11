@@ -35,6 +35,15 @@
                     <form action="{{ url_for('bienes.eliminar_bien', bien_id=bien.id) }}" method="POST" style="display:inline;">
                         <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('¿Estás seguro de que quieres eliminar este bien?');">Eliminar</button>
                     </form>
+                     {% if bien.tiene_resguardo %}
+            <a href="{{ url_for('resguardos.ver_resguardo', id_resguardo=bien.resguardo_id) }}" class="text-green-600 hover:text-green-800 transition-colors" title="Ver Resguardo">
+                <i class="fas fa-eye"></i>
+            </a>
+        {% else %}
+            <a href="{{ url_for('resguardos.crear_resguardo_de_bien', id_bien=bien.id) }}" class="text-blue-600 hover:text-blue-800 transition-colors" title="Generar Resguardo">
+                <i class="fas fa-file-alt"></i>
+            </a>
+        {% endif %}
                 </td> 
             </tr>
             {% else %}

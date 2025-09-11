@@ -41,6 +41,7 @@ from routes.plantillas import plantillas_bp
 from routes.admin_users import admin_users_bp # No necesitas admin_routes_bp, admin_users_bp lo reemplaza
 from routes.admin import admin_bp# Configuración de Flask-Login
 from routes.bienes import bienes_bp
+from routes.traspaso import traspaso_bp  # Importar el Blueprint de traspaso
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
@@ -59,7 +60,7 @@ app.register_blueprint(plantillas_bp)
 app.register_blueprint(admin_users_bp)
 app.register_blueprint(admin_bp)
 app.register_blueprint(bienes_bp)
-
+app.register_blueprint(traspaso_bp)  # Registrar el Blueprint de traspaso
 # Rutas de Autenticación
 @app.route('/login', methods=['GET', 'POST'])
 def login():

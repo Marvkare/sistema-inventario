@@ -81,7 +81,7 @@ CREATE TABLE bienes (
     `Numero_De_Serie` VARCHAR(100),
     `Tipo_De_Alta` VARCHAR(50)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
+--No se pueden editar estos datos:  factura, proveedor, no_inventario 
 
 -- Crear la tabla Resguardos con referencias correctas
 CREATE TABLE resguardos (
@@ -141,36 +141,41 @@ CREATE DATABASE IF NOT EXISTS inventario;
 
 
 
-CREATE TABLE IF NOT EXISTS oficio_traspaso (
+CREATE TABLE IF NOT EXISTS oficios_traspaso (
     `id` INT PRIMARY KEY NOT NULL AUTO_INCREMENT,
+    `id_resguardo_anterior` INT NOT NULL,
+    `id_resguardo_actual` INT NOT NULL,
     `Dependencia` VARCHAR(255),
-    `id_area` INT NOT NULL,
-    `id_bien` INT NOT NULL, 
     `Oficio_clave` VARCHAR(255),
     `Asunto` TEXT,
     `Lugar_Fecha` DATE,
     `Secretaria_General_Municipal` VARCHAR(255),
-    `No_Inventario` VARCHAR(50),
-    `Cantidad` INT,
-    `Descripcion` TEXT,
-    `Tipo` VARCHAR(50),
-    `id_resguardo_anterior` INT NOT NULL,
-    `id_resguardo_actual` INT NOT NULL,
-    `Fecha_Traspaso_DB` DATETIME DEFAULT CURRENT_TIMESTAMP,
-    `Fecha_Ultima_Modificacion` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    `Fecha_Registro` DATETIME DEFAULT CURRENT_TIMESTAMP,
 
-    CONSTRAINT fk_traspaso_resguardo_anterior
+    CONSTRAINT fk_oficio_resguardo_anterior
         FOREIGN KEY (`id_resguardo_anterior`)
         REFERENCES resguardos(`id`)
         ON DELETE RESTRICT,
 
-    CONSTRAINT fk_traspaso_resguardo_actual
+    CONSTRAINT fk_oficio_resguardo_actual
         FOREIGN KEY (`id_resguardo_actual`)
         REFERENCES resguardos(`id`)
         ON DELETE RESTRICT
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
---
+-- TABLA PARA LAS IMÁGENES DE CADA OFICIO
+-- Cada imagen se vincula a un oficio específico.
+CREATE TABLE IF NOT EXISTS imagenes_oficios_traspaso (
+    `id` INT AUTO_INCREMENT PRIMARY KEY,
+    `id_oficio` INT NOT NULL,
+    `ruta_imagen` VARCHAR(255) NOT NULL,
+    `fecha_subida` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT fk_imagenes_oficio
+        FOREIGN KEY (`id_oficio`)
+        REFERENCES oficios_traspaso(`id`)
+        ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 -- Estructura de tabla para la tabla `resguardo_errores`
 --
 CREATE TABLE `resguardo_errores` (
@@ -241,4 +246,7 @@ INSERT INTO areas (nombre, numero) VALUES
 ('CONCILIADOR MUNICIPAL', NULL),
 ('CASA DE CULTURA', NULL),
 ('CONTRALORIA INTERNA MUNICIPAL', NULL);
+
+
+Que nomenclatura se usa para el numero de resguardo 
 

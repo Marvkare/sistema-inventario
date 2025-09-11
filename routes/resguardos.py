@@ -438,9 +438,10 @@ def ver_resguardo(id_resguardo):
                 r.Tipo_De_Resguardo,
                 r.Fecha_Resguardo,
                 r.No_Trabajador,
-                r.Puesto,
+                r.Puesto_Trabajador AS Puesto,
                 r.Nombre_Director_Jefe_De_Area,
                 r.Nombre_Del_Resguardante,
+                r.Activo,
                 b.No_Inventario,
                 b.No_Factura,
                 b.No_Cuenta,
@@ -461,6 +462,7 @@ def ver_resguardo(id_resguardo):
                 b.Modelo,
                 b.Numero_De_Serie,
                 a.nombre AS Area_Nombre
+               
             FROM resguardos r
             JOIN bienes b ON r.id_bien = b.id
             JOIN areas a ON r.id_area = a.id
@@ -1012,3 +1014,59 @@ def delete_resguardo(id):
         conn.close()
     return redirect(url_for('index'))
 
+# your_flask_app/routes/resguardos.py
+
+# ... (tus imports y código existente) ...
+
+@resguardos_bp.route('/crear_resguardo_de_bien/<int:id_bien>', methods=['GET'])
+@login_required
+@permission_required('resguardos.crear_resguardo')
+def crear_resguardo_de_bien(id_bien):
+    conn = None
+    cursor = None
+    areas_list = list(get_areas_data().keys())
+    form_data = {}
+
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+        
+        # 1. Obtener los datos del bien usando su ID
+        sql_select_bien = "SELECT * FROM bienes WHERE id = %s"
+        cursor.execute(sql_select_bien, (id_bien,))
+        bien_data = cursor.fetchone()
+
+        if not bien_data:
+            flash("Bien no encontrado.", "danger")
+            return redirect(url_for('bienes.listar_bienes'))
+
+        # 2. Pasa los datos del bien al diccionario form_data
+        form_data = bien_data
+        
+        # 3. Formatea las fechas si existen, para que el formulario las muestre correctamente
+        if 'Fecha_Poliza' in form_data and form_data['Fecha_Poliza']:
+            form_data['Fecha_Poliza'] = form_data['Fecha_Poliza'].isoformat()
+        if 'Fecha_Factura' in form_data and form_data['Fecha_Factura']:
+            form_data['Fecha_Factura'] = form_data['Fecha_Factura'].isoformat()
+        
+        # 4. Renderiza el formulario, pero ahora con los datos precargados
+        return render_template(
+            'crear_resguardo.html', 
+            areas=areas_list, 
+            form_data=form_data, 
+            available_columns=AVAILABLE_COLUMNS,
+            bien_precargado=True # Una variable para controlar la lógica en la plantilla si es necesario
+        )
+
+    except mysql.connector.Error as err:
+        flash(f"Error de base de datos: {err}", "danger")
+        return redirect(url_for('bienes.listar_bienes'))
+        
+    except Exception as e:
+        flash(f"Ocurrió un error inesperado: {e}", "danger")
+        return redirect(url_for('bienes.listar_bienes'))
+        
+    finally:
+        if conn and conn.is_connected():
+            cursor.close()
+            conn.close()
