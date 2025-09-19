@@ -42,6 +42,7 @@ from routes.admin_users import admin_users_bp # No necesitas admin_routes_bp, ad
 from routes.admin import admin_bp# Configuración de Flask-Login
 from routes.bienes import bienes_bp
 from routes.traspaso import traspaso_bp  # Importar el Blueprint de traspaso
+from routes.etiquetas import etiquetas_bp
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
@@ -61,6 +62,7 @@ app.register_blueprint(admin_users_bp)
 app.register_blueprint(admin_bp)
 app.register_blueprint(bienes_bp)
 app.register_blueprint(traspaso_bp)  # Registrar el Blueprint de traspaso
+app.register_blueprint(etiquetas_bp)
 # Rutas de Autenticación
 @app.route('/login', methods=['GET', 'POST'])
 def login():

@@ -33,6 +33,7 @@ def get_areas_data():
 @login_required
 @permission_required('resguardos.crear_resguardo')
 def traspasar_resguardo(id_resguardo):
+
     conn = None
     cursor = None
     areas_data = get_areas_data()
@@ -47,7 +48,7 @@ def traspasar_resguardo(id_resguardo):
             form_data = request.form.to_dict()
             
             # Obtener datos del resguardo anterior
-            cursor.execute("SELECT id_bien, No_Inventario FROM resguardos WHERE id = %s", (id_resguardo,))
+            cursor.execute("SELECT r.id_bien, b.No_Inventario FROM resguardos r JOIN bienes b ON r.id_bien = b.id WHERE r.id = %s", (id_resguardo,))
             old_resguardo_data = cursor.fetchone()
             if not old_resguardo_data:
                 return jsonify({"message": "Resguardo anterior no encontrado.", "category": "danger"}), 404
@@ -59,7 +60,16 @@ def traspasar_resguardo(id_resguardo):
             new_area_id = areas_data.get(new_area_name)
             if not new_area_id:
                 return jsonify({"message": "Área seleccionada no válida.", "category": "danger"}), 400
-
+            print(form_data) 
+            # Se obtiene el valor del formulario y se convierte a entero directamente
+            tipo_resguardo_nuevo_str = form_data.get('Tipo_De_Resguardo_Value')
+            print(f"Tipo de resguardo nuevo: {tipo_resguardo_nuevo_str}")
+            try:
+                tipo_resguardo_nuevo_int = int(tipo_resguardo_nuevo_str)
+            except (ValueError, TypeError):
+                print(f"Tipo de resguardo no válido: {tipo_resguardo_nuevo_str}")
+                return jsonify({"message": "Tipo de resguardo no válido.", "category": "danger"}), 400
+            
             # 1. Dar de baja el resguardo anterior
             sql_update_old_resguardo = "UPDATE resguardos SET Activo = FALSE, Fecha_Ultima_Modificacion = NOW() WHERE id = %s"
             cursor.execute(sql_update_old_resguardo, (id_resguardo,))
@@ -75,7 +85,7 @@ def traspasar_resguardo(id_resguardo):
                 new_area_id,
                 form_data.get('Ubicacion_Nueva'),
                 form_data.get('No_Resguardo_Nuevo'),
-                form_data.get('Tipo_De_Resguardo_Nuevo'),
+                tipo_resguardo_nuevo_int,
                 form_data.get('Fecha_Resguardo_Nuevo'),
                 form_data.get('No_Trabajador_Nuevo'),
                 form_data.get('Puesto_Trabajador_Nuevo'),
@@ -150,21 +160,104 @@ def traspasar_resguardo(id_resguardo):
             if not resguardo_anterior:
                 flash('Resguardo no encontrado.', 'danger')
                 return redirect(url_for('resguardos.ver_resguardos'))
-
+            print(resguardo_anterior)
             return render_template(
                 'traspasar_resguardo.html',
                 resguardo_anterior=resguardo_anterior,
-                areas=areas_list
+                areas=areas_list,
+                # En este caso, si no tienes la tabla, no necesitamos enviar los tipos de resguardo al formulario
             )
 
     except mysql.connector.Error as err:
         if conn and conn.is_connected():
             conn.rollback()
+        print(f"Error de base de datos: {err}")
         return jsonify({"message": f"Error de base de datos: {err}", "category": "danger"}), 500
     except Exception as e:
         if conn and conn.is_connected():
             conn.rollback()
+        print(f"Ocurrió un error inesperado: {e}")
         return jsonify({"message": f"Ocurrió un error inesperado: {e}", "category": "danger"}), 500
+    finally:
+        if conn and conn.is_connected():
+            cursor.close()
+            conn.close()
+
+
+# --- NUEVA RUTA PARA VER OFICIOS DE TRASPASO ---
+@traspaso_bp.route('/ver_oficios_traspaso')
+@login_required
+def ver_oficios_traspaso():
+    """
+    Muestra una vista con todos los oficios de traspaso registrados.
+    """
+    conn = None
+    cursor = None
+    oficios_con_datos = []
+
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+
+        # Consulta principal para obtener los datos de los oficios y los resguardos
+        sql_select_oficios = """
+            SELECT
+                ot.*,
+                ro.No_Resguardo AS No_Resguardo_Anterior,
+                ro.Nombre_Del_Resguardante AS Resguardante_Anterior,
+                bo.No_Inventario AS No_Inventario_Anterior,
+                ao.nombre AS Area_Anterior,
+                rn.No_Resguardo AS No_Resguardo_Actual,
+                rn.Nombre_Del_Resguardante AS Resguardante_Actual,
+                bn.No_Inventario AS No_Inventario_Actual,
+                an.nombre AS Area_Actual
+            FROM
+                oficios_traspaso ot
+            JOIN resguardos ro ON ot.id_resguardo_anterior = ro.id
+            JOIN bienes bo ON ro.id_bien = bo.id
+            JOIN areas ao ON ro.id_area = ao.id
+            JOIN resguardos rn ON ot.id_resguardo_actual = rn.id
+            JOIN bienes bn ON rn.id_bien = bn.id
+            JOIN areas an ON rn.id_area = an.id
+            ORDER BY ot.Fecha_Registro DESC
+        """
+        cursor.execute(sql_select_oficios)
+        oficios = cursor.fetchall()
+        
+        # Para cada oficio, obtener sus imágenes
+        for oficio in oficios:
+            oficio_id = oficio['id']
+            oficio['imagenes'] = get_oficio_images(oficio_id)
+            oficios_con_datos.append(oficio)
+
+        return render_template('ver_oficios_traspaso.html', oficios=oficios_con_datos)
+
+    except mysql.connector.Error as err:
+        print(f"Error de base de datos al ver oficios: {err}")
+        flash(f"Error de base de datos: {err}", 'danger')
+        return redirect(url_for('resguardos.ver_resguardos'))
+    except Exception as e:
+        print(f"Ocurrió un error inesperado al ver oficios: {e}")
+        flash(f"Ocurrió un error inesperado: {e}", 'danger')
+        return redirect(url_for('resguardos.ver_resguardos'))
+    finally:
+        if conn and conn.is_connected():
+            cursor.close()
+            conn.close()
+
+def get_oficio_images(oficio_id):
+    """Función auxiliar para obtener las rutas de las imágenes de un oficio."""
+    conn = None
+    cursor = None
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute("SELECT ruta_imagen FROM imagenes_oficios_traspaso WHERE id_oficio = %s", (oficio_id,))
+        images = cursor.fetchall()
+        return [img['ruta_imagen'] for img in images]
+    except mysql.connector.Error as err:
+        print(f"Error al obtener imágenes del oficio: {err}")
+        return []
     finally:
         if conn and conn.is_connected():
             cursor.close()

@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Imprimir Etiquetas - Corregido</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        
+        :root {
+            --color-primary: #5A2E44;
+            --color-secondary: #BF9E55;
+            --color-background-light: #f3f4f6;
+            --color-white: #ffffff;
+            --color-text-dark: #1f2937;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--color-background-light);
+            color: var(--color-text-dark);
+        }
+        
+        .preview-container {
+            /* --- CORRECCIÓN 1: Ajustado a tamaño CARTA (Letter) --- */
+            width: 215.9mm;
+            min-height: 279.4mm;
+            margin: 10px auto;
+            background: white;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            padding: 10mm;
+            box-sizing: border-box;
+        }
+        
+        .config-panel {
+            background-color: #f8fafc;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-top: 1rem;
+        }
+        
+        .search-results-container {
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid #e5e7eb;
+            border-radius: 0.5rem;
+            margin-top: 0.5rem;
+            display: none;
+        }
+        
+        .print-list-container {
+            min-height: 200px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .print-item:hover {
+            background-color: #f9fafb;
+        }
+        
+        .margin-controls-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+        }
+        
+        @media (min-width: 768px) {
+            .margin-controls-grid {
+                grid-template-columns: repeat(4, 1fr);
+            }
+        }
+        
+        .calibration-box {
+            width: 100mm;
+            height: 50mm;
+            border: 1px solid #000;
+            margin: 10px auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #f0f0f0;
+            transition: all 0.3s ease;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 p-8">
+    <div class="max-w-7xl mx-auto bg-white shadow-lg rounded-lg p-6 mb-8">
+        <h1 class="text-3xl font-bold text-gray-800 mb-6 border-b-2 border-gray-200 pb-2">
+            Impresión de Etiquetas de Resguardos
+        </h1>
+
+        <div class="mb-6 bg-yellow-50 p-4 rounded-lg border border-yellow-200">
+            <h2 class="text-xl font-semibold text-yellow-800 mb-2">Calibración de Medidas</h2>
+            <p class="text-yellow-700 mb-3">Mida el siguiente rectángulo con una regla. Debe medir 100mm x 50mm. Ajuste el factor de corrección si no coincide.</p>
+            <div class="calibration-box" id="calibration-box">
+                <span id="calibration-size">100mm × 50mm</span>
+            </div>
+            <div class="mt-3">
+                <label for="calibration_factor" class="block text-sm font-medium text-yellow-700 mb-1">Factor de corrección:</label>
+                <input type="range" id="calibration_factor" min="80" max="120" value="100" class="w-full">
+                <span id="calibration_value" class="text-xs text-yellow-600">100% (sin corrección)</span>
+            </div>
+        </div>
+
+        <div class="mb-6">
+            <h2 class="text-xl font-semibold text-gray-700 mb-4">Buscar y Seleccionar Resguardos</h2>
+            <div class="flex flex-col md:flex-row gap-4">
+                <div class="flex-1">
+                    <label for="search_input" class="block text-sm font-medium text-gray-700 mb-1">Buscar por No. de Inventario, Resguardo, etc.</label>
+                    <input type="text" id="search_input" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" placeholder="Escribe para buscar...">
+                    <div id="search_results" class="search-results-container"></div>
+                </div>
+                <div class="flex-1">
+                    <h3 class="text-lg font-medium text-gray-700 mb-2">Resguardos para Imprimir</h3>
+                    <div id="print_list" class="print-list-container bg-gray-50 p-4 rounded-lg border border-gray-200">
+                        <p id="print_list_empty_message" class="text-gray-400 text-sm italic">Selecciona un resguardo para agregarlo.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="mb-6">
+            <h2 class="text-xl font-semibold text-gray-700 mb-4">Configuración de Impresión</h2>
+            <div class="flex flex-col md:flex-row items-end gap-4">
+                <div class="flex-1">
+                    <label for="template_select" class="block text-sm font-medium text-gray-700 mb-1">Plantilla de Etiqueta</label>
+                    <select id="template_select" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+                        <option value="Letter">Tamaño Carta (216 x 279 mm)</option>
+                        <option value="A4">Tamaño A4 (210 × 297 mm)</option>
+                    </select>
+                </div>
+                <div class="flex-1">
+                    <label for="label_width_input" class="block text-sm font-medium text-gray-700 mb-1">Ancho de Etiqueta (mm)</label>
+                    <input type="number" id="label_width_input" value="64" step="1" min="20" max="150" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <div class="flex-1">
+                    <label for="label_height_input" class="block text-sm font-medium text-gray-700 mb-1">Alto de Etiqueta (mm)</label>
+                    <input type="number" id="label_height_input" value="32" step="1" min="20" max="150" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <button id="preview_button" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors w-full md:w-auto">
+                    Previsualizar
+                </button>
+            </div>
+        </div>
+
+        <div class="config-panel">
+            <h3 class="text-lg font-medium text-gray-700 mb-3">Ajustes de Contenido</h3>
+            <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
+                <div>
+                    <label for="font_size_input" class="block text-sm font-medium text-gray-700 mb-1">Tamaño de fuente</label>
+                    <input type="range" id="font_size_input" min="2" max="14" value="8" class="w-full">
+                    <span id="font_size_value" class="text-xs text-gray-500">8pt</span>
+                </div>
+                <div>
+                    <label for="logo_size_input" class="block text-sm font-medium text-gray-700 mb-1">Tamaño de logos</label>
+                    <input type="range" id="logo_size_input" min="15" max="50" value="25" class="w-full">
+                    <span id="logo_size_value" class="text-xs text-gray-500">25px</span>
+                </div>
+                <div>
+                    <label for="horizontal_spacing_input" class="block text-sm font-medium text-gray-700 mb-1">Esp. horizontal (mm)</label>
+                    <input type="range" id="horizontal_spacing_input" min="0" max="20" value="5" step="1" class="w-full">
+                    <span id="horizontal_spacing_value" class="text-xs text-gray-500">5mm</span>
+                </div>
+                <div>
+                    <label for="vertical_spacing_input" class="block text-sm font-medium text-gray-700 mb-1">Esp. vertical (mm)</label>
+                    <input type="range" id="vertical_spacing_input" min="0" max="20" value="5" step="1" class="w-full">
+                    <span id="vertical_spacing_value" class="text-xs text-gray-500">5mm</span>
+                </div>
+                <div>
+                    <label class="flex items-center">
+                        <input type="checkbox" id="truncate_text" class="rounded border-gray-300 text-blue-600 focus:ring-blue-500" checked>
+                        <span class="ml-2 text-sm text-gray-700">Ajustar texto</span>
+                    </label>
+                </div>
+            </div>
+            
+            <h3 class="text-lg font-medium text-gray-700 mt-6 mb-3">Márgenes del Documento (mm)</h3>
+            <div class="margin-controls-grid">
+                <div>
+                    <label for="margin_top_input" class="block text-sm font-medium text-gray-700 mb-1">Superior</label>
+                    <input type="range" id="margin_top_input" min="0" max="30" value="10" step="1" class="w-full">
+                    <span id="margin_top_value" class="text-xs text-gray-500">10mm</span>
+                </div>
+                <div>
+                    <label for="margin_right_input" class="block text-sm font-medium text-gray-700 mb-1">Derecho</label>
+                    <input type="range" id="margin_right_input" min="0" max="30" value="10" step="1" class="w-full">
+                    <span id="margin_right_value" class="text-xs text-gray-500">10mm</span>
+                </div>
+                <div>
+                    <label for="margin_bottom_input" class="block text-sm font-medium text-gray-700 mb-1">Inferior</label>
+                    <input type="range" id="margin_bottom_input" min="0" max="30" value="10" step="1" class="w-full">
+                    <span id="margin_bottom_value" class="text-xs text-gray-500">10mm</span>
+                </div>
+                <div>
+                    <label for="margin_left_input" class="block text-sm font-medium text-gray-700 mb-1">Izquierdo</label>
+                    <input type="range" id="margin_left_input" min="0" max="30" value="10" step="1" class="w-full">
+                    <span id="margin_left_value" class="text-xs text-gray-500">10mm</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="preview-section" class="max-w-7xl mx-auto bg-white shadow-lg rounded-lg p-6 mb-8 hidden">
+        <h2 class="text-xl font-semibold text-gray-700 mb-4">Previsualización de Etiquetas</h2>
+        <div class="flex justify-center mb-4 gap-4">
+            <button id="print_button" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg">Imprimir</button>
+            <button id="back_button" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-lg">Volver a ajustar</button>
+        </div>
+        <div class="preview-container" id="print_container"></div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- Declaraciones de variables (sin cambios) ---
+            const searchInput = document.getElementById('search_input');
+            const searchResults = document.getElementById('search_results');
+            const printList = document.getElementById('print_list');
+            const previewButton = document.getElementById('preview_button');
+            const printButton = document.getElementById('print_button');
+            const backButton = document.getElementById('back_button');
+            const printListEmptyMessage = document.getElementById('print_list_empty_message');
+            const printContainer = document.getElementById('print_container');
+            const previewSection = document.getElementById('preview-section');
+            const labelWidthInput = document.getElementById('label_width_input');
+            const labelHeightInput = document.getElementById('label_height_input');
+            const fontSizeInput = document.getElementById('font_size_input');
+            const fontSizeValue = document.getElementById('font_size_value');
+            const logoSizeInput = document.getElementById('logo_size_input');
+            const logoSizeValue = document.getElementById('logo_size_value');
+            const horizontalSpacingInput = document.getElementById('horizontal_spacing_input');
+            const horizontalSpacingValue = document.getElementById('horizontal_spacing_value');
+            const verticalSpacingInput = document.getElementById('vertical_spacing_input');
+            const verticalSpacingValue = document.getElementById('vertical_spacing_value');
+            const truncateTextCheckbox = document.getElementById('truncate_text');
+            const marginTopInput = document.getElementById('margin_top_input');
+            const marginTopValue = document.getElementById('margin_top_value');
+            const marginRightInput = document.getElementById('margin_right_input');
+            const marginRightValue = document.getElementById('margin_right_value');
+            const marginBottomInput = document.getElementById('margin_bottom_input');
+            const marginBottomValue = document.getElementById('margin_bottom_value');
+            const marginLeftInput = document.getElementById('margin_left_input');
+            const marginLeftValue = document.getElementById('margin_left_value');
+            const calibrationFactorInput = document.getElementById('calibration_factor');
+            const calibrationValue = document.getElementById('calibration_value');
+            const calibrationBox = document.getElementById('calibration-box');
+            const calibrationSize = document.getElementById('calibration-size');
+
+            let selectedItems = {};
+            let searchTimeout = null;
+            
+            const getConfig = () => ({
+                baseFontSize: parseInt(fontSizeInput.value),
+                logoSize: parseInt(logoSizeInput.value),
+                horizontalSpacing: parseInt(horizontalSpacingInput.value),
+                verticalSpacing: parseInt(verticalSpacingInput.value),
+                truncateLongText: truncateTextCheckbox.checked,
+                marginTop: parseInt(marginTopInput.value),
+                marginRight: parseInt(marginRightInput.value),
+                marginBottom: parseInt(marginBottomInput.value),
+                marginLeft: parseInt(marginLeftInput.value),
+                calibrationFactor: parseInt(calibrationFactorInput.value) / 100,
+                labelWidth: parseFloat(labelWidthInput.value),
+                labelHeight: parseFloat(labelHeightInput.value)
+            });
+
+            const applyCalibration = (measurement, factor) => measurement * factor;
+
+            const updateCalibrationBox = () => {
+                const factor = parseInt(calibrationFactorInput.value) / 100;
+                const width = 100 * factor;
+                const height = 50 * factor;
+                calibrationBox.style.width = `${width}mm`;
+                calibrationBox.style.height = `${height}mm`;
+                calibrationSize.textContent = `${width.toFixed(1)}mm × ${height.toFixed(1)}mm`;
+            };
+
+            const updateUI = () => {
+                fontSizeValue.textContent = `${fontSizeInput.value}pt`;
+                logoSizeValue.textContent = `${logoSizeInput.value}px`;
+                horizontalSpacingValue.textContent = `${horizontalSpacingInput.value}mm`;
+                verticalSpacingValue.textContent = `${verticalSpacingInput.value}mm`;
+                marginTopValue.textContent = `${marginTopInput.value}mm`;
+                marginRightValue.textContent = `${marginRightInput.value}mm`;
+                marginBottomValue.textContent = `${marginBottomInput.value}mm`;
+                marginLeftValue.textContent = `${marginLeftInput.value}mm`;
+                calibrationValue.textContent = `${calibrationFactorInput.value}%`;
+                updateCalibrationBox();
+                if (previewSection.style.display !== 'hidden' && Object.keys(selectedItems).length > 0) {
+                    renderLabelsForPreview();
+                }
+            };
+            
+            // Centralizar los event listeners
+            [fontSizeInput, logoSizeInput, horizontalSpacingInput, verticalSpacingInput, marginTopInput, marginRightInput, marginBottomInput, marginLeftInput, calibrationFactorInput, truncateTextCheckbox, labelWidthInput, labelHeightInput].forEach(el => {
+                el.addEventListener('input', updateUI);
+                el.addEventListener('change', updateUI);
+            });
+            
+            // --- Funciones de búsqueda y selección (sin cambios importantes) ---
+            const truncateText = (text, maxLength, shouldTruncate) => {
+                if (!shouldTruncate || !text || text.length <= maxLength) return text;
+                return text.substring(0, maxLength) + '...';
+            };
+
+            const renderSearchResults = (items) => {
+                searchResults.innerHTML = '';
+                if (items.length === 0) {
+                    searchResults.innerHTML = '<p class="text-gray-500 p-2 text-sm italic">No se encontraron coincidencias.</p>';
+                    searchResults.style.display = 'block';
+                    return;
+                }
+                items.forEach(item => {
+                    const desc = item.Descripcion_Corta_Del_Bien && item.Descripcion_Corta_Del_Bien !== 'null' ? item.Descripcion_Corta_Del_Bien : 'Sin descripción';
+                    const resultItem = document.createElement('div');
+                    resultItem.classList.add('p-2', 'border-b', 'border-gray-200', 'flex', 'items-center', 'justify-between', 'hover:bg-gray-100', 'cursor-pointer');
+                    resultItem.dataset.itemData = JSON.stringify(item);
+                    resultItem.innerHTML = `
+                        <div class="flex-1">
+                            <p class="text-sm font-medium text-gray-900">${item.No_Inventario} - ${desc}</p>
+                            <p class="text-xs text-gray-500">Área: ${item.Area_Nombre || 'N/A'} | Resguardo: ${item.No_Resguardo || 'N/A'}</p>
+                        </div>
+                        <button class="add-to-print-list bg-green-500 hover:bg-green-600 text-white text-xs font-bold py-1 px-3 rounded-full">Seleccionar</button>`;
+                    searchResults.appendChild(resultItem);
+                });
+                searchResults.style.display = 'block';
+            };
+
+            const addItemToPrintList = (item) => {
+                if (selectedItems[item.id_resguardo]) return;
+                selectedItems[item.id_resguardo] = item;
+                const desc = item.Descripcion_Corta_Del_Bien && item.Descripcion_Corta_Del_Bien !== 'null' ? item.Descripcion_Corta_Del_Bien : 'Sin descripción';
+                const listItem = document.createElement('div');
+                listItem.className = 'p-2 bg-gray-100 rounded-md mb-2 flex items-center justify-between print-item';
+                listItem.id = `print-item-${item.id_resguardo}`;
+                listItem.innerHTML = `
+                    <p class="text-sm text-gray-800 flex-1">${item.No_Inventario} - ${desc}</p>
+                    <a href="/editar_resguardo/${item.id_resguardo}" target="_blank" class="mr-2 text-blue-600 hover:underline text-xs">Editar</a>
+                    <button class="remove-from-print-list bg-red-500 hover:bg-red-600 text-white text-xs font-bold py-1 px-3 rounded-full" data-id="${item.id_resguardo}">Quitar</button>`;
+                printList.appendChild(listItem);
+                printListEmptyMessage.style.display = 'none';
+            };
+
+            searchInput.addEventListener('input', () => {
+                clearTimeout(searchTimeout);
+                const query = searchInput.value.trim();
+                if (query.length < 3) {
+                    searchResults.style.display = 'none';
+                    return;
+                }
+                searchTimeout = setTimeout(async () => {
+                    try {
+                        const response = await fetch('/buscar_bienes', {
+                            method: 'POST',
+                            headers: {'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest'},
+                            body: JSON.stringify({ query })
+                        });
+                        if (response.ok) {
+                            renderSearchResults(await response.json());
+                        } else {
+                            searchResults.innerHTML = '<p class="text-red-500 p-2 text-sm">Error al buscar.</p>';
+                        }
+                    } catch (error) {
+                        searchResults.innerHTML = '<p class="text-red-500 p-2 text-sm">Error de conexión.</p>';
+                    }
+                }, 300);
+            });
+
+            document.addEventListener('click', (e) => {
+                if (e.target.closest('.add-to-print-list')) {
+                    const itemData = JSON.parse(e.target.closest('[data-item-data]').dataset.itemData);
+                    addItemToPrintList(itemData);
+                }
+                if (e.target.classList.contains('remove-from-print-list')) {
+                    const itemId = e.target.dataset.id;
+                    delete selectedItems[itemId];
+                    document.getElementById(`print-item-${itemId}`).remove();
+                    if(Object.keys(selectedItems).length === 0) printListEmptyMessage.style.display = 'block';
+                }
+                if (!searchResults.contains(e.target) && e.target !== searchInput) {
+                    searchResults.style.display = 'none';
+                }
+            });
+
+            // --- CORRECCIÓN 5: LÓGICA DE GENERACIÓN DE ETIQUETAS SIMPLIFICADA ---
+            const generateLabelsHTML = (items, config) => {
+                let labelsHtml = '';
+                const itemsArray = Object.values(items);
+                
+                // Aplicar calibración a las dimensiones y espaciados
+                const labelWidth = applyCalibration(config.labelWidth, config.calibrationFactor);
+                const labelHeight = applyCalibration(config.labelHeight, config.calibrationFactor);
+                const hSpacing = applyCalibration(config.horizontalSpacing, config.calibrationFactor);
+                const vSpacing = applyCalibration(config.verticalSpacing, config.calibrationFactor);
+                
+                // Conversión de unidades más directa y predecible
+                const fontSizePt = config.baseFontSize; // Tamaño base en pt
+                const logoHeightMm = (config.logoSize * 0.264583); // Px a mm
+                const titleFontSizePt = fontSizePt * 1.5; // Título un 50% más grande
+                const paddingMm = 2; // Padding fijo en mm
+
+                itemsArray.forEach(item => {
+                    const descripcion = truncateText(
+                        item.Descripcion_Corta_Del_Bien && item.Descripcion_Corta_Del_Bien !== 'null' ? item.Descripcion_Corta_Del_Bien : 'Sin descripción',
+                        35, 
+                        config.truncateLongText
+                    );
+                    const areaNombre = truncateText(item.Area_Nombre, 25, config.truncateLongText);
+                    const noResguardo = item.No_Resguardo || 'N/A';
+                    
+                    labelsHtml += `
+                        <div style="
+                            width: ${labelWidth}mm; 
+                            height: ${labelHeight}mm; 
+                            display: inline-flex; 
+                            flex-direction: column;
+                            margin-right: ${hSpacing}mm; 
+                            margin-bottom: ${vSpacing}mm; 
+                            border: 0.25mm solid #5A2E44; 
+                            padding: ${paddingMm}mm;
+                            box-sizing: border-box; 
+                            page-break-inside: avoid; 
+                            overflow: hidden;
+                            font-size: ${fontSizePt}pt;
+                            color: #1f2937;
+                            justify-content: space-between;
+                        ">
+                            <div style="display: flex; justify-content: space-between; align-items: center; flex-shrink: 0;">
+                                <img src="/static/images/image_e8aecf.jpg" alt="Logo 1" style="height: ${logoHeightMm}mm; max-width: 35%;">
+                                <p style="font-weight: bold; color: #5A2E44; font-size: ${titleFontSizePt}pt; margin: 0 1mm;">${noResguardo}</p>
+                                <img src="/static/images/image_e8b1f6.png" alt="Logo 2" style="height: ${logoHeightMm}mm; max-width: 35%;">
+                            </div>
+                            <div style="flex-grow: 1; display: flex; flex-direction: column; justify-content: center; line-height: 1.2;">
+                                <div style="display: flex; justify-content: space-between;">
+                                    <span style="font-weight: bold; padding-right: 5px;">Desc:</span>
+                                    <span style="text-align: right;">${descripcion}</span>
+                                </div>
+                                <div style="display: flex; justify-content: space-between;">
+                                    <span style="font-weight: bold; padding-right: 5px;">Área:</span>
+                                    <span style="text-align: right;">${areaNombre}</span>
+                                </div>
+                            </div>
+                        </div>`;
+                });
+                return labelsHtml;
+            };
+
+            const renderLabelsForPreview = () => {
+                if (Object.keys(selectedItems).length === 0) {
+                    alert('Por favor, selecciona al menos un resguardo.');
+                    return;
+                }
+                
+                const config = getConfig();
+                
+                // Aplicar calibración a los márgenes
+                const marginTop = applyCalibration(config.marginTop, config.calibrationFactor);
+                const marginRight = applyCalibration(config.marginRight, config.calibrationFactor);
+                const marginBottom = applyCalibration(config.marginBottom, config.calibrationFactor);
+                const marginLeft = applyCalibration(config.marginLeft, config.calibrationFactor);
+                
+                printContainer.style.padding = `${marginTop}mm ${marginRight}mm ${marginBottom}mm ${marginLeft}mm`;
+                printContainer.innerHTML = generateLabelsHTML(selectedItems, config);
+                previewSection.classList.remove('hidden');
+                previewSection.scrollIntoView({ behavior: 'smooth' });
+            };
+
+            const generateAndPrintLabels = () => {
+                if (Object.keys(selectedItems).length === 0) {
+                    alert('Por favor, selecciona al menos un resguardo.');
+                    return;
+                }
+                
+                const config = getConfig();
+                const paperSize = document.getElementById('template_select').value.toLowerCase(); // 'letter' o 'a4'
+                const paperWidth = paperSize === 'letter' ? '215.9mm' : '210mm';
+                const paperHeight = paperSize === 'letter' ? '279.4mm' : '297mm';
+
+                // Aplicar calibración a los márgenes
+                const marginTop = applyCalibration(config.marginTop, config.calibrationFactor);
+                const marginRight = applyCalibration(config.marginRight, config.calibrationFactor);
+                const marginBottom = applyCalibration(config.marginBottom, config.calibrationFactor);
+                const marginLeft = applyCalibration(config.marginLeft, config.calibrationFactor);
+
+                // --- CORRECCIÓN 6: Usar tamaño de papel 'letter' y dimensiones correctas ---
+                const printContent = `
+                    <!DOCTYPE html><html><head><title>Imprimir Etiquetas</title>
+                    <style>
+                        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+                        @page {
+                            size: ${paperSize};
+                            margin: 0;
+                        }
+                        body { 
+                            margin: 0; 
+                            font-family: 'Inter', sans-serif;
+                            width: ${paperWidth};
+                        }
+                        .container {
+                            padding: ${marginTop}mm ${marginRight}mm ${marginBottom}mm ${marginLeft}mm;
+                            box-sizing: border-box;
+                        }
+                    </style>
+                    </head><body>
+                    <div class="container">
+                        ${generateLabelsHTML(selectedItems, config)}
+                    </div>
+                    <script>
+                        window.onload = () => { window.print(); setTimeout(() => window.close(), 100); };
+                    <\/script>
+                    </body></html>`;
+                
+                const printWindow = window.open('', '_blank');
+                printWindow.document.open();
+                printWindow.document.write(printContent);
+                printWindow.document.close();
+            };
+
+            previewButton.addEventListener('click', renderLabelsForPreview);
+            printButton.addEventListener('click', generateAndPrintLabels);
+            backButton.addEventListener('click', () => previewSection.classList.add('hidden'));
+
+            // Inicialización
+            updateUI();
+        });
+    </script>
+</body>
+</html>

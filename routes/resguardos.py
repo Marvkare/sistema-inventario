@@ -32,9 +32,6 @@ def get_areas_data():
             cursor.close()
             conn.close()
 
-
-
-
 @resguardos_bp.route('/crear_resguardo', methods=['GET', 'POST'])
 @login_required
 @permission_required('resguardos.crear_resguardo')
@@ -62,18 +59,20 @@ def crear_resguardo():
                 return jsonify({"message": "Área seleccionada no válida.", "category": "danger"}), 400
 
             # 1. Insertar los datos del bien en la tabla 'bienes'
+            # Se ha eliminado la columna 'Area' de esta inserción para reflejar el cambio en la base de datos.
             sql_insert_bien = """
-                INSERT INTO bienes (No_Inventario, No_Factura, No_Cuenta, No_Resguardo, Proveedor, Descripcion_Del_Bien, 
-                                    Descripcion_Corta_Del_Bien, Area, Rubro, Poliza, Fecha_Poliza, Sub_Cuenta_Armonizadora, 
+                INSERT INTO bienes (No_Inventario, No_Factura, No_Cuenta, Proveedor, Descripcion_Del_Bien, 
+                                    Descripcion_Corta_Del_Bien, Rubro, Poliza, Fecha_Poliza, Sub_Cuenta_Armonizadora, 
                                     Fecha_Factura, Costo_Inicial, Depreciacion_Acumulada, Costo_Final_Cantidad, Cantidad, 
                                     Estado_Del_Bien, Marca, Modelo, Numero_De_Serie)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             """
             
+            # Se ha eliminado el valor 'area_name' de los valores de la inserción de bienes.
             bien_values = (
                 form_data.get('No_Inventario'), form_data.get('No_Factura'), form_data.get('No_Cuenta'), 
-                form_data.get('No_Resguardo'), form_data.get('Proveedor'), form_data.get('Descripcion_Del_Bien'),
-                form_data.get('Descripcion_Corta_Del_Bien'), area_name, form_data.get('Rubro'),
+                form_data.get('Proveedor'), form_data.get('Descripcion_Del_Bien'),
+                form_data.get('Descripcion_Corta_Del_Bien'), form_data.get('Rubro'),
                 form_data.get('Poliza'), form_data.get('Fecha_Poliza'), form_data.get('Sub_Cuenta_Armonizadora'),
                 form_data.get('Fecha_Factura'), form_data.get('Costo_Inicial'), form_data.get('Depreciacion_Acumulada'),
                 form_data.get('Costo_Final_Cantidad'), form_data.get('Cantidad'), form_data.get('Estado_Del_Bien'), 
@@ -86,13 +85,13 @@ def crear_resguardo():
             # 2. Insertar los datos del resguardo en la tabla 'resguardos'
             sql_insert_resguardo = """
                 INSERT INTO resguardos (id_bien, id_area, No_Resguardo, Tipo_De_Resguardo, Fecha_Resguardo, 
-                                        No_Trabajador, Puesto, Nombre_Director_Jefe_De_Area, Nombre_Del_Resguardante)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+                                        No_Trabajador, No_Nomina_Trabajador, Puesto_Trabajador, Nombre_Director_Jefe_De_Area, Nombre_Del_Resguardante)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             """
             
             resguardo_values = (
                 id_bien, area_id, form_data.get('No_Resguardo'), form_data.get('Tipo_De_Resguardo'), 
-                form_data.get('Fecha_Resguardo'), form_data.get('No_Trabajador'), form_data.get('Puesto'), 
+                form_data.get('Fecha_Resguardo'), form_data.get('No_Trabajador'), form_data.get('No_Nomina_Trabajador'), form_data.get('Puesto_Trabajador'), 
                 form_data.get('Nombre_Director_Jefe_De_Area'), form_data.get('Nombre_Del_Resguardante')
             )
             
@@ -140,6 +139,7 @@ def crear_resguardo():
     except mysql.connector.Error as err:
         if conn and conn.is_connected():
             conn.rollback()
+        print(f"Error de base de datos: {err}")
         return jsonify({"message": f"Error de base de datos: {err}", "category": "danger"}), 500
         
     except Exception as e:
@@ -151,6 +151,7 @@ def crear_resguardo():
         if conn and conn.is_connected():
             cursor.close()
             conn.close()
+
 
 @resguardos_bp.route('/editar_resguardo/<int:id_resguardo>', methods=['GET', 'POST'])
 @login_required
@@ -212,6 +213,7 @@ def editar_resguardo(id_resguardo):
             cantidad = parse_int(form_data.get('Cantidad'))
             tipo_resguardo = parse_int(form_data.get('Tipo_De_Resguardo'))
 
+
             # 1. Actualizar los datos del bien
             sql_update_bien = """
                 UPDATE bienes SET No_Inventario=%s, No_Factura=%s, No_Cuenta=%s, Proveedor=%s, 
@@ -249,7 +251,7 @@ def editar_resguardo(id_resguardo):
             # 2. Actualizar los datos del resguardo
             sql_update_resguardo = """
                 UPDATE resguardos SET id_area=%s, No_Resguardo=%s, Tipo_De_Resguardo=%s, Fecha_Resguardo=%s, 
-                No_Trabajador=%s, Puesto=%s, Nombre_Director_Jefe_De_Area=%s, Nombre_Del_Resguardante=%s 
+                No_Trabajador=%s, No_Nomina_Trabajador=%s, Puesto_trabajador=%s, Nombre_Director_Jefe_De_Area=%s, Nombre_Del_Resguardante=%s 
                 WHERE id=%s
             """
             
@@ -259,7 +261,8 @@ def editar_resguardo(id_resguardo):
                 tipo_resguardo,
                 fecha_resguardo,
                 parse_string(form_data.get('No_Trabajador')),
-                parse_string(form_data.get('Puesto')),
+                parse_string(form_data.get('No_Nomina_Trabajador')),
+                parse_string(form_data.get('Puesto_Trabajador')),
                 parse_string(form_data.get('Nombre_Director_Jefe_De_Area')),
                 parse_string(form_data.get('Nombre_Del_Resguardante')),
                 id_resguardo
@@ -441,6 +444,7 @@ def ver_resguardo(id_resguardo):
                 r.Puesto_Trabajador AS Puesto,
                 r.Nombre_Director_Jefe_De_Area,
                 r.Nombre_Del_Resguardante,
+                r.No_Nomina_Trabajador,
                 r.Activo,
                 b.No_Inventario,
                 b.No_Factura,
@@ -535,7 +539,7 @@ def ver_resguardos_sujeto_control():
             b.Modelo, b.Numero_De_Serie,
             r.No_Resguardo, r.Tipo_De_Resguardo, r.Fecha_Resguardo, r.No_Trabajador,
             r.Puesto, r.Nombre_Director_Jefe_De_Area,
-            r.Nombre_Del_Resguardante,
+            r.Nombre_Del_Resguardante, r.Activo,
             b.Proveedor
         """
         
@@ -764,8 +768,8 @@ def ver_resguardos():
             b.Costo_Final_Cantidad, b.Cantidad, b.Estado_Del_Bien, b.Marca,
             b.Modelo, b.Numero_De_Serie,
             r.No_Resguardo, r.Tipo_De_Resguardo, r.Fecha_Resguardo, r.No_Trabajador,
-            r.Puesto_Trabajador, r.Nombre_Director_Jefe_De_Area,
-            r.Nombre_Del_Resguardante,
+            r.Puesto_Trabajador, r.No_Nomina_Trabajador, r.Nombre_Director_Jefe_De_Area,
+            r.Nombre_Del_Resguardante, r.Activo,
             b.Proveedor
         """
         

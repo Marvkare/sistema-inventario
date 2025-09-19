@@ -38,7 +38,7 @@
                     <th data-sortable='true'>No. Factura</th>
                     <th data-sortable='true'>No. Cuenta</th>
                     <th data-sortable='true'>No. Resguardo</th>
-                    <th data-sortable='true'>No. Trabajador</th>
+                    
                     <th data-sortable='true'>Proveedor</th>
                     <th data-sortable='true'>Fecha Resguardo</th>
                     <th>Descripción Del Bien</th>
@@ -53,10 +53,14 @@
                     <th data-sortable='true'>Depreciación Acumulada</th>
                     <th data-sortable='true'>Costo Final Cantidad</th>
                     <th data-sortable='true'>Cantidad</th>
-                    <th>Puesto</th>
                     <th>Nombre Director Jefe Área</th>
                     <th>Tipo De Resguardo</th>
+
+                    <th data-sortable='true'>No. Trabajador</th>
                     <th>Nombre Del Resguardante</th>
+                    <th>Puesto Del Resguardante</th>
+                    <th>No. de Nomina Resguardante</th>
+
                     <th>Estado Del Bien</th>
                     <th>Marca</th>
                     <th>Modelo</th>
@@ -66,13 +70,12 @@
             </thead>
             <tbody>
                 {% for resguardo in resguardos %}
-                <tr>
+                <tr class="{% if resguardo.Activo %}active-row{% else %}inactive-row{% endif %}">
                     <td>{{ resguardo.id if resguardo.id is not none else '' }}</td>
                     <td>{{ resguardo.No_Inventario if resguardo.No_Inventario is not none else '' }}</td>
                     <td>{{ resguardo.No_Factura if resguardo.No_Factura is not none else '' }}</td>
                     <td>{{ resguardo.No_Cuenta if resguardo.No_Cueta is not none else '' }}</td>
                     <td>{{ resguardo.No_Resguardo if resguardo.No_Resguardo is not none else '' }}</td>
-                    <td>{{ resguardo.No_Trabajador if resguardo.No_Trabajador is not none else '' }}</td>
                     <td>{{ resguardo.Proveedor if resguardo.Proveedor is not none else '' }}</td>
                     <td>{{ resguardo.Fecha_Resguardo if resguardo.Fecha_Resguardo is not none else '' }}</td>
                     <td>{{ resguardo.Descripcion_Del_Bien if resguardo.Descripcion_Del_Bien is not none else '' }}</td>
@@ -87,10 +90,13 @@
                     <td>{{ resguardo.Depreciacion_Acumulada if resguardo.Depreciacion_Acumulada is not none else '' }}</td>
                     <td>{{ resguardo.Costo_Final_Cantidad if resguardo.Costo_Final_Cantidad is not none else '' }}</td>
                     <td>{{ resguardo.Cantidad if resguardo.Cantidad is not none else '' }}</td>
-                    <td>{{ resguardo.Puesto if resguardo.Puesto is not none else '' }}</td>
                     <td>{{ resguardo.Nombre_Director_Jefe_De_Area if resguardo.Nombre_Director_Jefe_De_Area is not none else '' }}</td>
                     <td>{{ 'Sujeto de Control' if resguardo.Tipo_De_Resguardo == 1 else 'Resguardo Normal' }}</td>
+
+                    <td>{{ resguardo.No_Trabajador if resguardo.No_Trabajador is not none else '' }}</td>
                     <td>{{ resguardo.Nombre_Del_Resguardante if resguardo.Nombre_Del_Resguardante is not none else '' }}</td>
+                    <td>{{ resguardo.Puesto_Trabajador if resguardo.Puesto_Trabajador is not none else '' }}</td>
+                    <td>{{ resguardo.No_Nomina_Trabajador}}</td> 
                     <td>{{ resguardo.Estado_Del_Bien if resguardo.Estado_Del_Bien is not none else '' }}</td>
                     <td>{{ resguardo.Marca if resguardo.Marca is not none else '' }}</td>
                     <td>{{ resguardo.Modelo if resguardo.Modelo is not none else '' }}</td>
@@ -154,16 +160,13 @@
         text-align: left; 
     }
     th { 
-        background-color: #e2e6ea; 
         color: #333; 
         cursor: pointer; 
         position: sticky;
         top: 0;
         z-index: 10;
     }
-    tr:nth-child(even) { 
-        background-color: #f2f2f2; 
-    }
+    
     tr:hover { 
         background-color: #ddd; 
     }
@@ -272,6 +275,14 @@
         color: white;
     }
     
+    .active-row {
+        background-color: #9dcea9; /* Verde pastel */
+    }
+
+    .inactive-row {
+        background-color: #fac2c7; /* Rojo pastel */
+    }
+    
     @media (max-width: 768px) {
         .filter-form {
             flex-direction: column;
@@ -340,6 +351,14 @@
         const tbody = document.querySelector("table tbody");
         resguardos.forEach(resguardo => {
             const row = document.createElement("tr");
+            
+            // Add conditional class based on the 'Activo' property
+            if (resguardo.Activo) {
+                row.classList.add('active-row');
+            } else {
+                row.classList.add('inactive-row');
+            }
+
             row.innerHTML = `
                 <td>${resguardo.id || ''}</td>
                 <td>${resguardo.No_Inventario || ''}</td>
@@ -371,7 +390,7 @@
                 <td>${resguardo.Numero_De_Serie || ''}</td>
                 <td class="actions">
                     <a href="/resguardos/editar_resguardo/${resguardo.id}">Editar</a>
-                    <a href="/resguardos/ver_resguardo/${resguardo.id}">Ver detalles</a>
+                    <a href="/ver_resguardo/${resguardo.id}">Ver detalles</a>
                     <a href="/traspaso/traspasar_resguardo/${resguardo.id}" class="traspaso-btn">Traspasar Resguardo</a>
                 </td>
             `;
