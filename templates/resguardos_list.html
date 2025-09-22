@@ -1,469 +1,176 @@
 {% extends "base.html" %}
-{% block content %}
-<div class="container">
-    <h1>Lista de Resguardos</h1>
 
-    <div class="flash-messages">
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                {% for category, message in messages %}
-                    <div class="{{ category }}">{{ message }}</div>
-                {% endfor %}
+{% block content %}
+<div class="container mx-auto px-4 mt-5">
+    <div class="flex items-center justify-between mb-6">
+        <h1 class="text-3xl font-bold text-gray-800">
+            {% if is_sujeto_control %}
+                Resguardos Sujeto de Control
+            {% else %}
+                Lista de Resguardos
             {% endif %}
-        {% endwith %}
+        </h1>
+        <a href="{{ url_for('resguardos.crear_resguardo') }}" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg shadow-md transition-all duration-300 flex items-center gap-2">
+            <i class="fas fa-plus-circle"></i> Agregar Nuevo Resguardo
+        </a>
     </div>
 
-    <form action="{{ url_for('resguardos.ver_resguardos') }}" method="GET" class="filter-form">
-        <label for="search_column">Buscar en:</label>
-        <select name="search_column" id="search_column">
-            <option value="all" {% if search_column == 'all' %}selected{% endif %}>Todas las Columnas</option>
-            {% for col in available_columns_for_search %}
-                <option value="{{ col }}" {% if search_column == col %}selected{% endif %}>{{ col.replace('_', ' ') }}</option>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="bg-{{ category|replace('danger', 'red')|replace('success', 'green')|replace('warning', 'yellow')|replace('info', 'blue') }}-100 border border-{{ category|replace('danger', 'red')|replace('success', 'green')|replace('warning', 'yellow')|replace('info', 'blue') }}-400 text-{{ category|replace('danger', 'red')|replace('success', 'green')|replace('warning', 'yellow')|replace('info', 'blue') }}-700 px-4 py-3 rounded relative mb-4" role="alert">
+                    <span class="block sm:inline">{{ message }}</span>
+                </div>
             {% endfor %}
-        </select>
+        {% endif %}
+    {% endwith %}
 
-        <label for="search_query">Texto a buscar:</label>
-        <input type="text" name="search_query" id="search_query" value="{{ search_query if search_query }}" placeholder="Escribe aquí...">
+    <div class="bg-white p-4 rounded-lg shadow-md mb-6">
+        <h5 class="text-lg font-semibold text-gray-700 mb-2">🔍 Buscar Resguardo</h5>
+        <form action="{{ request.path }}" method="GET" class="flex flex-wrap items-center gap-4">
+            <div class="flex items-center gap-2">
+                <label for="search_column" class="font-bold text-gray-700 whitespace-nowrap">Buscar en:</label>
+                <select name="search_column" id="search_column" class="p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
+                    <option value="all" {% if search_column == 'all' %}selected{% endif %}>Todas las Columnas</option>
+                    {% for col in available_columns_for_search %}
+                        <option value="{{ col }}" {% if search_column == col %}selected{% endif %}>{{ col.replace('_', ' ') }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="flex-grow flex items-center gap-2">
+                <label for="search_query" class="font-bold text-gray-700 whitespace-nowrap">Texto a buscar:</label>
+                <input type="text" name="search_query" id="search_query" value="{{ search_query | default('') }}" placeholder="Escribe aquí..." class="p-2 border border-gray-300 rounded-md flex-grow focus:ring-blue-500 focus:border-blue-500">
+            </div>
+            <div class="flex items-center gap-2">
+                <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md shadow-sm transition-colors duration-200">Aplicar Filtro</button>
+                <a href="{{ request.path }}" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-md shadow-sm transition-colors duration-200">Limpiar Filtros</a>
+            </div>
+        </form>
+    </div>
 
-        <button type="submit">Aplicar Filtro</button>
-        <button type="button" onclick="window.location.href='{{ url_for('resguardos.ver_resguardos') }}'">Limpiar Filtros</button>
-    </form>
-
-    <div style="overflow-x: auto;">
-        <table>
-            <thead>
-                <tr>
-                    <th data-sortable='true'>No. Id. DB</th>
-                    <th data-sortable='true'>No. Inventario</th>
-                    <th data-sortable='true'>No. Factura</th>
-                    <th data-sortable='true'>No. Cuenta</th>
-                    <th data-sortable='true'>No. Resguardo</th>
-                    
-                    <th data-sortable='true'>Proveedor</th>
-                    <th data-sortable='true'>Fecha Resguardo</th>
-                    <th>Descripción Del Bien</th>
-                    <th>Descripción Corta Del Bien</th>
-                    <th data-sortable='true'>Área</th>
-                    <th data-sortable='true'>Rubro</th>
-                    <th data-sortable='true'>Póliza</th>
-                    <th data-sortable='true'>Fecha Póliza</th>
-                    <th>Sub-Cuenta Armonizadora</th>
-                    <th data-sortable='true'>Fecha Factura</th>
-                    <th data-sortable='true'>Costo Inicial</th>
-                    <th data-sortable='true'>Depreciación Acumulada</th>
-                    <th data-sortable='true'>Costo Final Cantidad</th>
-                    <th data-sortable='true'>Cantidad</th>
-                    <th>Nombre Director Jefe Área</th>
-                    <th>Tipo De Resguardo</th>
-
-                    <th data-sortable='true'>No. Trabajador</th>
-                    <th>Nombre Del Resguardante</th>
-                    <th>Puesto Del Resguardante</th>
-                    <th>No. de Nomina Resguardante</th>
-
-                    <th>Estado Del Bien</th>
-                    <th>Marca</th>
-                    <th>Modelo</th>
-                    <th>Número De Serie</th>
-                    <th>Acciones</th>
+    <div class="overflow-x-auto rounded-lg shadow-md">
+        <table class="min-w-full leading-normal">
+            <thead class="bg-gray-50">
+                <tr class="bg-blue-600 text-white uppercase text-sm leading-normal">
+                    <th class="py-3 px-6 text-left">No. Resguardo</th>
+                    <th class="py-3 px-6 text-left">No. Inventario</th>
+                    <th class="py-3 px-6 text-left">Descripción Del Bien</th>
+                    <th class="py-3 px-6 text-left">Nombre Resguardante</th>
+                    <th class="py-3 px-6 text-left">Área</th>
+                    <th class="py-3 px-6 text-left">Fecha Resguardo</th>
+                    <th class="py-3 px-6 text-center">Acciones</th>
                 </tr>
             </thead>
-            <tbody>
+            <tbody class="text-gray-600 text-sm font-light">
                 {% for resguardo in resguardos %}
-                <tr class="{% if resguardo.Activo %}active-row{% else %}inactive-row{% endif %}">
-                    <td>{{ resguardo.id if resguardo.id is not none else '' }}</td>
-                    <td>{{ resguardo.No_Inventario if resguardo.No_Inventario is not none else '' }}</td>
-                    <td>{{ resguardo.No_Factura if resguardo.No_Factura is not none else '' }}</td>
-                    <td>{{ resguardo.No_Cuenta if resguardo.No_Cueta is not none else '' }}</td>
-                    <td>{{ resguardo.No_Resguardo if resguardo.No_Resguardo is not none else '' }}</td>
-                    <td>{{ resguardo.Proveedor if resguardo.Proveedor is not none else '' }}</td>
-                    <td>{{ resguardo.Fecha_Resguardo if resguardo.Fecha_Resguardo is not none else '' }}</td>
-                    <td>{{ resguardo.Descripcion_Del_Bien if resguardo.Descripcion_Del_Bien is not none else '' }}</td>
-                    <td>{{ resguardo.Descripcion_Corta_Del_Bien if resguardo.Descripcion_Corta_Del_Bien is not none else '' }}</td>
-                    <td>{{ resguardo.Area_Nombre if resguardo.Area_Nombre is not none else '' }}</td>
-                    <td>{{ resguardo.Rubro if resguardo.Rubro is not none else '' }}</td>
-                    <td>{{ resguardo.Poliza if resguardo.Poliza is not none else '' }}</td>
-                    <td>{{ resguardo.Fecha_Poliza if resguardo.Fecha_Poliza is not none else '' }}</td>
-                    <td>{{ resguardo.Sub_Cueta_Armonizadora if resguardo.Sub_Cueta_Armonizadora is not none else '' }}</td>
-                    <td>{{ resguardo.Fecha_Factura if resguardo.Fecha_Factura is not none else '' }}</td>
-                    <td>{{ resguardo.Costo_Inicial if resguardo.Costo_Inicial is not none else '' }}</td>
-                    <td>{{ resguardo.Depreciacion_Acumulada if resguardo.Depreciacion_Acumulada is not none else '' }}</td>
-                    <td>{{ resguardo.Costo_Final_Cantidad if resguardo.Costo_Final_Cantidad is not none else '' }}</td>
-                    <td>{{ resguardo.Cantidad if resguardo.Cantidad is not none else '' }}</td>
-                    <td>{{ resguardo.Nombre_Director_Jefe_De_Area if resguardo.Nombre_Director_Jefe_De_Area is not none else '' }}</td>
-                    <td>{{ 'Sujeto de Control' if resguardo.Tipo_De_Resguardo == 1 else 'Resguardo Normal' }}</td>
-
-                    <td>{{ resguardo.No_Trabajador if resguardo.No_Trabajador is not none else '' }}</td>
-                    <td>{{ resguardo.Nombre_Del_Resguardante if resguardo.Nombre_Del_Resguardante is not none else '' }}</td>
-                    <td>{{ resguardo.Puesto_Trabajador if resguardo.Puesto_Trabajador is not none else '' }}</td>
-                    <td>{{ resguardo.No_Nomina_Trabajador}}</td> 
-                    <td>{{ resguardo.Estado_Del_Bien if resguardo.Estado_Del_Bien is not none else '' }}</td>
-                    <td>{{ resguardo.Marca if resguardo.Marca is not none else '' }}</td>
-                    <td>{{ resguardo.Modelo if resguardo.Modelo is not none else '' }}</td>
-                    <td>{{ resguardo.Numero_De_Serie if resguardo.Numero_De_Serie is not none else '' }}</td>
-                    <td class="actions">
-                        {% if resguardo.id %}
-                        <a href="{{ url_for('resguardos.editar_resguardo', id_resguardo=resguardo.id) }}">Editar</a>
-                        <a href="{{ url_for('resguardos.ver_resguardo', id_resguardo=resguardo.id) }}">Ver detalles</a>
-                        <a href="{{ url_for('traspaso.traspasar_resguardo', id_resguardo=resguardo.id) }}" class="traspaso-btn">Traspasar Resguardo</a>
+                    <tr class="
+                        {% if resguardo.Activo %}
+                            bg-green-100 hover:bg-green-200
                         {% else %}
-                        <span>N/A</span>
+                            bg-red-100 hover:bg-red-200
                         {% endif %}
-                    </td>
-                </tr>
+                        border-b border-gray-200"
+                        title="Resguardo {% if resguardo.Activo %}Activo{% else %}Inactivo{% endif %}">
+                        <td class="py-3 px-6 text-left whitespace-nowrap" title="{{ resguardo.No_Resguardo | default('') }}">{{ resguardo.No_Resguardo | default('') }}</td>
+                        <td class="py-3 px-6 text-left whitespace-nowrap" title="{{ resguardo.No_Inventario | default('') }}">{{ resguardo.No_Inventario | default('') }}</td>
+                        <td class="py-3 px-6 text-left max-w-[200px] overflow-hidden text-ellipsis whitespace-nowrap" title="{{ resguardo.Descripcion_Del_Bien | default('') }}">{{ resguardo.Descripcion_Del_Bien | default('') }}</td>
+                        <td class="py-3 px-6 text-left max-w-[150px] overflow-hidden text-ellipsis whitespace-nowrap" title="{{ resguardo.Nombre_Del_Resguardante | default('') }}">{{ resguardo.Nombre_Del_Resguardante | default('') }}</td>
+                        <td class="py-3 px-6 text-left whitespace-nowrap" title="{{ resguardo.Area_Nombre | default('') }}">{{ resguardo.Area_Nombre | default('') }}</td>
+                        <td class="py-3 px-6 text-left whitespace-nowrap" title="{{ resguardo.Fecha_Resguardo | default('') }}">{{ resguardo.Fecha_Resguardo | default('') }}</td>
+                        <td class="py-3 px-6 text-center">
+                            <div class="flex item-center justify-center space-x-2">
+                                <a href="{{ url_for('resguardos.editar_resguardo', id_resguardo=resguardo.id) }}" class="bg-yellow-400 hover:bg-yellow-500 text-gray-900 py-1 px-2 rounded-lg transition-colors duration-300" title="Editar">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <a href="{{ url_for('resguardos.ver_resguardo', id_resguardo=resguardo.id) }}" class="bg-blue-500 hover:bg-blue-600 text-white py-1 px-2 rounded-lg transition-colors duration-300" title="Ver Detalles">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                <a href="{{ url_for('traspaso.traspasar_resguardo', id_resguardo=resguardo.id) }}" class="bg-gray-400 hover:bg-gray-500 text-white py-1 px-2 rounded-lg transition-colors duration-300" title="Traspasar">
+                                    <i class="fas fa-exchange-alt"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                {% else %}
+                    <tr>
+                        <td colspan="7" class="py-4 text-center text-gray-500">
+                            No hay resguardos para mostrar con los filtros aplicados.
+                        </td>
+                    </tr>
                 {% endfor %}
             </tbody>
         </table>
-        <div id="loading-indicator">Cargando más datos...</div>
-        <div id="no-more-data">No hay más datos para mostrar.</div>
     </div>
+    
+    {% if total_pages > 1 %}
+    <div class="flex justify-center mt-6 space-x-2 flex-wrap">
+        {% if current_page > 1 %}
+            <a href="{{ url_for('resguardos.ver_resguardos', page=current_page-1, search_column=search_column, search_query=search_query) }}" class="px-4 py-2 text-sm font-semibold text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors duration-300">
+                Anterior
+            </a>
+        {% else %}
+            <span class="px-4 py-2 text-sm font-semibold text-gray-400 bg-gray-100 rounded-lg cursor-not-allowed">
+                Anterior
+            </span>
+        {% endif %}
+
+        {% set pages_to_show = 5 %}
+        {% set start_page = (current_page - (pages_to_show // 2))|int %}
+        {% set end_page = (current_page + (pages_to_show // 2))|int %}
+
+        {% if start_page < 1 %}
+            {% set start_page = 1 %}
+            {% set end_page = (pages_to_show)|int %}
+        {% endif %}
+
+        {% if end_page > total_pages %}
+            {% set end_page = total_pages %}
+            {% set start_page = (total_pages - pages_to_show + 1)|int %}
+            {% if start_page < 1 %}
+                {% set start_page = 1 %}
+            {% endif %}
+        {% endif %}
+
+        {% if start_page > 1 %}
+            <a href="{{ url_for('resguardos.ver_resguardos', page=1, search_column=search_column, search_query=search_query) }}" class="px-4 py-2 text-sm font-semibold text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors duration-300">1</a>
+            {% if start_page > 2 %}
+                <span class="px-4 py-2 text-sm font-semibold text-gray-500">...</span>
+            {% endif %}
+        {% endif %}
+
+        {% for p in range(start_page, end_page + 1) %}
+            {% if p == current_page %}
+                <span class="px-4 py-2 text-sm font-semibold text-white bg-blue-600 rounded-lg shadow-md cursor-default">
+                    {{ p }}
+                </span>
+            {% else %}
+                <a href="{{ url_for('resguardos.ver_resguardos', page=p, search_column=search_column, search_query=search_query) }}" class="px-4 py-2 text-sm font-semibold text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors duration-300">
+                    {{ p }}
+                </a>
+            {% endif %}
+        {% endfor %}
+
+        {% if end_page < total_pages %}
+            {% if end_page < total_pages - 1 %}
+                <span class="px-4 py-2 text-sm font-semibold text-gray-500">...</span>
+            {% endif %}
+            <a href="{{ url_for('resguardos.ver_resguardos', page=total_pages, search_column=search_column, search_query=search_query) }}" class="px-4 py-2 text-sm font-semibold text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors duration-300">{{ total_pages }}</a>
+        {% endif %}
+
+        {% if current_page < total_pages %}
+            <a href="{{ url_for('resguardos.ver_resguardos', page=current_page+1, search_column=search_column, search_query=search_query) }}" class="px-4 py-2 text-sm font-semibold text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors duration-300">
+                Siguiente
+            </a>
+        {% else %}
+            <span class="px-4 py-2 text-sm font-semibold text-gray-400 bg-gray-100 rounded-lg cursor-not-allowed">
+                Siguiente
+            </span>
+        {% endif %}
+    </div>
+    {% endif %}
+
 </div>
-
-<style>
-    .container { 
-        max-width: 100%; 
-        margin: auto; 
-        background: #fff; 
-        padding: 20px; 
-        border-radius: 8px; 
-        box-shadow: 0 0 10px rgba(0,0,0,0.1); 
-    }
-    h1, h2 { 
-        color: #0056b3; 
-        margin-bottom: 20px;
-    }
-    .nav-links { 
-        text-align: center; 
-        margin-bottom: 20px; 
-    }
-    .nav-links a { 
-        display: inline-block; 
-        padding: 10px 15px; 
-        background-color: #28a745; 
-        color: white; 
-        text-decoration: none; 
-        border-radius: 4px; 
-        margin: 0 5px; 
-    }
-    .nav-links a:hover { 
-        background-color: #218838; 
-    }
-    table { 
-        width: 100%; 
-        border-collapse: collapse; 
-        margin-top: 20px; 
-        font-size: 0.9em;
-    }
-    th, td { 
-        border: 1px solid #ddd; 
-        padding: 8px; 
-        text-align: left; 
-    }
-    th { 
-        color: #333; 
-        cursor: pointer; 
-        position: sticky;
-        top: 0;
-        z-index: 10;
-    }
-    
-    tr:hover { 
-        background-color: #ddd; 
-    }
-    .actions a { 
-        margin-right: 5px; 
-        text-decoration: none; 
-        color: #007bff; 
-        display: block;
-        margin-bottom: 5px;
-    }
-    .actions a:hover { 
-        text-decoration: underline; 
-    }
-    .flash-messages { 
-        margin-bottom: 15px; 
-    }
-    .flash-messages .success { 
-        background-color: #d4edda; 
-        color: #155724; 
-        border: 1px solid #c3e6cb; 
-        padding: 10px; 
-        border-radius: 5px; 
-        margin-bottom: 5px; 
-    }
-    .flash-messages .error { 
-        background-color: #f8d7da; 
-        color: #721c24; 
-        border: 1px solid #f5c6cb; 
-        padding: 10px; 
-        border-radius: 5px; 
-        margin-bottom: 5px; 
-    }
-    .flash-messages .warning { 
-        background-color: #fff3cd; 
-        color: #856404; 
-        border: 1px solid #ffeeba; 
-        padding: 10px; 
-        border-radius: 5px; 
-        margin-bottom: 5px; 
-    }
-
-    /* Estilos adicionales para el formulario de búsqueda */
-    .filter-form {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 10px;
-        margin-bottom: 20px;
-        padding: 15px;
-        background-color: #e9ecef;
-        border-radius: 5px;
-        align-items: center;
-    }
-    .filter-form label {
-        font-weight: bold;
-        white-space: nowrap;
-    }
-    .filter-form select,
-    .filter-form input[type="text"] {
-        padding: 8px;
-        border: 1px solid #ced4da;
-        border-radius: 4px;
-        flex: 1;
-        min-width: 120px;
-    }
-    .filter-form button {
-        padding: 8px 15px;
-        background-color: #007bff;
-        color: white;
-        border: none;
-        border-radius: 4px;
-        cursor: pointer;
-        white-space: nowrap;
-    }
-    .filter-form button:hover {
-        background-color: #0056b3;
-    }
-
-    /* Loading indicator styles */
-    #loading-indicator {
-        text-align: center;
-        padding: 10px;
-        font-size: 1.2em;
-        color: #555;
-        display: none;
-    }
-    #no-more-data {
-        text-align: center;
-        padding: 10px;
-        font-size: 1.2em;
-        color: #888;
-        display: none;
-    }
-    
-    .traspaso-btn {
-        display: inline-block;
-        padding: 6px 12px;
-        background-color: #007bff;
-        color: white;
-        text-decoration: none;
-        border-radius: 4px;
-        margin-top: 5px;
-    }
-    .traspaso-btn:hover {
-        background-color: #0056b3;
-        text-decoration: none;
-        color: white;
-    }
-    
-    .active-row {
-        background-color: #9dcea9; /* Verde pastel */
-    }
-
-    .inactive-row {
-        background-color: #fac2c7; /* Rojo pastel */
-    }
-    
-    @media (max-width: 768px) {
-        .filter-form {
-            flex-direction: column;
-            align-items: stretch;
-        }
-        .filter-form label {
-            margin-top: 10px;
-        }
-        table {
-            font-size: 0.8em;
-        }
-        th, td {
-            padding: 6px 4px;
-        }
-    }
-</style>
-
-<script>
-    // Global variables for pagination and loading state
-    let currentPage = {{ current_page | default(1) }};
-    const limit = {{ limit | default(100) }};
-    let isLoading = false;
-    let allDataLoaded = false;
-
-    // Script para ordenar la tabla
-    function sortTable(columnIndex) {
-        const table = document.querySelector("table");
-        const tbody = table.querySelector("tbody");
-        const rows = Array.from(tbody.querySelectorAll("tr"));
-        const headers = Array.from(table.querySelectorAll("th"));
-
-        let currentSortOrder = headers[columnIndex].dataset.sortOrder || 'asc';
-        const newSortOrder = currentSortOrder === 'asc' ? 'desc' : 'asc';
-
-        // Clear previous sort indicators
-        headers.forEach(header => {
-            header.classList.remove('asc', 'desc');
-            header.textContent = header.textContent.replace(' ▲', '').replace(' ▼', '');
-        });
-
-        // Add new sort indicator
-        headers[columnIndex].classList.add(newSortOrder);
-        headers[columnIndex].dataset.sortOrder = newSortOrder;
-        headers[columnIndex].textContent += (newSortOrder === 'asc' ? ' ▲' : ' ▼');
-
-        rows.sort((a, b) => {
-            const aText = a.children[columnIndex].textContent.trim();
-            const bText = b.children[columnIndex].textContent.trim();
-
-            let comparison = 0;
-            // Try to compare as numbers if possible
-            if (!isNaN(parseFloat(aText)) && !isNaN(parseFloat(bText)) && aText !== '' && bText !== '') {
-                comparison = parseFloat(aText) - parseFloat(bText);
-            } else {
-                comparison = aText.localeCompare(bText);
-            }
-
-            return newSortOrder === 'asc' ? comparison : -comparison;
-        });
-
-        rows.forEach(row => tbody.appendChild(row));
-    }
-
-    // Function to append new rows to the table
-    function appendResguardos(resguardos) {
-        const tbody = document.querySelector("table tbody");
-        resguardos.forEach(resguardo => {
-            const row = document.createElement("tr");
-            
-            // Add conditional class based on the 'Activo' property
-            if (resguardo.Activo) {
-                row.classList.add('active-row');
-            } else {
-                row.classList.add('inactive-row');
-            }
-
-            row.innerHTML = `
-                <td>${resguardo.id || ''}</td>
-                <td>${resguardo.No_Inventario || ''}</td>
-                <td>${resguardo.No_Factura || ''}</td>
-                <td>${resguardo.No_Cuenta || ''}</td>
-                <td>${resguardo.No_Resguardo || ''}</td>
-                <td>${resguardo.No_Trabajador || ''}</td>
-                <td>${resguardo.Proveedor || ''}</td>
-                <td>${resguardo.Fecha_Resguardo || ''}</td>
-                <td>${resguardo.Descripcion_Del_Bien || ''}</td>
-                <td>${resguardo.Descripcion_Corta_Del_Bien || ''}</td>
-                <td>${resguardo.Area_Nombre || ''}</td>
-                <td>${resguardo.Rubro || ''}</td>
-                <td>${resguardo.Poliza || ''}</td>
-                <td>${resguardo.Fecha_Poliza || ''}</td>
-                <td>${resguardo.Sub_Cuenta_Armonizadora || ''}</td>
-                <td>${resguardo.Fecha_Factura || ''}</td>
-                <td>${resguardo.Costo_Inicial || ''}</td>
-                <td>${resguardo.Depreciacion_Acumulada || ''}</td>
-                <td>${resguardo.Costo_Final_Cantidad || ''}</td>
-                <td>${resguardo.Cantidad || ''}</td>
-                <td>${resguardo.Puesto || ''}</td>
-                <td>${resguardo.Nombre_Director_Jefe_De_Area || ''}</td>
-                <td>${resguardo.Tipo_De_Resguardo === 1 ? 'Sujeto de Control' : 'Resguardo Normal'}</td>
-                <td>${resguardo.Nombre_Del_Resguardante || ''}</td>
-                <td>${resguardo.Estado_Del_Bien || ''}</td>
-                <td>${resguardo.Marca || ''}</td>
-                <td>${resguardo.Modelo || ''}</td>
-                <td>${resguardo.Numero_De_Serie || ''}</td>
-                <td class="actions">
-                    <a href="/resguardos/editar_resguardo/${resguardo.id}">Editar</a>
-                    <a href="/ver_resguardo/${resguardo.id}">Ver detalles</a>
-                    <a href="/traspaso/traspasar_resguardo/${resguardo.id}" class="traspaso-btn">Traspasar Resguardo</a>
-                </td>
-            `;
-            tbody.appendChild(row);
-        });
-    }
-
-    // Function to fetch more data
-    async function loadMoreResguardos() {
-        if (isLoading || allDataLoaded) return;
-
-        isLoading = true;
-        document.getElementById('loading-indicator').style.display = 'block';
-
-        currentPage++;
-
-        const searchColumn = document.getElementById('search_column').value;
-        const searchQuery = document.getElementById('search_query').value;
-
-        const url = new URL("{{ url_for('resguardos.ver_resguardos') }}", window.location.origin);
-        url.searchParams.append('page', currentPage);
-        url.searchParams.append('limit', limit);
-        if (searchColumn && searchColumn !== 'all') {
-            url.searchParams.append('search_column', searchColumn);
-        }
-        if (searchQuery) {
-            url.searchParams.append('search_query', searchQuery);
-        }
-
-        try {
-            const response = await fetch(url.toString(), {
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest'
-                }
-            });
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            const newResguardos = await response.json();
-
-            if (newResguardos.length > 0) {
-                appendResguardos(newResguardos);
-            } else {
-                allDataLoaded = true;
-                document.getElementById('no-more-data').style.display = 'block';
-            }
-        } catch (error) {
-            console.error("Error loading more resguardos:", error);
-        } finally {
-            isLoading = false;
-            document.getElementById('loading-indicator').style.display = 'none';
-        }
-    }
-
-    window.addEventListener('scroll', () => {
-        const scrollBottom = window.innerHeight + window.scrollY;
-        const documentHeight = document.body.offsetHeight;
-        const threshold = documentHeight - 100;
-
-        if (scrollBottom >= threshold) {
-            loadMoreResguardos();
-        }
-    });
-
-    document.addEventListener('DOMContentLoaded', function() {
-        const headers = document.querySelectorAll("th[data-sortable='true']");
-        headers.forEach((header, index) => {
-            header.addEventListener('click', () => sortTable(index));
-        });
-
-        if (document.body.offsetHeight <= window.innerHeight) {
-            loadMoreResguardos();
-        }
-    });
-</script>
 {% endblock %}
+
+{% block scripts %}
+    {% endblock %}

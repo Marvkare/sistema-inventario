@@ -62,8 +62,8 @@
                                     </p>
                                     <p class="text-sm text-gray-500">Resguardante: {{ resguardo.Nombre_Del_Resguardante }}</p>
                                 </div> 
-                     <a href="{{ url_for('resguardos.editar_resguardo', id_resguardo=resguardo.id) }}" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-blanco-mexicano bg-verde-mexicano-oscuro hover:bg-verde-mexicano-medio focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-verde-mexicano-claro transition duration-150 ease-in-out">
-                    <i class="fas fa-edit mr-2"></i> Editar Resguardo
+                     <a href="{{ url_for('resguardos.ver_resguardo', id_resguardo=resguardo.id) }}" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-blanco-mexicano bg-verde-mexicano-oscuro hover:bg-verde-mexicano-medio focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-verde-mexicano-claro transition duration-150 ease-in-out">
+                    <i class="fas fa-eye mr-2 "></i> Ver Resguardo
                     </a>
                 </div>
                 {% endfor %}

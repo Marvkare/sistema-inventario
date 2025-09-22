@@ -11,6 +11,7 @@ import os
 import traceback
 from database import get_db_connection
 import mysql.connector
+import math
 bienes_bp = Blueprint('bienes', __name__)
 
 def allowed_file(filename):
@@ -20,10 +21,9 @@ def allowed_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in current_app.config['ALLOWED_EXTENSIONS']
 
-
 @bienes_bp.route('/bienes')
 @login_required
-@permission_required('bienes.listar_bienes') # Asume un permiso para ver bienes
+@permission_required('bienes.listar_bienes')
 def listar_bienes():
     conn = None
     cursor = None
@@ -33,25 +33,43 @@ def listar_bienes():
         conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
 
-        # Consulta SQL corregida para unir las tres tablas
+        # 1. Parámetros de paginación
+        page = request.args.get('page', 1, type=int)
+        items_per_page = 100  # Definimos 100 elementos por página
+        offset = (page - 1) * items_per_page
+
+        # 2. Contar el número total de bienes para calcular las páginas
+        count_query = "SELECT COUNT(*) FROM bienes"
+        cursor.execute(count_query)
+        total_items = cursor.fetchone()['COUNT(*)']
+        total_pages = math.ceil(total_items / items_per_page)
+
+        # 3. Consulta para obtener solo los bienes de la página actual
         sql_query = """
-                SELECT 
-                    b.id,
-                    b.No_Inventario, 
-                    b.Descripcion_Del_Bien,
-                    r.id AS resguardo_id, -- AQUI AGREGAMOS EL ID DEL RESGUARDO
-                    a.Nombre AS Area_Nombre,
-                    b.Estado_Del_Bien,
-                    CASE WHEN r.id IS NOT NULL THEN TRUE ELSE FALSE END AS tiene_resguardo
-                FROM bienes b
-                LEFT JOIN resguardos r ON b.id = r.id_bien
-                LEFT JOIN areas a ON r.id_area = a.id
-                ORDER BY b.id DESC
-            """
-        cursor.execute(sql_query)
+            SELECT 
+                b.id,
+                b.No_Inventario, 
+                b.Descripcion_Del_Bien,
+                r.id AS resguardo_id,
+                a.Nombre AS Area_Nombre,
+                b.Estado_Del_Bien,
+                CASE WHEN r.id IS NOT NULL THEN TRUE ELSE FALSE END AS tiene_resguardo,
+                r.Ubicacion
+            FROM bienes b
+            LEFT JOIN resguardos r ON b.id = r.id_bien
+            LEFT JOIN areas a ON r.id_area = a.id
+            ORDER BY b.id DESC
+            LIMIT %s OFFSET %s
+        """
+        cursor.execute(sql_query, (items_per_page, offset))
         bienes_data = cursor.fetchall()
         
-        return render_template('bienes/listar_bienes.html', bienes=bienes_data)
+        return render_template(
+            'bienes/listar_bienes.html', 
+            bienes=bienes_data, 
+            page=page, 
+            total_pages=total_pages
+        )
         
     except mysql.connector.Error as err:
         flash(f"Error al obtener los bienes: {err}", 'error')

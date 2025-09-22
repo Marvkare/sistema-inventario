@@ -13,6 +13,8 @@ from database import get_db, get_db_connection, AVAILABLE_COLUMNS
 from config import UPLOAD_FOLDER;
 from decorators import permission_required
 from log_activity import log_activity
+from models import Resguardo, Bienes, Area
+import math
 resguardos_bp = Blueprint('resguardos', __name__)
 
 def get_areas_data():
@@ -506,474 +508,6 @@ def ver_resguardo(id_resguardo):
             cursor.close()
             conn.close()
 
-@resguardos_bp.route('/resguardos_sujeto_control')
-@login_required
-@permission_required('resguardos.ver_resguardo')
-def ver_resguardos_sujeto_control():
-    conn = None
-    resguardos_data = []
-    
-    # Pagination parameters
-    page = request.args.get('page', 1, type=int)
-    limit = request.args.get('limit', 100, type=int)
-    offset = (page - 1) * limit
-
-    # Search parameters
-    search_column = request.args.get('search_column', 'all')
-    search_query = request.args.get('search_query', '').strip()
-    
-    # Check if this is an AJAX request for infinite scroll
-    is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
-
-    try:
-        conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
-
-        sql_select_columns = """
-            r.id,
-            b.No_Inventario, b.No_Factura, b.No_Cuenta, b.Descripcion_Del_Bien,
-            b.Descripcion_Corta_Del_Bien, a.nombre AS Area_Nombre,
-            b.Rubro, b.Poliza, b.Fecha_Poliza, b.Sub_Cuenta_Armonizadora,
-            b.Fecha_Factura, b.Costo_Inicial, b.Depreciacion_Acumulada,
-            b.Costo_Final_Cantidad, b.Cantidad, b.Estado_Del_Bien, b.Marca,
-            b.Modelo, b.Numero_De_Serie,
-            r.No_Resguardo, r.Tipo_De_Resguardo, r.Fecha_Resguardo, r.No_Trabajador,
-            r.Puesto, r.Nombre_Director_Jefe_De_Area,
-            r.Nombre_Del_Resguardante, r.Activo,
-            b.Proveedor
-        """
-        
-        sql_query = f"""
-            SELECT {sql_select_columns}
-            FROM resguardos r
-            JOIN bienes b ON r.id_bien = b.id
-            JOIN areas a ON r.id_area = a.id
-        """
-        
-        where_clauses = ["r.Tipo_De_Resguardo = 1"] # Filtro clave
-        sql_params = []
-
-        if search_query:
-            if search_column == 'all':
-                all_columns_search_clauses = []
-                searchable_cols = [
-                    'b.No_Inventario', 'b.No_Factura', 'b.No_Cuenta', 'b.Descripcion_Del_Bien',
-                    'a.nombre', 'b.Proveedor', 'b.Rubro', 'r.No_Resguardo',
-                    'r.Nombre_Del_Resguardante'
-                ]
-                for col in searchable_cols:
-                    all_columns_search_clauses.append(f"{col} LIKE %s")
-                    sql_params.append(f"%{search_query}%")
-                where_clauses.append("(" + " OR ".join(all_columns_search_clauses) + ")")
-            else:
-                col_mapping = {
-                    'Area': 'a.nombre',
-                    'No_Inventario': 'b.No_Inventario',
-                    'No_Factura': 'b.No_Factura',
-                    'No_Cuenta': 'b.No_Cuenta',
-                    'Descripcion_Del_Bien': 'b.Descripcion_Del_Bien',
-                    'Descripcion_Corta_Del_Bien': 'b.Descripcion_Corta_Del_Bien',
-                    'Rubro': 'b.Rubro',
-                    'Poliza': 'b.Poliza',
-                    'Fecha_Poliza': 'b.Fecha_Poliza',
-                    'Sub_Cuenta_Armonizadora': 'b.Sub_Cuenta_Armonizadora',
-                    'Fecha_Factura': 'b.Fecha_Factura',
-                    'Costo_Inicial': 'b.Costo_Inicial',
-                    'Depreciacion_Acumulada': 'b.Depreciacion_Acumulada',
-                    'Costo_Final_Cantidad': 'b.Costo_Final_Cantidad',
-                    'Cantidad': 'b.Cantidad',
-                    'Estado_Del_Bien': 'b.Estado_Del_Bien',
-                    'Marca': 'b.Marca',
-                    'Modelo': 'b.Modelo',
-                    'Numero_De_Serie': 'b.Numero_De_Serie',
-                    'No_Resguardo': 'r.No_Resguardo',
-                    'No_Trabajador': 'r.No_Trabajador',
-                    'Fecha_Resguardo': 'r.Fecha_Resguardo',
-                    'Puesto': 'r.Puesto',
-                    'Nombre_Director_Jefe_De_Area': 'r.Nombre_Director_Jefe_De_Area',
-                    'Tipo_De_Resguardo': 'r.Tipo_De_Resguardo',
-                    'Nombre_Del_Resguardante': 'r.Nombre_Del_Resguardante',
-                    'Proveedor': 'b.Proveedor'
-                }
-
-                db_col = col_mapping.get(search_column)
-                if db_col:
-                    where_clauses.append(f"{db_col} LIKE %s")
-                    sql_params.append(f"%{search_query}%")
-                else:
-                    flash("Columna de búsqueda inválida.", 'error')
-                    search_column = 'all'
-
-        if where_clauses:
-            sql_query += " WHERE " + " AND ".join(where_clauses)
-
-        sql_query += f" ORDER BY r.id DESC LIMIT %s OFFSET %s"
-        sql_params.extend([limit, offset])
-
-        cursor.execute(sql_query, sql_params)
-        resguardos_data = cursor.fetchall()
-        
-        available_columns_for_search = [col for col in AVAILABLE_COLUMNS if col not in [
-            'Descripcion_Del_Bien', 'Descripcion_Corta_Del_Bien', 'Puesto', 'Tipo_De_Resguardo', 'Estado_Del_Bien'
-        ]]
-
-        if is_ajax:
-            for row in resguardos_data:
-                for key, value in row.items():
-                    if isinstance(value, (date, datetime)):
-                        row[key] = value.isoformat()
-            
-            return jsonify(resguardos_data)
-        else:
-            return render_template(
-                'resguardos_sujeto_control.html',
-                resguardos=resguardos_data,
-                search_column=search_column,
-                search_query=search_query,
-                available_columns_for_search=available_columns_for_search,
-                current_page=page,
-                limit=limit
-            )
-
-    except mysql.connector.Error as err:
-        flash(f"Error al obtener resguardos: {err}", 'error')
-        print(f"Error: {err}")
-        return render_template('resguardos_sujeto_control.html', resguardos=[], search_column=search_column, search_query=search_query, available_columns_for_search=AVAILABLE_COLUMNS, current_page=page, limit=limit)
-    except Exception as e:
-        flash(f"Ocurrió un error inesperado: {e}", 'error')
-        print(f"Unexpected error: {e}")
-        return render_template('resguardos_sujeto_control.html', resguardos=[], search_column=search_column, search_query=search_query, available_columns_for_search=AVAILABLE_COLUMNS, current_page=page, limit=limit)
-    finally:
-        if conn and conn.is_connected():
-            cursor.close()
-            conn.close()
-
-@resguardos_bp.route('/generate_resguardo_pdf/<int:id_resguardo>')
-@login_required
-@permission_required('resguardos.crear_resguardo')
-def generate_resguardo_pdf(id_resguardo):
-    conn, cursor = get_db() # Using get_db for dictionary cursor
-    if not conn:
-        flash("No se pudo conectar a la base de datos.", 'error')
-        return redirect(url_for('main.resguardos_list'))
-
-    try:
-        cursor.execute("SELECT * FROM resguardo WHERE id = %s", (id_resguardo,))
-        resguardo_data = cursor.fetchone()
-        if not resguardo_data:
-            flash("Resguardo no encontrado.", 'error')
-            return redirect(url_for('main.resguardos_list'))
-    except mysql.connector.Error as err:
-        flash(f"Error al obtener datos: {err}", 'error')
-        return redirect(url_for('main.resguardos_list'))
-    finally:
-        if conn and conn.is_connected():
-            cursor.close()
-            conn.close()
-
-    try:
-        reader = PdfReader(current_app.config['PDF_TEMPLATE_PATH'])
-        
-        if not reader.get_form_text_fields():
-            flash("La plantilla PDF no contiene campos de formulario.", 'error')
-            return redirect(url_for('main.resguardos_list'))
-
-        # Map your DB data to PDF fields
-        # This is a critical part, ensure field names in PDF match these keys
-        field_data = {
-            "No_Inventario_Field": resguardo_data.get('No_Inventario', ''),
-            "No_Factura_Field": resguardo_data.get('No_Factura', ''),
-            "No_Cuenta_Field": resguardo_data.get('No_Cuenta', ''),
-            # Add all other fields you want to populate
-            "No_Resguardo_Field": resguardo_data.get('No_Resguardo', ''),
-            "Proveedor_Field": resguardo_data.get('Proveedor', ''),
-            "Fecha_Resguardo_Field": str(resguardo_data.get('Fecha_Resguardo', '')) if resguardo_data.get('Fecha_Resguardo') else '',
-            "Descripcion_Del_Bien_Field": resguardo_data.get('Descripcion_Del_Bien', ''),
-            "Descripcion_Fisica_Field": resguardo_data.get('Descripcion_Fisica', ''),
-            "Area_Field": resguardo_data.get('Area', ''),
-            "Rubro_Field": resguardo_data.get('Rubro', ''),
-            "Poliza_Field": resguardo_data.get('Poliza', ''),
-            "Fecha_Poliza_Field": str(resguardo_data.get('Fecha_Poliza', '')) if resguardo_data.get('Fecha_Poliza') else '',
-            "Sub_Cuenta_Armonizadora_Field": resguardo_data.get('Sub_Cuenta_Armonizadora', ''),
-            "Fecha_Factura_Field": str(resguardo_data.get('Fecha_Factura', '')) if resguardo_data.get('Fecha_Factura') else '',
-            "Costo_Inicial_Field": str(resguardo_data.get('Costo_Inicial', '')),
-            "Depreciacion_Acumulada_Field": str(resguardo_data.get('Depreciacion_Acumulada', '')),
-            "Costo_Final_Cantidad_Field": str(resguardo_data.get('Costo_Final_Cantidad', '')),
-            "Cantidad_Field": str(resguardo_data.get('Cantidad', '')),
-            
-            "Puesto_Field": resguardo_data.get('Puesto', ''),
-            "Nombre_Director_Jefe_De_Area_Field": resguardo_data.get('Nombre_Director_Jefe_De_Area', ''),
-            "Numero_De_Serie_Field": resguardo_data.get('Numero_De_Serie', '')
-        }
-
-        writer = PdfWriter()
-        writer.clone_reader_document_root(reader)
-        
-        # Fill the form fields
-        writer.update_page_form_field_values(writer.pages[0], field_data) # Assuming fields are on the first page
-
-        # Flatten the form fields so they are not editable in the final PDF
-        writer.flatten_form()
-
-        # Save to BytesIO to send as file
-        output_pdf_buffer = BytesIO()
-        writer.write(output_pdf_buffer)
-        output_pdf_buffer.seek(0)
-
-        return send_file(
-            output_pdf_buffer,
-            mimetype='application/pdf',
-            as_attachment=True,
-            download_name=f'resguardo_{id_resguardo}.pdf'
-        )
-
-    except FileNotFoundError:
-        flash("Plantilla PDF no encontrada en " + current_app.config['PDF_TEMPLATE_PATH'], 'error')
-    except Exception as e:
-        flash(f"Error al generar PDF: {str(e)}", 'error')
-        print(f"Error detallado:\n{traceback.format_exc()}")
-        
-    return redirect(url_for('main.resguardos_list'))
-
-
-@resguardos_bp.route('/ver_resguardos')
-@login_required
-@permission_required('resguardos.ver_resguardo')
-def ver_resguardos():
-    conn = None
-    resguardos_data = []
-    
-    # Pagination parameters
-    page = request.args.get('page', 1, type=int)
-    limit = request.args.get('limit', 100, type=int)
-    offset = (page - 1) * limit
-
-    # Search parameters
-    search_column = request.args.get('search_column', 'all')
-    search_query = request.args.get('search_query', '').strip()
-    
-    # Check if this is an AJAX request for infinite scroll
-    is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
-
-    try:
-        conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
-
-        sql_select_columns = """
-            r.id,
-            b.No_Inventario, b.No_Factura, b.No_Cuenta, b.Descripcion_Del_Bien,
-            b.Descripcion_Corta_Del_Bien, a.nombre AS Area_Nombre,
-            b.Rubro, b.Poliza, b.Fecha_Poliza, b.Sub_Cuenta_Armonizadora,
-            b.Fecha_Factura, b.Costo_Inicial, b.Depreciacion_Acumulada,
-            b.Costo_Final_Cantidad, b.Cantidad, b.Estado_Del_Bien, b.Marca,
-            b.Modelo, b.Numero_De_Serie,
-            r.No_Resguardo, r.Tipo_De_Resguardo, r.Fecha_Resguardo, r.No_Trabajador,
-            r.Puesto_Trabajador, r.No_Nomina_Trabajador, r.Nombre_Director_Jefe_De_Area,
-            r.Nombre_Del_Resguardante, r.Activo,
-            b.Proveedor
-        """
-        
-        sql_query = f"""
-            SELECT {sql_select_columns}
-            FROM resguardos r
-            JOIN bienes b ON r.id_bien = b.id
-            JOIN areas a ON r.id_area = a.id
-        """
-        
-        where_clauses = []
-        sql_params = []
-
-        if search_query:
-            print(search_query)
-            if search_column == 'all':
-                
-                all_columns_search_clauses = []
-                # Use a specific list of columns for "all" search for better performance
-                searchable_cols = [
-                    'b.No_Inventario', 'b.No_Factura', 'b.No_Cuenta', 'b.Descripcion_Del_Bien',
-                    'a.nombre', 'b.Proveedor', 'b.Rubro', 'r.No_Resguardo',
-                    'r.Nombre_Del_Resguardante'
-                ]
-                for col in searchable_cols:
-                    all_columns_search_clauses.append(f"{col} LIKE %s")
-                    sql_params.append(f"%{search_query}%")
-                where_clauses.append("(" + " OR ".join(all_columns_search_clauses) + ")")
-            else:
-                # Find the correct table prefix for the search column
-                col_mapping = {
-                    'Area': 'a.nombre',
-                    'No_Inventario': 'b.No_Inventario',
-                    'No_Factura': 'b.No_Factura',
-                    'No_Cuenta': 'b.No_Cuenta',
-                    'Descripcion_Del_Bien': 'b.Descripcion_Del_Bien',
-                    'Descripcion_Corta_Del_Bien': 'b.Descripcion_Corta_Del_Bien',
-                    'Rubro': 'b.Rubro',
-                    'Poliza': 'b.Poliza',
-                    'Fecha_Poliza': 'b.Fecha_Poliza',
-                    'Sub_Cuenta_Armonizadora': 'b.Sub_Cuenta_Armonizadora',
-                    'Fecha_Factura': 'b.Fecha_Factura',
-                    'Costo_Inicial': 'b.Costo_Inicial',
-                    'Depreciacion_Acumulada': 'b.Depreciacion_Acumulada',
-                    'Costo_Final_Cantidad': 'b.Costo_Final_Cantidad',
-                    'Cantidad': 'b.Cantidad',
-                    'Estado_Del_Bien': 'b.Estado_Del_Bien',
-                    'Marca': 'b.Marca',
-                    'Modelo': 'b.Modelo',
-                    'Numero_De_Serie': 'b.Numero_De_Serie',
-                    'No_Resguardo': 'r.No_Resguardo',
-                    'No_Trabajador': 'r.No_Trabajador',
-                    'Fecha_Resguardo': 'r.Fecha_Resguardo',
-                    'Puesto': 'r.Puesto',
-                    'Nombre_Director_Jefe_De_Area': 'r.Nombre_Director_Jefe_De_Area',
-                    'Tipo_De_Resguardo': 'r.Tipo_De_Resguardo',
-                    'Nombre_Del_Resguardante': 'r.Nombre_Del_Resguardante',
-                    'Proveedor': 'b.Proveedor'
-                }
-
-                db_col = col_mapping.get(search_column)
-                if db_col:
-                    where_clauses.append(f"{db_col} LIKE %s")
-                    sql_params.append(f"%{search_query}%")
-                else:
-                    flash("Columna de búsqueda inválida.", 'error')
-                    search_column = 'all'
-
-        if where_clauses:
-            sql_query += " WHERE " + " AND ".join(where_clauses)
-
-        sql_query += f" ORDER BY r.id DESC LIMIT %s OFFSET %s"
-        sql_params.extend([limit, offset])
-
-        cursor.execute(sql_query, sql_params)
-        resguardos_data = cursor.fetchall()
-        
-        # Prepare a list of user-friendly column names for the search dropdown
-        available_columns_for_search = [col for col in AVAILABLE_COLUMNS if col not in [
-            'Descripcion_Del_Bien', 'Descripcion_Corta_Del_Bien', 'Puesto', 'Tipo_De_Resguardo', 'Estado_Del_Bien'
-        ]]
-
-        if is_ajax:
-            # Format dates to string for JSON serialization
-           
-            for row in resguardos_data:
-                for key, value in row.items():
-                    if isinstance(value, (date, datetime)):
-                        row[key] = value.isoformat()
-            
-            # Use 'Area_Nombre' key instead of 'Area' as defined in the query
-            
-            return jsonify(resguardos_data)
-        else:
-            return render_template(
-                'resguardos_list.html',
-                resguardos=resguardos_data,
-                search_column=search_column,
-                search_query=search_query,
-                available_columns_for_search=available_columns_for_search,
-                current_page=page,
-                limit=limit
-            )
-
-    except mysql.connector.Error as err:
-        flash(f"Error al obtener resguardos: {err}", 'error')
-        print(f"Error: {err}")
-        return render_template('resguardos_list.html', resguardos=[], search_column=search_column, search_query=search_query, available_columns_for_search=AVAILABLE_COLUMNS, current_page=page, limit=limit)
-    except Exception as e:
-        flash(f"Ocurrió un error inesperado: {e}", 'error')
-        print(f"Unexpected error: {e}")
-        return render_template('resguardos_list.html', resguardos=[], search_column=search_column, search_query=search_query, available_columns_for_search=AVAILABLE_COLUMNS, current_page=page, limit=limit)
-    finally:
-        if conn and conn.is_connected():
-            cursor.close()
-            conn.close()
-
-@resguardos_bp.route('/resguardos_clasificados')
-@login_required
-@permission_required('resguardos.crear_resguardo')
-def resguardos_clasificados():
-    conn = get_db_connection()
-    if conn is None:
-        flash("Error de conexión a la base de datos", 'error')
-        return redirect(url_for('index'))
-    
-    try:
-        cursor = conn.cursor(dictionary=True)
-        cursor.execute("""
-     SELECT r.*,
-                   CASE
-                       WHEN r.Tipo_De_Resguardo LIKE '%Control%' THEN 'Sujeto de Control'
-                       ELSE 'Resguardo Normal'
-                   END AS Tipo_De_Resguardo
-            FROM resguardo r
-            ORDER BY
-                CASE
-                    WHEN r.Tipo_De_Resguardo LIKE '%Control%' THEN 0
-                    ELSE 1
-                END,
-                r.id
-""")
-        resguardos = cursor.fetchall()
-        
-        column_names = [desc[0] for desc in cursor.description]
-        
-        return render_template('resguardos_clasificados.html', 
-                            resguardos=resguardos,
-                            column_names=column_names)
-    except Exception as e:
-        flash(f"Error al obtener resguardos: {str(e)}", 'error')
-        return redirect(url_for('index'))
-    finally:
-        conn.close()
-
-        
-@resguardos_bp.route('/exportar_resguardos_excel', methods=['POST'])
-@login_required
-@permission_required('resguardos.crear_resguardo')
-def exportar_resguardos_excel():
-    try:
-        selected_columns = request.form.getlist('columns')
-        
-        if not selected_columns:
-            return jsonify({'error': 'No se seleccionaron columnas'}), 400
-        
-        conn = get_db_connection()
-        if conn is None:
-            return jsonify({'error': 'Error de conexión a la base de datos'}), 500
-            
-        try:
-            cursor = conn.cursor(dictionary=True)
-            columns_str = ', '.join(selected_columns)
-            cursor.execute(f"""
-                SELECT {columns_str}, 
-                       CASE 
-                           WHEN Tipo_De_Resguardo  = 1 THEN 'Sujeto de Control'
-                           ELSE 'Resguardo Normal'
-                       END AS Tipo_de_resguardo
-                FROM resguardo
-                ORDER BY Tipo_De_Resguardo  DESC, id
-            """)
-            data = cursor.fetchall()
-            
-            df = pd.DataFrame(data)
-            
-            output = BytesIO()
-            writer = pd.ExcelWriter(output, engine='xlsxwriter')
-            df.to_excel(writer, sheet_name='Resguardos', index=False)
-            writer.close()
-            output.seek(0)
-            
-            return send_file(
-                output,
-                mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-                as_attachment=True,
-                download_name='resguardos_clasificados.xlsx'
-            )
-        finally:
-            conn.close()
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
-
 
 # It's good practice to have a helper function to get areas
 def get_areas_list_from_db():
@@ -1018,9 +552,6 @@ def delete_resguardo(id):
         conn.close()
     return redirect(url_for('index'))
 
-# your_flask_app/routes/resguardos.py
-
-# ... (tus imports y código existente) ...
 
 @resguardos_bp.route('/crear_resguardo_de_bien/<int:id_bien>', methods=['GET'])
 @login_required
@@ -1073,4 +604,130 @@ def crear_resguardo_de_bien(id_bien):
     finally:
         if conn and conn.is_connected():
             cursor.close()
+            conn.close()
+
+# En tu archivo routes/resguardos.py
+
+# ... (tus otras importaciones como Flask, render_template, request, etc.)
+
+# =================================================================
+# VISTAS DE RESGUARDOS (RUTAS)
+# =================================================================
+
+@resguardos_bp.route('/resguardos')
+# Probablemente quieras añadir @login_required aquí también
+def ver_resguardos():
+    """
+    Muestra la lista de TODOS los resguardos.
+    Llama a la función principal para hacer el trabajo pesado.
+    """
+    return _get_resguardos_list(control_only=False)
+
+
+@resguardos_bp.route('/resguardos_sujeto_control')
+@login_required
+@permission_required('resguardos.ver_resguardo')
+def ver_resguardos_sujeto_control():
+    """
+    Muestra la lista de resguardos que son 'Sujeto de Control'.
+    Llama a la función principal para hacer el trabajo pesado.
+    """
+    return _get_resguardos_list(control_only=True)
+
+
+# =================================================================
+# FUNCIÓN LÓGICA PRINCIPAL (EL MOTOR)
+# =================================================================
+
+def _get_resguardos_list(control_only=False):
+    """
+    Función unificada y COMPLETA para obtener listas de resguardos.
+    Ahora solo maneja la paginación numerada.
+    """
+    conn = None
+    try:
+        # --- 1. Obtener Parámetros de la Petición ---
+        page = request.args.get('page', 1, type=int)
+        limit = 100
+        offset = (page - 1) * limit
+        search_column = request.args.get('search_column', 'all')
+        search_query = request.args.get('search_query', '').strip()
+        
+        # --- 2. Conexión a la Base de Datos ---
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+
+        # --- 3. Construcción de la Consulta SQL (Count y Select) ---
+        select_cols = """
+            SELECT
+                r.id, r.No_Resguardo, r.Tipo_De_Resguardo, r.Activo,
+                r.Nombre_Del_Resguardante, r.Puesto_Trabajador, r.Fecha_Resguardo,
+                r.No_Trabajador, r.Nombre_Director_Jefe_De_Area,
+                b.No_Inventario, b.No_Factura, b.No_Cuenta, b.Proveedor,
+                b.Descripcion_Del_Bien, b.Descripcion_Corta_Del_Bien,
+                b.Rubro, b.Poliza, b.Fecha_Poliza, b.Sub_Cuenta_Armonizadora,
+                b.Fecha_Factura, b.Costo_Inicial, b.Depreciacion_Acumulada,
+                b.Costo_Final_Cantidad, b.Cantidad, b.Estado_Del_Bien,
+                b.Marca, b.Modelo, b.Numero_De_Serie,
+                a.nombre AS Area_Nombre
+        """
+        from_tables = " FROM resguardos r JOIN bienes b ON r.id_bien = b.id JOIN areas a ON r.id_area = a.id "
+        
+        where_clauses = []
+        sql_params = []
+
+        if control_only:
+            where_clauses.append("r.Tipo_De_Resguardo = 1")
+        else:
+            where_clauses.append("r.Tipo_De_Resguardo = 0")
+        if search_query:
+            # (Tu lógica de búsqueda se mantiene aquí)
+            searchable_cols = [
+                'b.No_Inventario', 'b.Descripcion_Corta_Del_Bien', 'a.nombre', 
+                'r.No_Resguardo', 'r.Nombre_Del_Resguardante', 'b.Proveedor'
+            ]
+            all_cols_clause = " OR ".join([f"{col} LIKE %s" for col in searchable_cols])
+            where_clauses.append(f"({all_cols_clause})")
+            sql_params.extend([f"%{search_query}%"] * len(searchable_cols))
+
+        # --- Consulta para el conteo total de items (sin LIMIT ni OFFSET) ---
+        count_query = "SELECT COUNT(*) " + from_tables
+        if where_clauses:
+            count_query += " WHERE " + " AND ".join(where_clauses)
+        
+        cursor.execute(count_query, sql_params)
+        total_items = cursor.fetchone()['COUNT(*)']
+        total_pages = math.ceil(total_items / limit)
+
+        # --- Consulta para obtener los datos de la página actual ---
+        final_query = select_cols + from_tables
+        if where_clauses:
+            final_query += " WHERE " + " AND ".join(where_clauses)
+        
+        final_query += " ORDER BY r.id DESC LIMIT %s OFFSET %s"
+        sql_params.extend([limit, offset])
+
+        # --- 4. Ejecución y Renderizado ---
+        cursor.execute(final_query, sql_params)
+        resguardos_data = cursor.fetchall()
+        
+        template_name = 'resguardos_list.html'
+        return render_template(
+            template_name,
+            resguardos=resguardos_data,
+            search_column=search_column,
+            search_query=search_query,
+            available_columns_for_search=AVAILABLE_COLUMNS,
+            current_page=page,
+            total_pages=total_pages, # Ahora pasamos el total de páginas
+            limit=limit,
+            is_sujeto_control=control_only
+        )
+
+    except Exception as e:
+        traceback.print_exc()
+        flash(f"Ocurrió un error al obtener los resguardos: {e}", "error")
+        return render_template('resguardos_list.html', resguardos=[], available_columns_for_search=AVAILABLE_COLUMNS, current_page=1, total_pages=1, is_sujeto_control=control_only)
+    finally:
+        if conn:
             conn.close()

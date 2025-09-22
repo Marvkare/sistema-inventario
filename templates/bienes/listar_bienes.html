@@ -1,57 +1,174 @@
 {% extends 'base.html' %} 
 {% block content %}
-<div class="container mt-4">
-    <h2>Listado de Bienes</h2>
-    <a href="{{ url_for('bienes.agregar_bien') }}" class="btn btn-primary mb-3">Agregar Nuevo Bien</a>
+<div class="container mx-auto px-4 mt-5">
+    <div class="flex items-center justify-between mb-6">
+        <h2 class="text-3xl font-bold text-gray-800">📦 Inventario de Bienes</h2>
+        <a href="{{ url_for('bienes.agregar_bien') }}" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg shadow-md transition-all duration-300 flex items-center gap-2">
+            <i class="fas fa-plus-circle"></i> Agregar Nuevo Bien
+        </a>
+    </div>
 
     {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
             {% for category, message in messages %}
-                <div class="alert alert-{{ category }}">{{ message }}</div>
+                <div class="bg-{{ category|replace('danger', 'red')|replace('success', 'green')|replace('warning', 'yellow')|replace('info', 'blue') }}-100 border border-{{ category|replace('danger', 'red')|replace('success', 'green')|replace('warning', 'yellow')|replace('info', 'blue') }}-400 text-{{ category|replace('danger', 'red')|replace('success', 'green')|replace('warning', 'yellow')|replace('info', 'blue') }}-700 px-4 py-3 rounded relative mb-4" role="alert">
+                    <span class="block sm:inline">{{ message }}</span>
+                </div>
             {% endfor %}
         {% endif %}
     {% endwith %}
 
-    <table class="table table-bordered table-striped">
-        <thead>
-            <tr>
-                <th>No. de Inventario</th>
-                <th>Descripción</th>
-                <th>Ubicación</th>
-                <th>Área</th>
-                <th>Acciones</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for bien in bienes %}
-            <tr>
-                <td>{{ bien.No_Inventario }}</td>
-                <td>{{ bien.Descripcion_Del_Bien }}</td>
-                <td>{{ bien.Ubicacion }}</td>
-                <td>{{ bien.Area }}</td>
-                <td>
-                    <a href="{{ url_for('bienes.ver_detalles_bien', bien_id=bien.id) }}" class="btn btn-info btn-sm">Ver Detalles</a>
-                    <a href="{{ url_for('bienes.editar_bien', bien_id=bien.id) }}" class="btn btn-warning btn-sm">Editar</a>
-                    <form action="{{ url_for('bienes.eliminar_bien', bien_id=bien.id) }}" method="POST" style="display:inline;">
-                        <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('¿Estás seguro de que quieres eliminar este bien?');">Eliminar</button>
-                    </form>
-                     {% if bien.tiene_resguardo %}
-            <a href="{{ url_for('resguardos.ver_resguardo', id_resguardo=bien.resguardo_id) }}" class="text-green-600 hover:text-green-800 transition-colors" title="Ver Resguardo">
-                <i class="fas fa-eye"></i>
+    <div class="bg-white p-4 rounded-lg shadow-md mb-6">
+        <h5 class="text-lg font-semibold text-gray-700 mb-2">🔍 Buscar Bien</h5>
+        <div class="relative">
+            <input type="text" class="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" id="searchInput" placeholder="Buscar por No. de Inventario o Descripción...">
+            <span class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
+                <i class="fas fa-search"></i>
+            </span>
+        </div>
+    </div>
+
+    <div class="overflow-x-auto bg-white rounded-lg shadow-md">
+        <table class="min-w-full leading-normal" id="bienesTable">
+            <thead>
+                <tr class="bg-blue-600 text-white uppercase text-sm leading-normal">
+                    <th class="py-3 px-6 text-left">No. de Inventario</th>
+                    <th class="py-3 px-6 text-left">Descripción</th>
+                    <th class="py-3 px-6 text-left">Ubicación</th>
+                    <th class="py-3 px-6 text-center">Acciones</th>
+                </tr>
+            </thead>
+            <tbody class="text-gray-600 text-sm font-light">
+                {% for bien in bienes %}
+                <tr class="border-b border-gray-200 hover:bg-gray-100">
+                    <td class="py-3 px-6 text-left whitespace-nowrap">{{ bien.No_Inventario }}</td>
+                    <td class="py-3 px-6 text-left">{{ bien.Descripcion_Del_Bien }}</td>
+                    <td class="py-3 px-6 text-left">{{ bien.Ubicacion or 'N/A' }}</td>
+                    <td class="py-3 px-6 text-center">
+                        <div class="flex item-center justify-center space-x-2">
+                            <a href="{{ url_for('bienes.ver_detalles_bien', bien_id=bien.id) }}" class="bg-blue-500 hover:bg-blue-600 text-white py-1 px-2 rounded-lg transition-colors duration-300" title="Ver Detalles">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                            <a href="{{ url_for('bienes.editar_bien', bien_id=bien.id) }}" class="bg-yellow-400 hover:bg-yellow-500 text-gray-900 py-1 px-2 rounded-lg transition-colors duration-300" title="Editar">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            <form action="{{ url_for('bienes.eliminar_bien', bien_id=bien.id) }}" method="POST" class="inline">
+                                <button type="submit" class="bg-red-500 hover:bg-red-600 text-white py-1 px-2 rounded-lg transition-colors duration-300" onclick="return confirm('¿Estás seguro de que quieres eliminar este bien?');" title="Eliminar">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                            </form>
+                            {% if bien.tiene_resguardo %}
+                                <a href="{{ url_for('resguardos.ver_resguardo', id_resguardo=bien.resguardo_id) }}" class="bg-green-500 hover:bg-green-600 text-white py-1 px-2 rounded-lg transition-colors duration-300" title="Ver Resguardo">
+                                    <i class="fas fa-file-invoice"></i>
+                                </a>
+                            {% else %}
+                                <a href="{{ url_for('resguardos.crear_resguardo_de_bien', id_bien=bien.id) }}" class="bg-gray-400 hover:bg-gray-500 text-white py-1 px-2 rounded-lg transition-colors duration-300" title="Generar Resguardo">
+                                    <i class="fas fa-file-alt"></i>
+                                </a>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="5" class="py-4 text-center text-gray-500">
+                        <div class="inline-flex items-center space-x-2">
+                            <i class="fas fa-info-circle"></i> <span>No hay bienes registrados.</span>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    {% if total_pages > 1 %}
+    <div class="flex justify-center mt-6 space-x-2 flex-wrap">
+        {% if page > 1 %}
+            <a href="{{ url_for('bienes.listar_bienes', page=page-1) }}" class="px-4 py-2 text-sm font-semibold text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors duration-300">
+                Anterior
             </a>
         {% else %}
-            <a href="{{ url_for('resguardos.crear_resguardo_de_bien', id_bien=bien.id) }}" class="text-blue-600 hover:text-blue-800 transition-colors" title="Generar Resguardo">
-                <i class="fas fa-file-alt"></i>
-            </a>
+            <span class="px-4 py-2 text-sm font-semibold text-gray-400 bg-gray-100 rounded-lg cursor-not-allowed">
+                Anterior
+            </span>
         {% endif %}
-                </td> 
-            </tr>
+
+        {% set pages_to_show = 5 %}
+        {% set start_page = (page - (pages_to_show // 2))|int %}
+        {% set end_page = (page + (pages_to_show // 2))|int %}
+
+        {% if start_page < 1 %}
+            {% set start_page = 1 %}
+            {% set end_page = (pages_to_show)|int %}
+        {% endif %}
+
+        {% if end_page > total_pages %}
+            {% set end_page = total_pages %}
+            {% set start_page = (total_pages - pages_to_show + 1)|int %}
+            {% if start_page < 1 %}
+                {% set start_page = 1 %}
+            {% endif %}
+        {% endif %}
+
+        {% if start_page > 1 %}
+            <a href="{{ url_for('bienes.listar_bienes', page=1) }}" class="px-4 py-2 text-sm font-semibold text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors duration-300">1</a>
+            {% if start_page > 2 %}
+                <span class="px-4 py-2 text-sm font-semibold text-gray-500">...</span>
+            {% endif %}
+        {% endif %}
+
+        {% for p in range(start_page, end_page + 1) %}
+            {% if p == page %}
+                <span class="px-4 py-2 text-sm font-semibold text-white bg-blue-600 rounded-lg shadow-md cursor-default">
+                    {{ p }}
+                </span>
             {% else %}
-            <tr>
-                <td colspan="5">No hay bienes registrados.</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+                <a href="{{ url_for('bienes.listar_bienes', page=p) }}" class="px-4 py-2 text-sm font-semibold text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors duration-300">
+                    {{ p }}
+                </a>
+            {% endif %}
+        {% endfor %}
+
+        {% if end_page < total_pages %}
+            {% if end_page < total_pages - 1 %}
+                <span class="px-4 py-2 text-sm font-semibold text-gray-500">...</span>
+            {% endif %}
+            <a href="{{ url_for('bienes.listar_bienes', page=total_pages) }}" class="px-4 py-2 text-sm font-semibold text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors duration-300">{{ total_pages }}</a>
+        {% endif %}
+
+        {% if page < total_pages %}
+            <a href="{{ url_for('bienes.listar_bienes', page=page+1) }}" class="px-4 py-2 text-sm font-semibold text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors duration-300">
+                Siguiente
+            </a>
+        {% else %}
+            <span class="px-4 py-2 text-sm font-semibold text-gray-400 bg-gray-100 rounded-lg cursor-not-allowed">
+                Siguiente
+            </span>
+        {% endif %}
+    </div>
+    {% endif %}
 </div>
+
+<script>
+    document.getElementById('searchInput').addEventListener('keyup', function() {
+        let filter = this.value.toLowerCase();
+        let table = document.getElementById('bienesTable');
+        let tr = table.getElementsByTagName('tr');
+
+        for (let i = 1; i < tr.length; i++) {
+            let tdNoInv = tr[i].getElementsByTagName('td')[0];
+            let tdDesc = tr[i].getElementsByTagName('td')[1];
+            if (tdNoInv || tdDesc) {
+                let textValueNoInv = tdNoInv.textContent || tdNoInv.innerText;
+                let textValueDesc = tdDesc.textContent || tdDesc.innerText;
+                if (textValueNoInv.toLowerCase().indexOf(filter) > -1 || textValueDesc.toLowerCase().indexOf(filter) > -1) {
+                    tr[i].style.display = "";
+                } else {
+                    tr[i].style.display = "none";
+                }
+            }
+        }
+    });
+</script>
 {% endblock %}

@@ -1,0 +1,21 @@
+<tr class="hover:bg-gray-100 border-b border-gray-200">
+    <td class="py-3 px-6 text-left whitespace-nowrap" title="{{ resguardo.No_Resguardo | default('') }}">{{ resguardo.No_Resguardo | default('') }}</td>
+    <td class="py-3 px-6 text-left whitespace-nowrap" title="{{ resguardo.No_Inventario | default('') }}">{{ resguardo.No_Inventario | default('') }}</td>
+    <td class="py-3 px-6 text-left max-w-[200px] overflow-hidden text-ellipsis whitespace-nowrap" title="{{ resguardo.Descripcion_Del_Bien | default('') }}">{{ resguardo.Descripcion_Del_Bien | default('') }}</td>
+    <td class="py-3 px-6 text-left max-w-[150px] overflow-hidden text-ellipsis whitespace-nowrap" title="{{ resguardo.Nombre_Del_Resguardante | default('') }}">{{ resguardo.Nombre_Del_Resguardante | default('') }}</td>
+    <td class="py-3 px-6 text-left whitespace-nowrap" title="{{ resguardo.Area_Nombre | default('') }}">{{ resguardo.Area_Nombre | default('') }}</td>
+    <td class="py-3 px-6 text-left whitespace-nowrap" title="{{ resguardo.Fecha_Resguardo | default('') }}">{{ resguardo.Fecha_Resguardo | default('') }}</td>
+    <td class="py-3 px-6 text-center">
+        <div class="flex item-center justify-center space-x-2">
+            <a href="{{ url_for('resguardos.editar_resguardo', id_resguardo=resguardo.id) }}" class="bg-yellow-400 hover:bg-yellow-500 text-gray-900 py-1 px-2 rounded-lg transition-colors duration-300" title="Editar">
+                <i class="fas fa-edit"></i>
+            </a>
+            <a href="{{ url_for('resguardos.ver_resguardo', id_resguardo=resguardo.id) }}" class="bg-blue-500 hover:bg-blue-600 text-white py-1 px-2 rounded-lg transition-colors duration-300" title="Ver Detalles">
+                <i class="fas fa-eye"></i>
+            </a>
+            <a href="{{ url_for('traspaso.traspasar_resguardo', id_resguardo=resguardo.id) }}" class="bg-gray-400 hover:bg-gray-500 text-white py-1 px-2 rounded-lg transition-colors duration-300" title="Traspasar">
+                <i class="fas fa-exchange-alt"></i>
+            </a>
+        </div>
+    </td>
+</tr>

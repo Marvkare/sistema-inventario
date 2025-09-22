@@ -138,6 +138,16 @@ if __name__ == '__main__':
     # La llamada se hace dentro de un contexto de aplicación
     with app.app_context():
         create_default_admin()
+    
+
+    # 1. Definir la función que actuará como filtro
+    def default_if_none(value, default=''):
+        """Devuelve un valor por defecto (string vacío) si el valor es None."""
+        return default if value is None else value
+
+    # 2. Registrar la función como un filtro en el entorno de Jinja2
+    app.jinja_env.filters['default_if_none'] = default_if_none
+
         
     app.run(debug=True)
 
