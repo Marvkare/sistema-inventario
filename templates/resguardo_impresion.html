@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <title>Tarjeta de Resguardo {{ folio_resguardo }}</title>
+    <style>
+        body { font-family: Arial, sans-serif; font-size: 12px; }
+        .header img { max-width: 150px; }
+        .table-container { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        .table-container th, .table-container td { border: 1px solid #000; padding: 8px; text-align: left; }
+        .title { font-size: 16px; font-weight: bold; text-align: center; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <img src="/static/images/image_e8aecf.jpg" alt="Logo del Municipio">
+        <p class="title">MUNICIPIO DE ATITALAQUIA, HIDALGO</p>
+        <p class="title">TARJETA DE RESGUARDO</p>
+        <p class="title">FOLIO NO. {{ folio_resguardo }}</p>
+    </div>
+
+    <table class="table-container">
+        <tr>
+            <th>NO. DE INVENTARIO</th>
+            <td>{{ no_inventario }}</td>
+            <th>PROVEEDOR</th>
+            <td>{{ proveedor }}</td>
+        </tr>
+        <tr>
+            <th>NO. DE FACTURA</th>
+            <td>{{ no_factura }}</td>
+            <th>FECHA DE ELABORACIÓN</th>
+            <td>{{ fecha_elaboracion }}</td>
+        </tr>
+    </table>
+
+    <h3>DESCRIPCIÓN DEL BIEN</h3>
+    <p>{{ descripcion_del_bien }}</p>
+    <ul>
+        <li>NO. DE SERIE: {{ no_serie }}</li>
+        <li>MARCA: {{ marca }}</li>
+        <li>ÁREA: {{ area }}</li>
+        <li>RUBRO: {{ rubro }}</li>
+    </ul>
+
+    <h3>DATOS DE RESGUARDANTE</h3>
+    <p>PUESTO: {{ puesto_resguardante }}</p>
+    <p>NO. DE NÓMINA: {{ no_nomina }}</p>
+    <p>RESGUARDANTE Y/O USUARIO DEL ÁREA: {{ resguardante_nombre }}</p>
+</body>
+</html>

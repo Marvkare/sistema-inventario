@@ -731,3 +731,73 @@ def _get_resguardos_list(control_only=False):
     finally:
         if conn:
             conn.close()
+
+@resguardos_bp.route('/imprimir/<int:id_resguardo>')
+@login_required # Es muy recomendable proteger esta ruta
+def imprimir_resguardo(id_resguardo):
+    """
+    Obtiene los datos completos de un resguardo específico y los renderiza
+    en una plantilla diseñada para la impresión.
+    """
+    conn = None
+    try:
+        # --- 1. Conexión a la Base de Datos ---
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+
+        # --- 2. Construcción de la Consulta SQL ---
+        # Esta consulta es similar a la de tu lista, pero para un solo ID.
+        # Une las tres tablas (resguardos, bienes, areas) para obtener toda la info.
+        sql_query = """
+            SELECT
+                r.id, r.No_Resguardo, r.Tipo_De_Resguardo, r.Activo,
+                r.Nombre_Del_Resguardante, r.Puesto_Trabajador, r.Fecha_Resguardo,
+                r.No_Trabajador, r.Nombre_Director_Jefe_De_Area, r.No_Nomina_Trabajador,
+                b.No_Inventario, b.No_Factura, b.No_Cuenta, b.Proveedor,
+                b.Descripcion_Del_Bien, b.Descripcion_Corta_Del_Bien,
+                b.Rubro, b.Poliza, b.Fecha_Poliza, b.Sub_Cuenta_Armonizadora,
+                b.Fecha_Factura, b.Costo_Inicial, b.Depreciacion_Acumulada,
+                b.Costo_Final_Cantidad, b.Cantidad, b.Estado_Del_Bien,
+                b.Marca, b.Modelo, b.Numero_De_Serie,
+                a.nombre AS Area_Nombre
+            FROM 
+                resguardos r 
+            JOIN 
+                bienes b ON r.id_bien = b.id 
+            JOIN 
+                areas a ON r.id_area = a.id
+            WHERE 
+                r.id = %s
+        """
+        
+        # --- 3. Ejecución de la Consulta ---
+        cursor.execute(sql_query, (id_resguardo,))
+        resguardo_data = cursor.fetchone()
+
+        # --- 4. Manejo de Errores (Si no se encuentra el resguardo) ---
+        if not resguardo_data:
+            # Si no se encuentra un resguardo con ese ID, devuelve un error 404.
+            abort(404, description="Resguardo no encontrado")
+
+        # --- 5. Preparar Datos Adicionales (Responsables) ---
+        # Estos datos son fijos y se pueden gestionar aquí o en un archivo de config.
+        responsables = {
+        }
+
+        # --- 6. Renderizado de la Plantilla de Impresión ---
+        # Se pasa el diccionario 'resguardo_data' como 'resguardo' a la plantilla
+        # y se desempaquetan los responsables como variables individuales.
+        return render_template(
+            'imprimir_resguardo.html', 
+            resguardo=resguardo_data,
+            **responsables
+        )
+
+    except Exception as e:
+        traceback.print_exc()
+        flash(f"Ocurrió un error al generar el resguardo para impresión: {e}", "error")
+        # Puedes redirigir o mostrar una página de error genérica
+        return "Error al generar el documento.", 500
+    finally:
+        if conn:
+            conn.close()
