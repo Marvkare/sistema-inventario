@@ -34,125 +34,108 @@ def get_areas_data():
             cursor.close()
             conn.close()
 
+def get_areas_for_form():
+    """Obtiene una lista de objetos de área [{id, nombre}] desde la BD."""
+    conn = None
+    try:
+        conn = get_db_connection()
+        if not conn: return []
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute("SELECT id, nombre FROM areas ORDER BY nombre")
+        return cursor.fetchall()
+    except mysql.connector.Error as err:
+        print(f"Error al obtener áreas: {err}")
+        return []
+    finally:
+        if conn and conn.is_connected():
+            conn.close()
+
+
 @resguardos_bp.route('/crear_resguardo', methods=['GET', 'POST'])
 @login_required
 @permission_required('resguardos.crear_resguardo')
 def crear_resguardo():
     conn = None
-    cursor = None
+    areas = get_areas_for_form()
     
-    # Obtiene los datos de las áreas para el formulario, mapeando nombre a ID.
-    areas_data = get_areas_data()
-    areas_list = list(areas_data.keys())
-    
-    form_data = {}
+    if request.method == 'POST':
+        try:
+            conn = get_db_connection()
+            if not conn: raise Exception("No se pudo conectar a la base de datos.")
+            cursor = conn.cursor()
+            
+            form_data = request.form
+            
+            id_bien_existente = form_data.get('id_bien_existente')
+            
+            if id_bien_existente:
+                id_bien = id_bien_existente
+            else:
+                sql_bien = """INSERT INTO bienes (No_Inventario, No_Factura, No_Cuenta, Proveedor, Descripcion_Del_Bien, Descripcion_Corta_Del_Bien, Rubro, Poliza, Fecha_Poliza, Sub_Cuenta_Armonizadora, Fecha_Factura, Costo_Inicial, Depreciacion_Acumulada, Costo_Final_Cantidad, Cantidad, Estado_Del_Bien, Marca, Modelo, Numero_De_Serie) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"""
+                bien_values = (form_data.get('No_Inventario'), form_data.get('No_Factura'), form_data.get('No_Cuenta'), form_data.get('Proveedor'), form_data.get('Descripcion_Del_Bien'), form_data.get('Descripcion_Corta_Del_Bien'), form_data.get('Rubro'), form_data.get('Poliza'), form_data.get('Fecha_Poliza'), form_data.get('Sub_Cuenta_Armonizadora'), form_data.get('Fecha_Factura'), form_data.get('Costo_Inicial'), form_data.get('Depreciacion_Acumulada'), form_data.get('Costo_Final_Cantidad'), form_data.get('Cantidad'), form_data.get('Estado_Del_Bien'), form_data.get('Marca'), form_data.get('Modelo'), form_data.get('Numero_De_Serie'))
+                cursor.execute(sql_bien, bien_values)
+                id_bien = cursor.lastrowid
+                
+                # CORRECCIÓN: Se restauró la lógica de guardado de imágenes del bien
+                for file in request.files.getlist('imagenes_bien'):
+                    if file and file.filename:
+                        filename = secure_filename(file.filename)
+                        unique_filename = f"{uuid.uuid4()}-{filename}"
+                        file.save(os.path.join(UPLOAD_FOLDER, unique_filename))
+                        cursor.execute("INSERT INTO imagenes_bien (id_bien, ruta_imagen) VALUES (%s, %s)", (id_bien, unique_filename))
 
-    try:
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        
-        if request.method == 'POST':
-            form_data = request.form.to_dict()
-
-            area_name = form_data.get('Area')
-            area_id = areas_data.get(area_name)
-            
-            if not area_id:
-                return jsonify({"message": "Área seleccionada no válida.", "category": "danger"}), 400
-
-            # 1. Insertar los datos del bien en la tabla 'bienes'
-            # Se ha eliminado la columna 'Area' de esta inserción para reflejar el cambio en la base de datos.
-            sql_insert_bien = """
-                INSERT INTO bienes (No_Inventario, No_Factura, No_Cuenta, Proveedor, Descripcion_Del_Bien, 
-                                    Descripcion_Corta_Del_Bien, Rubro, Poliza, Fecha_Poliza, Sub_Cuenta_Armonizadora, 
-                                    Fecha_Factura, Costo_Inicial, Depreciacion_Acumulada, Costo_Final_Cantidad, Cantidad, 
-                                    Estado_Del_Bien, Marca, Modelo, Numero_De_Serie)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-            """
-            
-            # Se ha eliminado el valor 'area_name' de los valores de la inserción de bienes.
-            bien_values = (
-                form_data.get('No_Inventario'), form_data.get('No_Factura'), form_data.get('No_Cuenta'), 
-                form_data.get('Proveedor'), form_data.get('Descripcion_Del_Bien'),
-                form_data.get('Descripcion_Corta_Del_Bien'), form_data.get('Rubro'),
-                form_data.get('Poliza'), form_data.get('Fecha_Poliza'), form_data.get('Sub_Cuenta_Armonizadora'),
-                form_data.get('Fecha_Factura'), form_data.get('Costo_Inicial'), form_data.get('Depreciacion_Acumulada'),
-                form_data.get('Costo_Final_Cantidad'), form_data.get('Cantidad'), form_data.get('Estado_Del_Bien'), 
-                form_data.get('Marca'), form_data.get('Modelo'), form_data.get('Numero_De_Serie')
-            )
-            
-            cursor.execute(sql_insert_bien, bien_values)
-            id_bien = cursor.lastrowid
-            
-            # 2. Insertar los datos del resguardo en la tabla 'resguardos'
-            sql_insert_resguardo = """
-                INSERT INTO resguardos (id_bien, id_area, No_Resguardo, Tipo_De_Resguardo, Fecha_Resguardo, 
-                                        No_Trabajador, No_Nomina_Trabajador, Puesto_Trabajador, Nombre_Director_Jefe_De_Area, Nombre_Del_Resguardante)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-            """
-            
-            resguardo_values = (
-                id_bien, area_id, form_data.get('No_Resguardo'), form_data.get('Tipo_De_Resguardo'), 
-                form_data.get('Fecha_Resguardo'), form_data.get('No_Trabajador'), form_data.get('No_Nomina_Trabajador'), form_data.get('Puesto_Trabajador'), 
-                form_data.get('Nombre_Director_Jefe_De_Area'), form_data.get('Nombre_Del_Resguardante')
-            )
-            
-            cursor.execute(sql_insert_resguardo, resguardo_values)
+            area_id = form_data.get('Area')
+            sql_resguardo = """INSERT INTO resguardos (id_bien, id_area, No_Resguardo, Tipo_De_Resguardo, Fecha_Resguardo, No_Trabajador, No_Nomina_Trabajador, Puesto_Trabajador, Nombre_Director_Jefe_De_Area, Nombre_Del_Resguardante, Activo) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"""
+            resguardo_values = (id_bien, area_id, form_data.get('No_Resguardo'), form_data.get('Tipo_De_Resguardo'), form_data.get('Fecha_Resguardo'), form_data.get('No_Trabajador'), form_data.get('No_Nomina_Trabajador'), form_data.get('Puesto_Trabajador'), form_data.get('Nombre_Director_Jefe_De_Area'), form_data.get('Nombre_Del_Resguardante'), 1)
+            cursor.execute(sql_resguardo, resguardo_values)
             id_resguardo = cursor.lastrowid
-            
-            # 3. Manejar las imágenes del bien y guardarlas en la base de datos
-            imagenes_bien = request.files.getlist('imagenes_bien')
-            sql_insert_bien_img = "INSERT INTO imagenes_bien (id_bien, ruta_imagen) VALUES (%s, %s)"
 
-            for file in imagenes_bien:
-                if file.filename:
+            # CORRECCIÓN: Se restauró la lógica de guardado de imágenes del resguardo
+            for file in request.files.getlist('imagenes_resguardo'):
+                if file and file.filename:
                     filename = secure_filename(file.filename)
                     unique_filename = f"{uuid.uuid4()}-{filename}"
-                    file_path = os.path.join(UPLOAD_FOLDER, unique_filename)
-                    print("File path")
-                    print(file_path)
-                    file.save(file_path)
-                    
-                    cursor.execute(sql_insert_bien_img, (id_bien, unique_filename))
-
-            # 4. Manejar las imágenes del resguardo y guardarlas en la base de datos
-            imagenes_resguardo = request.files.getlist('imagenes_resguardo')
-            sql_insert_resguardo_img = "INSERT INTO imagenes_resguardo (id_resguardo, ruta_imagen) VALUES (%s, %s)"
-
-            for file in imagenes_resguardo:
-                if file.filename:
-                    filename = secure_filename(file.filename)
-                    unique_filename = f"{uuid.uuid4()}-{filename}"
-                    file_path = os.path.join(UPLOAD_FOLDER, unique_filename)
-                    file.save(file_path)
-
-                    cursor.execute(sql_insert_resguardo_img, (id_resguardo, unique_filename))
+                    file.save(os.path.join(UPLOAD_FOLDER, unique_filename))
+                    cursor.execute("INSERT INTO imagenes_resguardo (id_resguardo, ruta_imagen) VALUES (%s, %s)", (id_resguardo, unique_filename))
             
             conn.commit()
-            log_activity(action='Resguardos', resource='Resguardo', resource_id=id_resguardo, details=f'Se registró un nuevo resguardo y bien, ID: {id_resguardo}')
-            return jsonify({
-                "message": "Resguardo y bien creado exitosamente.",
-                "category": "success",
-                "redirect_url": url_for('resguardos.ver_resguardos')
-            }), 200
-           
-        return render_template('crear_resguardo.html', areas=areas_list, form_data=form_data, available_columns=AVAILABLE_COLUMNS)
+            log_activity(action='Creación de Resguardo', category='Resguardos', resource_id=id_resguardo)
+            return jsonify({"message": "Resguardo creado.", "category": "success", "redirect_url": url_for('resguardos.ver_resguardos')}), 200
 
-    except mysql.connector.Error as err:
-        if conn and conn.is_connected():
-            conn.rollback()
-        print(f"Error de base de datos: {err}")
-        return jsonify({"message": f"Error de base de datos: {err}", "category": "danger"}), 500
-        
+        except mysql.connector.Error as e:
+            if conn: conn.rollback()
+            if e.errno == 1062:
+                 return jsonify({"message": f"Error: Ya existe un bien con el mismo 'No. de Inventario'.", "category": "danger"}), 409
+            traceback.print_exc()
+            return jsonify({"message": f"Ocurrió un error de base de datos: {e}", "category": "danger"}), 500
+        finally:
+            if conn and conn.is_connected(): conn.close()
+    
+    return render_template('crear_resguardo.html', areas=areas, form_data={}, bien_precargado=False)
+
+@resguardos_bp.route('/crear_resguardo_de_bien/<int:id_bien>', methods=['GET'])
+@login_required
+@permission_required('resguardos.crear_resguardo')
+def crear_resguardo_de_bien(id_bien):
+    conn = None
+    areas = get_areas_for_form()
+    try:
+        conn = get_db_connection()
+        if not conn: raise Exception("No se pudo conectar a la base de datos.")
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute("SELECT * FROM bienes WHERE id = %s", (id_bien,))
+        bien_data = cursor.fetchone()
+
+        if not bien_data:
+            flash("Bien no encontrado.", "danger")
+            return redirect(url_for('bienes.listar_bienes'))
+
+        return render_template('crear_resguardo.html', areas=areas, form_data=bien_data, bien_precargado=True)
     except Exception as e:
-        if conn and conn.is_connected():
-            conn.rollback()
-        return jsonify({"message": f"Ocurrió un error inesperado: {e}", "category": "danger"}), 500
-        
+        flash(f"Ocurrió un error: {e}", "danger")
+        return redirect(url_for('bienes.listar_bienes'))
     finally:
-        if conn and conn.is_connected():
-            cursor.close()
-            conn.close()
+        if conn and conn.is_connected(): conn.close()
 
 
 @resguardos_bp.route('/editar_resguardo/<int:id_resguardo>', methods=['GET', 'POST'])
@@ -553,58 +536,7 @@ def delete_resguardo(id):
     return redirect(url_for('index'))
 
 
-@resguardos_bp.route('/crear_resguardo_de_bien/<int:id_bien>', methods=['GET'])
-@login_required
-@permission_required('resguardos.crear_resguardo')
-def crear_resguardo_de_bien(id_bien):
-    conn = None
-    cursor = None
-    areas_list = list(get_areas_data().keys())
-    form_data = {}
 
-    try:
-        conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
-        
-        # 1. Obtener los datos del bien usando su ID
-        sql_select_bien = "SELECT * FROM bienes WHERE id = %s"
-        cursor.execute(sql_select_bien, (id_bien,))
-        bien_data = cursor.fetchone()
-
-        if not bien_data:
-            flash("Bien no encontrado.", "danger")
-            return redirect(url_for('bienes.listar_bienes'))
-
-        # 2. Pasa los datos del bien al diccionario form_data
-        form_data = bien_data
-        
-        # 3. Formatea las fechas si existen, para que el formulario las muestre correctamente
-        if 'Fecha_Poliza' in form_data and form_data['Fecha_Poliza']:
-            form_data['Fecha_Poliza'] = form_data['Fecha_Poliza'].isoformat()
-        if 'Fecha_Factura' in form_data and form_data['Fecha_Factura']:
-            form_data['Fecha_Factura'] = form_data['Fecha_Factura'].isoformat()
-        
-        # 4. Renderiza el formulario, pero ahora con los datos precargados
-        return render_template(
-            'crear_resguardo.html', 
-            areas=areas_list, 
-            form_data=form_data, 
-            available_columns=AVAILABLE_COLUMNS,
-            bien_precargado=True # Una variable para controlar la lógica en la plantilla si es necesario
-        )
-
-    except mysql.connector.Error as err:
-        flash(f"Error de base de datos: {err}", "danger")
-        return redirect(url_for('bienes.listar_bienes'))
-        
-    except Exception as e:
-        flash(f"Ocurrió un error inesperado: {e}", "danger")
-        return redirect(url_for('bienes.listar_bienes'))
-        
-    finally:
-        if conn and conn.is_connected():
-            cursor.close()
-            conn.close()
 
 # En tu archivo routes/resguardos.py
 
@@ -615,7 +547,7 @@ def crear_resguardo_de_bien(id_bien):
 # =================================================================
 
 @resguardos_bp.route('/resguardos')
-# Probablemente quieras añadir @login_required aquí también
+@login_required
 def ver_resguardos():
     """
     Muestra la lista de TODOS los resguardos.

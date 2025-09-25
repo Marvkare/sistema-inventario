@@ -4,19 +4,26 @@ from flask import flash, current_app # current_app para acceder a la config de F
 from config import AVAILABLE_COLUMNS
 import pandas as pd
 from io import BytesIO
+from config import DB_CONFIG  # Importa la configuración directamente
+
 def get_db_connection():
-    """Establece conexión con la base de datos."""
+    """
+    Establece una conexión a la base de datos.
+    Ahora importa la configuración directamente para evitar el KeyError.
+    """
     try:
-        conn = mysql.connector.connect(**current_app.config['DB_CONFIG'])
+        # Usa el diccionario DB_CONFIG importado en lugar de current_app.config
+        conn = mysql.connector.connect(**DB_CONFIG)
         return conn
     except mysql.connector.Error as err:
-        flash(f"Error de Conexión a la Base de Datos: {err}. Verifica las credenciales y que MariaDB esté corriendo.", 'error')
+        print(f"Error de conexión a la base de datos: {err}")
         return None
     
 def get_db():
     """Establece conexión con la base de datos y devuelve la conexión y el cursor de diccionario."""
     try:
-        conn = mysql.connector.connect(**current_app.config['DB_CONFIG'])
+        # Corregido para usar la importación directa
+        conn = mysql.connector.connect(**DB_CONFIG)
         cursor = conn.cursor(dictionary=True)
         return conn, cursor
     except mysql.connector.Error as err:
@@ -100,7 +107,7 @@ def get_image_paths(table_name, foreign_key_col, record_id):
         import traceback
         traceback.print_exc()
     finally:
-        if conn:
+        if conn and conn.is_connected():
             conn.close()
     return paths
 
@@ -118,7 +125,7 @@ def get_filtered_resguardo_data(selected_columns, filters):
         image_columns = [col for col in selected_columns if col in ['imagenPath_bien', 'imagenPath_resguardo']]
         
         # Build the SELECT clause solo con columnas reales
-        select_clause = ", ".join(real_columns) if real_columns else "*"
+        select_clause = ", ".join(real_columns) if real_columns else "r.id as id_resguardo, b.id as id_bien, r.*, b.*, a.nombre as Area_Nombre"
         
         # Siempre incluir los IDs necesarios para recuperar imágenes
         id_columns = []
@@ -169,7 +176,7 @@ def get_filtered_resguardo_data(selected_columns, filters):
 
         if not data:
             print("No data found for the given filters.")
-            return []
+            return [], 0, 0
 
         # Obtener el máximo número de imágenes por tipo para determinar cuántas columnas necesitamos
         max_bien_images = 0
@@ -231,5 +238,6 @@ def get_filtered_resguardo_data(selected_columns, filters):
         traceback.print_exc()
         return [], 0, 0
     finally:
-        if conn:
+        if conn and conn.is_connected():
             conn.close()
+

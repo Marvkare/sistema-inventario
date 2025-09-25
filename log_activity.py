@@ -1,50 +1,32 @@
-from flask import current_app
+from extensions import db
+from models import ActivityLog
 from flask_login import current_user
-import mysql.connector
 from datetime import datetime
-from database import get_db_connection
-# Asume que esta función ya está en tu archivo de utilidades o en un módulo
-# accesible para todas tus rutas.
 
-
-def log_activity(action, resource, resource_id=None, details=None):
+def log_activity(action, category=None, details=None, resource_id=None):
     """
-    Registra una acción de usuario en la tabla activity_log.
-
-    Obtiene automáticamente el ID del usuario actual de Flask-Login.
-
-    Args:
-        action (str): Descripción de la acción (e.g., 'Inicio de sesión', 'Agregar').
-        resource (str): Tipo de recurso afectado (e.g., 'Área', 'Usuario').
-        resource_id (int, optional): ID del recurso afectado. Por defecto es None.
-        details (str, optional): Detalles adicionales sobre la acción. Por defecto es None.
+    Crea un registro de actividad y lo añade a la sesión de la base de datos.
+    NO hace commit. El commit se debe hacer en la ruta que llama a esta función.
     """
-    # Verifica si hay un usuario logueado para obtener su ID
-    if not current_user.is_authenticated:
-        user_id = None # O un valor por defecto si lo prefieres
-    else:
-        user_id = current_user.id
-
-    conn = get_db_connection()
-    if conn is None:
-        print("No se pudo registrar la actividad: Fallo en la conexión a la base de datos.")
-        return
-
-    cursor = conn.cursor()
     try:
-        query = """
-            INSERT INTO activity_log (user_id, action, resource, resource_id, details)
-            VALUES (%s, %s, %s, %s, %s)
-        """
-        data = (user_id, action, resource, resource_id, details)
+        # Asegurarse de que hay un usuario autenticado
+        user_id = current_user.id if current_user and current_user.is_authenticated else None
+
+        log_entry = ActivityLog(
+            user_id=user_id,
+            action=action,
+            category=category,
+            details=details,
+            resource_id=resource_id,
+            timestamp=datetime.utcnow()
+        )
+        db.session.add(log_entry)
+        # Nota: No hacemos db.session.commit() aquí.
+        # La ruta que llama a esta función es responsable de hacer el commit.
         
-        cursor.execute(query, data)
-        conn.commit()
-    except mysql.connector.Error as e:
-        print(f"Error en la base de datos al registrar la actividad: {e}")
-        conn.rollback()
-    finally:
-        if cursor:
-            cursor.close()
-        if conn and conn.is_connected():
-            conn.close()
+    except Exception as e:
+        # En caso de error, para no detener la aplicación principal,
+        # simplemente lo imprimimos. En un entorno de producción,
+        # podrías usar un logger más avanzado.
+        print(f"Error al registrar actividad: {e}")
+

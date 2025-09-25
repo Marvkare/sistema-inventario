@@ -7,6 +7,9 @@
     <div class="bg-white overflow-hidden shadow-xl sm:rounded-lg p-6">
         <h2 class="text-2xl font-bold text-gray-800 mb-6">Traspasar Resguardo: {{ resguardo_anterior.No_Inventario }}</h2>
         
+        <!-- Contenedor para los mensajes flash de JavaScript -->
+        <div id="js-flash-container"></div>
+
         <form id="traspasoForm" method="post" enctype="multipart/form-data" class="space-y-6">
 
             <!-- Sección de Información del Resguardo Anterior -->
@@ -57,13 +60,13 @@
                         <input type="text"  id="No_Resguardo_Nuevo" name="No_Resguardo_Nuevo" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" value="{{resguardo_anterior.No_Resguardo}}" required readonly>
                     </div>
                     <div>
-                        <label for="Area_Nueva" class="block text-sm font-medium text-gray-700">Área (Nueva)</label>
-                        <select id="Area_Nueva" name="Area_Nueva" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" required>
-                            <option value="">Selecciona un Área</option>
+                       <label for="Area_Nueva">Área Nueva</label>
+                        <select name="Area_Nueva" id="Area_Nueva" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" required>
+                            <option value="">Seleccione un área...</option>
                             {% for area in areas %}
-                                <option value="{{ area }}">{{ area }}</option>
+                                <option value="{{ area.id }}">{{ area.nombre }}</option>
                             {% endfor %}
-                        </select>
+                        </select> 
                     </div>
                     <div>
                         <label for="Ubicacion_Nueva" class="block text-sm font-medium text-gray-700">Ubicación (Nueva)</label>
@@ -81,6 +84,10 @@
                         <label for="Puesto_Trabajador_Nuevo" class="block text-sm font-medium text-gray-700">Puesto (Nuevo)</label>
                         <input type="text" id="Puesto_Trabajador_Nuevo" name="Puesto_Trabajador_Nuevo" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
                     </div>
+                     <div>
+                        <label for="No_Nomina_Trabajador_Nuevo" class="block text-sm font-medium text-gray-700">No. Nómina (Nuevo)</label>
+                        <input type="number" id="No_Nomina_Trabajador_Nuevo" name="No_Nomina_Trabajador_Nuevo" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                    </div>
                     <div>
                         <label for="Fecha_Resguardo_Nuevo" class="block text-sm font-medium text-gray-700">Fecha del Resguardo (Nuevo)</label>
                         <input type="date" id="Fecha_Resguardo_Nuevo" name="Fecha_Resguardo_Nuevo" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" required>
@@ -90,9 +97,9 @@
                         <input type="text" id="Nombre_Director_Jefe_De_Area_Nueva" name="Nombre_Director_Jefe_De_Area_Nueva" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
                     </div>
                     <div>
-                        <label for="Tipo_De_Resguardo_Nuevo" class="block text-sm font-medium text-gray-700">Tipo de Resguardo</label>
-                        <input type="text" id="Tipo_De_Resguardo_Nuevo" name="Tipo_De_Resguardo_Nuevo" class="mt-1 block w-full rounded-md border-gray-300 bg-gray-200 cursor-not-allowed shadow-sm focus:border-indigo-500 focus:ring-indigo-500" value="{% if resguardo_anterior.Tipo_De_Resguardo == 1 %}Sujeto de Control{% else %}Resguardo Normal{% endif %}" readonly>
-                        <input type="hidden" name="Tipo_De_Resguardo_Value" value="{{ resguardo_anterior.Tipo_De_Resguardo }}">
+                        <label for="Tipo_De_Resguardo_Display" class="block text-sm font-medium text-gray-700">Tipo de Resguardo</label>
+                        <input type="text" id="Tipo_De_Resguardo_Display" class="mt-1 block w-full rounded-md border-gray-300 bg-gray-100 shadow-sm" value="{% if resguardo_anterior.Tipo_De_Resguardo == 1 %}Sujeto de Control{% else %}Resguardo Normal{% endif %}" readonly>
+                        <input type="hidden" name="Tipo_De_Resguardo_Nuevo" value="{{ resguardo_anterior.Tipo_De_Resguardo }}">
                     </div>
                 </div>
             </div>
@@ -106,9 +113,6 @@
                             <i class="fas fa-file-invoice-dollar text-blue-500 mr-3"></i>
                             Oficio de Traspaso #<span class="oficio-number">1</span>
                         </h3>
-                        <button type="button" class="remove-oficio-btn hidden text-red-500 hover:text-red-700 font-bold" title="Eliminar este oficio">
-                            <i class="fas fa-times-circle"></i>
-                        </button>
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         <div>
@@ -127,18 +131,9 @@
                             <label for="Asunto_Oficio_1" class="block text-sm font-medium text-gray-700">Asunto</label>
                             <textarea id="Asunto_Oficio_1" name="Asunto_Oficio_1" rows="3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"></textarea>
                         </div>
-                        <div class="md:col-span-2 lg:col-span-3">
-                            <label for="archivos_oficios_1" class="block text-sm font-medium text-gray-700">Adjuntar Oficios (PDF, JPG, PNG)</label>
-                            <input type="file" id="archivos_oficios_1" name="archivos_oficios_1" multiple class="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
-                            <p class="mt-1 text-xs text-gray-500">Puedes seleccionar uno o varios archivos.</p>
-                        </div>
                     </div>
                 </div>
             </div>
-
-            <button type="button" id="add-oficio-btn" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                <i class="fas fa-plus mr-2"></i> Agregar Otro Oficio
-            </button>
 
             <div class="flex justify-end mt-8">
                 <button type="submit" class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
@@ -155,96 +150,26 @@
 <script>
     document.addEventListener('DOMContentLoaded', () => {
         const traspasoForm = document.getElementById('traspasoForm');
-        const oficiosContainer = document.getElementById('oficios-container');
-        const addOficioBtn = document.getElementById('add-oficio-btn');
-        let oficioCount = 1;
-
-        function updateRemoveButtons() {
-            const removeButtons = document.querySelectorAll('.remove-oficio-btn');
-            if (removeButtons.length > 1) {
-                removeButtons.forEach(btn => btn.classList.remove('hidden'));
-            } else {
-                removeButtons.forEach(btn => btn.classList.add('hidden'));
-            }
+        
+        // Función para mostrar mensajes de error de JavaScript
+        function showJsFlashMessage(message, category) {
+            const container = document.getElementById('js-flash-container');
+            const alertClasses = {
+                'success': 'bg-green-100 border-green-500 text-green-700',
+                'danger': 'bg-red-100 border-red-500 text-red-700',
+                'warning': 'bg-yellow-100 border-yellow-500 text-yellow-700'
+            };
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `p-4 mb-4 rounded-lg border-l-4 ${alertClasses[category] || 'bg-gray-100 border-gray-500 text-gray-700'}`;
+            alertDiv.textContent = message;
+            container.innerHTML = ''; // Limpiar mensajes anteriores
+            container.appendChild(alertDiv);
         }
 
-        function addOficioBlock() {
-            oficioCount++;
-            const template = `
-                <div class="oficio-block mb-8 p-6 bg-blue-50 rounded-lg border-l-4 border-blue-400" data-oficio-index="${oficioCount}">
-                    <div class="flex justify-between items-center mb-4">
-                        <h3 class="text-xl font-semibold text-blue-800 flex items-center">
-                            <i class="fas fa-file-invoice-dollar text-blue-500 mr-3"></i>
-                            Oficio de Traspaso #<span class="oficio-number">${oficioCount}</span>
-                        </h3>
-                        <button type="button" class="remove-oficio-btn text-red-500 hover:text-red-700 font-bold" title="Eliminar este oficio">
-                            <i class="fas fa-times-circle"></i>
-                        </button>
-                    </div>
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        <div>
-                            <label for="Dependencia_Oficio_${oficioCount}" class="block text-sm font-medium text-gray-700">Dependencia</label>
-                            <input type="text" id="Dependencia_Oficio_${oficioCount}" name="Dependencia_Oficio_${oficioCount}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
-                        </div>
-                        <div>
-                            <label for="Oficio_clave_${oficioCount}" class="block text-sm font-medium text-gray-700">Oficio Clave</label>
-                            <input type="text" id="Oficio_clave_${oficioCount}" name="Oficio_clave_${oficioCount}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
-                        </div>
-                        <div>
-                            <label for="Lugar_Fecha_Oficio_${oficioCount}" class="block text-sm font-medium text-gray-700">Lugar y Fecha</label>
-                            <input type="date" id="Lugar_Fecha_Oficio_${oficioCount}" name="Lugar_Fecha_Oficio_${oficioCount}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
-                        </div>
-                        <div class="md:col-span-2 lg:col-span-3">
-                            <label for="Asunto_Oficio_${oficioCount}" class="block text-sm font-medium text-gray-700">Asunto</label>
-                            <textarea id="Asunto_Oficio_${oficioCount}" name="Asunto_Oficio_${oficioCount}" rows="3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"></textarea>
-                        </div>
-                        <div class="md:col-span-2 lg:col-span-3">
-                            <label for="archivos_oficios_${oficioCount}" class="block text-sm font-medium text-gray-700">Adjuntar Oficios (PDF, JPG, PNG)</label>
-                            <input type="file" id="archivos_oficios_${oficioCount}" name="archivos_oficios_${oficioCount}" multiple class="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
-                            <p class="mt-1 text-xs text-gray-500">Puedes seleccionar uno o varios archivos.</p>
-                        </div>
-                    </div>
-                </div>
-            `;
-            oficiosContainer.insertAdjacentHTML('beforeend', template);
-            updateRemoveButtons();
-        }
-
-        oficiosContainer.addEventListener('click', (e) => {
-            if (e.target.closest('.remove-oficio-btn')) {
-                const oficioBlock = e.target.closest('.oficio-block');
-                oficioBlock.remove();
-                
-                // Reindexa los bloques
-                let newIndex = 1;
-                document.querySelectorAll('.oficio-block').forEach(block => {
-                    block.dataset.oficioIndex = newIndex;
-                    block.querySelector('.oficio-number').textContent = newIndex;
-                    const inputs = block.querySelectorAll('input, textarea');
-                    inputs.forEach(input => {
-                        input.name = input.name.replace(/_\d+$/, `_${newIndex}`);
-                        input.id = input.id.replace(/_\d+$/, `_${newIndex}`);
-                    });
-                    newIndex++;
-                });
-                oficioCount = newIndex - 1;
-                updateRemoveButtons();
-            }
-        });
-        
-        addOficioBtn.addEventListener('click', addOficioBlock);
-        
-        updateRemoveButtons(); // Llama al cargar la página para el caso de un solo oficio
-        
         traspasoForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             
             const formData = new FormData(traspasoForm);
-            console.log(formData.get('Tipo_De_Resguardo_Nuevo')) 
-            // Corrige el tipo de resguardo que se envía
-            const tipoResguardoValue = traspasoForm.querySelector('input[name="Tipo_De_Resguardo_Value"]').value;
-            formData.set('Tipo_De_Resguardo_Nuevo', tipoResguardoValue);
-            console.log(formData.get('Tipo_De_Resguardo_Nuevo'))
             
             try {
                 const response = await fetch(traspasoForm.action, {
@@ -254,25 +179,18 @@
                 
                 const result = await response.json();
                 
-                if (response.ok) {
-                    const flashContainer = document.querySelector('.container.bg-white');
-                    flashContainer.innerHTML = `<div class="flash-message flash-success">${result.message}</div>` + flashContainer.innerHTML;
-                    
-                    if (result.redirect_url) {
-                        setTimeout(() => {
-                            window.location.href = result.redirect_url;
-                        }, 2000);
-                    }
+                if (response.ok && result.redirect_url) {
+                    window.location.href = result.redirect_url;
                 } else {
-                    const flashContainer = document.querySelector('.container.bg-white');
-                    flashContainer.innerHTML = `<div class="flash-message flash-danger">${result.message}</div>` + flashContainer.innerHTML;
+                    showJsFlashMessage(result.message || 'Ocurrió un error.', result.category || 'danger');
                 }
+
             } catch (error) {
                 console.error('Error:', error);
-                const flashContainer = document.querySelector('.container.bg-white');
-                flashContainer.innerHTML = `<div class="flash-message flash-danger">Ocurrió un error inesperado.</div>` + flashContainer.innerHTML;
+                showJsFlashMessage('Ocurrió un error de red. Por favor, intente de nuevo.', 'danger');
             }
         });
     });
 </script>
 {% endblock %}
+

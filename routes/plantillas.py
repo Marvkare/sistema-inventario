@@ -19,20 +19,29 @@ plantillas_bp = Blueprint('plantillas', __name__)
 # =================================================================
 # FUNCIÓN CENTRALIZADA PARA OBTENER DATOS CON FILTROS E IMÁGENES
 # =================================================================
+def map_operator_to_sql(operator):
+    """Mapea operadores del frontend a operadores SQL."""
+    operator_map = {
+        '==': '=',
+        '!=': '!=',
+        '>': '>',
+        '<': '<',
+        '>=': '>=',
+        '<=': '<=',
+        'contains': 'LIKE'
+    }
+    return operator_map.get(operator)
+
 def get_filtered_resguardo_data(selected_columns, filters, limit=None):
     """
-    Función que construye y ejecuta una consulta SQL dinámica
-    basada en columnas y filtros seleccionados.
-    
-    Retorna: una lista de diccionarios con los resultados y el número 
-             máximo de imágenes por bien y resguardo.
+    Función completa que construye y ejecuta una consulta SQL dinámica,
+    incluyendo la lógica para obtener y formatear las URLs de las imágenes.
     """
     conn = None
     try:
         conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
 
-        # Mapeo de columnas a sus tablas para construir la consulta
         column_map = {
             'id': 'r', 'No_Resguardo': 'r', 'Tipo_De_Resguardo': 'r', 'Fecha_Resguardo': 'r',
             'No_Trabajador': 'r', 'Puesto_Trabajador': 'r', 'No_Nomina_Trabajador': 'r',
@@ -43,76 +52,56 @@ def get_filtered_resguardo_data(selected_columns, filters, limit=None):
             'Fecha_Factura': 'b', 'Costo_Inicial': 'b', 'Depreciacion_Acumulada': 'b',
             'Costo_Final_Cantidad': 'b', 'Cantidad': 'b', 'Estado_Del_Bien': 'b',
             'Marca': 'b', 'Modelo': 'b', 'Numero_De_Serie': 'b', 'Tipo_De_Alta': 'b',
-            'Area_Nombre': 'a'
+            'Area': 'a'
         }
         
-        # Separar columnas de datos de columnas de imágenes
         data_columns = [col for col in selected_columns if col not in ['imagenPath_bien', 'imagenPath_resguardo']]
         image_columns = [col for col in selected_columns if col in ['imagenPath_bien', 'imagenPath_resguardo']]
         
-        # Construir la cláusula SELECT
-        select_clause = []
+        select_clause = set()
+        select_clause.add('r.id AS resguardo_id')
+        select_clause.add('b.id AS bien_id')
+
         for col in data_columns:
             table_alias = column_map.get(col)
-            if col == 'Area_Nombre':
-                select_clause.append('a.nombre AS Area_Nombre')
+            if col == 'Area':
+                select_clause.add('a.nombre AS Area')
             elif table_alias:
-                select_clause.append(f'{table_alias}.`{col}`')
+                select_clause.add(f'{table_alias}.`{col}`')
         
-        # Incluir IDs para las uniones si se necesitan imágenes
-        if image_columns:
-            select_clause.append('r.id AS resguardo_id')
-            select_clause.append('b.id AS bien_id')
+        if any(f.get('field') == 'Area' for f in filters):
+            select_clause.add('a.nombre AS Area')
             
-        select_string = ", ".join(select_clause)
+        select_string = ", ".join(list(select_clause))
 
-        # Construir la cláusula FROM con los JOINs
-        from_clause = """
-            FROM resguardos r
-            JOIN bienes b ON r.id_bien = b.id
-            JOIN areas a ON r.id_area = a.id
-        """
+        from_clause = "FROM resguardos r JOIN bienes b ON r.id_bien = b.id JOIN areas a ON r.id_area = a.id"
         
-        # Construir la cláusula WHERE con los filtros
         where_clauses = []
         sql_params = []
         
         for f in filters:
-            field = f.get('field')
-            operator = f.get('operator')
-            value = f.get('value')
+            field, operator, value = f.get('field'), f.get('operator'), f.get('value')
+            if not all([field, operator, value]): 
+                continue
             
-            if not field or value is None or value == '':
-                continue
-
-            table_alias = column_map.get(field)
-            if not table_alias:
-                continue
-
             sql_operator = map_operator_to_sql(operator)
-            if not sql_operator:
+            if not sql_operator: 
                 continue
-                
-            if operator == 'contains':
-                where_clauses.append(f"{table_alias}.`{field}` LIKE %s")
-                sql_params.append(f"%{value}%")
-            elif operator == 'not_contains':
-                where_clauses.append(f"{table_alias}.`{field}` NOT LIKE %s")
-                sql_params.append(f"%{value}%")
-            elif operator == 'starts_with':
-                where_clauses.append(f"{table_alias}.`{field}` LIKE %s")
-                sql_params.append(f"{value}%")
-            elif operator == 'ends_with':
-                where_clauses.append(f"{table_alias}.`{field}` LIKE %s")
-                sql_params.append(f"%{value}")
-            elif field == 'Area_Nombre':
-                where_clauses.append(f"a.nombre {sql_operator} %s")
-                sql_params.append(value)
-            else:
-                where_clauses.append(f"{table_alias}.`{field}` {sql_operator} %s")
-                sql_params.append(value)
 
-        # Consulta final
+            if field == 'Area':
+                where_clauses.append(f"(a.id = %s OR a.nombre LIKE %s OR a.numero LIKE %s)")
+                sql_params.extend([value, f"%{value}%", f"%{value}%"])
+            else:
+                table_alias = column_map.get(field)
+                if not table_alias: 
+                    continue
+                
+                where_clauses.append(f"{table_alias}.`{field}` {sql_operator} %s")
+                if operator == 'contains':
+                    sql_params.append(f"%{value}%")
+                else:
+                    sql_params.append(value)
+
         final_query = f"SELECT {select_string} {from_clause}"
         if where_clauses:
             final_query += " WHERE " + " AND ".join(where_clauses)
@@ -120,55 +109,43 @@ def get_filtered_resguardo_data(selected_columns, filters, limit=None):
         final_query += " ORDER BY r.id DESC"
         if limit:
             final_query += f" LIMIT {limit}"
-
+        
         cursor.execute(final_query, sql_params)
         results = cursor.fetchall()
         
-        if not results:
+        if not results: 
             return [], 0, 0
 
-        # Obtener imágenes si se solicitaron
-        max_bien_images, max_resguardo_images = 0, 0
-        
+        # --- LÓGICA DE IMÁGENES (RESTAURADA Y COMPLETA) ---
         if 'imagenPath_bien' in image_columns:
-            bien_ids = [str(row['bien_id']) for row in results]
+            bien_ids = [str(row['bien_id']) for row in results if row.get('bien_id')]
             if bien_ids:
                 placeholders = ','.join(['%s'] * len(bien_ids))
                 cursor.execute(f"SELECT id_bien, GROUP_CONCAT(ruta_imagen) as imagenes FROM imagenes_bien WHERE id_bien IN ({placeholders}) GROUP BY id_bien", bien_ids)
-                bien_images = {row['id_bien']: row['imagenes'].split(',') for row in cursor.fetchall()}
-                max_bien_images = max(len(v) for v in bien_images.values()) if bien_images else 0
+                bien_images = {row['id_bien']: row['imagenes'].split(',') for row in cursor.fetchall() if row['imagenes']}
                 for row in results:
-                    row['imagenPath_bien'] = bien_images.get(row['bien_id'], [])
-                    for i, img_path in enumerate(row['imagenPath_bien']):
-                        row[f'imagen_bien_{i+1}'] = img_path
+                    filenames = bien_images.get(row.get('bien_id'), [])
+                    row['imagenPath_bien'] = [url_for('serve_uploaded_file', filename=f) for f in filenames]
 
         if 'imagenPath_resguardo' in image_columns:
-            resguardo_ids = [str(row['resguardo_id']) for row in results]
+            resguardo_ids = [str(row['resguardo_id']) for row in results if row.get('resguardo_id')]
             if resguardo_ids:
                 placeholders = ','.join(['%s'] * len(resguardo_ids))
                 cursor.execute(f"SELECT id_resguardo, GROUP_CONCAT(ruta_imagen) as imagenes FROM imagenes_resguardo WHERE id_resguardo IN ({placeholders}) GROUP BY id_resguardo", resguardo_ids)
-                resguardo_images = {row['id_resguardo']: row['imagenes'].split(',') for row in cursor.fetchall()}
-                max_resguardo_images = max(len(v) for v in resguardo_images.values()) if resguardo_images else 0
+                resguardo_images = {row['id_resguardo']: row['imagenes'].split(',') for row in cursor.fetchall() if row['imagenes']}
                 for row in results:
-                    row['imagenPath_resguardo'] = resguardo_images.get(row['resguardo_id'], [])
-                    for i, img_path in enumerate(row['imagenPath_resguardo']):
-                        row[f'imagen_resguardo_{i+1}'] = img_path
+                    filenames = resguardo_images.get(row.get('resguardo_id'), [])
+                    row['imagenPath_resguardo'] = [url_for('serve_uploaded_file', filename=f) for f in filenames]
 
-        # Limpiar resultados de campos temporales
-        for row in results:
-            row.pop('resguardo_id', None)
-            row.pop('bien_id', None)
-
-        return results, max_bien_images, max_resguardo_images
+        return results, len(results), len(results)
         
     except Exception as e:
         traceback.print_exc()
-        raise e
+        return [], 0, 0
     finally:
         if conn and conn.is_connected():
             cursor.close()
             conn.close()
-
 
 @plantillas_bp.route('/crear_plantilla', methods=['GET', 'POST'])
 @login_required
@@ -192,57 +169,36 @@ def crear_plantilla():
         try:
             conn = get_db_connection()
             cursor = conn.cursor()
-
             columns_json = json.dumps(selected_columns)
             filters_json = json.dumps(filters)
-
             sql = "INSERT INTO query_templates (name, description, columns, filters) VALUES (%s, %s, %s, %s)"
             data_to_save = (template_name, template_description, columns_json, filters_json)
-
             cursor.execute(sql, data_to_save)
             conn.commit()
-
             flash(f"Plantilla '{template_name}' guardada exitosamente.", 'success')
             return redirect(url_for('plantillas.ver_plantillas'))
-
         except mysql.connector.IntegrityError:
             flash(f"Error: Ya existe una plantilla con el nombre '{template_name}'.", 'danger')
         except Exception as e:
             flash(f"Error al guardar la plantilla: {e}", 'danger')
         finally:
-            if conn:
-                conn.close()
+            if conn: conn.close()
 
-    return render_template('crear_plantilla.html', columns=AVAILABLE_COLUMNS)
-
-
-@plantillas_bp.route('/ver_plantillas')
-@login_required
-@permission_required('resguardos.crear_resguardo')
-def ver_plantillas():
-    """Ruta para ver todas las plantillas de consulta guardadas."""
-    conn = None
-    try:
-        conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
-        cursor.execute("SELECT id, name, description FROM query_templates ORDER BY name")
-        templates = cursor.fetchall()
-        return render_template('ver_plantillas.html', templates=templates)
-    except Exception as e:
-        flash(f"Error al cargar las plantillas: {e}", 'danger')
-        return redirect(url_for('index'))
-    finally:
-        if conn:
-            conn.close()
+    # Renderiza la nueva plantilla unificada en modo "crear"
+    return render_template('plantillas/plantilla_form.html', 
+                           is_edit=False, 
+                           template={},
+                           columns=AVAILABLE_COLUMNS,
+                           template_columns=[],
+                           template_filters=[])
 
 
 @plantillas_bp.route('/editar_plantilla/<int:template_id>', methods=['GET', 'POST'])
 @login_required
-@permission_required('resguardos.crear_resguardo')
+@permission_required('plantillas.editar_plantilla')
 def editar_plantilla(template_id):
     """Ruta para editar una plantilla de consulta existente."""
     conn = None
-    template = None
     try:
         conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
@@ -253,10 +209,7 @@ def editar_plantilla(template_id):
         if not template:
             flash("Plantilla no encontrada.", 'danger')
             return redirect(url_for('plantillas.ver_plantillas'))
-
-        cursor.execute("SELECT id, nombre FROM areas ORDER BY nombre")
-        areas = cursor.fetchall()
-
+        
         if request.method == 'POST':
             template_name = request.form.get('template_name')
             template_description = request.form.get('template_description')
@@ -286,23 +239,41 @@ def editar_plantilla(template_id):
         template_columns = json.loads(template['columns']) if template['columns'] else []
         template_filters = json.loads(template['filters']) if template['filters'] else []
         
-        # Generar datos de vista previa
-        preview_data, _, _ = get_filtered_resguardo_data(template_columns, template_filters, limit=5)
-        
-        return render_template('editar_plantilla.html',
+        # Renderiza la nueva plantilla unificada en modo "editar"
+        return render_template('plantillas/plantilla_form.html',
+                               is_edit=True,
                                template=template,
                                columns=AVAILABLE_COLUMNS,
                                template_columns=template_columns,
-                               template_filters=template_filters,
-                               areas=areas,
-                               preview_data=preview_data)
+                               template_filters=template_filters)
 
     except Exception as e:
         flash(f"Error al cargar/editar la plantilla: {e}", 'danger')
         return redirect(url_for('plantillas.ver_plantillas'))
     finally:
+        if conn and conn.is_connected():
+            conn.close()
+
+@plantillas_bp.route('/ver_plantillas')
+@login_required
+@permission_required('resguardos.crear_resguardo')
+def ver_plantillas():
+    """Ruta para ver todas las plantillas de consulta guardadas."""
+    conn = None
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute("SELECT id, name, description FROM query_templates ORDER BY name")
+        templates = cursor.fetchall()
+        return render_template('ver_plantillas.html', templates=templates)
+    except Exception as e:
+        flash(f"Error al cargar las plantillas: {e}", 'danger')
+        return redirect(url_for('index'))
+    finally:
         if conn:
             conn.close()
+
+
 
 @plantillas_bp.route('/eliminar_plantilla/<int:template_id>', methods=['POST'])
 @login_required
@@ -457,7 +428,7 @@ def preview_query():
     filters = data.get('filters', [])
 
     try:
-        results, _, _ = get_filtered_resguardo_data(columns, filters, limit=5)
+        results, _, _ = get_filtered_resguardo_data(columns, filters, limit=100)
         return jsonify(results)
     
     except Exception as e:

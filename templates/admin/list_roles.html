@@ -25,9 +25,7 @@
                     <td class="px-6 py-4 whitespace-nowrap">{{ role.id }}</td>
                     <td class="px-6 py-4 whitespace-nowrap">{{ role.name }}</td>
                     <td class="px-6 py-4">{{ role.description }}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <a href="{{ url_for('admin_users.edit_role_permissions', role_id=role.id) }}" class="text-blue-600 hover:text-blue-900">Editar Permisos</a>
-                    </td>
+                    
                 </tr>
                 {% endfor %}
             </tbody>
@@ -35,3 +33,4 @@
     </div>
 </div>
 {% endblock %}
+

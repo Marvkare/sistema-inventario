@@ -2,12 +2,21 @@
 import os
 
 # --- Configuración de la Base de Datos ---
+DB_CONFIG_ = {
+    'host': 'Marvkare.mysql.pythonanywhere-services.com',
+    'user': 'Marvkare',
+    'password': 'Pescadovolador1-',
+    'database': 'Marvkare$default'
+}
+
+
 DB_CONFIG = {
     'host': 'localhost',
     'user': 'root',
     'password': 'Pescadoroot',
     'database': 'inventario'
 }
+
 
 # --- Rutas de Archivos ---
 # app.root_path es la raíz de tu aplicación Flask
@@ -113,7 +122,8 @@ AVAILABLE_COLUMNS = [
     'Modelo',
     'Numero_De_Serie',
     'imagenPath_bien',
-    'imagenPath_resguardo'
+    'imagenPath_resguardo',
+    'Activo'
 ]
 
 # The name of the Area column in the Excel file

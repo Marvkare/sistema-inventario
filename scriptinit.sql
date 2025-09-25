@@ -40,16 +40,16 @@ CREATE TABLE roles_users (
 );
 
 
-CREATE TABLE activity_log (
-    id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
-    user_id INT NOT NULL,
-    action VARCHAR(255) NOT NULL,
-    resource VARCHAR(255) NOT NULL,
-    resource_id INT,
-    timestamp DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    details TEXT,
-    FOREIGN KEY (user_id) REFERENCES user(id) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+CREATE TABLE `activity_log` (
+    `id` INT AUTO_INCREMENT PRIMARY KEY,
+    `timestamp` DATETIME NOT NULL,
+    `user_id` INT,
+    `action` VARCHAR(255) NOT NULL,
+    `category` VARCHAR(100), -- Se usa 'category' para coincidir con el código Python
+    `details` TEXT,
+    `resource_id` INT,
+    FOREIGN KEY (`user_id`) REFERENCES `user`(`id`) ON DELETE SET NULL -- Usar SET NULL para no perder el log si se borra el usuario
+);
 
 CREATE TABLE areas (
     `id` INT PRIMARY KEY NOT NULL AUTO_INCREMENT,
@@ -217,37 +217,4 @@ CREATE TABLE `resguardo_errores` (
   PRIMARY KEY (`id`),
   KEY `idx_upload_id` (`upload_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
-
---
--- Estructura de tabla para la tabla `query_templates`
---
-
-
-
-
-INSERT INTO areas (nombre, numero) VALUES
-('SERVICIOS PÚBLICOS', null),
-('MAQUINARIA Y PARQUE VEHICULAR', NULL),
-('COMUNICACIÓN SOCIAL Y SISTEMAS', NULL),
-('DIF MUNICIPAL (DIRECCION)', NULL),
-('OFICIALIA MAYOR', NULL),
-('CAPASMAH', NULL),
-('INSTITUTO MUNICIPAL DEL DEPORTE', NULL),
-('TESORERIA MUNICIPAL', NULL),
-('DESARROLLO URBANO Y MOVILIDAD', NULL),
-('PRESIDENCIA MUNICIPAL', NULL),
-('SECRETARIA GENERAL MUNICIPAL', NULL),
-('HONORABLE ASAMBLEA', NULL),
-('SEGURIDAD PÚBLICA Y TRÁNSITO MUNICIPAL', NULL),
-('DESARROLLO SOCIAL', NULL),
-('PROTECCIÓN CIVIL Y BOMBEROS', NULL),
-('REGLAMENTOS Y ESPECTÁCULOS', NULL),
-('INSTANCIA MUNICIPAL  DE LAS MUJERES', NULL),
-('CONCILIADOR MUNICIPAL', NULL),
-('CASA DE CULTURA', NULL),
-('CONTRALORIA INTERNA MUNICIPAL', NULL);
-
-
-Que nomenclatura se usa para el numero de resguardo 
 

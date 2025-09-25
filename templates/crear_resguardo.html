@@ -33,7 +33,13 @@
                 <p style="color: red;">Para crear un nuevo bien resguardo es obligatorio el numero de factura  y de inventario</p>
             </div>
             
-            <form id="resguardoForm" method="post" enctype="multipart/form-data" class="space-y-6">
+            <form id="resguardoForm" action="{{ url_for('resguardos.crear_resguardo') }}" 
+                  method="post" 
+                  enctype="multipart/form-data" 
+                  class="class="space-y-6">
+                   {% if bien_precargado %}
+                <input type="hidden" name="id_bien_existente" value="{{ form_data.id }}">
+                {% endif %}
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     
                     <div>
@@ -87,9 +93,10 @@
                                     <option value="{{ area }}" {% if form_data.Area == area %}selected{% endif %}>{{ area }}</option>
                                 {% endfor %}
                             </select>
-                            <button type="button" id="addAreaBtn" class="bg-green-500 hover:bg-green-600 text-white p-2 rounded-lg shadow-sm transition-colors" title="Agregar Nueva Área">
+                            <!-- CAMBIO: El botón ahora es un enlace que abre una nueva pestaña -->
+                            <a href="{{ url_for('areas.manage_areas') }}" target="_blank" class="bg-green-500 hover:bg-green-600 text-white p-2 rounded-lg shadow-sm transition-colors" title="Agregar o Editar Áreas">
                                 <i class="fas fa-plus"></i>
-                            </button>
+                            </a>
                             <button type="button" id="refreshAreasBtn" class="bg-gray-400 hover:bg-gray-500 text-white p-2 rounded-lg shadow-sm transition-colors" title="Refrescar Áreas">
                                 <i class="fas fa-sync-alt"></i>
                             </button>
@@ -150,7 +157,7 @@
                         <label for="Tipo_De_Resguardo" class="block text-sm font-medium text-gray-700 mb-1">Tipo de Resguardo</label>
                         <select id="Tipo_De_Resguardo" name="Tipo_De_Resguardo" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
                             <option value="1" {% if form_data.Tipo_De_Resguardo == 1 %}selected{% endif %}>Sujeto de Control</option>
-                            <option value="0" {% if form_data.Tipo_De_Resguardo == 0 %}selected{% endif %}>Resguardo Normal</option>
+                            <option value="0" {% if form_data.Tipo_De_Resguardo == 0 or form_data.Tipo_De_Resguardo is none %}selected{% endif %}>Resguardo Normal</option>
                         </select>
                     </div>
 
@@ -285,18 +292,6 @@
     </div>
 </div>
 
-<!-- Modal para agregar área -->
-<div id="addAreaModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center hidden z-50">
-    <div class="bg-white rounded-lg shadow-xl w-11/12 md:w-1/3 p-6">
-        <h3 class="text-xl font-semibold text-gray-800 mb-4">Agregar Nueva Área</h3>
-        <input type="text" id="newAreaName" placeholder="Nombre de la nueva área" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 mb-4">
-        <div class="flex justify-end space-x-2">
-            <button type="button" id="cancelAddAreaBtn" class="px-4 py-2 bg-gray-300 text-gray-800 rounded-lg hover:bg-gray-400 transition-colors">Cancelar</button>
-            <button type="button" id="saveNewAreaBtn" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">Guardar Área</button>
-        </div>
-    </div>
-</div>
-
 <!-- Modal para recorte de imagen -->
 <div id="imageCropModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center hidden z-50">
     <div class="bg-white rounded-lg shadow-xl w-11/12 md:w-3/4 lg:w-2/3 max-h-screen overflow-auto">
@@ -342,13 +337,8 @@
         const resguardoForm = document.getElementById('resguardoForm');
         
         const areaSelect = document.getElementById('Area');
-        const addAreaBtn = document.getElementById('addAreaBtn');
         const refreshAreasBtn = document.getElementById('refreshAreasBtn');
-        const addAreaModal = document.getElementById('addAreaModal');
-        const newAreaNameInput = document.getElementById('newAreaName');
-        const cancelAddAreaBtn = document.getElementById('cancelAddAreaBtn');
-        const saveNewAreaBtn = document.getElementById('saveNewAreaBtn');
-
+        
         // Configurar los labels como disparadores de los inputs de archivo
         document.querySelector('label[for="imagenes_bien"]').addEventListener('click', function() {
             imagenBienInput.click();
@@ -623,42 +613,6 @@
         });
         
         // Lógica para áreas
-        addAreaBtn.addEventListener('click', function() {
-            newAreaNameInput.value = '';
-            addAreaModal.classList.remove('hidden');
-        });
-        
-        cancelAddAreaBtn.addEventListener('click', function() {
-            addAreaModal.classList.add('hidden');
-        });
-        
-        saveNewAreaBtn.addEventListener('click', async function() {
-            const newArea = newAreaNameInput.value.trim();
-            if (newArea) {
-                try {
-                    const response = await fetch("{{ url_for('areas.add_area') }}", {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ area_name: newArea })
-                    });
-                    const data = await response.json();
-                    if (response.ok) {
-                        showFlashMessage(data.message, 'success');
-                        addAreaModal.classList.add('hidden');
-                        await loadAreas();
-                        areaSelect.value = newArea;
-                    } else {
-                        showFlashMessage(data.message || 'Error al guardar el área.', 'error');
-                    }
-                } catch (error) {
-                    console.error('Error al guardar nueva área:', error);
-                    showFlashMessage('Error al guardar el área.', 'error');
-                }
-            } else {
-                showFlashMessage('El nombre del área no puede estar vacío.', 'warning');
-            }
-        });
-        
         refreshAreasBtn.addEventListener('click', async function() {
             await loadAreas();
         });
@@ -669,20 +623,24 @@
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
-                const areas = await response.json();
-                const currentSelectedArea = areaSelect.value;
+                const areas = await response.json(); // areas es [{id: 1, nombre: 'Sistemas'}, ...]
+                const currentSelectedId = areaSelect.value;
+                
                 areaSelect.innerHTML = '<option value="">Selecciona un área</option>';
+                
+                // Iterar sobre la lista de objetos
                 areas.forEach(area => {
                     const option = document.createElement('option');
-                    option.value = area;
-                    option.textContent = area;
+                    option.value = area.id;         // El valor es el ID
+                    option.textContent = area.nombre; // El texto es el nombre
                     areaSelect.appendChild(option);
                 });
-                if (currentSelectedArea && areas.includes(currentSelectedArea)) {
-                    areaSelect.value = currentSelectedArea;
-                } else if (currentSelectedArea) {
-                    areaSelect.value = '';
+
+                // Volver a seleccionar el área que estaba elegida, si aún existe
+                if (currentSelectedId && areas.find(a => a.id == currentSelectedId)) {
+                    areaSelect.value = currentSelectedId;
                 }
+                
                 showFlashMessage('Áreas actualizadas correctamente.', 'success');
             } catch (error) {
                 console.error('Error al cargar las áreas:', error);
@@ -691,4 +649,4 @@
         }
     });
 </script>
-{% endblock %}
+{% endblock %}" 

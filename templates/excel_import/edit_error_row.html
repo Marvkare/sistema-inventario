@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <h1 class="text-3xl font-bold text-gray-800 mb-4">Corregir Fila de Importación</h1>
+    <p class="text-gray-600 mb-6">
+        Estás editando la fila de error con ID: <span class="font-mono bg-gray-200 px-2 py-1 rounded">{{ error_id }}</span>.
+        Corrige los datos a continuación y haz clic en "Guardar Corrección" para intentar reinsertar el registro.
+    </p>
+
+    <div class="bg-white shadow-lg rounded-lg p-6">
+        <div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-6 rounded">
+            <p><strong class="font-bold">Error Original:</strong> {{ error_data.error_message }}</p>
+        </div>
+
+        <form method="POST" action="{{ url_for('excel_import.edit_error_row', error_id=error_id) }}">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                
+                <div>
+                    <label for="No_Inventario" class="block text-sm font-medium text-gray-700">No. Inventario</label>
+                    <input type="text" name="No_Inventario" value="{{ error_data.No_Inventario or '' }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                </div>
+                <div>
+                    <label for="No_Factura" class="block text-sm font-medium text-gray-700">No. Factura</label>
+                    <input type="text" name="No_Factura" value="{{ error_data.No_Factura or '' }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                </div>
+                <div>
+                    <label for="No_Cuenta" class="block text-sm font-medium text-gray-700">No. Cuenta</label>
+                    <input type="text" name="No_Cuenta" value="{{ error_data.No_Cuenta or '' }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                </div>
+                <div>
+                    <label for="No_Resguardo" class="block text-sm font-medium text-gray-700">No. Resguardo</label>
+                    <input type="text" name="No_Resguardo" value="{{ error_data.No_Resguardo or '' }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                </div>
+                <div>
+                    <label for="No_Trabajador" class="block text-sm font-medium text-gray-700">No. Trabajador</label>
+                    <input type="text" name="No_Trabajador" value="{{ error_data.No_Trabajador or '' }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                </div>
+                <div>
+                    <label for="Proveedor" class="block text-sm font-medium text-gray-700">Proveedor</label>
+                    <input type="text" name="Proveedor" value="{{ error_data.Proveedor or '' }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                </div>
+                <div>
+                    <label for="Fecha_Resguardo" class="block text-sm font-medium text-gray-700">Fecha Resguardo</label>
+                    {# --- CAMBIO CLAVE --- #}
+                    <input type="date" name="Fecha_Resguardo" value="{{ error_data.Fecha_Resguardo or '' }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                </div>
+                <div class="md:col-span-3">
+                    <label for="Descripcion_Del_Bien" class="block text-sm font-medium text-gray-700">Descripción del Bien</label>
+                    <textarea name="Descripcion_Del_Bien" rows="3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">{{ error_data.Descripcion_Del_Bien or '' }}</textarea>
+                </div>
+                <div>
+                    <label for="Area" class="block text-sm font-medium text-gray-700">Área</label>
+                    <select name="Area" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                        <option value="">Selecciona un área</option>
+                        {% for area_name in areas %}
+                            <option value="{{ area_name }}" {% if error_data.Area == area_name %}selected{% endif %}>{{ area_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label for="Rubro" class="block text-sm font-medium text-gray-700">Rubro</label>
+                    <input type="text" name="Rubro" value="{{ error_data.Rubro or '' }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                </div>
+                <div>
+                    <label for="Poliza" class="block text-sm font-medium text-gray-700">Póliza</label>
+                    <input type="text" name="Poliza" value="{{ error_data.Poliza or '' }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                </div>
+                <div>
+                    <label for="Fecha_Poliza" class="block text-sm font-medium text-gray-700">Fecha Póliza</label>
+                    {# --- CAMBIO CLAVE --- #}
+                    <input type="date" name="Fecha_Poliza" value="{{ error_data.Fecha_Poliza or '' }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                </div>
+                <div>
+                    <label for="Sub_Cuenta_Armonizadora" class="block text-sm font-medium text-gray-700">Sub-Cuenta Armonizadora</label>
+                    <input type="text" name="Sub_Cuenta_Armonizadora" value="{{ error_data.Sub_Cuenta_Armonizadora or '' }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                </div>
+                <div>
+                    <label for="Fecha_Factura" class="block text-sm font-medium text-gray-700">Fecha Factura</label>
+                    {# --- CAMBIO CLAVE --- #}
+                    <input type="date" name="Fecha_Factura" value="{{ error_data.Fecha_Factura or '' }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                </div>
+                <div>
+                    <label for="Costo_Inicial" class="block text-sm font-medium text-gray-700">Costo Inicial</label>
+                    <input type="text" name="Costo_Inicial" value="{{ error_data.Costo_Inicial or '' }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                </div>
+                <div>
+                    <label for="Depreciacion_Acumulada" class="block text-sm font-medium text-gray-700">Depreciación Acumulada</label>
+                    <input type="text" name="Depreciacion_Acumulada" value="{{ error_data.Depreciacion_Acumulada or '' }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                </div>
+                <div>
+                    <label for="Costo_Final_Cantidad" class="block text-sm font-medium text-gray-700">Costo Final</label>
+                    <input type="text" name="Costo_Final_Cantidad" value="{{ error_data.Costo_Final_Cantidad or '' }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                </div>
+                <div>
+                    <label for="Cantidad" class="block text-sm font-medium text-gray-700">Cantidad</label>
+                    <input type="text" name="Cantidad" value="{{ error_data.Cantidad or '' }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                </div>
+                <div>
+                    <label for="Puesto_Trabajador" class="block text-sm font-medium text-gray-700">Puesto</label>
+                    <input type="text" name="Puesto_Trabajador" value="{{ error_data.get('Puesto', error_data.get('Puesto_Trabajador', '')) }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                </div>
+                <div>
+                    <label for="Nombre_Director_Jefe_De_Area" class="block text-sm font-medium text-gray-700">Nombre Director/Jefe de Área</label>
+                    <input type="text" name="Nombre_Director_Jefe_De_Area" value="{{ error_data.Nombre_Director_Jefe_De_Area or '' }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                </div>
+                <div>
+                    <label for="Tipo_De_Resguardo" class="block text-sm font-medium text-gray-700">Tipo de Resguardo</label>
+                    <input type="text" name="Tipo_De_Resguardo" value="{{ error_data.Tipo_De_Resguardo or '' }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                </div>
+                <div>
+                    <label for="Nombre_Del_Resguardante" class="block text-sm font-medium text-gray-700">Nombre del Resguardante</label>
+                    <input type="text" name="Nombre_Del_Resguardante" value="{{ error_data.Nombre_Del_Resguardante or '' }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                </div>
+                <div>
+                    <label for="Estado_Del_Bien" class="block text-sm font-medium text-gray-700">Estado del Bien</label>
+                    <input type="text" name="Estado_Del_Bien" value="{{ error_data.Estado_Del_Bien or '' }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                </div>
+                <div>
+                    <label for="Marca" class="block text-sm font-medium text-gray-700">Marca</label>
+                    <input type="text" name="Marca" value="{{ error_data.Marca or '' }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                </div>
+                <div>
+                    <label for="Modelo" class="block text-sm font-medium text-gray-700">Modelo</label>
+                    <input type="text" name="Modelo" value="{{ error_data.Modelo or '' }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                </div>
+                <div>
+                    <label for="Numero_De_Serie" class="block text-sm font-medium text-gray-700">Número de Serie</label>
+                    <input type="text" name="Numero_De_Serie" value="{{ error_data.Numero_De_Serie or '' }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                </div>
+            </div>
+            
+            <div class="flex justify-end space-x-4 mt-8">
+                <a href="{{ url_for('excel_import.handle_errors') }}" class="px-4 py-2 bg-gray-300 text-gray-800 rounded-lg hover:bg-gray-400">Cancelar</a>
+                <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Guardar Corrección</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+

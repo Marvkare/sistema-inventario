@@ -145,7 +145,7 @@
                 <i class="fas fa-print mr-2"></i> Imprimir Resguardo
             </a>
             {% if resguardo.Activo %}
-            <a href="{{ url_for('traspaso.traspasar_resguardo', id_resguardo=resguardo.id_resguardo) }}" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 transition-colors">
+            <a href="{{ url_for('traspaso.traspasar_resguardo', id_resguardo_anterior=resguardo.id_resguardo) }}" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 transition-colors">
                 <i class="fas fa-exchange-alt mr-2"></i> Traspasar Resguardo
             </a>
             <a href="{{ url_for('resguardos.editar_resguardo', id_resguardo=resguardo.id_resguardo) }}" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 transition-colors">

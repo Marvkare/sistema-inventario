@@ -12,33 +12,28 @@
             <h3 class="text-2xl font-semibold mb-4 text-verde-mexicano-medio border-b-2 border-verde-mexicano-claro pb-2">Información del Bien</h3>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-4">
                 <div class="space-y-2">
-                    <p><strong>No. de Inventario:</strong> <span class="text-gray-700">{{ bien.No_Inventario }}</span></p>
-                    <p><strong>No. Factura:</strong> <span class="text-gray-700">{{ bien.No_Factura }}</span></p>
-                    <p><strong>No. Cuenta:</strong> <span class="text-gray-700">{{ bien.No_Cuenta }}</span></p>
-                    <p><strong>No. Resguardo:</strong> <span class="text-gray-700">{{ bien.No_Resguardo }}</span></p>
-                    <p><strong>Proveedor:</strong> <span class="text-gray-700">{{ bien.Proveedor }}</span></p>
-                    <p><strong>Descripción del Bien:</strong> <span class="text-gray-700">{{ bien.Descripcion_Del_Bien }}</span></p>
-                    <p><strong>Descripción Corta:</strong> <span class="text-gray-700">{{ bien.Descripcion_Corta_Del_Bien }}</span></p>
-                    <p><strong>Área:</strong> <span class="text-gray-700">{{ bien.Area }}</span></p>
-                    <p><strong>Rubro:</strong> <span class="text-gray-700">{{ bien.Rubro }}</span></p>
-                    <p><strong>Póliza:</strong> <span class="text-gray-700">{{ bien.Poliza }}</span></p>
-                    <p><strong>Fecha Póliza:</strong> <span class="text-gray-700">{{ bien.Fecha_Poliza }}</span></p>
-                    <p><strong>Subcuenta Armonizadora:</strong> <span class="text-gray-700">{{ bien.Sub_Cuenta_Armonizadora }}</span></p>
+                    <p><strong>No. de Inventario:</strong> <span class="text-gray-700">{{ bien.No_Inventario or 'N/A' }}</span></p>
+                    <p><strong>No. Factura:</strong> <span class="text-gray-700">{{ bien.No_Factura or 'N/A' }}</span></p>
+                    <p><strong>No. Cuenta:</strong> <span class="text-gray-700">{{ bien.No_Cuenta or 'N/A' }}</span></p>
+                    <p><strong>Proveedor:</strong> <span class="text-gray-700">{{ bien.Proveedor or 'N/A' }}</span></p>
+                    <p><strong>Descripción del Bien:</strong> <span class="text-gray-700">{{ bien.Descripcion_Del_Bien or 'N/A' }}</span></p>
+                    <p><strong>Descripción Corta:</strong> <span class="text-gray-700">{{ bien.Descripcion_Corta_Del_Bien or 'N/A' }}</span></p>
+                    <p><strong>Rubro:</strong> <span class="text-gray-700">{{ bien.Rubro or 'N/A' }}</span></p>
+                    <p><strong>Póliza:</strong> <span class="text-gray-700">{{ bien.Poliza or 'N/A' }}</span></p>
+                    <p><strong>Fecha Póliza:</strong> <span class="text-gray-700">{{ bien.Fecha_Poliza or 'N/A' }}</span></p>
                 </div>
                 <div class="space-y-2">
-                    <p><strong>Fecha Factura:</strong> <span class="text-gray-700">{{ bien.Fecha_Factura }}</span></p>
-                    <p><strong>Costo Inicial:</strong> <span class="text-gray-700">{{ bien.Costo_Inicial }}</span></p>
-                    <p><strong>Depreciación Acumulada:</strong> <span class="text-gray-700">{{ bien.Depreciacion_Acumulada }}</span></p>
-                    <p><strong>Costo Final:</strong> <span class="text-gray-700">{{ bien.Costo_Final_Cantidad }}</span></p>
-                    <p><strong>Cantidad:</strong> <span class="text-gray-700">{{ bien.Cantidad }}</span></p>
-                    <p><strong>Estado del Bien:</strong> <span class="text-gray-700">{{ bien.Estado_Del_Bien }}</span></p>
-                    <p><strong>Marca:</strong> <span class="text-gray-700">{{ bien.Marca }}</span></p>
-                    <p><strong>Modelo:</strong> <span class="text-gray-700">{{ bien.Modelo }}</span></p>
-                    <p><strong>No. Serie:</strong> <span class="text-gray-700">{{ bien.Numero_De_Serie }}</span></p>
-                    <p><strong>Ubicación:</strong> <span class="text-gray-700">{{ bien.Ubicacion }}</span></p>
-                    <p><strong>Tipo de Alta:</strong> <span class="text-gray-700">{{ bien.Tipo_De_Alta }}</span></p>
-                    <p><strong>Clasificación:</strong> <span class="text-gray-700">{{ bien.Clasificacion }}</span></p>
-                    <p><strong>Partida Presupuestal:</strong> <span class="text-gray-700">{{ bien.Partida_Presupuestal }}</span></p>
+                    <p><strong>Subcuenta Armonizadora:</strong> <span class="text-gray-700">{{ bien.Sub_Cuenta_Armonizadora or 'N/A' }}</span></p>
+                    <p><strong>Fecha Factura:</strong> <span class="text-gray-700">{{ bien.Fecha_Factura or 'N/A' }}</span></p>
+                    <p><strong>Costo Inicial:</strong> <span class="text-gray-700">{{ bien.Costo_Inicial or 'N/A' }}</span></p>
+                    <p><strong>Depreciación Acumulada:</strong> <span class="text-gray-700">{{ bien.Depreciacion_Acumulada or 'N/A' }}</span></p>
+                    <p><strong>Costo Final:</strong> <span class="text-gray-700">{{ bien.Costo_Final_Cantidad or 'N/A' }}</span></p>
+                    <p><strong>Cantidad:</strong> <span class="text-gray-700">{{ bien.Cantidad or 'N/A' }}</span></p>
+                    <p><strong>Estado del Bien:</strong> <span class="text-gray-700">{{ bien.Estado_Del_Bien or 'N/A' }}</span></p>
+                    <p><strong>Marca:</strong> <span class="text-gray-700">{{ bien.Marca or 'N/A' }}</span></p>
+                    <p><strong>Modelo:</strong> <span class="text-gray-700">{{ bien.Modelo or 'N/A' }}</span></p>
+                    <p><strong>No. Serie:</strong> <span class="text-gray-700">{{ bien.Numero_De_Serie or 'N/A' }}</span></p>
+                    <p><strong>Tipo de Alta:</strong> <span class="text-gray-700">{{ bien.Tipo_De_Alta or 'N/A' }}</span></p>
                 </div>
             </div>
 
@@ -51,17 +46,17 @@
                 {% for resguardo in resguardos %}
                 <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg shadow-sm">
                     <div>
-                                    <p class="font-semibold text-lg">No. de Resguardo: {{ resguardo.No_Resguardo }}</p>
-                                    <p class="text-sm text-gray-500">
-                                        Estado: 
-                                        {% if resguardo.Activo %}
-                                            <span class="font-bold text-green-600">Activo</span>
-                                        {% else %}
-                                            <span class="font-bold text-red-600">Inactivo</span>
-                                        {% endif %}
-                                    </p>
-                                    <p class="text-sm text-gray-500">Resguardante: {{ resguardo.Nombre_Del_Resguardante }}</p>
-                                </div> 
+                        <p class="font-semibold text-lg">No. de Resguardo: {{ resguardo.No_Resguardo }}</p>
+                        <p class="text-sm text-gray-500">
+                            Estado: 
+                            {% if resguardo.Activo %}
+                                <span class="font-bold text-green-600">Activo</span>
+                            {% else %}
+                                <span class="font-bold text-red-600">Inactivo</span>
+                            {% endif %}
+                        </p>
+                        <p class="text-sm text-gray-500">Resguardante: {{ resguardo.Nombre_Del_Resguardante }}</p>
+                    </div> 
                      <a href="{{ url_for('resguardos.ver_resguardo', id_resguardo=resguardo.id) }}" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-blanco-mexicano bg-verde-mexicano-oscuro hover:bg-verde-mexicano-medio focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-verde-mexicano-claro transition duration-150 ease-in-out">
                     <i class="fas fa-eye mr-2 "></i> Ver Resguardo
                     </a>
@@ -77,19 +72,23 @@
 
             <hr class="my-8">
 
-            <!-- Sección de Imágenes (Movida al final) -->
+            <!-- Sección de Imágenes -->
             <div class="mb-8">
                 <h3 class="text-2xl font-semibold mb-4 text-verde-mexicano-medio border-b-2 border-verde-mexicano-claro pb-2">Imágenes del Bien</h3>
-                {% if bien.imagenes %}
+                {# CORRECCIÓN: Se usa la variable 'imagenes' que pasa el controlador #}
+                {% if imagenes %}
                     <div id="imageCarousel" class="carousel slide" data-ride="carousel">
                         <div class="carousel-inner rounded-lg shadow-md">
-                            {% for imagen in bien.imagenes %}
+                            {# CORRECCIÓN: Se itera sobre 'imagenes' #}
+                            {% for imagen_filename in imagenes %}
                             <div class="carousel-item {% if loop.first %}active{% endif %}">
-                                <img src="{{ url_for('serve_uploaded_file', filename=imagen.ruta_imagen) }}" class="d-block w-full h-96 object-cover" alt="Imagen del Bien">
+                                {# CORRECCIÓN: Se usa 'imagen_filename' directamente #}
+                                <img src="{{ url_for('bienes.serve_uploaded_file', filename=imagen_filename) }}" class="d-block w-full h-96 object-cover" alt="Imagen del Bien">
                             </div>
                             {% endfor %}
                         </div>
-                        {% if bien.imagenes | length > 1 %}
+                        {# CORRECCIÓN: Se comprueba el tamaño de 'imagenes' #}
+                        {% if imagenes | length > 1 %}
                         <a class="carousel-control-prev" href="#imageCarousel" role="button" data-slide="prev">
                             <span class="carousel-control-prev-icon" aria-hidden="true"></span>
                             <span class="sr-only">Anterior</span>
@@ -121,3 +120,4 @@
     </div>
 </div>
 {% endblock %}
+
