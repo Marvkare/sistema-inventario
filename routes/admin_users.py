@@ -272,7 +272,7 @@ def manage_permissions():
         conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
 
-        # 1. Sincronizar permisos (esta lógica no cambia)
+        # 1. Siempre busca y añade nuevos permisos del servidor.
         endpoints = [str(rule.endpoint) for rule in current_app.url_map.iter_rules()]
         relevant_endpoints = [ep for ep in endpoints if not ep.startswith(('static', 'debugtoolbar'))]
         
@@ -284,14 +284,13 @@ def manage_permissions():
             new_perms_data = [(ep, f'Acceso a la ruta {ep}') for ep in new_endpoints]
             cursor.executemany("INSERT INTO permission (endpoint, description) VALUES (%s, %s)", new_perms_data)
             conn.commit()
-            flash(f'{len(new_perms_data)} nuevos permisos han sido detectados y agregados.', 'info')
+            flash(f'{len(new_endpoints)} nuevos permisos han sido detectados y agregados.', 'info')
 
-        # 2. Lógica POST para asignar permisos
+        # 2. Lógica POST para guardar los permisos de un rol.
         if request.method == 'POST':
             role_id = request.form.get('role_id')
             selected_permission_ids = request.form.getlist('permissions')
 
-            # Actualizar permisos del rol
             cursor.execute("DELETE FROM role_permissions WHERE role_id = %s", (role_id,))
             if selected_permission_ids:
                 perm_data = [(role_id, perm_id) for perm_id in selected_permission_ids]
@@ -302,24 +301,32 @@ def manage_permissions():
             cursor.execute("SELECT name FROM role WHERE id = %s", (role_id,))
             role_name = cursor.fetchone()['name']
             
-            # CORRECCIÓN: Se usa 'category' en lugar de 'resource'
             log_activity(action="Gestión de Permisos", category="Role-permisos", resource_id=int(role_id), details=f"Se actualizaron los permisos para el rol '{role_name}'")
             flash(f'Permisos del rol "{role_name}" actualizados exitosamente.', 'success')
             return redirect(url_for('admin_users.list_roles'))
 
-        # 3. Lógica GET para mostrar la página
+        # 3. Lógica GET para mostrar la página.
         cursor.execute("SELECT id, name FROM role ORDER BY name")
         all_roles = cursor.fetchall()
         cursor.execute("SELECT id, endpoint, description FROM permission ORDER BY endpoint")
         all_permissions = cursor.fetchall()
         
-        # Obtener los permisos actuales de cada rol para la plantilla
+        # --- CORRECCIÓN CLAVE ---
+        # Se crea un mapa de los permisos de cada rol para enviarlo a la plantilla.
         cursor.execute("SELECT role_id, permission_id FROM role_permissions")
         role_perms_map = {}
         for row in cursor.fetchall():
-            role_perms_map.setdefault(row['role_id'], set()).add(row['permission_id'])
+            role_id = row['role_id']
+            permission_id = row['permission_id']
+            # .setdefault() es una forma eficiente de inicializar la lista si no existe.
+            role_perms_map.setdefault(role_id, []).append(permission_id)
 
-        return render_template('admin/manage_permissions.html', all_roles=all_roles, all_permissions=all_permissions, role_perms_map=role_perms_map)
+        return render_template(
+            'admin/manage_permissions.html', 
+            all_roles=all_roles, 
+            all_permissions=all_permissions, 
+            role_perms_map=role_perms_map  # Se pasa el mapa a la plantilla
+        )
 
     except Exception as e:
         if conn: conn.rollback()
@@ -328,4 +335,3 @@ def manage_permissions():
         return redirect(url_for('admin_users.list_roles'))
     finally:
         if conn and conn.is_connected(): conn.close()
-

@@ -47,3 +47,53 @@
     </div>
 </div>
 {% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    // --- LÓGICA DE JAVASCRIPT PARA LA INTERACTIVIDAD (CORREGIDA Y COMPLETA) ---
+
+    // 1. Obtener los datos de los permisos que el controlador de Python envió.
+    // Flask convierte el diccionario de Python a un objeto JSON seguro.
+    const rolePermsMap = {{ role_perms_map | tojson | safe }};
+    
+    const roleSelect = document.getElementById('role_id');
+    const allCheckboxes = document.querySelectorAll('input[name="permissions"]');
+
+    /**
+     * Actualiza los checkboxes basados en el rol seleccionado en el menú desplegable.
+     */
+    function updateCheckboxes() {
+        const selectedRoleId = roleSelect.value;
+        
+        // Obtener la lista de IDs de permisos para el rol seleccionado.
+        // Si el rol no tiene permisos, se usa una lista vacía como valor por defecto.
+        const permissionsForRole = rolePermsMap[selectedRoleId] || [];
+        
+        // Recorrer todos los checkboxes de la página.
+        allCheckboxes.forEach(checkbox => {
+            const permissionId = parseInt(checkbox.value, 10);
+            
+            // Marcar el checkbox si su ID está en la lista de permisos del rol.
+            if (permissionsForRole.includes(permissionId)) {
+                checkbox.checked = true;
+            } else {
+                checkbox.checked = false;
+            }
+        });
+    }
+
+    // 2. Añadir un "escuchador de eventos" al menú desplegable.
+    // Cada vez que el usuario cambie de rol, se ejecutará la función updateCheckboxes.
+    roleSelect.addEventListener('change', updateCheckboxes);
+
+    // 3. (Opcional) Limpiar los checkboxes si se deselecciona un rol.
+    // Esto asegura que si el usuario elige "-- Selecciona un Rol --", todos los checks se quiten.
+    if (!roleSelect.value) {
+        updateCheckboxes();
+    }
+});
+</script>
+{% endblock %}
+

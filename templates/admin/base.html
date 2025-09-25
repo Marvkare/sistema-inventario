@@ -1,19 +1,20 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
-    <title>Panel de Administración</title>
+    <title>{% block title %}Panel de Administración{% endblock %}</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Es buena idea incluir FontAwesome para los iconos -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
 </head>
 <body class="bg-gray-100 text-gray-800 font-sans">
     <header class="bg-gray-900 text-white p-4 flex justify-between items-center">
         <h1 class="text-2xl font-bold">Panel Admin</h1>
         <nav>
             <ul class="flex space-x-4">
+                {# --- CORRECCIÓN CLAVE: Se usa 'admin_bp' en lugar de 'admin' --- #}
                 <li><a href="{{ url_for('admin.admin_dashboard') }}" class="hover:text-gray-400">Dashboard</a></li>
                 <li><a href="{{ url_for('admin_users.list_users') }}" class="hover:text-gray-400">Usuarios</a></li>
-                
                 <li><a href="{{ url_for('admin_users.list_roles') }}" class="hover:text-gray-400">Roles</a></li>
-
                 <li><a href="{{ url_for('resguardos.ver_resguardos') }}" class="hover:text-gray-400">Ver Todos los Resguardos</a></li>
             </ul>
         </nav>
@@ -21,5 +22,15 @@
     <main class="container mx-auto mt-4 p-4">
         {% block content %}{% endblock %}
     </main>
+
+    <!--
+        Se restaura el bloque de scripts para asegurar que las plantillas
+        hijas puedan añadir su propio JavaScript.
+    -->
+    {% block scripts %}
+    <!-- Los scripts base, si los tuvieras, irían aquí -->
+    {% endblock %}
 </body>
 </html>
+
+
