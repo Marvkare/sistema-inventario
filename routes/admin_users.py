@@ -106,9 +106,15 @@ def list_users():
     try:
         conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
-        # Unimos con la tabla de roles para poder mostrar los roles de cada usuario
+        
+        # --- CORRECCIÓN CLAVE ---
+        # Se usa COALESCE para manejar el caso en que un usuario no tenga roles.
+        # Si GROUP_CONCAT devuelve NULL, se reemplaza por un string vacío.
         cursor.execute("""
-            SELECT u.id, u.username, GROUP_CONCAT(r.name SEPARATOR ', ') as roles
+            SELECT 
+                u.id, 
+                u.username, 
+                COALESCE(GROUP_CONCAT(r.name SEPARATOR ', '), '') as roles
             FROM user u
             LEFT JOIN user_roles ur ON u.id = ur.user_id
             LEFT JOIN role r ON ur.role_id = r.id
@@ -119,9 +125,11 @@ def list_users():
         return render_template('admin/list_users.html', users=users)
     except Exception as e:
         flash(f"Error al listar usuarios: {e}", 'danger')
+        traceback.print_exc() # Imprime el error completo en la consola del servidor
         return redirect(url_for('resguardos.ver_resguardos'))
     finally:
         if conn and conn.is_connected(): conn.close()
+
 
 
 @admin_users_bp.route('/create', methods=['GET', 'POST'])
