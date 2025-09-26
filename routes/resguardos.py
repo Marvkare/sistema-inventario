@@ -111,7 +111,7 @@ def crear_resguardo():
         finally:
             if conn and conn.is_connected(): conn.close()
     
-    return render_template('crear_resguardo.html', areas=areas, form_data={}, bien_precargado=False)
+    return render_template('/resguardos/resguardo_form.html', areas=areas, form_data={}, bien_precargado=False)
 
 @resguardos_bp.route('/crear_resguardo_de_bien/<int:id_bien>', methods=['GET'])
 @login_required
@@ -123,6 +123,8 @@ def crear_resguardo_de_bien(id_bien):
         conn = get_db_connection()
         if not conn: raise Exception("No se pudo conectar a la base de datos.")
         cursor = conn.cursor(dictionary=True)
+        
+        # Se obtienen los datos del bien
         cursor.execute("SELECT * FROM bienes WHERE id = %s", (id_bien,))
         bien_data = cursor.fetchone()
 
@@ -130,7 +132,18 @@ def crear_resguardo_de_bien(id_bien):
             flash("Bien no encontrado.", "danger")
             return redirect(url_for('bienes.listar_bienes'))
 
-        return render_template('crear_resguardo.html', areas=areas, form_data=bien_data, bien_precargado=True)
+        # --- CORRECCIÓN CLAVE ---
+        # Ahora también se obtienen las imágenes existentes del bien.
+        cursor.execute("SELECT id, ruta_imagen FROM imagenes_bien WHERE id_bien = %s", (id_bien,))
+        imagenes_bien_db = cursor.fetchall()
+
+        # Se pasan las imágenes a la plantilla con la variable 'imagenes_bien_db'
+        return render_template('resguardos/resguardo_form.html', 
+                               areas=areas, 
+                               form_data=bien_data, 
+                               is_edit=False, 
+                               bien_precargado=True,
+                               imagenes_bien_db=imagenes_bien_db)
     except Exception as e:
         flash(f"Ocurrió un error: {e}", "danger")
         return redirect(url_for('bienes.listar_bienes'))
@@ -140,266 +153,129 @@ def crear_resguardo_de_bien(id_bien):
 
 @resguardos_bp.route('/editar_resguardo/<int:id_resguardo>', methods=['GET', 'POST'])
 @login_required
-@permission_required('resguardos.crear_resguardo')
+@permission_required('resguardos.editar_resguardo')
 def editar_resguardo(id_resguardo):
     conn = None
-    cursor = None
-    
-    areas_data = get_areas_data()
-    areas_list = list(areas_data.keys())
-
+    areas = get_areas_for_form()
     try:
         conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
 
         if request.method == 'POST':
-            form_data = request.form.to_dict()
-            cursor.execute("SELECT id_bien FROM resguardos WHERE id = %s", (id_resguardo,))
-            resguardo = cursor.fetchone()
-            if not resguardo:
-                return jsonify({"message": "Resguardo no encontrado.", "category": "danger"}), 404
+            form_data = request.form
             
-            id_bien = resguardo['id_bien']
-            area_name = form_data.get('Area')
-            area_id = areas_data.get(area_name)
-            
-            if not area_id:
-                return jsonify({"message": "Área seleccionada no válida.", "category": "danger"}), 400
+            id_bien = form_data.get('id_bien')
+            area_id = form_data.get('Area')
 
-            # FUNCIONES AUXILIARES PARA MANEJAR CAMPOS
-            def parse_decimal(value):
-                if value is None or value == '':
-                    return None
-                try:
-                    cleaned_value = str(value).replace(',', '').strip()
-                    return float(cleaned_value) if cleaned_value else None
-                except (ValueError, TypeError):
-                    return None
+            def to_null(value):
+                return None if value == '' else value
 
-            def parse_int(value):
-                if value is None or value == '':
-                    return None
-                try:
-                    return int(value) if value else None
-                except (ValueError, TypeError):
-                    return None
-
-            def parse_string(value):
-                return value if value else None
-
-            # CONVERTIR TODOS LOS CAMPOS NUMÉRICOS Y FECHAS
-            fecha_poliza = parse_string(form_data.get('Fecha_Poliza'))
-            fecha_factura = parse_string(form_data.get('Fecha_Factura'))
-            fecha_resguardo = parse_string(form_data.get('Fecha_Resguardo'))
-            
-            costo_inicial = parse_decimal(form_data.get('Costo_Inicial'))
-            depreciacion_acumulada = parse_decimal(form_data.get('Depreciacion_Acumulada'))
-            costo_final_cantidad = parse_decimal(form_data.get('Costo_Final_Cantidad'))
-            cantidad = parse_int(form_data.get('Cantidad'))
-            tipo_resguardo = parse_int(form_data.get('Tipo_De_Resguardo'))
-
-
-            # 1. Actualizar los datos del bien
-            sql_update_bien = """
-                UPDATE bienes SET No_Inventario=%s, No_Factura=%s, No_Cuenta=%s, Proveedor=%s, 
-                Descripcion_Del_Bien=%s, Descripcion_Corta_Del_Bien=%s, Rubro=%s, Poliza=%s, 
-                Fecha_Poliza=%s, Sub_Cuenta_Armonizadora=%s, Fecha_Factura=%s, Costo_Inicial=%s, 
-                Depreciacion_Acumulada=%s, Costo_Final_Cantidad=%s, Cantidad=%s, Estado_Del_Bien=%s, 
-                Marca=%s, Modelo=%s, Numero_De_Serie=%s WHERE id=%s
-            """
-            
+            sql_update_bien = "UPDATE bienes SET No_Inventario=%s, No_Factura=%s, No_Cuenta=%s, Proveedor=%s, Descripcion_Del_Bien=%s, Descripcion_Corta_Del_Bien=%s, Rubro=%s, Poliza=%s, Fecha_Poliza=%s, Sub_Cuenta_Armonizadora=%s, Fecha_Factura=%s, Costo_Inicial=%s, Depreciacion_Acumulada=%s, Costo_Final_Cantidad=%s, Cantidad=%s, Estado_Del_Bien=%s, Marca=%s, Modelo=%s, Numero_De_Serie=%s WHERE id=%s"
             bien_values = (
-                parse_string(form_data.get('No_Inventario')),
-                parse_string(form_data.get('No_Factura')),
-                parse_string(form_data.get('No_Cuenta')),
-                parse_string(form_data.get('Proveedor')),
-                parse_string(form_data.get('Descripcion_Del_Bien')),
-                parse_string(form_data.get('Descripcion_Corta_Del_Bien')),
-                parse_string(form_data.get('Rubro')),
-                parse_string(form_data.get('Poliza')),
-                fecha_poliza,
-                parse_string(form_data.get('Sub_Cuenta_Armonizadora')),
-                fecha_factura,
-                costo_inicial,
-                depreciacion_acumulada,
-                costo_final_cantidad,
-                cantidad,
-                parse_string(form_data.get('Estado_Del_Bien')),
-                parse_string(form_data.get('Marca')),
-                parse_string(form_data.get('Modelo')),
-                parse_string(form_data.get('Numero_De_Serie')),
-                id_bien
+                form_data.get('No_Inventario'), form_data.get('No_Factura'), form_data.get('No_Cuenta'), 
+                form_data.get('Proveedor'), form_data.get('Descripcion_Del_Bien'), 
+                form_data.get('Descripcion_Corta_Del_Bien'), form_data.get('Rubro'), 
+                form_data.get('Poliza'), to_null(form_data.get('Fecha_Poliza')), 
+                form_data.get('Sub_Cuenta_Armonizadora'), to_null(form_data.get('Fecha_Factura')), 
+                to_null(form_data.get('Costo_Inicial')), to_null(form_data.get('Depreciacion_Acumulada')), 
+                to_null(form_data.get('Costo_Final_Cantidad')), to_null(form_data.get('Cantidad')), 
+                form_data.get('Estado_Del_Bien'), form_data.get('Marca'), 
+                form_data.get('Modelo'), form_data.get('Numero_De_Serie'), id_bien
             )
-            
             cursor.execute(sql_update_bien, bien_values)
             
-            # 2. Actualizar los datos del resguardo
-            sql_update_resguardo = """
-                UPDATE resguardos SET id_area=%s, No_Resguardo=%s, Tipo_De_Resguardo=%s, Fecha_Resguardo=%s, 
-                No_Trabajador=%s, No_Nomina_Trabajador=%s, Puesto_trabajador=%s, Nombre_Director_Jefe_De_Area=%s, Nombre_Del_Resguardante=%s 
-                WHERE id=%s
-            """
-            
+            sql_update_resguardo = "UPDATE resguardos SET id_area=%s, No_Resguardo=%s, Tipo_De_Resguardo=%s, Fecha_Resguardo=%s, No_Trabajador=%s, No_Nomina_Trabajador=%s, Puesto_trabajador=%s, Nombre_Director_Jefe_De_Area=%s, Nombre_Del_Resguardante=%s WHERE id=%s"
             resguardo_values = (
-                area_id,
-                parse_string(form_data.get('No_Resguardo')),
-                tipo_resguardo,
-                fecha_resguardo,
-                parse_string(form_data.get('No_Trabajador')),
-                parse_string(form_data.get('No_Nomina_Trabajador')),
-                parse_string(form_data.get('Puesto_Trabajador')),
-                parse_string(form_data.get('Nombre_Director_Jefe_De_Area')),
-                parse_string(form_data.get('Nombre_Del_Resguardante')),
-                id_resguardo
+                area_id, form_data.get('No_Resguardo'), 
+                form_data.get('Tipo_De_Resguardo'), to_null(form_data.get('Fecha_Resguardo')),
+                form_data.get('No_Trabajador'), to_null(form_data.get('No_Nomina_Trabajador')),
+                form_data.get('Puesto_Trabajador'), form_data.get('Nombre_Director_Jefe_De_Area'),
+                form_data.get('Nombre_Del_Resguardante'), id_resguardo
             )
-            
             cursor.execute(sql_update_resguardo, resguardo_values)
+            
+            # --- CORRECCIÓN CLAVE: Lógica para AÑADIR y ELIMINAR imágenes ---
 
+            # 1. Eliminar imágenes marcadas
+            for img_id in request.form.getlist('eliminar_imagen_bien[]'):
+                cursor.execute("SELECT ruta_imagen FROM imagenes_bien WHERE id = %s", (img_id,))
+                imagen = cursor.fetchone()
+                if imagen:
+                    os.remove(os.path.join(UPLOAD_FOLDER, imagen['ruta_imagen']))
+                    cursor.execute("DELETE FROM imagenes_bien WHERE id = %s", (img_id,))
 
-                        # 3. Procesar eliminación de imágenes
-            eliminar_imagenes_bien = request.form.getlist('eliminar_imagen_bien[]')
-            eliminar_imagenes_resguardo = request.form.getlist('eliminar_imagen_resguardo[]')
-
-            print(f"Imágenes bien a eliminar: {eliminar_imagenes_bien}")
-            print(f"Imágenes resguardo a eliminar: {eliminar_imagenes_resguardo}")
-
-            # Eliminar imágenes del bien
-            for img_id in eliminar_imagenes_bien:
-                if img_id:
-                    try:
-                        # Primero obtener la ruta para eliminar el archivo físico
-                        cursor.execute("SELECT ruta_imagen FROM imagenes_bien WHERE id = %s", (img_id,))
-                        imagen = cursor.fetchone()
-                        if imagen:
-                            # Eliminar archivo físico
-                            file_path = os.path.join(UPLOAD_FOLDER, imagen['ruta_imagen'])
-                            if os.path.exists(file_path):
-                                os.remove(file_path)
-                                print(f"Archivo eliminado: {file_path}")
-                            
-                            # Eliminar registro de la base de datos
-                            cursor.execute("DELETE FROM imagenes_bien WHERE id = %s", (img_id,))
-                            print(f"Imagen de bien eliminada de BD: {img_id}")
-                    except Exception as e:
-                        print(f"Error al eliminar imagen de bien {img_id}: {e}")
-
-            # Eliminar imágenes del resguardo
-            for img_id in eliminar_imagenes_resguardo:
-                if img_id:
-                    try:
-                        # Primero obtener la ruta para eliminar el archivo físico
-                        cursor.execute("SELECT ruta_imagen FROM imagenes_resguardo WHERE id = %s", (img_id,))
-                        imagen = cursor.fetchone()
-                        if imagen:
-                            # Eliminar archivo físico
-                            file_path = os.path.join(UPLOAD_FOLDER, imagen['ruta_imagen'])
-                            if os.path.exists(file_path):
-                                os.remove(file_path)
-                                print(f"Archivo eliminado: {file_path}")
-                            
-                            # Eliminar registro de la base de datos
-                            cursor.execute("DELETE FROM imagenes_resguardo WHERE id = %s", (img_id,))
-                            print(f"Imagen de resguardo eliminada de BD: {img_id}")
-                    except Exception as e:
-                        print(f"Error al eliminar imagen de resguardo {img_id}: {e}")
-
-            # 4. Procesar nuevas imágenes del bien - SOLO SI HAY ARCHIVOS CON CONTENIDO
-            imagenes_bien = request.files.getlist('imagenes_bien')
-            print(f"Imágenes bien recibidas: {[img.filename for img in imagenes_bien]}")
-
-            for file in imagenes_bien:
-                # VERIFICAR QUE EL ARCHIVO TENGA NOMBRE Y CONTENIDO
-                if file and file.filename and file.filename != '':
+            for img_id in request.form.getlist('eliminar_imagen_resguardo[]'):
+                cursor.execute("SELECT ruta_imagen FROM imagenes_resguardo WHERE id = %s", (img_id,))
+                imagen = cursor.fetchone()
+                if imagen:
+                    os.remove(os.path.join(UPLOAD_FOLDER, imagen['ruta_imagen']))
+                    cursor.execute("DELETE FROM imagenes_resguardo WHERE id = %s", (img_id,))
+            
+            # 2. Añadir nuevas imágenes
+            for file in request.files.getlist('imagenes_bien'):
+                if file and file.filename:
                     filename = secure_filename(file.filename)
                     unique_filename = f"{uuid.uuid4()}-{filename}"
-                    
-                    # Guardar en la nueva ubicación (UPLOAD_FOLDER)
-                    file_save_path = os.path.join(UPLOAD_FOLDER, unique_filename)
-                    file.save(file_save_path)
-                    
-                    # Guardar solo el nombre del archivo en la base de datos
-                    cursor.execute("INSERT INTO imagenes_bien (id_bien, ruta_imagen) VALUES (%s, %s)", 
-                                (id_bien, unique_filename))
-                    print(f"Imagen de bien guardada: {unique_filename}")
+                    file.save(os.path.join(UPLOAD_FOLDER, unique_filename))
+                    cursor.execute("INSERT INTO imagenes_bien (id_bien, ruta_imagen) VALUES (%s, %s)", (id_bien, unique_filename))
 
-            # 5. Procesar nuevas imágenes del resguardo - SOLO SI HAY ARCHIVOS CON CONTENIDO
-            imagenes_resguardo = request.files.getlist('imagenes_resguardo')
-            print(f"Imágenes resguardo recibidas: {[img.filename for img in imagenes_resguardo]}")
-
-            for file in imagenes_resguardo:
-                # VERIFICAR QUE EL ARCHIVO TENGA NOMBRE Y CONTENIDO
-                if file and file.filename and file.filename != '':
+            for file in request.files.getlist('imagenes_resguardo'):
+                if file and file.filename:
                     filename = secure_filename(file.filename)
                     unique_filename = f"{uuid.uuid4()}-{filename}"
-                    
-                    # Guardar en la nueva ubicación (UPLOAD_FOLDER)
-                    file_save_path = os.path.join(UPLOAD_FOLDER, unique_filename)
-                    file.save(file_save_path)
-                    
-                    # Guardar solo el nombre del archivo en la base de datos
-                    cursor.execute("INSERT INTO imagenes_resguardo (id_resguardo, ruta_imagen) VALUES (%s, %s)", 
-                                (id_resguardo, unique_filename))
-                    print(f"Imagen de resguardo guardada: {unique_filename}")
-        
+                    file.save(os.path.join(UPLOAD_FOLDER, unique_filename))
+                    cursor.execute("INSERT INTO imagenes_resguardo (id_resguardo, ruta_imagen) VALUES (%s, %s)", (id_resguardo, unique_filename))
+
             conn.commit()
-            log_activity(action='Resguardos', resource='Resguardo', resource_id=id_resguardo, details=f'Se Actualizo un nuevo resguardo y bien, ID: {id_resguardo}')
-            return jsonify({
-                "message": "Resguardo actualizado exitosamente.",
-                "category": "success",
-                "redirect_url": url_for('resguardos.ver_resguardo', id_resguardo=id_resguardo) # REDIRECCIÓN CORREGIDA
-            }), 200
+            log_activity(action='Edición de Resguardo', category='Resguardos', resource_id=id_resguardo)
+            flash('Resguardo actualizado exitosamente.', 'success')
+            return redirect(url_for('resguardos.ver_resguardos'))
 
-        else:
-            sql_select = """
-                SELECT r.id AS resguardo_id, b.id AS bien_id, r.*, b.*, a.Nombre as Area_Nombre
-                FROM resguardos r
-                JOIN bienes b ON r.id_bien = b.id
-                JOIN areas a ON r.id_area = a.id
-                WHERE r.id = %s
-            """
-            cursor.execute(sql_select, (id_resguardo,))
-            resguardo_data = cursor.fetchone()
+        # Lógica GET
+        sql_select = "SELECT r.*, b.*, r.id AS resguardo_id, b.id AS bien_id, a.id as Area_id FROM resguardos r JOIN bienes b ON r.id_bien = b.id JOIN areas a ON r.id_area = a.id WHERE r.id = %s"
+        cursor.execute(sql_select, (id_resguardo,))
+        resguardo_data = cursor.fetchone()
+        if not resguardo_data: abort(404)
 
-            if not resguardo_data:
-                flash('Resguardo no encontrado.', 'danger')
-                return redirect(url_for('resguardos.ver_resguardos'))
+        cursor.execute("SELECT id, ruta_imagen FROM imagenes_bien WHERE id_bien = %s", (resguardo_data['bien_id'],))
+        imagenes_bien_db = cursor.fetchall()
+        cursor.execute("SELECT id, ruta_imagen FROM imagenes_resguardo WHERE id_resguardo = %s", (resguardo_data['resguardo_id'],))
+        imagenes_resguardo_db = cursor.fetchall()
+        
+        return render_template('resguardos/resguardo_form.html', is_edit=True, form_data=resguardo_data, areas=areas, imagenes_bien_db=imagenes_bien_db, imagenes_resguardo_db=imagenes_resguardo_db)
 
-            cursor.execute("SELECT id, ruta_imagen FROM imagenes_bien WHERE id_bien = %s", (resguardo_data['bien_id'],))
-            imagenes_bien_db = cursor.fetchall()
-            
-            cursor.execute("SELECT id, ruta_imagen FROM imagenes_resguardo WHERE id_resguardo = %s", (resguardo_data['resguardo_id'],))
-            imagenes_resguardo_db = cursor.fetchall()
-            
-            resguardo_data['Area'] = resguardo_data['Area_Nombre']
-
-            return render_template('editar_resguardo.html', 
-                                 areas=areas_list, 
-                                 resguardo_data=resguardo_data, 
-                                 imagenes_bien_db=imagenes_bien_db, 
-                                 imagenes_resguardo_db=imagenes_resguardo_db)
-
-    except mysql.connector.Error as err:
-        if conn and conn.is_connected():
-            conn.rollback()
-        import traceback
-        traceback.print_exc()
-        return jsonify({
-            "message": f"Error de base de datos: {err}",
-            "category": "danger"
-        }), 500
     except Exception as e:
-        if conn and conn.is_connected():
-            conn.rollback()
-        import traceback
+        if conn: conn.rollback()
+        flash(f"Error al editar el resguardo: {e}", 'danger')
         traceback.print_exc()
-        return jsonify({
-            "message": f"Ocurrió un error inesperado: {e}",
-            "category": "danger"
-        }), 500
+        
+        form_data_on_error = request.form.to_dict()
+        form_data_on_error['resguardo_id'] = id_resguardo
+        form_data_on_error['bien_id'] = request.form.get('id_bien')
+        
+        imagenes_bien_db, imagenes_resguardo_db = [], []
+        id_bien_from_form = request.form.get('id_bien')
+        if id_bien_from_form:
+            try:
+                if not conn or not conn.is_connected():
+                    conn = get_db_connection()
+                    cursor = conn.cursor(dictionary=True)
+                cursor.execute("SELECT id, ruta_imagen FROM imagenes_bien WHERE id_bien = %s", (id_bien_from_form,))
+                imagenes_bien_db = cursor.fetchall()
+                cursor.execute("SELECT id, ruta_imagen FROM imagenes_resguardo WHERE id_resguardo = %s", (id_resguardo,))
+                imagenes_resguardo_db = cursor.fetchall()
+            except Exception as inner_e:
+                print(f"Error al recuperar imágenes durante el manejo de errores: {inner_e}")
+
+        return render_template('resguardos/resguardo_form.html', 
+                               is_edit=True, 
+                               form_data=form_data_on_error, 
+                               areas=areas,
+                               imagenes_bien_db=imagenes_bien_db,
+                               imagenes_resguardo_db=imagenes_resguardo_db)
     finally:
-        if conn and conn.is_connected():
-            cursor.close()
-            conn.close()
+        if conn and conn.is_connected(): conn.close()
+
 
 
 @resguardos_bp.route('/ver_resguardo/<int:id_resguardo>', methods=['GET'])
@@ -733,3 +609,14 @@ def imprimir_resguardo(id_resguardo):
     finally:
         if conn:
             conn.close()
+
+
+
+
+
+@resguardos_bp.route('/carga_masiva')
+@login_required
+def carga_masiva():
+    """Muestra la página de ayuda para la importación masiva con Excel."""
+    # Esta función simplemente renderiza la plantilla estática de ayuda.
+    return render_template('resguardos/carga_masiva.html')

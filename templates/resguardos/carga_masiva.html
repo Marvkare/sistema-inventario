@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+
+{% block title %}Guía para Carga Masiva{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-100 py-8">
+    <div class="container mx-auto px-4">
+        <div class="bg-white rounded-xl shadow-lg border border-gray-200 p-6 md:p-8 max-w-4xl mx-auto">
+            
+            <div class="text-center mb-8">
+                <i class="fas fa-file-excel text-green-500 text-5xl mb-4"></i>
+                <h1 class="text-3xl font-bold text-gray-800">Guía para Carga Masiva con Excel</h1>
+                <p class="text-gray-600 mt-2">Sigue estas instrucciones para asegurar una importación de datos exitosa.</p>
+            </div>
+
+            <div class="space-y-6">
+                <div class="bg-blue-50 p-6 rounded-lg border border-blue-200">
+                    <h3 class="text-xl font-semibold mb-3 text-blue-800">Instrucciones Generales</h3>
+                    <ul class="list-disc list-inside text-gray-700 space-y-2">
+                        <li>Sube un archivo en formato `.xlsx` o `.xls`.</li>
+                        <li>Asegúrate de que los nombres de las columnas en tu Excel coincidan **exactamente** con los nombres de la lista de abajo.</li>
+                        <li>El sistema es sensible a mayúsculas, minúsculas y guiones bajos en los nombres de las columnas.</li>
+                        <li>La columna **"AREA"** es obligatoria para cada fila.</li>
+                    </ul>
+                </div>
+
+                <div class="bg-gray-50 p-6 rounded-lg border border-gray-200">
+                    <h3 class="text-xl font-semibold mb-3 text-gray-700">Columnas Soportadas</h3>
+                    <p class="text-sm text-gray-600 mb-4">
+                        Haz clic en cualquier nombre de columna para copiarlo a tu portapapeles.
+                    </p>
+                    <ul class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-x-6 gap-y-3">
+                        {% for col in ['NO.POLIZA', 'FECHA POLIZA', 'SUB-CTA. ARMONIZADORA', 'NO. DE CUENTA', 'NO. DE INVENTARIO', 'NO. DE RESGUARDO', 'PROVEEDOR', 'FACTURA', 'FECHA FACTURA', 'COSTO INICIAL', 'DEPRECIACION ACUMULADA', 'COSTO FINAL', 'CANTIDAD', 'DESCRIPCION FISICAS DEL BIEN', 'AREA', 'RUBRO', 'PUESTO', 'NO. DE TRABAJADOR', 'NOMBRE DIRECTOR/JEFES DE AREA', 'FECHA RESGUARDO', 'NOMBRE DEL RESGUARDANTE'] %}
+                        <li class="copyable-li flex items-center justify-between p-2 rounded-md hover:bg-gray-200 cursor-pointer transition-colors">
+                            <span class="font-mono text-sm text-gray-800">{{ col }}</span>
+                            <span class="copy-feedback text-xs text-green-600 font-semibold opacity-0 transition-opacity duration-300">¡Copiado!</span>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+
+                <!-- SECCIÓN AÑADIDA: Formulario de Carga de Archivos -->
+                <div class="bg-green-50 p-6 rounded-lg border border-green-200">
+                    <h3 class="text-xl font-semibold mb-3 text-green-800">Subir Archivo</h3>
+                    <p class="text-gray-600 mb-4">Una vez que tu archivo esté listo, súbelo aquí para iniciar el proceso de importación.</p>
+                    <form action="{{ url_for('excel_import.upload_excel') }}" method="post" enctype="multipart/form-data" class="flex flex-col sm:flex-row items-center space-y-4 sm:space-y-0 sm:space-x-4">
+                        <input type="file" name="excel_file" required class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-green-100 file:text-green-700 hover:file:bg-green-200 cursor-pointer">
+                        <button type="submit" class="w-full sm:w-auto bg-green-600 text-white px-6 py-2 rounded-lg shadow-md hover:bg-green-700 transition-colors font-medium flex items-center justify-center">
+                            <i class="fas fa-upload mr-2"></i> Subir Excel
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="mt-8 text-center">
+                 <a href="{{ url_for('resguardos.crear_resguardo') }}" class="inline-flex items-center px-6 py-2 border border-gray-300 text-base font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition duration-150 ease-in-out">
+                    <i class="fas fa-arrow-left mr-2"></i> Volver al Formulario
+                </a>
+            </div>
+
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('.copyable-li').forEach(item => {
+        item.addEventListener('click', () => {
+            // Obtiene el texto del span principal, eliminando espacios extra.
+            const textToCopy = item.querySelector('span:first-child').textContent.trim();
+            
+            // Crea un textarea temporal para usar la API del portapapeles.
+            const textArea = document.createElement('textarea');
+            textArea.value = textToCopy;
+            textArea.style.position = 'fixed'; // Evita que se vea en la pantalla.
+            textArea.style.opacity = '0';
+            document.body.appendChild(textArea);
+            
+            textArea.select();
+            
+            try {
+                document.execCommand('copy'); // Método compatible con la mayoría de navegadores.
+                
+                // Muestra el feedback visual.
+                const feedback = item.querySelector('.copy-feedback');
+                if (feedback) {
+                    feedback.style.opacity = '1';
+                    setTimeout(() => {
+                        feedback.style.opacity = '0';
+                    }, 1500); // El mensaje desaparece después de 1.5 segundos.
+                }
+            } catch (err) {
+                console.error('No se pudo copiar el texto: ', err);
+            }
+            
+            document.body.removeChild(textArea);
+        });
+    });
+});
+</script>
+{% endblock %}
+

@@ -1,0 +1,340 @@
+{% extends "base.html" %}
+
+{% block title %}
+    {% if is_edit %}
+        Editar Resguardo
+    {% elif bien_precargado %}
+        Crear Resguardo para Bien Existente
+    {% else %}
+        Crear Nuevo Bien y Resguardo
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-100 py-8">
+    <div class="container mx-auto px-4">
+        <div class="bg-white rounded-xl shadow-lg border border-gray-200 p-6 md:p-8 max-w-5xl mx-auto">
+            
+            <div id="js-flash-container"></div>
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="flash-message flash-{{ category }} mb-6 p-4 rounded-lg border-l-4 {% if category == 'success' %}bg-green-100 border-green-500 text-green-700{% elif category == 'danger' %}bg-red-100 border-red-500 text-red-700{% else %}bg-blue-100 border-blue-500 text-blue-700{% endif %}">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 pb-4 border-b border-gray-200">
+                <h2 class="text-2xl md:text-3xl font-bold text-gray-800 mb-4 md:mb-0">
+                    {% if is_edit %}
+                        Editar Resguardo: <span class="text-indigo-600">{{ form_data.No_Inventario }}</span>
+                    {% elif bien_precargado %}
+                        Crear Resguardo para Bien: <span class="text-indigo-600">{{ form_data.No_Inventario }}</span>
+                    {% else %}
+                        Formulario de Nuevo Bien y Resguardo
+                    {% endif %}
+                </h2>
+            </div>
+            
+            <form id="resguardoForm" 
+                  action="{{ url_for('resguardos.editar_resguardo', id_resguardo=form_data.resguardo_id) if is_edit else url_for('resguardos.crear_resguardo') }}" 
+                  method="post" 
+                  enctype="multipart/form-data" 
+                  class="space-y-10">
+                
+                {% if is_edit %}
+                    <input type="hidden" name="id_bien" value="{{ form_data.bien_id }}">
+                {% elif bien_precargado %}
+                    <input type="hidden" name="id_bien_existente" value="{{ form_data.id }}">
+                {% endif %}
+
+                <!-- SECCIÓN DE DATOS DEL BIEN -->
+                <fieldset class="space-y-6">
+                    <legend class="text-xl font-semibold text-gray-800 mb-4 border-b-2 border-indigo-200 pb-2 flex items-center gap-3">
+                        <i class="fas fa-box text-indigo-500"></i>
+                        <span>Datos del Bien</span>
+                    </legend>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <div>
+                            <label for="No_Inventario" class="block text-sm font-medium text-gray-700">No. de Inventario</label>
+                            <input type="text" id="No_Inventario" name="No_Inventario" value="{{ form_data.No_Inventario or '' }}" class="mt-1 block w-full rounded-md border-gray-300 bg-gray-100 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 sm:text-sm {% if bien_precargado or is_edit %}bg-gray-200 cursor-not-allowed{% endif %}" {% if bien_precargado or is_edit %}readonly{% endif %} required>
+                        </div>
+                        <div>
+                            <label for="Descripcion_Corta_Del_Bien" class="block text-sm font-medium text-gray-700">Descripción Corta</label>
+                            <input type="text" id="Descripcion_Corta_Del_Bien" name="Descripcion_Corta_Del_Bien" value="{{ form_data.Descripcion_Corta_Del_Bien or '' }}" class="mt-1 block w-full rounded-md border-gray-300 bg-gray-100 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 sm:text-sm {% if bien_precargado or is_edit %}bg-gray-200 cursor-not-allowed{% endif %}" {% if bien_precargado or is_edit %}readonly{% endif %}>
+                        </div>
+                        <div>
+                            <label for="Marca" class="block text-sm font-medium text-gray-700">Marca</label>
+                            <input type="text" name="Marca" value="{{ form_data.Marca or '' }}" class="mt-1 block w-full rounded-md border-gray-300 bg-gray-100 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 sm:text-sm {% if bien_precargado or is_edit %}bg-gray-200 cursor-not-allowed{% endif %}" {% if bien_precargado or is_edit %}readonly{% endif %}>
+                        </div>
+                        <div>
+                            <label for="Modelo" class="block text-sm font-medium text-gray-700">Modelo</label>
+                            <input type="text" name="Modelo" value="{{ form_data.Modelo or '' }}" class="mt-1 block w-full rounded-md border-gray-300 bg-gray-100 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 sm:text-sm {% if bien_precargado or is_edit %}bg-gray-200 cursor-not-allowed{% endif %}" {% if bien_precargado or is_edit %}readonly{% endif %}>
+                        </div>
+                        <div>
+                            <label for="Numero_De_Serie" class="block text-sm font-medium text-gray-700">Número de Serie</label>
+                            <input type="text" id="Numero_De_Serie" name="Numero_De_Serie" value="{{ form_data.Numero_De_Serie or '' }}" class="mt-1 block w-full rounded-md border-gray-300 bg-gray-100 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 sm:text-sm {% if bien_precargado or is_edit %}bg-gray-200 cursor-not-allowed{% endif %}" {% if bien_precargado or is_edit %}readonly{% endif %}>
+                        </div>
+                        <div>
+                            <label for="Estado_Del_Bien" class="block text-sm font-medium text-gray-700">Estado del Bien</label>
+                            <input type="text" name="Estado_Del_Bien" value="{{ form_data.Estado_Del_Bien or '' }}" class="mt-1 block w-full rounded-md border-gray-300 bg-gray-100 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 sm:text-sm {% if bien_precargado or is_edit %}bg-gray-200 cursor-not-allowed{% endif %}" {% if bien_precargado or is_edit %}readonly{% endif %}>
+                        </div>
+                        <div class="lg:col-span-3">
+                            <label for="Descripcion_Del_Bien" class="block text-sm font-medium text-gray-700">Descripción Completa</label>
+                            <textarea id="Descripcion_Del_Bien" name="Descripcion_Del_Bien" rows="3" class="mt-1 block w-full rounded-md border-gray-300 bg-gray-100 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 sm:text-sm {% if bien_precargado or is_edit %}bg-gray-200 cursor-not-allowed{% endif %}" {% if bien_precargado or is_edit %}readonly{% endif %}>{{ form_data.Descripcion_Del_Bien or '' }}</textarea>
+                        </div>
+                    </div>
+                </fieldset>
+
+                <!-- SECCIÓN DE DATOS CONTABLES DEL BIEN -->
+                <fieldset class="space-y-6">
+                    <legend class="text-xl font-semibold text-gray-800 mb-4 border-b-2 border-indigo-200 pb-2 flex items-center gap-3">
+                        <i class="fas fa-file-invoice-dollar text-indigo-500"></i>
+                        <span>Datos Contables del Bien</span>
+                    </legend>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <div>
+                            <label for="No_Factura" class="block text-sm font-medium text-gray-700">No. de Factura</label>
+                            <input type="text" id="No_Factura" name="No_Factura" value="{{ form_data.No_Factura or '' }}" class="mt-1 block w-full rounded-md border-gray-300 bg-gray-100 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 sm:text-sm" {% if bien_precargado or is_edit %}readonly{% endif %}>
+                        </div>
+                        <div>
+                            <label for="Fecha_Factura" class="block text-sm font-medium text-gray-700">Fecha de Factura</label>
+                            <input type="date" id="Fecha_Factura" name="Fecha_Factura" value="{{ form_data.Fecha_Factura|string|slice(0,10) if form_data.Fecha_Factura else '' }}" class="mt-1 block w-full rounded-md border-gray-300 bg-gray-100 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 sm:text-sm" {% if bien_precargado or is_edit %}readonly{% endif %}>
+                        </div>
+                         <div>
+                            <label for="Proveedor" class="block text-sm font-medium text-gray-700">Proveedor</label>
+                            <input type="text" name="Proveedor" value="{{ form_data.Proveedor or '' }}" class="mt-1 block w-full rounded-md border-gray-300 bg-gray-100 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 sm:text-sm" {% if bien_precargado or is_edit %}readonly{% endif %}>
+                        </div>
+                        <div>
+                            <label for="No_Cuenta" class="block text-sm font-medium text-gray-700">No. de Cuenta</label>
+                            <input type="text" name="No_Cuenta" value="{{ form_data.No_Cuenta or '' }}" class="mt-1 block w-full rounded-md border-gray-300 bg-gray-100 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 sm:text-sm" {% if bien_precargado or is_edit %}readonly{% endif %}>
+                        </div>
+                         <div>
+                            <label for="Rubro" class="block text-sm font-medium text-gray-700">Rubro</label>
+                            <input type="text" name="Rubro" value="{{ form_data.Rubro or '' }}" class="mt-1 block w-full rounded-md border-gray-300 bg-gray-100 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 sm:text-sm" {% if bien_precargado or is_edit %}readonly{% endif %}>
+                        </div>
+                        <div>
+                            <label for="Poliza" class="block text-sm font-medium text-gray-700">Póliza</label>
+                            <input type="text" name="Poliza" value="{{ form_data.Poliza or '' }}" class="mt-1 block w-full rounded-md border-gray-300 bg-gray-100 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 sm:text-sm" {% if bien_precargado or is_edit %}readonly{% endif %}>
+                        </div>
+                        <div>
+                            <label for="Fecha_Poliza" class="block text-sm font-medium text-gray-700">Fecha de Póliza</label>
+                            <input type="date" name="Fecha_Poliza" value="{{ form_data.Fecha_Poliza|string|slice(0,10) if form_data.Fecha_Poliza else '' }}" class="mt-1 block w-full rounded-md border-gray-300 bg-gray-100 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 sm:text-sm" {% if bien_precargado or is_edit %}readonly{% endif %}>
+                        </div>
+                        <div>
+                            <label for="Sub_Cuenta_Armonizadora" class="block text-sm font-medium text-gray-700">Subcuenta Armonizadora</label>
+                            <input type="text" name="Sub_Cuenta_Armonizadora" value="{{ form_data.Sub_Cuenta_Armonizadora or '' }}" class="mt-1 block w-full rounded-md border-gray-300 bg-gray-100 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 sm:text-sm" {% if bien_precargado or is_edit %}readonly{% endif %}>
+                        </div>
+                        <div>
+                            <label for="Costo_Inicial" class="block text-sm font-medium text-gray-700">Costo Inicial</label>
+                            <input type="number" step="0.01" name="Costo_Inicial" value="{{ form_data.Costo_Inicial or '' }}" class="mt-1 block w-full rounded-md border-gray-300 bg-gray-100 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 sm:text-sm" {% if bien_precargado or is_edit %}readonly{% endif %}>
+                        </div>
+                        <div>
+                            <label for="Depreciacion_Acumulada" class="block text-sm font-medium text-gray-700">Depreciación Acumulada</label>
+                            <input type="number" step="0.01" name="Depreciacion_Acumulada" value="{{ form_data.Depreciacion_Acumulada or '' }}" class="mt-1 block w-full rounded-md border-gray-300 bg-gray-100 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 sm:text-sm" {% if bien_precargado or is_edit %}readonly{% endif %}>
+                        </div>
+                        <div>
+                            <label for="Costo_Final_Cantidad" class="block text-sm font-medium text-gray-700">Costo Final</label>
+                            <input type="number" step="0.01" name="Costo_Final_Cantidad" value="{{ form_data.Costo_Final_Cantidad or '' }}" class="mt-1 block w-full rounded-md border-gray-300 bg-gray-100 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 sm:text-sm" {% if bien_precargado or is_edit %}readonly{% endif %}>
+                        </div>
+                         <div>
+                            <label for="Tipo_De_Alta" class="block text-sm font-medium text-gray-700">Tipo de Alta</label>
+                            <input type="text" name="Tipo_De_Alta" value="{{ form_data.Tipo_De_Alta or '' }}" class="mt-1 block w-full rounded-md border-gray-300 bg-gray-100 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 sm:text-sm" {% if bien_precargado or is_edit %}readonly{% endif %}>
+                        </div>
+                    </div>
+                </fieldset>
+
+                <!-- SECCIÓN DE DATOS DEL RESGUARDO -->
+                <fieldset class="space-y-6">
+                    <legend class="text-xl font-semibold text-gray-800 mb-4 border-b-2 border-indigo-200 pb-2 flex items-center gap-3">
+                        <i class="fas fa-user-shield text-indigo-500"></i>
+                        <span>Datos del Resguardo</span>
+                    </legend>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <div>
+                            <label for="No_Resguardo" class="block text-sm font-medium text-gray-700">No. de Resguardo</label>
+                            <input type="text" id="No_Resguardo" name="No_Resguardo" value="{{ form_data.No_Resguardo or '' }}" class="mt-1 block w-full rounded-md border-gray-300 bg-gray-100 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 sm:text-sm">
+                        </div>
+                        <div>
+                            <label for="Area" class="block text-sm font-medium text-gray-700">Área</label>
+                            <select id="Area" name="Area" class="mt-1 block w-full rounded-md border-gray-300 bg-gray-100 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 sm:text-sm" required>
+                                <option value="">Selecciona un área</option>
+                                {% for area in areas %}
+                                    <option value="{{ area.id }}" {% if form_data.Area_id == area.id %}selected{% endif %}>{{ area.nombre }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div>
+                            <label for="Ubicacion" class="block text-sm font-medium text-gray-700">Ubicación</label>
+                            <input type="text" name="Ubicacion" value="{{ form_data.Ubicacion or '' }}" class="mt-1 block w-full rounded-md border-gray-300 bg-gray-100 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 sm:text-sm">
+                        </div>
+                        <div>
+                            <label for="Nombre_Del_Resguardante" class="block text-sm font-medium text-gray-700">Nombre del Resguardante</label>
+                            <input type="text" id="Nombre_Del_Resguardante" name="Nombre_Del_Resguardante" value="{{ form_data.Nombre_Del_Resguardante or '' }}" class="mt-1 block w-full rounded-md border-gray-300 bg-gray-100 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 sm:text-sm">
+                        </div>
+                        <div>
+                            <label for="Puesto_Trabajador" class="block text-sm font-medium text-gray-700">Puesto del Resguardante</label>
+                            <input type="text" id="Puesto_Trabajador" name="Puesto_Trabajador" value="{{ form_data.Puesto_Trabajador or '' }}" class="mt-1 block w-full rounded-md border-gray-300 bg-gray-100 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 sm:text-sm">
+                        </div>
+                        <div>
+                            <label for="No_Trabajador" class="block text-sm font-medium text-gray-700">No. de Trabajador</label>
+                            <input type="text" name="No_Trabajador" value="{{ form_data.No_Trabajador or '' }}" class="mt-1 block w-full rounded-md border-gray-300 bg-gray-100 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 sm:text-sm">
+                        </div>
+                        <div>
+                            <label for="No_Nomina_Trabajador" class="block text-sm font-medium text-gray-700">No. de Nómina</label>
+                            <input type="number" id="No_Nomina_Trabajador" name="No_Nomina_Trabajador" value="{{ form_data.No_Nomina_Trabajador or '' }}" class="mt-1 block w-full rounded-md border-gray-300 bg-gray-100 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 sm:text-sm">
+                        </div>
+                        <div>
+                            <label for="Fecha_Resguardo" class="block text-sm font-medium text-gray-700">Fecha de Resguardo</label>
+                            <input type="date" id="Fecha_Resguardo" name="Fecha_Resguardo" value="{{ form_data.Fecha_Resguardo|string|slice(0,10) if form_data.Fecha_Resguardo else '' }}" class="mt-1 block w-full rounded-md border-gray-300 bg-gray-100 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 sm:text-sm">
+                        </div>
+                        <div class="md:col-span-2">
+                            <label for="Nombre_Director_Jefe_De_Area" class="block text-sm font-medium text-gray-700">Nombre Director/Jefe de Área</label>
+                            <input type="text" name="Nombre_Director_Jefe_De_Area" value="{{ form_data.Nombre_Director_Jefe_De_Area or '' }}" class="mt-1 block w-full rounded-md border-gray-300 bg-gray-100 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 sm:text-sm">
+                        </div>
+                        <div>
+                            <label for="Tipo_De_Resguardo" class="block text-sm font-medium text-gray-700">Tipo de Resguardo</label>
+                             <select id="Tipo_De_Resguardo" name="Tipo_De_Resguardo" class="mt-1 block w-full rounded-md border-gray-300 bg-gray-100 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 sm:text-sm">
+                                <option value="0" {% if form_data.Tipo_De_Resguardo == 0 %}selected{% endif %}>Resguardo Normal</option>
+                                <option value="1" {% if form_data.Tipo_De_Resguardo == 1 %}selected{% endif %}>Sujeto de Control</option>
+                            </select>
+                        </div>
+                    </div>
+                </fieldset>
+                
+                <!-- SECCIÓN DE IMÁGENES -->
+                <fieldset class="space-y-6">
+                    <legend class="text-xl font-semibold text-gray-800 mb-4 border-b-2 border-indigo-200 pb-2 flex items-center gap-3">
+                        <i class="fas fa-images text-indigo-500"></i>
+                        <span>Imágenes</span>
+                    </legend>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Imágenes del Bien</label>
+                            {# --- CORRECCIÓN CLAVE: El input ahora se muestra en modo 'editar' --- #}
+                            <input type="file" id="imagenes_bien" name="imagenes_bien" multiple class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 cursor-pointer" {% if bien_precargado %}disabled{% endif %}>
+                            
+                            <div id="preview_imagenes_bien" class="mt-4 flex flex-wrap gap-2 min-h-[6rem] bg-gray-100 p-2 rounded border">
+                                {% if imagenes_bien_db %}
+                                    {% for img in imagenes_bien_db %}
+                                    <div class="relative inline-block" id="imagen-bien-{{ img.id }}">
+                                        <img src="{{ url_for('serve_uploaded_file', filename=img.ruta_imagen) }}" class="h-24 w-24 object-cover rounded-md border">
+                                        {% if is_edit %}
+                                        <button type="button" class="absolute top-1 right-1 bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs shadow-lg hover:bg-red-700 transition-transform transform hover:scale-110" title="Marcar para eliminar" onclick="marcarParaEliminar(this, 'eliminar_imagen_bien[]', '{{ img.id }}')">&times;</button>
+                                        {% endif %}
+                                    </div>
+                                    {% endfor %}
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Imágenes del Resguardo</label>
+                            <input type="file" id="imagenes_resguardo" name="imagenes_resguardo" multiple class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 cursor-pointer">
+                             <div id="preview_imagenes_resguardo" class="mt-4 flex flex-wrap gap-2 min-h-[6rem] bg-gray-100 p-2 rounded border">
+                                {% if imagenes_resguardo_db %}
+                                    {% for img in imagenes_resguardo_db %}
+                                    <div class="relative inline-block" id="imagen-resguardo-{{ img.id }}">
+                                        <img src="{{ url_for('serve_uploaded_file', filename=img.ruta_imagen) }}" class="h-24 w-24 object-cover rounded-md border">
+                                         {% if is_edit %}
+                                        <button type="button" class="absolute top-1 right-1 bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs shadow-lg hover:bg-red-700 transition-transform transform hover:scale-110" title="Marcar para eliminar" onclick="marcarParaEliminar(this, 'eliminar_imagen_resguardo[]', '{{ img.id }}')">&times;</button>
+                                        {% endif %}
+                                    </div>
+                                    {% endfor %}
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </fieldset>
+
+                <div class="mt-8 flex justify-end space-x-4 pt-6 border-t">
+                    <a href="{{ url_for('resguardos.ver_resguardos') }}" class="inline-flex items-center justify-center px-6 py-2 border border-gray-300 text-base font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-colors">Cancelar</a>
+                    <button type="submit" class="inline-flex items-center justify-center px-6 py-2 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors">
+                        <i class="fas fa-save mr-2"></i>
+                        {% if is_edit %}
+                            Guardar Cambios
+                        {% else %}
+                            Guardar Resguardo
+                        {% endif %}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const form = document.getElementById('resguardoForm');
+    
+    window.marcarParaEliminar = function(btn, inputName, imageId) {
+        if (confirm('¿Estás seguro de que quieres marcar esta imagen para eliminar? La eliminación será permanente al guardar.')) {
+            const hiddenInput = document.createElement('input');
+            hiddenInput.type = 'hidden';
+            hiddenInput.name = inputName;
+            hiddenInput.value = imageId;
+            form.appendChild(hiddenInput);
+            btn.parentElement.style.display = 'none';
+        }
+    }
+
+    function setupImageManager(inputId, previewId) {
+        const inputElement = document.getElementById(inputId);
+        const previewContainer = document.getElementById(previewId);
+        if (!inputElement) return;
+
+        let fileStore = [];
+
+        inputElement.addEventListener('change', (event) => {
+            const nuevosArchivos = Array.from(event.target.files);
+            fileStore.push(...nuevosArchivos);
+            sincronizarInput();
+            renderizarPreview();
+        });
+
+        function renderizarPreview() {
+            previewContainer.querySelectorAll('.preview-nueva').forEach(el => el.remove());
+
+            fileStore.forEach((file) => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const contenedor = document.createElement('div');
+                    contenedor.className = "relative inline-block preview-nueva";
+                    const img = document.createElement('img');
+                    img.src = e.target.result;
+                    img.className = "h-24 w-24 object-cover rounded border";
+                    const btn = document.createElement('button');
+                    btn.type = "button";
+                    btn.innerHTML = '&times;';
+                    btn.className = "absolute top-1 right-1 bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs shadow-lg hover:bg-red-700 transition-transform transform hover:scale-110";
+                    btn.title = "Quitar esta imagen";
+                    btn.onclick = () => {
+                        fileStore = fileStore.filter(f => f !== file);
+                        sincronizarInput();
+                        renderizarPreview();
+                    };
+                    contenedor.appendChild(img);
+                    contenedor.appendChild(btn);
+                    previewContainer.prepend(contenedor);
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        function sincronizarInput() {
+            const dataTransfer = new DataTransfer();
+            fileStore.forEach(file => dataTransfer.items.add(file));
+            inputElement.files = dataTransfer.files;
+        }
+    }
+
+    setupImageManager('imagenes_bien', 'preview_imagenes_bien');
+    setupImageManager('imagenes_resguardo', 'preview_imagenes_resguardo');
+});
+</script>
+{% endblock %}
+
