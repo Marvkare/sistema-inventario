@@ -4,6 +4,9 @@ from flask_login import login_required, current_user
 from werkzeug.security import generate_password_hash
 import mysql.connector
 import traceback
+import uuid
+from datetime import datetime, timedelta
+from werkzeug.exceptions import abort
 
 # Se importan las funciones y variables de tus otros archivos
 from database import get_db_connection
@@ -343,3 +346,97 @@ def manage_permissions():
         return redirect(url_for('admin_users.list_roles'))
     finally:
         if conn and conn.is_connected(): conn.close()
+
+
+@admin_users_bp.route('/reset-password-request/<int:user_id>', methods=['POST'])
+@login_required
+@admin_required
+def reset_password_request(user_id):
+    """Genera un token y un enlace para que el usuario restablezca su contraseña."""
+    conn = None
+    try:
+        # Generar un token único y seguro
+        token = uuid.uuid4().hex
+        # Establecer una fecha de expiración (ej. 24 horas desde ahora)
+        expiration = datetime.utcnow() + timedelta(hours=24)
+        
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        # Guardar el token y la fecha de expiración en la base de datos
+        cursor.execute(
+            "UPDATE user SET reset_token = %s, reset_token_expiration = %s WHERE id = %s",
+            (token, expiration, user_id)
+        )
+        conn.commit()
+        
+        # Crear el enlace de restablecimiento
+        reset_link = url_for('admin_users.reset_password', token=token, _external=True)
+        
+        # Mostrar el enlace al administrador
+        flash(f"Copia y envía este enlace al usuario. El enlace expirará en 24 horas: {reset_link}", 'success')
+        log_activity(action="Solicitud de reseteo de contraseña", category="Usuarios", resource_id=user_id)
+
+    except Exception as e:
+        if conn: conn.rollback()
+        flash(f"Error al generar el enlace de reseteo: {e}", 'danger')
+        traceback.print_exc()
+    finally:
+        if conn and conn.is_connected(): conn.close()
+        
+    return redirect(url_for('admin_users.list_users'))
+
+
+@admin_users_bp.route('/reset-password/<token>', methods=['GET', 'POST'])
+def reset_password(token):
+    """Página donde el usuario final establece su nueva contraseña."""
+    conn = None
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+
+        # Verificar si el token es válido y no ha expirado
+        cursor.execute(
+            "SELECT id, username FROM user WHERE reset_token = %s AND reset_token_expiration > NOW()",
+            (token,)
+        )
+        user = cursor.fetchone()
+
+        if not user:
+            flash("El enlace de restablecimiento de contraseña es inválido o ha expirado.", 'danger')
+            return redirect(url_for('login'))
+
+        if request.method == 'POST':
+            password = request.form.get('password')
+            confirm_password = request.form.get('confirm_password')
+
+            if not password or password != confirm_password:
+                flash("Las contraseñas no coinciden o están vacías.", 'danger')
+                return render_template('admin/reset_password.html', token=token)
+
+            # Actualizar la contraseña y anular el token
+            hashed_password = generate_password_hash(password)
+            cursor.execute(
+                "UPDATE user SET password_hash = %s, reset_token = NULL, reset_token_expiration = NULL WHERE id = %s",
+                (hashed_password, user['id'])
+            )
+            conn.commit()
+            
+            log_activity(action="Contraseña restablecida", category="Usuarios", resource_id=user['id'])
+            flash("Tu contraseña ha sido actualizada. Ya puedes iniciar sesión.", 'success')
+            
+            # (Opcional) Iniciar sesión automáticamente al usuario
+            # user_obj = User.query.get(user['id'])
+            # login_user(user_obj)
+
+            return redirect(url_for('login'))
+
+    except Exception as e:
+        flash(f"Ocurrió un error: {e}", 'danger')
+        traceback.print_exc()
+        return redirect(url_for('login'))
+    finally:
+        if conn and conn.is_connected(): conn.close()
+
+    return render_template('admin/reset_password.html', token=token)
+

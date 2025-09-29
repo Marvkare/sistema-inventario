@@ -3,6 +3,8 @@ from flask_login import LoginManager, login_user, logout_user, login_required, c
 from sqlalchemy.exc import OperationalError, ProgrammingError
 from sqlalchemy import inspect
 import os
+from flask_migrate import Migrate  # <--- 1. Importa la clase
+
 
 # --- INICIALIZACIÓN Y CONFIGURACIÓN ---
 app = Flask(__name__)
@@ -19,7 +21,7 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 # Inicializar la base de datos con la app
 db.init_app(app)
-
+migrate = Migrate(app, db)
 # --- LÓGICA DE INICIALIZACIÓN DE TABLAS (PARA PRODUCCIÓN) ---
 def init_tables():
     """

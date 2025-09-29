@@ -27,6 +27,10 @@ class User(UserMixin, db.Model):
     roles = db.relationship('Role', secondary=user_roles, backref='users')
     activity_logs = db.relationship('ActivityLog', back_populates='user', lazy=True)
 
+    reset_token = db.Column(db.String(255), unique=True, nullable=True)
+    reset_token_expiration = db.Column(db.DateTime, nullable=True)
+    
+
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
 

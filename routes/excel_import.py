@@ -207,7 +207,6 @@ def handle_errors():
         if conn and conn.is_connected():
             conn.close()
 
-# --- Rutas que Faltaban y/o Estaban Incompletas ---
 
 
 @excel_import_bp.route('/delete_error_row/<int:row_id>', methods=['POST'])

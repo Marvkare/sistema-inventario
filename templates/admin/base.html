@@ -11,7 +11,6 @@
         <h1 class="text-2xl font-bold">Panel Admin</h1>
         <nav>
             <ul class="flex space-x-4">
-                {# --- CORRECCIÓN CLAVE: Se usa 'admin_bp' en lugar de 'admin' --- #}
                 <li><a href="{{ url_for('admin.admin_dashboard') }}" class="hover:text-gray-400">Dashboard</a></li>
                 <li><a href="{{ url_for('admin_users.list_users') }}" class="hover:text-gray-400">Usuarios</a></li>
                 <li><a href="{{ url_for('admin_users.list_roles') }}" class="hover:text-gray-400">Roles</a></li>
@@ -20,17 +19,28 @@
         </nav>
     </header>
     <main class="container mx-auto mt-4 p-4">
+        
+        {# --- CORRECCIÓN CLAVE: Se añade el bloque para mostrar los mensajes flash --- #}
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="p-4 mb-4 text-sm rounded-lg 
+                        {% if category == 'success' %} bg-green-100 text-green-800 
+                        {% elif category == 'danger' %} bg-red-100 text-red-800 
+                        {% else %} bg-blue-100 text-blue-800 {% endif %}" 
+                        role="alert">
+                        <span class="font-medium">{{ category|title }}:</span> {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
         {% block content %}{% endblock %}
     </main>
 
-    <!--
-        Se restaura el bloque de scripts para asegurar que las plantillas
-        hijas puedan añadir su propio JavaScript.
-    -->
     {% block scripts %}
-    <!-- Los scripts base, si los tuvieras, irían aquí -->
+    <!-- Los scripts de las páginas hijas se insertarán aquí -->
     {% endblock %}
 </body>
 </html>
-
 

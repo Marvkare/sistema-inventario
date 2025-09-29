@@ -30,7 +30,43 @@
                         Haz clic en cualquier nombre de columna para copiarlo a tu portapapeles.
                     </p>
                     <ul class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-x-6 gap-y-3">
-                        {% for col in ['NO.POLIZA', 'FECHA POLIZA', 'SUB-CTA. ARMONIZADORA', 'NO. DE CUENTA', 'NO. DE INVENTARIO', 'NO. DE RESGUARDO', 'PROVEEDOR', 'FACTURA', 'FECHA FACTURA', 'COSTO INICIAL', 'DEPRECIACION ACUMULADA', 'COSTO FINAL', 'CANTIDAD', 'DESCRIPCION FISICAS DEL BIEN', 'AREA', 'RUBRO', 'PUESTO', 'NO. DE TRABAJADOR', 'NOMBRE DIRECTOR/JEFES DE AREA', 'FECHA RESGUARDO', 'NOMBRE DEL RESGUARDANTE'] %}
+                        {% for col in [
+
+    "NO. DE INVENTARIO",
+    "NO. FACTURA",
+    "FECHA FACTURA",
+    "PROVEEDOR",
+    "DESCRIPCION DEL BIEN",
+    "DESCRIPCION CORTA DEL BIEN",
+    "CANTIDAD",
+    "ESTADO DEL BIEN",
+    "MARCA",
+    "MODELO",
+    "NUMERO DE SERIE",
+    "TIPO DE ALTA",
+    "NO. DE CUENTA",
+    "RUBRO",
+    "NO.POLIZA",
+    "FECHA POLIZA",
+    "SUB-CTA. ARMONIZADORA",
+    "COSTO INICIAL",
+    "DEPRECIACION ACUMULADA",
+    "COSTO FINAL",
+    "NO. DE RESGUARDO",
+    "AREA",
+    "UBICACION",
+    "TIPO DE RESGUARDO",
+    "FECHA DE RESGUARDO",
+    "NO. DE TRABAJADOR",
+    "PUESTO TRABAJADOR",
+    "NOMBRE DEL RESGUARDANTE",
+    "NOMBRE DIRECTOR/JEFES DE AREA",
+    "FACTURA",
+    "DESCRIPCION FISICAS DEL BIEN",
+    "PUESTO",
+    "FECHA RESGUARDO"
+]
+ %}
                         <li class="copyable-li flex items-center justify-between p-2 rounded-md hover:bg-gray-200 cursor-pointer transition-colors">
                             <span class="font-mono text-sm text-gray-800">{{ col }}</span>
                             <span class="copy-feedback text-xs text-green-600 font-semibold opacity-0 transition-opacity duration-300">¡Copiado!</span>
