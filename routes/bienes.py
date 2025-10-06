@@ -19,7 +19,6 @@ def allowed_file(filename):
     """Función para verificar si la extensión del archivo es permitida."""
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
-
 @bienes_bp.route('/bienes')
 @login_required
 @permission_required('bienes.listar_bienes')
@@ -34,36 +33,47 @@ def listar_bienes():
         offset = (page - 1) * items_per_page
         search_query = request.args.get('search_query', '').strip()
         
-        # La consulta ahora solo se une con el resguardo ACTIVO para evitar duplicados
-        count_base_query = "FROM bienes b LEFT JOIN resguardos r ON b.id = r.id_bien AND r.Activo = 1 LEFT JOIN areas a ON r.id_area = a.id"
+        # --- CAMBIO: Se añaden más columnas para mostrar en la lista ---
+        select_base = """
+            SELECT 
+                b.id, b.No_Inventario, b.Descripcion_Corta_Del_Bien, b.Estado_Del_Bien,
+                b.Marca, b.Modelo, b.Clasificacion_Legal, b.Valor_En_Libros,
+                r.id AS resguardo_id, a.nombre AS Area_Nombre, r.Nombre_Del_Resguardante,
+                (CASE WHEN r.id IS NOT NULL THEN TRUE ELSE FALSE END) AS tiene_resguardo
+        """
+        from_base = "FROM bienes b LEFT JOIN resguardos r ON b.id = r.id_bien AND r.Activo = 1 LEFT JOIN areas a ON r.id_area = a.id"
         
         where_clause = ""
         params = []
         if search_query:
-            where_clause = " WHERE b.No_Inventario LIKE %s OR b.Descripcion_Corta_Del_Bien LIKE %s OR r.Nombre_Del_Resguardante LIKE %s"
-            params.extend([f"%{search_query}%", f"%{search_query}%", f"%{search_query}%"])
+            # --- CAMBIO: Se amplía la búsqueda a más campos útiles ---
+            searchable_fields = [
+                'b.No_Inventario', 'b.Descripcion_Corta_Del_Bien', 'b.Marca', 
+                'b.Modelo', 'b.Numero_De_Serie', 'b.Clasificacion_Legal', 
+                'r.Nombre_Del_Resguardante', 'a.nombre'
+            ]
+            where_clause = " WHERE " + " OR ".join([f"{field} LIKE %s" for field in searchable_fields])
+            params.extend([f"%{search_query}%"] * len(searchable_fields))
             
-        count_query = "SELECT COUNT(DISTINCT b.id) AS total " + count_base_query + where_clause
+        count_query = f"SELECT COUNT(DISTINCT b.id) AS total {from_base} {where_clause}"
         cursor.execute(count_query, tuple(params))
         total_items = cursor.fetchone()['total']
         total_pages = math.ceil(total_items / items_per_page)
 
+        # Se añaden los parámetros de paginación después del conteo
+        final_params = params + [items_per_page, offset]
+
         sql_query = f"""
-            SELECT 
-                b.id, b.No_Inventario, b.Descripcion_Corta_Del_Bien, b.Estado_Del_Bien,
-                r.id AS resguardo_id, a.nombre AS Area_Nombre,
-                (CASE WHEN r.id IS NOT NULL THEN TRUE ELSE FALSE END) AS tiene_resguardo
-            {count_base_query}
+            {select_base}
+            {from_base}
             {where_clause}
             GROUP BY b.id
             ORDER BY b.id DESC
             LIMIT %s OFFSET %s
         """
-        params.extend([items_per_page, offset])
-        cursor.execute(sql_query, tuple(params))
+        cursor.execute(sql_query, tuple(final_params))
         bienes_data = cursor.fetchall()
         
-        # CORRECCIÓN: Se pasa 'page' en lugar de 'current_page' para que coincida con la plantilla.
         return render_template(
             'bienes/listar_bienes.html', 
             bienes=bienes_data, 
@@ -75,7 +85,6 @@ def listar_bienes():
     except Exception as err:
         flash(f"Error al obtener los bienes: {err}", 'danger')
         traceback.print_exc()
-        # CORRECCIÓN: Se pasan todas las variables que la plantilla necesita, incluso en caso de error.
         return render_template(
             'bienes/listar_bienes.html', 
             bienes=[], 
@@ -98,11 +107,43 @@ def agregar_bien():
             cursor = conn.cursor()
             form_data = request.form
 
-            sql = """INSERT INTO bienes (No_Inventario, No_Factura, No_Cuenta, Proveedor, Descripcion_Del_Bien, Descripcion_Corta_Del_Bien, Rubro, Poliza, Fecha_Poliza, Sub_Cuenta_Armonizadora, Fecha_Factura, Costo_Inicial, Depreciacion_Acumulada, Costo_Final_Cantidad, Cantidad, Estado_Del_Bien, Marca, Modelo, Numero_De_Serie, Tipo_De_Alta) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"""
-            values = (form_data.get('No_Inventario'), form_data.get('No_Factura'), form_data.get('No_Cuenta'), form_data.get('Proveedor'), form_data.get('Descripcion_Del_Bien'), form_data.get('Descripcion_Corta_Del_Bien'), form_data.get('Rubro'), form_data.get('Poliza'), form_data.get('Fecha_Poliza'), form_data.get('Sub_Cuenta_Armonizadora'), form_data.get('Fecha_Factura'), form_data.get('Costo_Inicial'), form_data.get('Depreciacion_Acumulada'), form_data.get('Costo_Final_Cantidad'), form_data.get('Cantidad'), form_data.get('Estado_Del_Bien'), form_data.get('Marca'), form_data.get('Modelo'), form_data.get('Numero_De_Serie'), form_data.get('Tipo_De_Alta'))
+            # --- CAMBIO: Se añade 'Activo' a la lista de columnas ---
+            sql = """
+                INSERT INTO bienes (
+                    No_Inventario, No_Factura, No_Cuenta, Proveedor, Descripcion_Del_Bien,
+                    Descripcion_Corta_Del_Bien, Rubro, Poliza, Fecha_Poliza, Sub_Cuenta_Armonizadora,
+                    Fecha_Factura, Costo_Inicial, Depreciacion_Acumulada, Costo_Final_Cantidad, Cantidad,
+                    Estado_Del_Bien, Marca, Modelo, Numero_De_Serie, Tipo_De_Alta,
+                    Clasificacion_Legal, usuario_id_registro, Area_Presupuestal, Documento_Propiedad,
+                    Fecha_Documento_Propiedad, Valor_En_Libros, Fecha_Adquisicion_Alta, Activo
+                ) VALUES (
+                    %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
+                    %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
+                )
+            """
+            
+            values = (
+                form_data.get('No_Inventario'), form_data.get('No_Factura'), form_data.get('No_Cuenta'),
+                form_data.get('Proveedor'), form_data.get('Descripcion_Del_Bien'), form_data.get('Descripcion_Corta_Del_Bien'),
+                form_data.get('Rubro'), form_data.get('Poliza'), form_data.get('Fecha_Poliza'),
+                form_data.get('Sub_Cuenta_Armonizadora'), form_data.get('Fecha_Factura'), form_data.get('Costo_Inicial'),
+                form_data.get('Depreciacion_Acumulada'), form_data.get('Costo_Final_Cantidad'), form_data.get('Cantidad'),
+                form_data.get('Estado_Del_Bien'), form_data.get('Marca'), form_data.get('Modelo'),
+                form_data.get('Numero_De_Serie'), form_data.get('Tipo_De_Alta'),
+                form_data.get('Clasificacion_Legal'),
+                current_user.id,
+                form_data.get('Area_Presupuestal'),
+                form_data.get('Documento_Propiedad'),
+                form_data.get('Fecha_Documento_Propiedad') or None,
+                form_data.get('Valor_En_Libros'),
+                form_data.get('Fecha_Adquisicion_Alta') or None,
+                1  # Se añade el valor 1 (TRUE) para el campo Activo
+            )
             cursor.execute(sql, values)
             id_bien = cursor.lastrowid
 
+            # --- 📸 LÓGICA DE IMÁGENES (INTACTA) ---
+            # Esta parte del código no se modificó y sigue funcionando.
             for file in request.files.getlist('imagenes_bien'):
                 if file and file.filename and allowed_file(file.filename):
                     filename = secure_filename(file.filename)
@@ -119,12 +160,10 @@ def agregar_bien():
             if conn: conn.rollback()
             flash(f'Error al agregar el bien: {e}', 'danger')
             traceback.print_exc()
-            # Se devuelve el formulario con los datos que el usuario ya había ingresado
             return render_template('bienes/bien_form.html', is_edit=False, form_data=request.form)
         finally:
             if conn and conn.is_connected(): conn.close()
             
-    # Para el método GET, se muestra el formulario vacío
     return render_template('bienes/bien_form.html', is_edit=False, form_data={})
 
 @bienes_bp.route('/bienes/editar/<int:bien_id>', methods=['GET', 'POST'])
@@ -138,8 +177,39 @@ def editar_bien(bien_id):
 
         if request.method == 'POST':
             form_data = request.form
-            sql = """UPDATE bienes SET No_Inventario=%s, No_Factura=%s, No_Cuenta=%s, Proveedor=%s, Descripcion_Del_Bien=%s, Descripcion_Corta_Del_Bien=%s, Rubro=%s, Poliza=%s, Fecha_Poliza=%s, Sub_Cuenta_Armonizadora=%s, Fecha_Factura=%s, Costo_Inicial=%s, Depreciacion_Acumulada=%s, Costo_Final_Cantidad=%s, Cantidad=%s, Estado_Del_Bien=%s, Marca=%s, Modelo=%s, Numero_De_Serie=%s, Tipo_De_Alta=%s WHERE id=%s"""
-            values = (form_data.get('No_Inventario'), form_data.get('No_Factura'), form_data.get('No_Cuenta'), form_data.get('Proveedor'), form_data.get('Descripcion_Del_Bien'), form_data.get('Descripcion_Corta_Del_Bien'), form_data.get('Rubro'), form_data.get('Poliza'), form_data.get('Fecha_Poliza'), form_data.get('Sub_Cuenta_Armonizadora'), form_data.get('Fecha_Factura'), form_data.get('Costo_Inicial'), form_data.get('Depreciacion_Acumulada'), form_data.get('Costo_Final_Cantidad'), form_data.get('Cantidad'), form_data.get('Estado_Del_Bien'), form_data.get('Marca'), form_data.get('Modelo'), form_data.get('Numero_De_Serie'), form_data.get('Tipo_De_Alta'), bien_id)
+            
+            # --- CAMBIO: Se añaden los nuevos campos a la consulta UPDATE ---
+            sql = """
+                UPDATE bienes SET 
+                    No_Inventario=%s, No_Factura=%s, No_Cuenta=%s, Proveedor=%s, Descripcion_Del_Bien=%s, 
+                    Descripcion_Corta_Del_Bien=%s, Rubro=%s, Poliza=%s, Fecha_Poliza=%s, 
+                    Sub_Cuenta_Armonizadora=%s, Fecha_Factura=%s, Costo_Inicial=%s, Depreciacion_Acumulada=%s, 
+                    Costo_Final_Cantidad=%s, Cantidad=%s, Estado_Del_Bien=%s, Marca=%s, Modelo=%s, 
+                    Numero_De_Serie=%s, Tipo_De_Alta=%s, Clasificacion_Legal=%s, Area_Presupuestal=%s, 
+                    Documento_Propiedad=%s, Fecha_Documento_Propiedad=%s, Valor_En_Libros=%s, 
+                    Fecha_Adquisicion_Alta=%s 
+                WHERE id=%s
+            """
+            
+            # --- CAMBIO: Se añaden los valores de los nuevos campos al tuple ---
+            values = (
+                form_data.get('No_Inventario'), form_data.get('No_Factura'), form_data.get('No_Cuenta'), 
+                form_data.get('Proveedor'), form_data.get('Descripcion_Del_Bien'), form_data.get('Descripcion_Corta_Del_Bien'), 
+                form_data.get('Rubro'), form_data.get('Poliza'), form_data.get('Fecha_Poliza'), 
+                form_data.get('Sub_Cuenta_Armonizadora'), form_data.get('Fecha_Factura'), form_data.get('Costo_Inicial'), 
+                form_data.get('Depreciacion_Acumulada'), form_data.get('Costo_Final_Cantidad'), form_data.get('Cantidad'), 
+                form_data.get('Estado_Del_Bien'), form_data.get('Marca'), form_data.get('Modelo'), 
+                form_data.get('Numero_De_Serie'), form_data.get('Tipo_De_Alta'),
+                # Nuevos campos
+                form_data.get('Clasificacion_Legal'),
+                form_data.get('Area_Presupuestal'),
+                form_data.get('Documento_Propiedad'),
+                form_data.get('Fecha_Documento_Propiedad') or None,
+                form_data.get('Valor_En_Libros'),
+                form_data.get('Fecha_Adquisicion_Alta') or None,
+                # ID del bien al final para el WHERE
+                bien_id
+            )
             cursor.execute(sql, values)
             
             for img_id in request.form.getlist('eliminar_imagen_bien[]'):
@@ -164,7 +234,7 @@ def editar_bien(bien_id):
             flash('Bien actualizado exitosamente.', 'success')
             return redirect(url_for('bienes.listar_bienes'))
 
-        # Lógica GET para mostrar el formulario con datos existentes
+        # Lógica GET (sin cambios necesarios aquí, SELECT * ya trae los nuevos campos)
         cursor.execute("SELECT * FROM bienes WHERE id = %s", (bien_id,))
         bien = cursor.fetchone()
         if not bien:
@@ -173,8 +243,6 @@ def editar_bien(bien_id):
         cursor.execute("SELECT id, ruta_imagen FROM imagenes_bien WHERE id_bien = %s", (bien_id,))
         bien['imagenes'] = cursor.fetchall()
 
-        # --- CORRECCIÓN CLAVE ---
-        # Se añade la consulta para obtener los resguardos asociados al bien.
         cursor.execute("SELECT * FROM resguardos WHERE id_bien = %s ORDER BY Fecha_Registro DESC", (bien_id,))
         bien['resguardos'] = cursor.fetchall()
 
@@ -187,7 +255,6 @@ def editar_bien(bien_id):
         return redirect(url_for('bienes.listar_bienes'))
     finally:
         if conn and conn.is_connected(): conn.close()
-
 
 @bienes_bp.route('/bienes/eliminar/<int:bien_id>', methods=['POST'])
 @login_required
@@ -225,17 +292,28 @@ def ver_detalles_bien(bien_id):
         conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
         
-        cursor.execute("SELECT * FROM bienes WHERE id = %s", (bien_id,))
+        # --- CAMBIO: Se une con la tabla 'user' para obtener el nombre del usuario ---
+        sql_bien = """
+            SELECT 
+                b.*, 
+                u.username AS registrado_por_nombre 
+            FROM bienes b
+            JOIN user u ON b.usuario_id_registro = u.id
+            WHERE b.id = %s
+        """
+        cursor.execute(sql_bien, (bien_id,))
         bien = cursor.fetchone()
+        
         if not bien:
             abort(404)
         
+        # El resto de la función sigue exactamente igual
         cursor.execute("SELECT r.*, a.nombre as Area_Nombre FROM resguardos r JOIN areas a ON r.id_area = a.id WHERE r.id_bien = %s", (bien_id,))
         resguardos = cursor.fetchall()
         
         cursor.execute("SELECT ruta_imagen FROM imagenes_bien WHERE id_bien = %s", (bien_id,))
         imagenes = [row['ruta_imagen'] for row in cursor.fetchall()]
-
+        print(bien)
         return render_template('bienes/detalles_bien.html', bien=bien, resguardos=resguardos, imagenes=imagenes)
         
     except Exception as e:
@@ -244,7 +322,6 @@ def ver_detalles_bien(bien_id):
     finally:
         if conn and conn.is_connected():
             conn.close()
-
 # Ruta para servir imágenes (necesaria para mostrarlas en las plantillas)
 @bienes_bp.route('/uploads/<path:filename>')
 def serve_uploaded_file(filename):

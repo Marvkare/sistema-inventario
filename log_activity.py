@@ -5,10 +5,25 @@ from datetime import datetime
 
 def log_activity(action, category=None, details=None, resource_id=None):
     """
-    Crea un registro de actividad y lo añade a la sesión de la base de datos.
-    NO hace commit. El commit se debe hacer en la ruta que llama a esta función.
+    Versión mejorada con manejo de errores y límites de longitud
     """
     try:
+        # Asegurar que la sesión esté limpia
+        db.session.rollback()
+        
+        # Limitar longitudes para evitar truncamiento
+        if resource_id and len(str(resource_id)) > 50:
+            resource_id = str(resource_id)[:50]
+        
+        if details and len(str(details)) > 500:
+            details = str(details)[:500]
+        
+        if category and len(str(category)) > 100:
+            category = str(category)[:100]
+        
+        if action and len(str(action)) > 100:
+            action = str(action)[:100]
+
         # Asegurarse de que hay un usuario autenticado
         user_id = current_user.id if current_user and current_user.is_authenticated else None
 
@@ -20,13 +35,10 @@ def log_activity(action, category=None, details=None, resource_id=None):
             resource_id=resource_id,
             timestamp=datetime.utcnow()
         )
+        
         db.session.add(log_entry)
-        # Nota: No hacemos db.session.commit() aquí.
-        # La ruta que llama a esta función es responsable de hacer el commit.
+        db.session.commit()
         
     except Exception as e:
-        # En caso de error, para no detener la aplicación principal,
-        # simplemente lo imprimimos. En un entorno de producción,
-        # podrías usar un logger más avanzado.
         print(f"Error al registrar actividad: {e}")
-
+        db.session.rollback()  # Siempre hacer rollback en caso de error

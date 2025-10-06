@@ -50,7 +50,6 @@
                     <input type="hidden" name="id_bien_existente" value="{{ form_data.id }}">
                 {% endif %}
 
-                <!-- SECCIÓN DE DATOS DEL BIEN -->
                 <fieldset class="space-y-6">
                     <legend class="text-xl font-semibold text-gray-800 mb-4 border-b-2 border-indigo-200 pb-2 flex items-center gap-3">
                         <i class="fas fa-box text-indigo-500"></i>
@@ -88,7 +87,6 @@
                     </div>
                 </fieldset>
 
-                <!-- SECCIÓN DE DATOS CONTABLES DEL BIEN -->
                 <fieldset class="space-y-6">
                     <legend class="text-xl font-semibold text-gray-800 mb-4 border-b-2 border-indigo-200 pb-2 flex items-center gap-3">
                         <i class="fas fa-file-invoice-dollar text-indigo-500"></i>
@@ -101,7 +99,7 @@
                         </div>
                         <div>
                             <label for="Fecha_Factura" class="block text-sm font-medium text-gray-700">Fecha de Factura</label>
-                            <input type="date" id="Fecha_Factura" name="Fecha_Factura" value="{{ form_data.Fecha_Factura|string|slice(0,10) if form_data.Fecha_Factura else '' }}" class="mt-1 block w-full rounded-md border-gray-300 bg-gray-100 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 sm:text-sm" {% if bien_precargado or is_edit %}readonly{% endif %}>
+                            <input type="date" id="Fecha_Factura" name="Fecha_Factura" value="{{ form_data.Fecha_Factura or '' }}" class="mt-1 block w-full rounded-md border-gray-300 bg-gray-100 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 sm:text-sm" {% if bien_precargado or is_edit %}readonly{% endif %}>
                         </div>
                          <div>
                             <label for="Proveedor" class="block text-sm font-medium text-gray-700">Proveedor</label>
@@ -121,7 +119,7 @@
                         </div>
                         <div>
                             <label for="Fecha_Poliza" class="block text-sm font-medium text-gray-700">Fecha de Póliza</label>
-                            <input type="date" name="Fecha_Poliza" value="{{ form_data.Fecha_Poliza|string|slice(0,10) if form_data.Fecha_Poliza else '' }}" class="mt-1 block w-full rounded-md border-gray-300 bg-gray-100 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 sm:text-sm" {% if bien_precargado or is_edit %}readonly{% endif %}>
+                             <input type="date" name="Fecha_Poliza" value="{{ form_data.Fecha_Poliza or '' }}" class="mt-1 block w-full rounded-md border-gray-300 bg-gray-100 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 sm:text-sm" {% if bien_precargado or is_edit %}readonly{% endif %}>
                         </div>
                         <div>
                             <label for="Sub_Cuenta_Armonizadora" class="block text-sm font-medium text-gray-700">Subcuenta Armonizadora</label>
@@ -146,7 +144,6 @@
                     </div>
                 </fieldset>
 
-                <!-- SECCIÓN DE DATOS DEL RESGUARDO -->
                 <fieldset class="space-y-6">
                     <legend class="text-xl font-semibold text-gray-800 mb-4 border-b-2 border-indigo-200 pb-2 flex items-center gap-3">
                         <i class="fas fa-user-shield text-indigo-500"></i>
@@ -155,11 +152,11 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         <div>
                             <label for="No_Resguardo" class="block text-sm font-medium text-gray-700">No. de Resguardo</label>
-                            <input type="text" id="No_Resguardo" name="No_Resguardo" value="{{ form_data.No_Resguardo or '' }}" class="mt-1 block w-full rounded-md border-gray-300 bg-gray-100 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 sm:text-sm">
+                            <input type="text" id="No_Resguardo" name="No_Resguardo" value="{{ form_data.No_Resguardo or '' }}" class="form-input">
                         </div>
                         <div>
                             <label for="Area" class="block text-sm font-medium text-gray-700">Área</label>
-                            <select id="Area" name="Area" class="mt-1 block w-full rounded-md border-gray-300 bg-gray-100 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 sm:text-sm" required>
+                            <select id="Area" name="Area" class="form-select" required>
                                 <option value="">Selecciona un área</option>
                                 {% for area in areas %}
                                     <option value="{{ area.id }}" {% if form_data.Area_id == area.id %}selected{% endif %}>{{ area.nombre }}</option>
@@ -167,36 +164,40 @@
                             </select>
                         </div>
                         <div>
-                            <label for="Ubicacion" class="block text-sm font-medium text-gray-700">Ubicación</label>
-                            <input type="text" name="Ubicacion" value="{{ form_data.Ubicacion or '' }}" class="mt-1 block w-full rounded-md border-gray-300 bg-gray-100 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 sm:text-sm">
+                            <label for="Ubicacion" class="block text-sm font-medium text-gray-700">Ubicación Física</label>
+                            <input type="text" id="Ubicacion" name="Ubicacion" value="{{ form_data.Ubicacion or '' }}" class="form-input">
                         </div>
                         <div>
                             <label for="Nombre_Del_Resguardante" class="block text-sm font-medium text-gray-700">Nombre del Resguardante</label>
-                            <input type="text" id="Nombre_Del_Resguardante" name="Nombre_Del_Resguardante" value="{{ form_data.Nombre_Del_Resguardante or '' }}" class="mt-1 block w-full rounded-md border-gray-300 bg-gray-100 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 sm:text-sm">
+                            <input type="text" id="Nombre_Del_Resguardante" name="Nombre_Del_Resguardante" value="{{ form_data.Nombre_Del_Resguardante or '' }}" class="form-input">
                         </div>
                         <div>
                             <label for="Puesto_Trabajador" class="block text-sm font-medium text-gray-700">Puesto del Resguardante</label>
-                            <input type="text" id="Puesto_Trabajador" name="Puesto_Trabajador" value="{{ form_data.Puesto_Trabajador or '' }}" class="mt-1 block w-full rounded-md border-gray-300 bg-gray-100 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 sm:text-sm">
+                            <input type="text" id="Puesto_Trabajador" name="Puesto_Trabajador" value="{{ form_data.Puesto_Trabajador or '' }}" class="form-input">
+                        </div>
+                         <div>
+                            <label for="RFC_Trabajador" class="block text-sm font-medium text-gray-700">RFC del Resguardante</label>
+                            <input type="text" id="RFC_Trabajador" name="RFC_Trabajador" value="{{ form_data.RFC_Trabajador or '' }}" class="form-input" maxlength="13">
                         </div>
                         <div>
                             <label for="No_Trabajador" class="block text-sm font-medium text-gray-700">No. de Trabajador</label>
-                            <input type="text" name="No_Trabajador" value="{{ form_data.No_Trabajador or '' }}" class="mt-1 block w-full rounded-md border-gray-300 bg-gray-100 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 sm:text-sm">
+                            <input type="text" name="No_Trabajador" value="{{ form_data.No_Trabajador or '' }}" class="form-input">
                         </div>
                         <div>
                             <label for="No_Nomina_Trabajador" class="block text-sm font-medium text-gray-700">No. de Nómina</label>
-                            <input type="number" id="No_Nomina_Trabajador" name="No_Nomina_Trabajador" value="{{ form_data.No_Nomina_Trabajador or '' }}" class="mt-1 block w-full rounded-md border-gray-300 bg-gray-100 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 sm:text-sm">
+                            <input type="number" id="No_Nomina_Trabajador" name="No_Nomina_Trabajador" value="{{ form_data.No_Nomina_Trabajador or '' }}" class="form-input">
                         </div>
                         <div>
                             <label for="Fecha_Resguardo" class="block text-sm font-medium text-gray-700">Fecha de Resguardo</label>
-                            <input type="date" id="Fecha_Resguardo" name="Fecha_Resguardo" value="{{ form_data.Fecha_Resguardo|string|slice(0,10) if form_data.Fecha_Resguardo else '' }}" class="mt-1 block w-full rounded-md border-gray-300 bg-gray-100 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 sm:text-sm">
+                             <input type="date" id="Fecha_Resguardo" name="Fecha_Resguardo" value="{{ form_data.Fecha_Resguardo or '' }}" class="form-input">
                         </div>
                         <div class="md:col-span-2">
                             <label for="Nombre_Director_Jefe_De_Area" class="block text-sm font-medium text-gray-700">Nombre Director/Jefe de Área</label>
-                            <input type="text" name="Nombre_Director_Jefe_De_Area" value="{{ form_data.Nombre_Director_Jefe_De_Area or '' }}" class="mt-1 block w-full rounded-md border-gray-300 bg-gray-100 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 sm:text-sm">
+                            <input type="text" name="Nombre_Director_Jefe_De_Area" value="{{ form_data.Nombre_Director_Jefe_De_Area or '' }}" class="form-input">
                         </div>
                         <div>
                             <label for="Tipo_De_Resguardo" class="block text-sm font-medium text-gray-700">Tipo de Resguardo</label>
-                             <select id="Tipo_De_Resguardo" name="Tipo_De_Resguardo" class="mt-1 block w-full rounded-md border-gray-300 bg-gray-100 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 sm:text-sm">
+                             <select id="Tipo_De_Resguardo" name="Tipo_De_Resguardo" class="form-select">
                                 <option value="0" {% if form_data.Tipo_De_Resguardo == 0 %}selected{% endif %}>Resguardo Normal</option>
                                 <option value="1" {% if form_data.Tipo_De_Resguardo == 1 %}selected{% endif %}>Sujeto de Control</option>
                             </select>
@@ -204,7 +205,6 @@
                     </div>
                 </fieldset>
                 
-                <!-- SECCIÓN DE IMÁGENES -->
                 <fieldset class="space-y-6">
                     <legend class="text-xl font-semibold text-gray-800 mb-4 border-b-2 border-indigo-200 pb-2 flex items-center gap-3">
                         <i class="fas fa-images text-indigo-500"></i>
@@ -213,16 +213,14 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Imágenes del Bien</label>
-                            {# --- CORRECCIÓN CLAVE: El input ahora se muestra en modo 'editar' --- #}
-                            <input type="file" id="imagenes_bien" name="imagenes_bien" multiple class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 cursor-pointer" {% if bien_precargado %}disabled{% endif %}>
-                            
+                            <input type="file" id="imagenes_bien" name="imagenes_bien" multiple class="form-input-file" {% if bien_precargado %}disabled{% endif %}>
                             <div id="preview_imagenes_bien" class="mt-4 flex flex-wrap gap-2 min-h-[6rem] bg-gray-100 p-2 rounded border">
                                 {% if imagenes_bien_db %}
                                     {% for img in imagenes_bien_db %}
                                     <div class="relative inline-block" id="imagen-bien-{{ img.id }}">
-                                        <img src="{{ url_for('serve_uploaded_file', filename=img.ruta_imagen) }}" class="h-24 w-24 object-cover rounded-md border">
+                                        <img src="{{ url_for('bienes.serve_uploaded_file', filename=img.ruta_imagen) }}" class="h-24 w-24 object-cover rounded-md border">
                                         {% if is_edit %}
-                                        <button type="button" class="absolute top-1 right-1 bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs shadow-lg hover:bg-red-700 transition-transform transform hover:scale-110" title="Marcar para eliminar" onclick="marcarParaEliminar(this, 'eliminar_imagen_bien[]', '{{ img.id }}')">&times;</button>
+                                        <button type="button" class="btn-delete-img" title="Marcar para eliminar" onclick="marcarParaEliminar(this, 'eliminar_imagen_bien[]', '{{ img.id }}')">&times;</button>
                                         {% endif %}
                                     </div>
                                     {% endfor %}
@@ -231,14 +229,14 @@
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Imágenes del Resguardo</label>
-                            <input type="file" id="imagenes_resguardo" name="imagenes_resguardo" multiple class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 cursor-pointer">
+                            <input type="file" id="imagenes_resguardo" name="imagenes_resguardo" multiple class="form-input-file">
                              <div id="preview_imagenes_resguardo" class="mt-4 flex flex-wrap gap-2 min-h-[6rem] bg-gray-100 p-2 rounded border">
                                 {% if imagenes_resguardo_db %}
                                     {% for img in imagenes_resguardo_db %}
                                     <div class="relative inline-block" id="imagen-resguardo-{{ img.id }}">
-                                        <img src="{{ url_for('serve_uploaded_file', filename=img.ruta_imagen) }}" class="h-24 w-24 object-cover rounded-md border">
+                                        <img src="{{ url_for('bienes.serve_uploaded_file', filename=img.ruta_imagen) }}" class="h-24 w-24 object-cover rounded-md border">
                                          {% if is_edit %}
-                                        <button type="button" class="absolute top-1 right-1 bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs shadow-lg hover:bg-red-700 transition-transform transform hover:scale-110" title="Marcar para eliminar" onclick="marcarParaEliminar(this, 'eliminar_imagen_resguardo[]', '{{ img.id }}')">&times;</button>
+                                        <button type="button" class="btn-delete-img" title="Marcar para eliminar" onclick="marcarParaEliminar(this, 'eliminar_imagen_resguardo[]', '{{ img.id }}')">&times;</button>
                                         {% endif %}
                                     </div>
                                     {% endfor %}
@@ -249,8 +247,8 @@
                 </fieldset>
 
                 <div class="mt-8 flex justify-end space-x-4 pt-6 border-t">
-                    <a href="{{ url_for('resguardos.ver_resguardos') }}" class="inline-flex items-center justify-center px-6 py-2 border border-gray-300 text-base font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-colors">Cancelar</a>
-                    <button type="submit" class="inline-flex items-center justify-center px-6 py-2 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors">
+                    <a href="{{ url_for('resguardos.ver_resguardos') }}" class="btn-secondary">Cancelar</a>
+                    <button type="submit" class="btn-primary">
                         <i class="fas fa-save mr-2"></i>
                         {% if is_edit %}
                             Guardar Cambios
@@ -310,7 +308,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     const btn = document.createElement('button');
                     btn.type = "button";
                     btn.innerHTML = '&times;';
-                    btn.className = "absolute top-1 right-1 bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs shadow-lg hover:bg-red-700 transition-transform transform hover:scale-110";
+                    btn.className = "btn-delete-img";
                     btn.title = "Quitar esta imagen";
                     btn.onclick = () => {
                         fileStore = fileStore.filter(f => f !== file);
@@ -337,4 +335,3 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 </script>
 {% endblock %}
-

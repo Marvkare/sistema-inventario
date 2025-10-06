@@ -62,6 +62,7 @@ class Area(db.Model):
     
     resguardos = db.relationship('Resguardo', back_populates='area', lazy=True)
 
+
 class Bienes(db.Model):
     __tablename__ = 'bienes'
     id = db.Column(db.Integer, primary_key=True)
@@ -85,9 +86,26 @@ class Bienes(db.Model):
     Modelo = db.Column(db.String(100))
     Numero_De_Serie = db.Column(db.String(100))
     Tipo_De_Alta = db.Column(db.String(50))
+    Clasificacion_Legal = db.Column(db.String(50), nullable=False)
+    usuario_id_registro = db.Column(db.Integer, db.ForeignKey('usuarios.id'), nullable=False)
     
+    # --- Columnas corregidas ---
+    Area_Presupuestal = db.Column(db.String(255))
+    Documento_Propiedad = db.Column(db.String(255))
+    Fecha_Documento_Propiedad = db.Column(db.Date)
+    Valor_En_Libros = db.Column(db.Numeric(10, 2))
+    Fecha_Adquisicion_Alta = db.Column(db.Date)
+
+    # --- Timestamps y estado ---
+    Fecha_Registro = db.Column(db.DateTime, server_default=text('CURRENT_TIMESTAMP'))
+    Fecha_Ultima_Modificacion = db.Column(db.DateTime, server_default=text('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP'))
+    Activo = db.Column(db.Boolean, default=True, nullable=False)
+
+    # --- Relaciones ---
     resguardos = db.relationship('Resguardo', backref='bien', lazy=True, cascade="all, delete-orphan")
     imagenes = db.relationship('ImagenesBien', backref='bien', lazy=True, cascade="all, delete-orphan")
+    usuario_id_registro = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+
 
 class Resguardo(db.Model):
     __tablename__ = 'resguardos'
@@ -100,13 +118,13 @@ class Resguardo(db.Model):
     Fecha_Resguardo = db.Column(db.Date)
     No_Trabajador = db.Column(db.String(50))
     Puesto_Trabajador = db.Column(db.String(100))
+    RFC_Trabajador = db.Column(db.String(15))
     No_Nomina_Trabajador = db.Column(db.Integer)
     Nombre_Del_Resguardante = db.Column(db.String(255))
     Nombre_Director_Jefe_De_Area = db.Column(db.String(255))
     Activo = db.Column(db.Boolean, default=True, nullable=False)
     Fecha_Registro = db.Column(db.DateTime, server_default=text('CURRENT_TIMESTAMP'))
     Fecha_Ultima_Modificacion = db.Column(db.DateTime, server_default=text('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP'))
-
     area = db.relationship('Area', back_populates='resguardos')
     imagenes = db.relationship('ImagenesResguardo', backref='resguardo', lazy=True, cascade="all, delete-orphan")
     traspasos = db.relationship('Traspaso', back_populates='resguardo', lazy=True)
@@ -114,7 +132,8 @@ class Resguardo(db.Model):
     # --- CORRECCIÓN CLAVE: Se añaden las relaciones inversas que faltaban ---
     oficios_traspaso_anteriores = db.relationship('OficiosTraspaso', foreign_keys='OficiosTraspaso.id_resguardo_anterior', back_populates='resguardo_anterior')
     oficios_traspaso_actuales = db.relationship('OficiosTraspaso', foreign_keys='OficiosTraspaso.id_resguardo_actual', back_populates='resguardo_actual')
-
+    usuario_id_registro = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    
 class ImagenesBien(db.Model):
     __tablename__ = 'imagenes_bien'
     id = db.Column(db.Integer, primary_key=True)
@@ -129,6 +148,7 @@ class ImagenesResguardo(db.Model):
     ruta_imagen = db.Column(db.String(255), nullable=False)
     fecha_subida = db.Column(db.DateTime, default=datetime.utcnow)
 
+# En tu models.py - MODIFICA esta línea
 class ActivityLog(db.Model):
     __tablename__ = 'activity_log'
     id = db.Column(db.Integer, primary_key=True)
@@ -137,7 +157,7 @@ class ActivityLog(db.Model):
     action = db.Column(db.String(255), nullable=False)
     category = db.Column(db.String(100))
     details = db.Column(db.Text)
-    resource_id = db.Column(db.Integer)
+    resource_id = db.Column(db.String(50))  # ← CAMBIAR de Integer a String(50)
     user = db.relationship('User', back_populates='activity_logs')
 
 class Traspaso(db.Model):

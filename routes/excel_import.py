@@ -94,12 +94,37 @@ def upload_excel():
     inserted_count = 0
     error_rows = []
     upload_id = str(uuid.uuid4())
+    
+    # Registrar inicio de la actividad (SOLO si db está disponible)
+    try:
+        from app import db  # Importar aquí para evitar errores
+        log_activity(
+            action='INICIO_IMPORTACION_EXCEL',
+            category='IMPORTACION',
+            details=f'Inicio de importación desde archivo: {file.filename}',
+            resource_id=upload_id
+        )
+        db.session.commit()
+    except Exception as log_error:
+        print(f"Error inicial en log: {log_error}")
 
     try:
         df = pd.read_excel(file)
         excel_headers_map = {str(col).upper().strip(): str(col) for col in df.columns}
-        conn = get_db_connection()
+        conn = get_db_connection()  # ← MANTIENES tu conexión actual
         cursor = conn.cursor(dictionary=True)
+        
+        # Registrar lectura exitosa del archivo
+        try:
+            log_activity(
+                action='ARCHIVO_LEIDO',
+                category='IMPORTACION',
+                details=f'Archivo leído correctamente. Filas: {len(df)}, Columnas: {len(df.columns)}',
+                resource_id=upload_id
+            )
+            db.session.commit()
+        except Exception as log_error:
+            print(f"Error en log de archivo leído: {log_error}")
         
         for index, row in df.iterrows():
             try:
@@ -146,7 +171,19 @@ def upload_excel():
                 error_rows.append(error_row_data)
                 traceback.print_exc()
 
-        if inserted_count > 0: conn.commit()
+        if inserted_count > 0: 
+            conn.commit()
+            # Registrar éxito en la inserción de datos
+            try:
+                log_activity(
+                    action='DATOS_INSERTADOS',
+                    category='IMPORTACION',
+                    details=f'Resguardos insertados exitosamente: {inserted_count}',
+                    resource_id=upload_id
+                )
+                db.session.commit()
+            except Exception as log_error:
+                print(f"Error en log de datos insertados: {log_error}")
         
         if error_rows:
             error_cols_to_insert = list(error_rows[0].keys())
@@ -160,22 +197,80 @@ def upload_excel():
             conn.commit()
             session['upload_id'] = upload_id
             
+            # Registrar errores encontrados
+            try:
+                log_activity(
+                    action='ERRORES_REGISTRADOS',
+                    category='IMPORTACION',
+                    details=f'Errores registrados: {len(error_rows)} filas con problemas',
+                    resource_id=upload_id
+                )
+                
+                log_activity(
+                    action='IMPORTACION_COMPLETADA_CON_ERRORES',
+                    category='IMPORTACION',
+                    details=f'Importación completada. Exitosos: {inserted_count}, Errores: {len(error_rows)}',
+                    resource_id=upload_id
+                )
+                db.session.commit()
+            except Exception as log_error:
+                print(f"Error en log de errores: {log_error}")
+            
             flash(f"Se importaron {inserted_count} resguardos y se omitieron {len(error_rows)} filas con errores. Por favor, revísalas.", 'warning')
             return redirect(url_for('excel_import.handle_errors'))
+            
         elif inserted_count > 0:
-             flash(f"Se importaron {inserted_count} resguardos exitosamente.", 'success')
+            flash(f"Se importaron {inserted_count} resguardos exitosamente.", 'success')
+            # Registrar finalización exitosa
+            try:
+                log_activity(
+                    action='IMPORTACION_COMPLETADA_EXITOSA',
+                    category='IMPORTACION',
+                    details=f'Importación completada exitosamente. Total resguardos: {inserted_count}',
+                    resource_id=upload_id
+                )
+                db.session.commit()
+            except Exception as log_error:
+                print(f"Error en log de éxito: {log_error}")
+            
         else:
-             flash("No se encontraron filas válidas para importar en el archivo.", 'info')
+            flash("No se encontraron filas válidas para importar en el archivo.", 'info')
+            # Registrar que no había datos válidos
+            try:
+                log_activity(
+                    action='IMPORTACION_SIN_DATOS_VALIDOS',
+                    category='IMPORTACION',
+                    details='El archivo no contenía filas válidas para importar',
+                    resource_id=upload_id
+                )
+                db.session.commit()
+            except Exception as log_error:
+                print(f"Error en log sin datos: {log_error}")
 
     except Exception as e:
-        if conn: conn.rollback()
+        if conn: 
+            conn.rollback()
+        
+        # Registrar error fatal
+        try:
+            log_activity(
+                action='ERROR_FATAL_IMPORTACION',
+                category='IMPORTACION',
+                details=f'Error fatal al procesar archivo: {str(e)}',
+                resource_id=upload_id
+            )
+            db.session.commit()
+        except Exception as log_error:
+            print(f"Error en log fatal: {log_error}")
+        
         flash(f"Error fatal al procesar el archivo: {e}", 'danger')
         traceback.print_exc()
+        
     finally:
-        if conn and conn.is_connected(): conn.close()
+        if conn and conn.is_connected(): 
+            conn.close()
     
     return redirect(url_for('resguardos.crear_resguardo'))
-
 
 @excel_import_bp.route('/handle_errors')
 @login_required
