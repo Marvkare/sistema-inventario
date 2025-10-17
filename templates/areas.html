@@ -1,163 +1,331 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="flex-grow flex flex-col items-center p-8">
-    <div class="container bg-white p-8 rounded-xl shadow-lg border border-gray-200 w-full max-w-4xl">
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                {% for category, message in messages %}
-                    <div class="flash-message flash-{{ category }}">{{ message }}</div>
-                {% endfor %}
-            {% endif %}
-        {% endwith %}
-
-        <h2 class="text-3xl font-bold text-gray-800 mb-6 text-center">Gestión de Áreas</h2>
-
-        {# Formulario para Agregar/Editar Área #}
-        <div class="bg-gray-50 p-6 rounded-lg mb-8 border border-gray-200">
-            <h3 class="text-2xl font-semibold mb-4 text-gray-700" id="form-title">Agregar Nueva Área</h3>
-            <form id="area-form" method="POST" action="{{ url_for('areas.manage_areas') }}" class="space-y-4">
-                <input type="hidden" name="area_id" id="area_id" value="">
-                <div>
-                    <label for="area_name" class="block text-sm font-medium text-gray-700">Nombre del Área</label>
-                    <input type="text" id="area_name" name="area_name" required
-                           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 border">
+<div class="min-h-screen bg-gradient-to-br from-gray-50 to-beige-light/20 py-8 px-4">
+    <div class="max-w-6xl mx-auto">
+        
+        <!-- ENCABEZADO MEJORADO -->
+        <div class="bg-white rounded-2xl shadow-xl border border-beige-light overflow-hidden mb-8">
+            <div class="bg-gradient-to-r from-burgundy to-burgundy-dark p-6 text-white">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                    <div>
+                        <h1 class="text-2xl md:text-3xl font-bold">
+                            Gestión de Áreas
+                        </h1>
+                        <p class="text-beige-light mt-2">
+                            Administra las áreas disponibles en el sistema
+                        </p>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <div class="w-10 h-10 bg-beige rounded-full flex items-center justify-center">
+                            <i class="fas fa-map-marker-alt text-burgundy text-lg"></i>
+                        </div>
+                    </div>
                 </div>
-                <div>
-                    <label for="area_numero" class="block text-sm font-medium text-gray-700">Número de Área (Opcional)</label>
-                    <input type="number" id="area_numero" name="area_numero" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 border">
-                </div>
-                <div class="flex justify-end space-x-2">
-                    <button type="submit" class="bg-blue-600 text-white px-6 py-2 rounded-lg shadow-md hover:bg-blue-700 transition-colors font-medium flex items-center">
-                        <i class="fas fa-save mr-2"></i> Guardar Área
-                    </button>
-                    <button type="button" id="cancel-edit-btn" class="bg-gray-400 text-white px-6 py-2 rounded-lg shadow-md hover:bg-gray-500 transition-colors font-medium hidden">
-                        <i class="fas fa-times-circle mr-2"></i> Cancelar Edición
-                    </button>
-                </div>
-            </form>
+            </div>
         </div>
 
-        {# Tabla de Áreas Existentes #}
-        <div class="bg-gray-50 p-6 rounded-lg border border-gray-200">
-            <h3 class="text-2xl font-semibold mb-4 text-gray-700">Áreas Existentes</h3>
-            {% if areas %}
-            <div class="overflow-x-auto">
-                <table class="min-w-full divide-y divide-gray-200">
-                    <thead class="bg-gray-100">
-                        <tr>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID DB</th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nombre</th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Número</th>
-                            <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody class="bg-white divide-y divide-gray-200">
-                        {% for area in areas %}
-                        <tr id="area-row-{{ area.id }}">
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ area.id }}</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900" data-name="{{ area.name }}">{{ area.name }}</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ area.numero | default('N/A') }}</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
-                                <button type="button" onclick="editArea({{ area.id }}, '{{ area.name }}', '{{ area.numero | default('') }}')"
-                                        class="text-indigo-600 hover:text-indigo-900 mr-4" title="Editar">
-                                    <i class="fas fa-edit"></i>
-                                </button>
-                                
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+        <!-- CONTENIDO PRINCIPAL -->
+        <div class="space-y-8">
+            <!-- MENSAJES FLASH MEJORADOS -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="p-4 rounded-xl border-l-4 
+                                    {% if category == 'success' %} 
+                                        bg-green-50 border-green-500 text-green-700
+                                    {% elif category == 'danger' %} 
+                                        bg-red-50 border-red-500 text-red-700
+                                    {% else %} 
+                                        bg-blue-50 border-blue-500 text-blue-700
+                                    {% endif %}">
+                            <div class="flex items-center">
+                                <i class="fas 
+                                    {% if category == 'success' %} 
+                                        fa-check-circle 
+                                    {% elif category == 'danger' %} 
+                                        fa-exclamation-circle 
+                                    {% else %} 
+                                        fa-info-circle 
+                                    {% endif %} 
+                                    mr-3 text-lg"></i>
+                                <span class="font-medium">{{ message }}</span>
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <!-- FORMULARIO PARA AGREGAR/EDITAR ÁREA MEJORADO -->
+            <div class="bg-white rounded-2xl shadow-lg border border-beige-light overflow-hidden">
+                <div class="p-6 md:p-8">
+                    <div class="flex items-center mb-6">
+                        <div class="w-8 h-8 bg-burgundy rounded-full flex items-center justify-center mr-3">
+                            <i class="fas fa-plus-circle text-white text-sm"></i>
+                        </div>
+                        <h2 class="text-xl font-bold text-burgundy" id="form-title">Agregar Nueva Área</h2>
+                    </div>
+                    
+                    <form id="area-form" method="POST" action="{{ url_for('areas.manage_areas') }}" class="space-y-6">
+                        <input type="hidden" name="area_id" id="area_id" value="">
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label for="area_name" class="block text-sm font-semibold text-gray-700 mb-2 flex items-center">
+                                    <i class="fas fa-tag text-burgundy mr-2 text-xs"></i>
+                                    Nombre del Área *
+                                </label>
+                                <input type="text" 
+                                       id="area_name" 
+                                       name="area_name" 
+                                       required
+                                       class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-burgundy/50 focus:border-burgundy transition-all duration-200 bg-white/80"
+                                       placeholder="Ingrese el nombre del área">
+                            </div>
+                            
+                            <div>
+                                <label for="area_numero" class="block text-sm font-semibold text-gray-700 mb-2 flex items-center">
+                                    <i class="fas fa-hashtag text-burgundy mr-2 text-xs"></i>
+                                    Número de Área
+                                </label>
+                                <input type="number" 
+                                       id="area_numero" 
+                                       name="area_numero" 
+                                       class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-burgundy/50 focus:border-burgundy transition-all duration-200 bg-white/80"
+                                       placeholder="Número opcional">
+                            </div>
+                        </div>
+                        
+                        <div class="flex justify-end space-x-4 pt-4">
+                            <button type="button" 
+                                    id="cancel-edit-btn" 
+                                    class="inline-flex items-center justify-center px-6 py-3 border-2 border-gray-300 text-base font-semibold rounded-xl text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-all duration-200 ease-in-out hidden">
+                                <i class="fas fa-times-circle mr-2"></i> Cancelar
+                            </button>
+                            <button type="submit" 
+                                    class="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-semibold rounded-xl shadow-sm text-white bg-gradient-to-r from-burgundy to-burgundy-dark hover:from-burgundy-dark hover:to-burgundy focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-burgundy transition-all duration-200 ease-in-out">
+                                <i class="fas fa-save mr-2"></i> 
+                                <span id="submit-text">Guardar Área</span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
             </div>
-            {% else %}
-            <p class="no-data">No hay áreas registradas aún.</p>
-            {% endif %}
+
+            <!-- TABLA DE ÁREAS EXISTENTES MEJORADA -->
+            <div class="bg-white rounded-2xl shadow-lg border border-beige-light overflow-hidden">
+                <div class="p-6 md:p-8">
+                    <div class="flex items-center justify-between mb-6">
+                        <div class="flex items-center">
+                            <div class="w-8 h-8 bg-burgundy rounded-full flex items-center justify-center mr-3">
+                                <i class="fas fa-list text-white text-sm"></i>
+                            </div>
+                            <h2 class="text-xl font-bold text-burgundy">Áreas Existentes</h2>
+                        </div>
+                        
+                        {% if areas %}
+                        <div class="flex items-center bg-beige-light/20 px-3 py-2 rounded-lg">
+                            <i class="fas fa-layer-group text-burgundy mr-2"></i>
+                            <span class="text-sm font-medium text-gray-700">
+                                Total: <strong class="text-burgundy">{{ areas|length }}</strong> área{{ 's' if areas|length != 1 }}
+                            </span>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    {% if areas %}
+                    <div class="overflow-hidden shadow-lg rounded-xl border border-beige-light">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gradient-to-r from-gray-50 to-beige-light/30">
+                                <tr>
+                                    <th scope="col" class="px-6 py-4 text-left text-sm font-semibold text-burgundy uppercase tracking-wider border-b border-beige-light">
+                                        <i class="fas fa-database mr-2"></i>ID
+                                    </th>
+                                    <th scope="col" class="px-6 py-4 text-left text-sm font-semibold text-burgundy uppercase tracking-wider border-b border-beige-light">
+                                        <i class="fas fa-tag mr-2"></i>Nombre
+                                    </th>
+                                    <th scope="col" class="px-6 py-4 text-left text-sm font-semibold text-burgundy uppercase tracking-wider border-b border-beige-light">
+                                        <i class="fas fa-hashtag mr-2"></i>Número
+                                    </th>
+                                    <th scope="col" class="px-6 py-4 text-center text-sm font-semibold text-burgundy uppercase tracking-wider border-b border-beige-light">
+                                        <i class="fas fa-cogs mr-2"></i>Acciones
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200">
+                                {% for area in areas %}
+                                <tr id="area-row-{{ area.id }}" class="hover:bg-beige-light/10 transition-colors duration-150 group">
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="text-sm font-medium text-gray-900 bg-gray-50 px-2 py-1 rounded-lg inline-block">
+                                            {{ area.id }}
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="flex items-center">
+                                            <div class="w-8 h-8 bg-burgundy/10 rounded-full flex items-center justify-center mr-3 group-hover:bg-burgundy/20 transition-colors duration-200">
+                                                <i class="fas fa-map-marker-alt text-burgundy text-xs"></i>
+                                            </div>
+                                            <span class="text-sm font-medium text-gray-900" data-name="{{ area.name }}">
+                                                {{ area.name }}
+                                            </span>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="text-sm text-gray-600">
+                                            {{ area.numero | default('N/A') }}
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-center">
+                                        <div class="flex justify-center space-x-2">
+                                            <button type="button" 
+                                                    onclick="editArea({{ area.id }}, '{{ area.name }}', '{{ area.numero | default('') }}')"
+                                                    class="inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg text-white bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200 shadow-sm"
+                                                    title="Editar área">
+                                                <i class="fas fa-edit mr-2 text-xs"></i>
+                                                Editar
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <!-- ESTADO VACÍO MEJORADO -->
+                    <div class="text-center py-12">
+                        <div class="w-24 h-24 bg-beige-light/30 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <i class="fas fa-map-marker-alt text-burgundy text-3xl"></i>
+                        </div>
+                        <h3 class="text-xl font-semibold text-gray-700 mb-2">No hay áreas registradas</h3>
+                        <p class="text-gray-500 mb-6 max-w-md mx-auto">
+                            Comienza agregando la primera área al sistema.
+                        </p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
         </div>
     </div>
 </div>
+{% endblock %}
 
+{% block styles %}
+<style>
+    .bg-burgundy { background-color: #6A2E4D; }
+    .bg-burgundy-dark { background-color: #551E3A; }
+    .text-burgundy { color: #6A2E4D; }
+    .border-burgundy { border-color: #6A2E4D; }
+    
+    .bg-beige { background-color: #BC9B6A; }
+    .bg-beige-light { background-color: #D7C3A0; }
+    .text-beige-light { color: #D7C3A0; }
+    .border-beige { border-color: #BC9B6A; }
+    .border-beige-light { border-color: #D7C3A0; }
+    
+    .from-burgundy { --tw-gradient-from: #6A2E4D; --tw-gradient-to: rgb(106 46 77 / 0); --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to); }
+    .to-burgundy-dark { --tw-gradient-to: #551E3A; }
+    
+    input:focus, select:focus, textarea:focus {
+        outline: none;
+        box-shadow: 0 0 0 2px rgb(106 46 77 / 0.1);
+    }
+    
+    /* Animaciones suaves para las filas de la tabla */
+    tr {
+        transition: all 0.2s ease-in-out;
+    }
+    
+    /* Efectos hover mejorados */
+    .inline-flex:hover {
+        transform: translateY(-1px);
+    }
+</style>
+{% endblock %}
+
+{% block scripts %}
 <script>
-    // JavaScript para ocultar los mensajes flash
     document.addEventListener('DOMContentLoaded', () => {
-        const flashMessages = document.querySelectorAll('.flash-message');
-        flashMessages.forEach(msg => {
+        console.log("✅ Diseño mejorado cargado - Gestión de Áreas");
+
+        // Elementos del formulario
+        const formTitle = document.getElementById('form-title');
+        const areaForm = document.getElementById('area-form');
+        const areaIdInput = document.getElementById('area_id');
+        const areaNameInput = document.getElementById('area_name');
+        const areaNumeroInput = document.getElementById('area_numero');
+        const submitText = document.getElementById('submit-text');
+        const cancelButton = document.getElementById('cancel-edit-btn');
+
+        // Función para editar área
+        window.editArea = function(id, name, numero) {
+            formTitle.textContent = 'Editar Área';
+            areaIdInput.value = id;
+            areaNameInput.value = name;
+            areaNumeroInput.value = numero;
+            submitText.textContent = 'Actualizar Área';
+            cancelButton.classList.remove('hidden');
+            
+            // Scroll suave al formulario
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // Event listener para cancelar edición
+        cancelButton.addEventListener('click', () => {
+            resetForm();
+        });
+
+        // Función para resetear el formulario
+        function resetForm() {
+            formTitle.textContent = 'Agregar Nueva Área';
+            areaIdInput.value = '';
+            areaNameInput.value = '';
+            areaNumeroInput.value = '';
+            submitText.textContent = 'Guardar Área';
+            cancelButton.classList.add('hidden');
+        }
+
+        // Efectos hover en las filas de la tabla
+        const tableRows = document.querySelectorAll('tbody tr');
+        tableRows.forEach(row => {
+            row.addEventListener('mouseenter', function() {
+                this.style.transform = 'translateX(4px)';
+            });
+            
+            row.addEventListener('mouseleave', function() {
+                this.style.transform = 'translateX(0)';
+            });
+        });
+
+        // Validación del formulario
+        areaForm.addEventListener('submit', function(e) {
+            const areaName = areaNameInput.value.trim();
+            
+            if (!areaName) {
+                e.preventDefault();
+                areaNameInput.focus();
+                areaNameInput.classList.add('border-red-500');
+                
+                // Remover la clase después de 2 segundos
+                setTimeout(() => {
+                    areaNameInput.classList.remove('border-red-500');
+                }, 2000);
+                
+                return false;
+            }
+            
+            // Mostrar loading state en el botón
+            const submitBtn = this.querySelector('button[type="submit"]');
+            const originalText = submitBtn.innerHTML;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Procesando...';
+            submitBtn.disabled = true;
+            
+            // Restaurar después de 3 segundos (en caso de que algo falle)
             setTimeout(() => {
-                msg.style.opacity = '0';
-                msg.style.display = 'none';
-                msg.remove(); // Eliminar del DOM
-            }, 6000);
+                submitBtn.innerHTML = originalText;
+                submitBtn.disabled = false;
+            }, 3000);
         });
     });
-
-    const formTitle = document.getElementById('form-title');
-    const areaForm = document.getElementById('area-form');
-    const areaIdInput = document.getElementById('area_id');
-    const areaNameInput = document.getElementById('area_name');
-    const areaNumeroInput = document.getElementById('area_numero'); // New input
-    const saveButton = areaForm.querySelector('button[type="submit"]');
-    const cancelButton = document.getElementById('cancel-edit-btn');
-
-    function editArea(id, name, numero) {
-        formTitle.textContent = 'Editar Área';
-        areaIdInput.value = id;
-        areaNameInput.value = name;
-        areaNumeroInput.value = numero; // Set the value for the number input
-        saveButton.innerHTML = '<i class="fas fa-save mr-2"></i> Actualizar Área';
-        cancelButton.classList.remove('hidden');
-        window.scrollTo({ top: 0, behavior: 'smooth' }); // Scroll to form
-    }
-
-    cancelButton.addEventListener('click', () => {
-        resetForm();
-    });
-
-    function resetForm() {
-        formTitle.textContent = 'Agregar Nueva Área';
-        areaIdInput.value = '';
-        areaNameInput.value = '';
-        areaNumeroInput.value = ''; // Reset the number input
-        saveButton.innerHTML = '<i class="fas fa-save mr-2"></i> Guardar Área';
-        cancelButton.classList.add('hidden');
-    }
-
-    function deleteArea(id, name) {
-        if (confirm(`¿Estás seguro de que quieres eliminar el área "${name}"? Esta acción no se puede deshacer.`)) {
-            fetch(`/delete_area/${id}`, {
-                method: 'POST', // Using POST for deletion as it changes state
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    showFlashMessage(data.message, 'success');
-                    document.getElementById(`area-row-${id}`).remove(); // Remove row from table
-                } else {
-                    showFlashMessage(data.message, 'error');
-                }
-            })
-            .catch(error => {
-                console.error('Error al eliminar el área:', error);
-                showFlashMessage('Error de red o del servidor al eliminar el área.', 'error');
-            });
-        }
-    }
-
-    // Function to show flash messages from JavaScript (copied from crear_resguardo.html)
-    function showFlashMessage(message, category) {
-        const flashContainer = document.querySelector('.container');
-        const newMessageDiv = document.createElement('div');
-        newMessageDiv.classList.add('flash-message', `flash-${category}`);
-        newMessageDiv.textContent = message;
-        flashContainer.insertBefore(newMessageDiv, flashContainer.firstChild);
-
-        setTimeout(() => {
-            newMessageDiv.style.opacity = '0';
-            newMessageDiv.style.display = 'none';
-            newMessageDiv.remove();
-        }, 6000);
-    }
 </script>
 {% endblock %}

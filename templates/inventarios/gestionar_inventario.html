@@ -1,0 +1,640 @@
+{# templates/inventarios/gestionar_inventario.html #}
+
+{% extends "base.html" %}
+
+{% block title %}Gestionando: {{ inventario.nombre }}{% endblock %}
+
+{% block content %}
+
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+
+    <div class="bg-white p-6 shadow-lg rounded-lg mb-8">
+        <div class="flex flex-wrap justify-between items-start gap-4">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-800">{{ inventario.nombre }}</h1>
+                <p class="mt-1 text-sm text-gray-500">Iniciado el: {{ inventario.fecha_inicio.strftime('%d de %B de %Y') }}</p>
+            </div>
+            <div class="flex items-center space-x-4">
+                <a href="{{ url_for('inventarios.listar_inventarios') }}" class="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                    <svg class="w-5 h-5 mr-2 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M12.79 5.23a.75.75 0 01-.02 1.06L8.832 10l3.938 3.71a.75.75 0 11-1.04 1.08l-4.5-4.25a.75.75 0 010-1.08l4.5-4.25a.75.75 0 011.06.02z" clip-rule="evenodd" /></svg>
+                    Regresar
+                </a>
+
+                {% if inventario.estatus == 'Planificado' %}
+                <form action="{{ url_for('inventarios.cambiar_estatus_inventario', inventario_id=inventario.id, accion='comenzar') }}" method="POST" onsubmit="return confirm('¿Deseas iniciar el levantamiento físico?');">
+                    <button type="submit" class="inline-flex items-center px-3 py-2 border border-transparent shadow-sm text-sm leading-4 font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">Comenzar Levantamiento</button>
+                </form>
+                {% elif inventario.estatus == 'En Progreso' %}
+                <form action="{{ url_for('inventarios.cambiar_estatus_inventario', inventario_id=inventario.id, accion='conciliar') }}" method="POST" onsubmit="return confirm('¿Has terminado de capturar todos los hallazgos?');">
+                    <button type="submit" class="inline-flex items-center px-3 py-2 border border-transparent shadow-sm text-sm leading-4 font-medium rounded-md text-white bg-yellow-500 hover:bg-yellow-600">Mover a Conciliación</button>
+                </form>
+                {% elif inventario.estatus == 'En Conciliación' %}
+                 <form action="{{ url_for('inventarios.cambiar_estatus_inventario', inventario_id=inventario.id, accion='finalizar') }}" method="POST" onsubmit="return confirm('¿Estás seguro de finalizar? Esta acción es irreversible.');">
+                    <button type="submit" class="inline-flex items-center px-3 py-2 border border-transparent shadow-sm text-sm leading-4 font-medium rounded-md text-white bg-green-600 hover:bg-green-700">Finalizar Inventario</button>
+                </form>
+                {% endif %}
+                
+                <span class="text-sm font-medium text-gray-600">Estatus: {{ inventario.estatus }}
+                </span>
+                </div>
+        </div>
+    </div>
+
+    <div class="border-b border-gray-200 mb-6">
+        <nav class="-mb-px flex space-x-8" aria-label="Tabs">
+            <button id="tab-verificar" class="tab-button whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm border-indigo-500 text-indigo-600">Bienes a Verificar</button>
+            <button id="tab-sobrantes" class="tab-button whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300">Bienes Sobrantes ({{ sobrantes|length }})</button>
+        </nav>
+    </div>
+
+    <div id="tab-verificar-content" class="tab-content space-y-6">
+        <div class="text-center">
+            <h2 class="text-xl font-bold text-gray-800">Cédula de Levantamiento por Área</h2>
+            <p class="mt-1 text-sm text-gray-500">Haz clic en cada área para ver y gestionar sus bienes correspondientes.</p>
+        </div>
+
+        <div class="mb-6 px-1">
+            <label for="search-bienes-input" class="sr-only">Buscar Bien</label>
+            <input type="search" id="search-bienes-input" placeholder="🔍 Buscar por No. Inventario, Descripción, Resguardante..." class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+        </div>        
+        
+        
+{% for nombre_area, detalles_en_area in detalles_agrupados.items() %}
+        <details class="bg-white shadow-lg rounded-lg overflow-hidden transition-all duration-300" open>
+            <summary class="p-4 cursor-pointer flex justify-between items-center font-medium text-gray-900 hover:bg-gray-50">
+                <div>
+                    <span class="text-lg font-semibold">Área: {{ nombre_area }}</span>
+                    {% if detalles_en_area and detalles_en_area[0].Nombre_Director_Jefe_De_Area %}
+                    <p class="text-sm text-gray-500">Jefe de Área: {{ detalles_en_area[0].Nombre_Director_Jefe_De_Area }}</p>
+                    {% endif %}
+                </div>
+                <span class="text-sm px-3 py-1 rounded-full bg-blue-100 text-blue-800">{{ detalles_en_area|length }} bienes</span>
+            </summary>
+            <div class="border-t border-gray-200 overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">No. Inventario</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Descripción</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Resguardante Esperado</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estatus Hallazgo</th>
+                            <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        {% for detalle in detalles_en_area %}
+                        <tr class="bien-row">
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-mono text-gray-700">{{ detalle.No_Inventario }}</td>
+                            <td class="px-6 py-4 text-sm text-gray-600">{{ detalle.Descripcion_Del_Bien }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ detalle.nombre_resguardante_esperado }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                {% if detalle.estatus_hallazgo == 'Pendiente' %}<span class="text-gray-500">Pendiente</span>{% elif detalle.estatus_hallazgo == 'Localizado' %}<span class="text-green-600">Localizado</span>{% elif detalle.estatus_hallazgo == 'No Localizado' %}<span class="text-red-600">No Localizado</span>{% elif detalle.estatus_hallazgo == 'Localizado con Discrepancia' %}<span class="text-yellow-600">Con Discrepancia</span>{% endif %}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-center text-sm">
+    {# Solo mostramos botones de acción si el inventario está en progreso #}
+    {% if inventario.estatus == 'En Progreso' %}
+
+        {# Si el bien aún no se ha revisado, el botón es "Revisar" #}
+        {% if detalle.estatus_hallazgo == 'Pendiente' %}
+            <button class="revisar-btn text-indigo-600 hover:text-indigo-900 font-medium" 
+                    data-detalle-id="{{ detalle.id }}"
+                    data-inventario-id="{{ detalle.id_inventario }}"
+                    data-no-inventario="{{ detalle.No_Inventario or '' }}"
+                    data-descripcion="{{ detalle.Descripcion_Del_Bien or '' }}"
+                    data-action="revisar">
+                Revisar
+            </button>
+        
+        {# Si el bien ya fue revisado (cualquier estado excepto pendiente), el botón es "Editar" #}
+        {% else %}
+            <button class="revisar-btn text-green-600 hover:text-green-900 font-medium" 
+                    data-detalle-id="{{ detalle.id }}"
+                    data-inventario-id="{{ detalle.id_inventario }}"
+                    data-no-inventario="{{ detalle.No_Inventario or '' }}"
+                    data-descripcion="{{ detalle.Descripcion_Del_Bien or '' }}"
+                    data-action="editar">
+                Editar
+            </button>
+        {% endif %}
+
+    {# Si el inventario no está en progreso, no se puede hacer ninguna acción #}
+    {% else %}
+        <span class="text-gray-400 font-medium">-</span>
+    {% endif %}
+</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </details>
+        {% else %}
+            <div class="bg-white shadow-lg rounded-lg p-12 text-center">
+                <h3 class="text-lg font-medium text-gray-700">No hay bienes asignados</h3>
+                <p class="mt-1 text-sm text-gray-500">No se encontraron bienes en las áreas seleccionadas para este inventario.</p>
+            </div>
+        {% endfor %}
+    </div>
+
+    <div id="tab-sobrantes-content" class="tab-content hidden">
+    <div class="bg-white shadow-lg rounded-lg overflow-hidden">
+        <div class="p-6 flex justify-between items-center">
+            <div>
+                <h2 class="text-lg font-medium text-gray-900">Bienes Sobrantes Encontrados</h2>
+                <p class="mt-1 text-sm text-gray-500">Bienes encontrados en campo que no estaban en la lista original.</p>
+            </div>
+            {% if inventario.estatus != 'Planificado' %}
+            <button id="abrir-modal-sobrante" class="inline-flex items-center px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-md shadow-sm hover:bg-green-700">
+                Registrar Bien Sobrante
+            </button>
+            {% endif %}
+        </div>
+        
+        <div class="border-t border-gray-200 overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Descripción</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Marca / Modelo / Serie</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado de Resolución</th>
+                        <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for sobrante in sobrantes %}
+                    <tr>
+                        <td class="px-6 py-4 text-sm text-gray-600">{{ sobrante.descripcion_bien }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {{ sobrante.marca or 'N/A' }} / {{ sobrante.modelo or 'N/A' }} / {{ sobrante.numero_serie or 'N/A' }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-700">{{ sobrante.estatus_resolucion }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-center text-sm">
+                            <a href="#" class="text-indigo-600 hover:text-indigo-900 font-medium">Gestionar</a>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="4" class="text-center text-gray-500 py-8">No se han registrado bienes sobrantes.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+</div>
+
+<div id="sobrante-modal" class="fixed inset-0 z-50 overflow-y-auto hidden">
+    <div class="flex items-end justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" id="sobrante-modal-backdrop"></div>
+        <span class="hidden sm:inline-block sm:align-middle sm:h-screen">&#8203;</span>
+        
+        <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+            <form action="{{ url_for('inventarios.agregar_sobrante', inventario_id=inventario.id) }}" method="POST" enctype="multipart/form-data">
+                <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                    <h3 class="text-lg leading-6 font-medium text-gray-900">Registrar Bien Sobrante</h3>
+                    <div class="mt-6 space-y-4">
+                        
+                        <div>
+                            <label for="sobrante-area" class="block text-sm font-medium text-gray-700">Área donde se encontró</label>
+                            <select id="sobrante-area" name="id_area_encontrado" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                                <option value="" disabled selected>-- Selecciona un área --</option>
+                                {% for area in todas_las_areas %}
+                                    <option value="{{ area.id }}">{{ area.nombre }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div>
+                            <label for="sobrante-descripcion" class="block text-sm font-medium text-gray-700">Descripción Detallada</label>
+                            <textarea id="sobrante-descripcion" name="descripcion_bien" rows="3" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"></textarea>
+                        </div>
+                        
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                                <label for="sobrante-marca" class="block text-sm font-medium text-gray-700">Marca</label>
+                                <input type="text" name="marca" id="sobrante-marca" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                            </div>
+                            <div>
+                                <label for="sobrante-modelo" class="block text-sm font-medium text-gray-700">Modelo</label>
+                                <input type="text" name="modelo" id="sobrante-modelo" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                            </div>
+                        </div>
+                        <div>
+                            <label for="sobrante-serie" class="block text-sm font-medium text-gray-700">Número de Serie</label>
+                            <input type="text" name="numero_serie" id="sobrante-serie" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                        </div>
+                        
+                        <div>
+                            <label for="sobrante-condicion" class="block text-sm font-medium text-gray-700">Condición Física</label>
+                            <select id="sobrante-condicion" name="condicion_fisica" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                                <option>Bueno</option>
+                                <option>Regular</option>
+                                <option>Malo</option>
+                            </select>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Fotografías</label>
+                            <input type="file" name="fotos_sobrante" id="sobrante-fotos-input" multiple class="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100"/>
+                            <div id="sobrante-fotos-preview-container" class="mt-4 grid grid-cols-3 sm:grid-cols-4 gap-4">
+                                </div>
+                        </div>
+
+                    </div>
+                </div>
+                <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                    <button type="submit" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 font-medium text-white hover:bg-blue-700 sm:ml-3 sm:w-auto sm:text-sm">Registrar</button>
+                    <button type="button" id="sobrante-modal-cancelar" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white font-medium text-gray-700 hover:bg-gray-50 sm:mt-0 sm:w-auto sm:text-sm">Cancelar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div id="revisar-modal" class="fixed inset-0 z-50 overflow-y-auto hidden">
+    <div class="flex items-end justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" id="modal-backdrop"></div>
+        <span class="hidden sm:inline-block sm:align-middle sm:h-screen">&#8203;</span>
+        <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+            <form method="POST" enctype="multipart/form-data">
+                <input type="hidden" name="detalle_id" id="modal-detalle-id">
+                <input type="hidden" name="inventario_id" id="modal-inventario-id"> 
+                <div id="existing-fotos-container" class="mt-2 grid grid-cols-3 gap-4">
+                </div>
+                <div id="fotos-a-eliminar-container"></div>
+                <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                    <div class="sm:flex sm:items-start">
+                        <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
+                            <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">Revisar Bien: <span class="font-mono" id="modal-no-inventario"></span></h3>
+                            <p class="text-sm text-gray-500" id="modal-descripcion"></p>
+                        </div>
+                    </div>
+                    <div class="mt-6 space-y-6">
+                        <div>
+                            <label class="text-base font-medium text-gray-900">Estatus del Hallazgo</label>
+                            <fieldset class="mt-2"><div class="space-y-2"><div class="flex items-center"><input id="estatus-localizado" name="estatus_hallazgo" type="radio" value="Localizado" class="h-4 w-4 border-gray-300 text-indigo-600 focus:ring-indigo-500"><label for="estatus-localizado" class="ml-3 block text-sm font-medium text-gray-700">Localizado</label></div><div class="flex items-center"><input id="estatus-no-localizado" name="estatus_hallazgo" type="radio" value="No Localizado" class="h-4 w-4 border-gray-300 text-indigo-600 focus:ring-indigo-500"><label for="estatus-no-localizado" class="ml-3 block text-sm font-medium text-gray-700">No Localizado</label></div><div class="flex items-center"><input id="estatus-discrepancia" name="estatus_hallazgo" type="radio" value="Localizado con Discrepancia" class="h-4 w-4 border-gray-300 text-indigo-600 focus:ring-indigo-500"><label for="estatus-discrepancia" class="ml-3 block text-sm font-medium text-gray-700">Localizado con Discrepancia</label></div></div></fieldset>
+                        </div>
+                        <div>
+                            <label for="condicion" class="block text-sm font-medium text-gray-700">Condición Física Reportada</label>
+                            <select id="condicion" name="condicion_fisica" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"><option value="Bueno">Bueno</option><option value="Regular">Regular</option><option value="Malo">Malo</option></select>
+                        </div>
+                        <div>
+                            <label for="observaciones" class="block text-sm font-medium text-gray-700">Observaciones</label>
+                            <textarea id="observaciones" name="observaciones" rows="3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" placeholder="Ej: Ubicado en la oficina contigua, presenta un golpe en la esquina..."></textarea>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Añadir Evidencia Fotográfica</label>
+                            <input type="file" name="fotos" id="fotos-input" multiple class="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100"/>
+                            <div id="fotos-preview-container" class="mt-4 grid grid-cols-3 gap-4">
+                                </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                    <button type="submit" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700">Guardar Cambios</button>
+                    <button type="button" id="modal-cancelar" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50">Cancelar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+    .tab-button.active { border-color: #6366f1; color: #4f46e5; }
+    .tab-content.hidden { display: none; }
+    .preview-image-wrapper {
+    position: relative;
+}
+.preview-image {
+    width: 100%;
+    height: 100px;
+    object-fit: cover;
+    border-radius: 0.375rem; /* rounded-md */
+    border: 1px solid #e5e7eb; /* border-gray-200 */
+}
+.remove-image-btn {
+    position: absolute;
+    top: -0.5rem;
+    right: -0.5rem;
+    background-color: #ef4444; /* bg-red-500 */
+    color: white;
+    border-radius: 9999px; /* rounded-full */
+    width: 1.5rem; /* w-6 */
+    height: 1.5rem; /* h-6 */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.875rem; /* text-sm */
+    font-weight: bold;
+    cursor: pointer;
+    border: 2px solid white;
+    transition: background-color 0.2s;
+}
+.remove-image-btn:hover {
+    background-color: #dc2626; /* bg-red-600 */
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    
+    // ===================================================================
+    // 1. SISTEMA DE TABS
+    // ===================================================================
+    const tabButtons = document.querySelectorAll('.tab-button');
+    const tabContents = document.querySelectorAll('.tab-content');
+    tabButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const targetTab = this.id.replace('tab-', '');
+            tabButtons.forEach(btn => {
+                btn.classList.remove('active', 'border-indigo-500', 'text-indigo-600');
+                btn.classList.add('border-transparent', 'text-gray-500');
+            });
+            this.classList.add('active', 'border-indigo-500', 'text-indigo-600');
+            this.classList.remove('border-transparent', 'text-gray-500');
+            tabContents.forEach(content => content.classList.add('hidden'));
+            document.getElementById(`tab-${targetTab}-content`).classList.remove('hidden');
+        });
+    });
+
+    // ===================================================================
+    // 2. LÓGICA DE LA BARRA DE BÚSQUEDA
+    // ===================================================================
+    const searchInput = document.getElementById('search-bienes-input');
+    if (searchInput) {
+        searchInput.addEventListener('input', function() {
+            const searchTerm = this.value.toLowerCase().trim();
+            const areaDetails = document.querySelectorAll('#tab-verificar-content details');
+
+            areaDetails.forEach(details => {
+                const rows = details.querySelectorAll('tbody tr.bien-row');
+                let visibleRows = 0;
+                rows.forEach(row => {
+                    const cellText = Array.from(row.cells).slice(0, 3).map(cell => cell.textContent.toLowerCase()).join(' ');
+                    if (cellText.includes(searchTerm)) {
+                        row.style.display = '';
+                        visibleRows++;
+                    } else {
+                        row.style.display = 'none';
+                    }
+                });
+                // Ocultar la sección del área si no hay resultados que coincidan
+                if (visibleRows === 0 && searchTerm) {
+                    details.style.display = 'none';
+                } else {
+                    details.style.display = '';
+                }
+            });
+        });
+    }
+
+    // ===================================================================
+    // 3. LÓGICA DE MODALES (REVISAR/EDITAR Y SOBRANTES)
+    // ===================================================================
+
+    // --- Constantes para el Modal "Revisar/Editar Bien" ---
+    const revisarModal = document.getElementById('revisar-modal');
+    const revisarModalBackdrop = document.getElementById('modal-backdrop');
+    const revisarModalCancelar = document.getElementById('modal-cancelar');
+    const revisarButtons = document.querySelectorAll('.revisar-btn');
+    const fotosInput = document.getElementById('fotos-input');
+    const previewContainer = document.getElementById('fotos-preview-container');
+    const existingFotosContainer = document.getElementById('existing-fotos-container');
+    const fotosAEliminarContainer = document.getElementById('fotos-a-eliminar-container');
+    let fileStore = new DataTransfer(); // Almacén para manejar los archivos nuevos
+
+    // --- Constantes para el Modal "Bien Sobrante" ---
+    const sobranteModal = document.getElementById('sobrante-modal');
+    const sobranteModalBackdrop = document.getElementById('sobrante-modal-backdrop');
+    const sobranteModalCancelar = document.getElementById('sobrante-modal-cancelar');
+    const abrirSobranteButton = document.getElementById('abrir-modal-sobrante');
+
+    // --- Funciones para el Modal "Revisar/Editar Bien" ---
+    async function openRevisarModal(button) {
+        const detalleId = button.dataset.detalleId;
+        const inventarioId = button.dataset.inventarioId;
+        const noInventario = button.dataset.noInventario;
+        const descripcion = button.dataset.descripcion;
+        const action = button.dataset.action;
+
+        // Configuración básica del formulario
+        const modalForm = document.querySelector('#revisar-modal form');
+        modalForm.action = `/inventarios/detalle/actualizar/${detalleId}`;
+        document.getElementById('modal-detalle-id').value = detalleId;
+        document.getElementById('modal-inventario-id').value = inventarioId;
+        document.getElementById('modal-no-inventario').textContent = noInventario;
+        document.getElementById('modal-descripcion').textContent = descripcion;
+
+        if (action === 'editar') {
+            try {
+                const response = await fetch(`/inventarios/detalle/${detalleId}`);
+                if (!response.ok) throw new Error('No se pudieron cargar los datos.');
+                const data = await response.json();
+
+                // Llenar formulario con datos existentes
+                document.querySelector(`input[name="estatus_hallazgo"][value="${data.estatus_hallazgo}"]`).checked = true;
+                document.querySelector('#condicion').value = data.condicion_fisica_reportada;
+                document.querySelector('#observaciones').value = data.observaciones;
+
+                // Mostrar fotos existentes
+                existingFotosContainer.innerHTML = '';
+                data.fotos.forEach(foto => {
+                    const wrapper = document.createElement('div');
+                    wrapper.className = 'preview-image-wrapper';
+                    wrapper.id = `foto-existente-${foto.id}`;
+                    wrapper.innerHTML = `
+                        <img src="/uploads/${foto.ruta_archivo}" class="preview-image" alt="Foto existente">
+                        <button type="button" class="remove-image-btn" title="Marcar para eliminar" data-foto-id="${foto.id}">×</button>
+                    `;
+                    existingFotosContainer.appendChild(wrapper);
+                });
+            } catch (error) {
+                console.error("Error al cargar detalle:", error);
+                alert("No se pudo cargar la información para editar. Inténtalo de nuevo.");
+                return;
+            }
+        } else {
+            // Acción de REVISAR: Asegurarse de que el estado por defecto sea 'Pendiente'
+            const pendienteRadio = document.querySelector('input[name="estatus_hallazgo"][value="Pendiente"]');
+            if(pendienteRadio) pendienteRadio.checked = true;
+        }
+
+        revisarModal.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeRevisarModal() {
+        if (!revisarModal) return;
+        revisarModal.classList.add('hidden');
+        document.body.style.overflow = 'auto';
+        // Limpieza completa del modal
+        document.querySelector('#revisar-modal form').reset();
+        previewContainer.innerHTML = '';
+        existingFotosContainer.innerHTML = '';
+        fotosAEliminarContainer.innerHTML = '';
+        fileStore = new DataTransfer();
+        if (fotosInput) fotosInput.files = fileStore.files;
+    }
+
+    // --- Funciones para el Modal "Bien Sobrante" ---
+    function openSobranteModal() {
+        if (!sobranteModal) return;
+        sobranteModal.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeSobranteModal() {
+        if (!sobranteModal) return;
+        sobranteModal.classList.add('hidden');
+        document.body.style.overflow = 'auto';
+
+        // Limpieza del formulario y las previsualizaciones de imágenes
+        document.querySelector('#sobrante-modal form').reset();
+        sobrantePreviewContainer.innerHTML = '';
+        sobranteFileStore = new DataTransfer();
+        if (sobranteFotosInput) sobranteFotosInput.files = sobranteFileStore.files;
+    }
+
+    // --- Asignación de Eventos (Listeners) ---
+    revisarButtons.forEach(button => {
+        button.addEventListener('click', () => openRevisarModal(button));
+    });
+    if (revisarModalBackdrop) revisarModalBackdrop.addEventListener('click', closeRevisarModal);
+    if (revisarModalCancelar) revisarModalCancelar.addEventListener('click', closeRevisarModal);
+
+    if (abrirSobranteButton) abrirSobranteButton.addEventListener('click', openSobranteModal);
+    if (sobranteModalBackdrop) sobranteModalBackdrop.addEventListener('click', closeSobranteModal);
+    if (sobranteModalCancelar) sobranteModalCancelar.addEventListener('click', closeSobranteModal);
+    
+    // Listener para marcar una foto existente para eliminar
+    existingFotosContainer.addEventListener('click', function(event) {
+        if (event.target.matches('.remove-image-btn')) {
+            const fotoId = event.target.dataset.fotoId;
+            const wrapper = document.getElementById(`foto-existente-${fotoId}`);
+            wrapper.style.display = 'none'; // Ocultar visualmente
+            // Añadir un input oculto para que el backend sepa cuál borrar
+            const hiddenInput = document.createElement('input');
+            hiddenInput.type = 'hidden';
+            hiddenInput.name = 'fotos_a_eliminar';
+            hiddenInput.value = fotoId;
+            fotosAEliminarContainer.appendChild(hiddenInput);
+        }
+    });
+
+    // ===================================================================
+    // 4. LÓGICA PARA PREVISUALIZACIÓN DE IMÁGENES NUEVAS
+    // ===================================================================
+    if (fotosInput) {
+        fotosInput.addEventListener('change', function(event) {
+            const files = event.target.files;
+            for (const file of files) {
+                if (![...fileStore.files].find(f => f.name === file.name && f.size === file.size)) {
+                    fileStore.items.add(file);
+                }
+            }
+            fotosInput.files = fileStore.files;
+            renderPreviews();
+        });
+    }
+
+    function renderPreviews() {
+        previewContainer.innerHTML = '';
+        [...fileStore.files].forEach((file, index) => {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const wrapper = document.createElement('div');
+                wrapper.className = 'preview-image-wrapper';
+                wrapper.innerHTML = `
+                    <img src="${e.target.result}" class="preview-image" alt="Previsualización de ${file.name}">
+                    <button type="button" class="remove-image-btn" title="Quitar ${file.name}" data-index="${index}">×</button>
+                `;
+                wrapper.querySelector('.remove-image-btn').addEventListener('click', removeFile);
+                previewContainer.appendChild(wrapper);
+            }
+            reader.readAsDataURL(file);
+        });
+    }
+    
+    function removeFile(event) {
+        const indexToRemove = parseInt(event.target.dataset.index, 10);
+        const newFiles = new DataTransfer();
+        [...fileStore.files].forEach((file, index) => {
+            if (index !== indexToRemove) {
+                newFiles.items.add(file);
+            }
+        });
+        fileStore = newFiles;
+        fotosInput.files = fileStore.files;
+        renderPreviews();
+    }
+
+    // ===================================================================
+    // 5. CERRAR MODALES CON LA TECLA ESCAPE
+    // ===================================================================
+    document.addEventListener('keydown', function(event) {
+        if (event.key === 'Escape') {
+            if (revisarModal && !revisarModal.classList.contains('hidden')) {
+                closeRevisarModal();
+            }
+            if (sobranteModal && !sobranteModal.classList.contains('hidden')) {
+                closeSobranteModal();
+            }
+        }
+    });
+});
+
+const sobranteFotosInput = document.getElementById('sobrante-fotos-input');
+    const sobrantePreviewContainer = document.getElementById('sobrante-fotos-preview-container');
+    let sobranteFileStore = new DataTransfer(); // Almacén de archivos exclusivo para este modal
+
+    if (sobranteFotosInput) {
+        sobranteFotosInput.addEventListener('change', function(event) {
+            const files = event.target.files;
+            for (const file of files) {
+                // Evita añadir duplicados
+                if (![...sobranteFileStore.files].find(f => f.name === file.name && f.size === file.size)) {
+                    sobranteFileStore.items.add(file);
+                }
+            }
+            sobranteFotosInput.files = sobranteFileStore.files;
+            renderSobrantePreviews();
+        });
+    }
+
+    function renderSobrantePreviews() {
+        sobrantePreviewContainer.innerHTML = ''; // Limpiar previsualizaciones
+        [...sobranteFileStore.files].forEach((file, index) => {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const wrapper = document.createElement('div');
+                wrapper.className = 'preview-image-wrapper';
+                // Usamos innerHTML para construir el elemento de una vez
+                wrapper.innerHTML = `
+                    <img src="${e.target.result}" class="preview-image" alt="Previsualización de ${file.name}">
+                    <button type="button" class="remove-image-btn" title="Quitar ${file.name}" data-index="${index}">×</button>
+                `;
+                // Añadimos el listener al botón de eliminar recién creado
+                wrapper.querySelector('.remove-image-btn').addEventListener('click', removeSobranteFile);
+                sobrantePreviewContainer.appendChild(wrapper);
+            }
+            reader.readAsDataURL(file);
+        });
+    }
+    
+    function removeSobranteFile(event) {
+        const indexToRemove = parseInt(event.target.dataset.index, 10);
+        const newFiles = new DataTransfer();
+        // Reconstruimos la lista de archivos sin el que se eliminó
+        [...sobranteFileStore.files].forEach((file, index) => {
+            if (index !== indexToRemove) {
+                newFiles.items.add(file);
+            }
+        });
+        sobranteFileStore = newFiles;
+        sobranteFotosInput.files = sobranteFileStore.files;
+        renderSobrantePreviews(); // Re-dibujamos las miniaturas
+    }
+</script>
+{% endblock %}

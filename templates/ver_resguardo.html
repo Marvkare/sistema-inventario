@@ -1,165 +1,388 @@
 {% extends "base.html" %}
 
-{% block title %}Detalles del Resguardo{% endblock %}
+{% block title %}Detalles del Resguardo: {{ resguardo.No_Resguardo }}{% endblock %}
 
 {% block content %}
-<div class="flex-grow flex flex-col items-center p-8">
-    <div class="container bg-white p-8 rounded-xl shadow-lg border border-gray-200 w-full max-w-4xl">
-        <h1 class="text-3xl font-bold text-gray-800 mb-6 text-center">Detalles del Resguardo</h1>
-        
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
-            <div class="md:col-span-2">
-                <div class="bg-gray-50 p-6 rounded-lg shadow-sm space-y-4">
-                    <h2 class="text-xl font-semibold text-gray-700 border-b pb-2">Información Principal</h2>
-                    <div><strong class="text-gray-800">ID Base de datos:</strong> {{ resguardo.id_resguardo }}</div>
-                    <div><strong class="text-gray-800">No. de Resguardo:</strong> {{ resguardo.No_Resguardo }}</div>
-                    <div><strong class="text-gray-800">No. de Inventario:</strong> {{ resguardo.No_Inventario }}</div>
-                    <div><strong class="text-gray-800">Área:</strong> {{ resguardo.Area_Nombre }}</div>
-                    <div><strong class="text-gray-800">Fecha de Resguardo:</strong> {{ resguardo.Fecha_Resguardo }}</div>
-                    <div><strong class="text-gray-800">Descripción del Bien:</strong> {{ resguardo.Descripcion_Del_Bien }}</div>
-                    <div><strong class="text-gray-800">Descripción Corta del Bien:</strong> {{ resguardo.Descripcion_Corta_Del_Bien }}</div>
-                    
-                    <div class="flex items-center space-x-2">
-                        <strong class="text-gray-800">Estado del Resguardo:</strong>
-                        {% if resguardo.Activo %}
-                            <span class="h-3 w-3 bg-green-500 rounded-full inline-block"></span>
-                            <span class="text-green-700 font-medium">Activo</span>
-                        {% else %}
-                            <span class="h-3 w-3 bg-red-500 rounded-full inline-block"></span>
-                            <span class="text-red-700 font-medium">Inactivo</span>
-                        {% endif %}
+<div class="min-h-screen bg-gradient-to-br from-gray-50 to-beige-light/20 py-8 px-4">
+    <div class="max-w-7xl mx-auto">
+        <!-- Encabezado -->
+        <div class="bg-white rounded-2xl shadow-xl border border-beige-light overflow-hidden mb-8">
+            <div class="bg-gradient-to-r from-burgundy to-burgundy-dark p-6 text-white">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                    <div>
+                        <h1 class="text-2xl md:text-3xl font-bold">Detalles del Resguardo</h1>
+                        <div class="flex flex-wrap items-center gap-3 mt-2">
+                            <span class="bg-beige/30 px-3 py-1 rounded-full text-sm font-medium">{{ resguardo.No_Resguardo or 'N/A' }}</span>
+                            {% if resguardo.Activo %}
+                                <span class="bg-green-500/80 px-3 py-1 rounded-full text-sm font-medium flex items-center">
+                                    <i class="fas fa-circle text-xs mr-1"></i> Activo
+                                </span>
+                            {% else %}
+                                <span class="bg-red-500/80 px-3 py-1 rounded-full text-sm font-medium flex items-center">
+                                    <i class="fas fa-circle text-xs mr-1"></i> Inactivo
+                                </span>
+                            {% endif %}
+                            <span class="bg-burgundy/80 px-3 py-1 rounded-full text-sm font-medium">
+                                {% if resguardo.Tipo_De_Resguardo == 1 %}Sujeto de Control{% else %}Resguardo Normal{% endif %}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="flex flex-wrap gap-2">
+                        <a href="{{ url_for('resguardos.editar_resguardo', id_resguardo=resguardo.id_resguardo) }}" 
+                           class="inline-flex items-center px-4 py-2 bg-beige text-burgundy rounded-xl font-semibold hover:bg-beige-light transition-colors duration-200">
+                            <i class="fas fa-edit mr-2"></i> Editar
+                        </a>
+                        <a href="{{ url_for('resguardos.ver_resguardos') }}" 
+                           class="inline-flex items-center px-4 py-2 border-2 border-beige text-beige rounded-xl font-semibold hover:bg-beige/10 transition-colors duration-200">
+                            <i class="fas fa-arrow-left mr-2"></i> Volver
+                        </a>
                     </div>
                 </div>
             </div>
         </div>
-        
-        <div class="bg-white p-6 rounded-lg border border-gray-200">
-            <h2 class="text-xl font-semibold text-gray-700 mb-4 border-b pb-2">Detalles Completos del Bien y Resguardo</h2>
-            <div class="overflow-x-auto">
-                <table class="min-w-full divide-y divide-gray-200">
-                    <tbody class="bg-white divide-y divide-gray-200">
-                        <tr>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">No. de Factura:</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ resguardo.No_Factura or 'N/A' }}</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">No. de Cuenta:</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ resguardo.No_Cuenta or 'N/A' }}</td>
-                        </tr>
-                        <tr>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Proveedor:</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ resguardo.Proveedor or 'N/A' }}</td>
-                            <td class="px-6 py-4 whitespace-now-word text-sm font-medium text-gray-900">Rubro:</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ resguardo.Rubro or 'N/A' }}</td>
-                        </tr>
-                        <tr>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Póliza:</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ resguardo.Poliza or 'N/A' }}</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Fecha de Póliza:</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ resguardo.Fecha_Poliza or 'N/A' }}</td>
-                        </tr>
-                        <tr>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Sub-Cuenta Armonizadora:</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ resguardo.Sub_Cuenta_Armonizadora or 'N/A' }}</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Fecha de Factura:</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ resguardo.Fecha_Factura or 'N/A' }}</td>
-                        </tr>
-                        <tr>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Costo Inicial:</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ resguardo.Costo_Inicial or 'N/A' }}</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Depreciación Acumulada:</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ resguardo.Depreciacion_Acumulada or 'N/A' }}</td>
-                        </tr>
-                        <tr>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Costo Final:</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ resguardo.Costo_Final_Cantidad or 'N/A' }}</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Cantidad:</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ resguardo.Cantidad or 'N/A' }}</td>
-                        </tr>
-                        <tr>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">No. de Trabajador:</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ resguardo.No_Trabajador or 'N/A' }}</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Puesto:</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ resguardo.Puesto or 'N/A' }}</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">No de Nomina Trabajador:</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ resguardo.No_Nomina_Trabajador or 'N/A' }}</td>
-                        </tr>
-                        <tr>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Nombre Director/Jefe de Área:</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ resguardo.Nombre_Director_Jefe_De_Area or 'N/A' }}</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Tipo de Resguardo:</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                {% if resguardo.Tipo_De_Resguardo is not none %}
-                                    {% if resguardo.Tipo_De_Resguardo == 1 %}Sujeto de Control{% else %}Resguardo Normal{% endif %}
-                                {% else %}N/A{% endif %}
-                            </td>
-                        </tr>
-                        <tr>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Nombre del Resguardante:</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ resguardo.Nombre_Del_Resguardante or 'N/A' }}</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Estado del Bien:</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ resguardo.Estado_Del_Bien or 'N/A' }}</td>
-                        </tr>
-                        <tr>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Marca:</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ resguardo.Marca or 'N/A' }}</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Modelo:</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ resguardo.Modelo or 'N/A' }}</td>
-                        </tr>
-                        <tr>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Número de Serie:</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ resguardo.Numero_De_Serie or 'N/A' }}</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Fecha de Registro:</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ resguardo.Fecha_Registro or 'N/A' }}</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-        <div class="mb-8">
-            <h2 class="text-2xl font-semibold text-gray-700 mb-4 border-b pb-2">Imágenes del Resguardo</h2>
-            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-                {% if imagenes_bien or imagenes_resguardo %}
-                    {% for img_path in imagenes_bien %}
-                    <div class="relative w-full h-48 rounded-lg overflow-hidden shadow-md">
-                        <img src="{{ url_for('serve_uploaded_file', filename=img_path) }}" 
-                             alt="Imagen del bien" 
-                             class="w-full h-full object-cover">
-                    </div>
-                    {% endfor %}
-                    {% for img_path in imagenes_resguardo %}
-                    <div class="relative w-full h-48 rounded-lg overflow-hidden shadow-md">
-                        <img src="{{ url_for('serve_uploaded_file', filename=img_path) }}" 
-                             alt="Imagen del resguardo" 
-                             class="w-full h-full object-cover">
-                    </div>
-                    {% endfor %}
-                {% else %}
-                    <div class="col-span-full w-full h-48 flex items-center justify-center bg-gray-100 rounded-lg text-gray-500">
-                        No hay imágenes disponibles para este resguardo.
-                    </div>
-                {% endif %}
-            </div>
-        </div>
 
-        <div class="mt-8 flex justify-center space-x-4">
-            <a href="{{ url_for('resguardos.imprimir_resguardo', id_resguardo=resguardo.id_resguardo) }}" target="_blank" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-purple-600 hover:bg-purple-700 transition-colors">
-                <i class="fas fa-print mr-2"></i> Imprimir Resguardo
-            </a>
-            {% if resguardo.Activo %}
-            <a href="{{ url_for('traspaso.traspasar_resguardo', id_resguardo_anterior=resguardo.id_resguardo) }}" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 transition-colors">
-                <i class="fas fa-exchange-alt mr-2"></i> Traspasar Resguardo
-            </a>
-            <a href="{{ url_for('resguardos.editar_resguardo', id_resguardo=resguardo.id_resguardo) }}" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 transition-colors">
-                <i class="fas fa-edit mr-2"></i> Editar Resguardo
-            </a>
-            {% else %}
-            <a href="#" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-gray-400 bg-gray-200 cursor-not-allowed">
-                <i class="fas fa-ban mr-2"></i> Resguardo Inactivo
-            </a>
-            {% endif %}
-            <a href="{{ url_for('resguardos.ver_resguardos') }}" class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 transition-colors">
-                <i class="fas fa-arrow-left mr-2"></i> Volver
-            </a>
+        <!-- Contenido principal -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Columna izquierda: Información del Bien -->
+            <div class="lg:col-span-2 space-y-6">
+                <!-- Información General del Bien -->
+                <div class="bg-white rounded-2xl shadow-lg border border-beige-light overflow-hidden">
+                    <div class="flex items-center bg-gradient-to-r from-burgundy/10 to-burgundy/5 p-4 border-b border-beige-light">
+                        <div class="w-8 h-8 bg-burgundy rounded-full flex items-center justify-center mr-3">
+                            <i class="fas fa-box text-white text-sm"></i>
+                        </div>
+                        <h2 class="text-xl font-bold text-burgundy">Información General del Bien</h2>
+                    </div>
+                    <div class="p-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">No. de Inventario</label>
+                                <p class="text-lg font-bold text-burgundy">{{ resguardo.No_Inventario or 'N/A' }}</p>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">Cantidad</label>
+                                <p class="text-lg font-bold text-gray-900">{{ resguardo.Cantidad or 'N/A' }}</p>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">Descripción Corta</label>
+                                <p class="text-base text-gray-900">{{ resguardo.Descripcion_Corta_Del_Bien or 'N/A' }}</p>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">Marca</label>
+                                <p class="text-base text-gray-900">{{ resguardo.Marca or 'N/A' }}</p>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">Modelo</label>
+                                <p class="text-base text-gray-900">{{ resguardo.Modelo or 'N/A' }}</p>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">Número de Serie</label>
+                                <p class="text-base text-gray-900">{{ resguardo.Numero_De_Serie or 'N/A' }}</p>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">Estado del Bien</label>
+                                <p class="text-base text-gray-900">{{ resguardo.Estado_Del_Bien or 'N/A' }}</p>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">Tipo de Alta</label>
+                                <p class="text-base text-gray-900">{{ resguardo.Tipo_De_Alta or 'N/A' }}</p>
+                            </div>
+                            <div class="md:col-span-2">
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">Descripción Completa</label>
+                                <p class="text-base text-gray-900 bg-beige-light/30 p-4 rounded-xl border border-beige-light">{{ resguardo.Descripcion_Del_Bien or 'N/A' }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Datos Financieros del Bien -->
+                <div class="bg-white rounded-2xl shadow-lg border border-beige-light overflow-hidden">
+                    <div class="flex items-center bg-gradient-to-r from-burgundy/10 to-burgundy/5 p-4 border-b border-beige-light">
+                        <div class="w-8 h-8 bg-burgundy rounded-full flex items-center justify-center mr-3">
+                            <i class="fas fa-dollar-sign text-white text-sm"></i>
+                        </div>
+                        <h2 class="text-xl font-bold text-burgundy">Datos Financieros del Bien</h2>
+                    </div>
+                    <div class="p-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">No. de Factura</label>
+                                <p class="text-base text-gray-900">{{ resguardo.No_Factura or 'N/A' }}</p>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">Fecha de Factura</label>
+                                <p class="text-base text-gray-900">{{ resguardo.Fecha_Factura or 'N/A' }}</p>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">Costo Inicial</label>
+                                <p class="text-base text-gray-900">${{ "%.2f"|format(resguardo.Costo_Inicial|float) if resguardo.Costo_Inicial is not none else 'N/A' }}</p>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">Depreciación Acumulada</label>
+                                <p class="text-base text-gray-900">${{ "%.2f"|format(resguardo.Depreciacion_Acumulada|float) if resguardo.Depreciacion_Acumulada is not none else 'N/A' }}</p>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">Costo Final</label>
+                                <p class="text-base text-gray-900">${{ "%.2f"|format(resguardo.Costo_Final|float) if resguardo.Costo_Final is not none else 'N/A' }}</p>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">Valor en Libros</label>
+                                <p class="text-base text-gray-900">${{ "%.2f"|format(resguardo.Valor_En_Libros|float) if resguardo.Valor_En_Libros is not none else 'N/A' }}</p>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">Póliza</label>
+                                <p class="text-base text-gray-900">{{ resguardo.Poliza or 'N/A' }}</p>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">Fecha de Póliza</label>
+                                <p class="text-base text-gray-900">{{ resguardo.Fecha_Poliza or 'N/A' }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Información Contable del Bien -->
+                <div class="bg-white rounded-2xl shadow-lg border border-beige-light overflow-hidden">
+                    <div class="flex items-center bg-gradient-to-r from-burgundy/10 to-burgundy/5 p-4 border-b border-beige-light">
+                        <div class="w-8 h-8 bg-burgundy rounded-full flex items-center justify-center mr-3">
+                            <i class="fas fa-calculator text-white text-sm"></i>
+                        </div>
+                        <h2 class="text-xl font-bold text-burgundy">Información Contable del Bien</h2>
+                    </div>
+                    <div class="p-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">No. de Cuenta</label>
+                                <p class="text-base text-gray-900">{{ resguardo.No_Cuenta or 'N/A' }}</p>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">Subcuenta Armonizadora</label>
+                                <p class="text-base text-gray-900">{{ resguardo.Sub_Cuenta_Armonizadora or 'N/A' }}</p>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">Proveedor</label>
+                                <p class="text-base text-gray-900">{{ resguardo.Proveedor or 'N/A' }}</p>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">Rubro</label>
+                                <p class="text-base text-gray-900">{{ resguardo.Rubro or 'N/A' }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Columna derecha: Información del Resguardo y Adicional -->
+            <div class="space-y-6">
+                <!-- Información del Resguardo -->
+                <div class="bg-white rounded-2xl shadow-lg border border-beige-light overflow-hidden">
+                    <div class="flex items-center bg-gradient-to-r from-burgundy/10 to-burgundy/5 p-4 border-b border-beige-light">
+                        <div class="w-8 h-8 bg-burgundy rounded-full flex items-center justify-center mr-3">
+                            <i class="fas fa-user-shield text-white text-sm"></i>
+                        </div>
+                        <h2 class="text-xl font-bold text-burgundy">Información del Resguardo</h2>
+                    </div>
+                    <div class="p-6">
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">Área</label>
+                                <p class="text-base font-bold text-burgundy">{{ resguardo.Area_Nombre or 'N/A' }}</p>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">Ubicación Física</label>
+                                <p class="text-base text-gray-900">{{ resguardo.Ubicacion or 'N/A' }}</p>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">Fecha de Resguardo</label>
+                                <p class="text-base text-gray-900">{{ resguardo.Fecha_Resguardo or 'N/A' }}</p>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">Tipo de Resguardo</label>
+                                <p class="text-base text-gray-900">
+                                    {% if resguardo.Tipo_De_Resguardo == 1 %}
+                                        Sujeto de Control
+                                    {% else %}
+                                        Resguardo Normal
+                                    {% endif %}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Información del Resguardante -->
+                <div class="bg-white rounded-2xl shadow-lg border border-beige-light overflow-hidden">
+                    <div class="flex items-center bg-gradient-to-r from-burgundy/10 to-burgundy/5 p-4 border-b border-beige-light">
+                        <div class="w-8 h-8 bg-burgundy rounded-full flex items-center justify-center mr-3">
+                            <i class="fas fa-user text-white text-sm"></i>
+                        </div>
+                        <h2 class="text-xl font-bold text-burgundy">Información del Resguardante</h2>
+                    </div>
+                    <div class="p-6">
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">Nombre del Resguardante</label>
+                                <p class="text-base font-bold text-burgundy">{{ resguardo.Nombre_Del_Resguardante or 'N/A' }}</p>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">Puesto</label>
+                                <p class="text-base text-gray-900">{{ resguardo.Puesto_Trabajador or 'N/A' }}</p>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">RFC</label>
+                                <p class="text-base text-gray-900">{{ resguardo.RFC_Trabajador or 'N/A' }}</p>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">No. de Trabajador</label>
+                                <p class="text-base text-gray-900">{{ resguardo.No_Trabajador or 'N/A' }}</p>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">No. de Nómina</label>
+                                <p class="text-base text-gray-900">{{ resguardo.No_Nomina_Trabajador or 'N/A' }}</p>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">Director/Jefe de Área</label>
+                                <p class="text-base text-gray-900">{{ resguardo.Nombre_Director_Jefe_De_Area or 'N/A' }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Información Adicional del Bien -->
+                <div class="bg-white rounded-2xl shadow-lg border border-beige-light overflow-hidden">
+                    <div class="flex items-center bg-gradient-to-r from-burgundy/10 to-burgundy/5 p-4 border-b border-beige-light">
+                        <div class="w-8 h-8 bg-burgundy rounded-full flex items-center justify-center mr-3">
+                            <i class="fas fa-file-alt text-white text-sm"></i>
+                        </div>
+                        <h2 class="text-xl font-bold text-burgundy">Información Adicional del Bien</h2>
+                    </div>
+                    <div class="p-6">
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">Clasificación Legal</label>
+                                <p class="text-base text-gray-900">{{ resguardo.Clasificacion_Legal or 'N/A' }}</p>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">Área Presupuestal</label>
+                                <p class="text-base text-gray-900">{{ resguardo.Area_Presupuestal or 'N/A' }}</p>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">Fecha de Adquisición/Alta</label>
+                                <p class="text-base text-gray-900">{{ resguardo.Fecha_Adquisicion_Alta or 'N/A' }}</p>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">Documento de Propiedad</label>
+                                <p class="text-base text-gray-900">{{ resguardo.Documento_Propiedad or 'N/A' }}</p>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">Fecha del Documento</label>
+                                <p class="text-base text-gray-900">{{ resguardo.Fecha_Documento_Propiedad or 'N/A' }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Imágenes -->
+                <div class="bg-white rounded-2xl shadow-lg border border-beige-light overflow-hidden">
+                    <div class="flex items-center bg-gradient-to-r from-burgundy/10 to-burgundy/5 p-4 border-b border-beige-light">
+                        <div class="w-8 h-8 bg-burgundy rounded-full flex items-center justify-center mr-3">
+                            <i class="fas fa-images text-white text-sm"></i>
+                        </div>
+                        <h2 class="text-xl font-bold text-burgundy">Imágenes Adjuntas</h2>
+                    </div>
+                    <div class="p-6">
+                        {% if imagenes_bien or imagenes_resguardo %}
+                            <div class="grid grid-cols-2 gap-4">
+                                {% if imagenes_bien %}
+                                    <div class="col-span-2">
+                                        <p class="text-sm font-semibold text-gray-700 mb-2">Imágenes del Bien:</p>
+                                        <div class="grid grid-cols-2 gap-2">
+                                            {% for img_path in imagenes_bien %}
+                                                <a href="{{ url_for('bienes.serve_uploaded_file', filename=img_path) }}" target="_blank" class="group">
+                                                    <div class="aspect-square overflow-hidden rounded-xl border-2 border-beige-light bg-beige-light/30">
+                                                        <img src="{{ url_for('bienes.serve_uploaded_file', filename=img_path) }}" 
+                                                             alt="Imagen del bien" 
+                                                             class="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105">
+                                                    </div>
+                                                </a>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                {% endif %}
+                                
+                                {% if imagenes_resguardo %}
+                                    <div class="col-span-2">
+                                        <p class="text-sm font-semibold text-gray-700 mb-2 mt-4">Imágenes del Resguardo:</p>
+                                        <div class="grid grid-cols-2 gap-2">
+                                            {% for img_path in imagenes_resguardo %}
+                                                <a href="{{ url_for('bienes.serve_uploaded_file', filename=img_path) }}" target="_blank" class="group">
+                                                    <div class="aspect-square overflow-hidden rounded-xl border-2 border-beige-light bg-beige-light/30">
+                                                        <img src="{{ url_for('bienes.serve_uploaded_file', filename=img_path) }}" 
+                                                             alt="Imagen del resguardo" 
+                                                             class="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105">
+                                                    </div>
+                                                </a>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        {% else %}
+                            <div class="flex flex-col items-center justify-center bg-beige-light/30 rounded-xl text-gray-500 h-32 p-4">
+                                <i class="fas fa-image text-3xl mb-2 opacity-50"></i>
+                                <p class="text-sm">No hay imágenes disponibles</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Acciones -->
+                <div class="bg-white rounded-2xl shadow-lg border border-beige-light overflow-hidden">
+                    <div class="flex items-center bg-gradient-to-r from-burgundy/10 to-burgundy/5 p-4 border-b border-beige-light">
+                        <div class="w-8 h-8 bg-burgundy rounded-full flex items-center justify-center mr-3">
+                            <i class="fas fa-cogs text-white text-sm"></i>
+                        </div>
+                        <h2 class="text-xl font-bold text-burgundy">Acciones</h2>
+                    </div>
+                    <div class="p-6">
+                        <div class="space-y-3">
+                            <a href="{{ url_for('resguardos.imprimir_resguardo', id_resguardo=resguardo.id_resguardo) }}" 
+                               target="_blank" 
+                               class="w-full flex items-center justify-center px-4 py-3 bg-burgundy hover:bg-burgundy-dark text-white rounded-xl font-semibold transition-colors duration-200">
+                                <i class="fas fa-print mr-2"></i> Imprimir Resguardo
+                            </a>
+                            
+                            {% if resguardo.Activo %}
+                                <a href="{{ url_for('traspaso.traspasar_resguardo', id_resguardo_anterior=resguardo.id_resguardo) }}" 
+                                   class="w-full flex items-center justify-center px-4 py-3 bg-beige hover:bg-beige-light text-burgundy rounded-xl font-semibold transition-colors duration-200">
+                                    <i class="fas fa-exchange-alt mr-2"></i> Traspasar Resguardo
+                                </a>
+                            {% else %}
+                                <div class="w-full flex items-center justify-center px-4 py-3 bg-gray-300 text-gray-500 rounded-xl font-semibold cursor-not-allowed">
+                                    <i class="fas fa-ban mr-2"></i> Resguardo Inactivo
+                                </div>
+                                <p class="text-xs text-center text-gray-500">No se puede traspasar un resguardo inactivo</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block styles %}
+<style>
+    .bg-burgundy { background-color: #6A2E4D; }
+    .bg-burgundy-dark { background-color: #551E3A; }
+    .text-burgundy { color: #6A2E4D; }
+    .border-burgundy { border-color: #6A2E4D; }
+    
+    .bg-beige { background-color: #BC9B6A; }
+    .bg-beige-light { background-color: #D7C3A0; }
+    .text-beige-light { color: #D7C3A0; }
+    .border-beige { border-color: #BC9B6A; }
+    .border-beige-light { border-color: #D7C3A0; }
+</style>
 {% endblock %}

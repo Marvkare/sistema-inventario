@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Reporte: {{ inventario.nombre }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        /* Estilos específicos para el PDF */
+        @page {
+            size: letter;
+            /* Se redujo el margen para dar más espacio al contenido */
+            margin: 0.5in; 
+        }
+        body {
+            font-family: sans-serif;
+            font-size: 10pt;
+        }
+        .page-break {
+            page-break-before: always;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid #e2e8f0;
+            padding: 6px; /* Ligeramente reducido para que quepa más info */
+            text-align: left;
+            word-wrap: break-word; /* Evita que el texto largo desborde la celda */
+        }
+        th {
+            background-color: #f7fafc;
+        }
+        img {
+            max-width: 80px; /* Ajustado para el nuevo layout */
+            max-height: 80px;
+        }
+    </style>
+</head>
+<body>
+
+    <h1 class="text-2xl font-bold text-gray-800">Reporte de Conciliación de Inventario</h1>
+    <p class="text-lg text-gray-600">{{ inventario.nombre }}</p>
+    <p class="text-sm text-gray-500">Generado el: {{ fecha_generacion.strftime('%d/%m/%Y %H:%M') }}</p>
+    <div class="border-t my-4"></div>
+
+    <div class="bg-white border rounded-lg mb-6">
+        <h2 class="text-lg font-semibold text-gray-800 border-b p-3">Información General</h2>
+        <div class="grid grid-cols-2 gap-x-6 p-3 text-sm">
+            <div>
+                <dt class="font-medium text-gray-500 mb-1">Áreas y Jefes Involucrados</dt>
+                <dd class="mt-1 text-gray-900 space-y-1">
+                    {% for area, jefe in area_jefe_map.items() %}
+                    <div><p><span class="font-semibold">{{ area }}:</span> {{ jefe }}</p></div>
+                    {% else %}<p>No hay áreas asignadas.</p>{% endfor %}
+                </dd>
+            </div>
+            <div>
+                <dt class="font-medium text-gray-500 mb-1">Personal de la Brigada</dt>
+                <dd class="mt-1 text-gray-900">
+                    <ul class="list-disc list-inside">{% for miembro in brigada %}<li>{{ miembro }}</li>{% else %}<li>No hay personal asignado.</li>{% endfor %}</ul>
+                </dd>
+            </div>
+        </div>
+    </div>
+
+    <div class="space-y-6">
+        <div>
+            <h3 class="text-lg font-bold p-2 text-red-800 bg-red-50 rounded-t-lg">Bienes Faltantes</h3>
+            {% for nombre_area, bienes_en_area in faltantes_por_area.items() %}
+                <h4 class="font-semibold text-gray-700 p-2 bg-gray-100 border-l border-r">Área: {{ nombre_area }}</h4>
+                <table><thead><tr><th class="w-1/4">No. Inventario</th><th>Descripción</th></tr></thead>
+                <tbody>{% for bien in bienes_en_area %}<tr><td>{{ bien.No_Inventario }}</td><td>{{ bien.Descripcion_Del_Bien }}</td></tr>{% endfor %}</tbody></table>
+            {% else %}<p class="p-4 border text-center text-sm text-gray-500">No hay bienes faltantes.</p>{% endfor %}
+        </div>
+        
+        <div class="page-break">
+            <h3 class="text-lg font-bold p-2 text-blue-800 bg-blue-50 rounded-t-lg">Bienes Sobrantes</h3>
+            <table><thead><tr><th class="w-1/2">Descripción Capturada</th><th class="w-1/2">Marca/Modelo/Serie</th></tr></thead>
+            <tbody>{% for bien in bienes_sobrantes %}<tr><td>{{ bien.descripcion_bien }}</td><td>{{ bien.marca or 'N/A' }} / {{ bien.modelo or 'N/A' }} / {{ bien.numero_serie or 'N/A' }}</td></tr>{% else %}<tr><td colspan="2" class="text-center p-4">No se registraron bienes sobrantes.</td></tr>{% endfor %}</tbody></table>
+        </div>
+
+        <div class="page-break">
+            <h3 class="text-lg font-bold p-2 text-gray-800 bg-gray-100 rounded-t-lg">Bitácora de Verificación de Bienes</h3>
+            <table><thead><tr><th style="width: 15%;">No. Inventario</th><th style="width: 25%;">Descripción</th><th style="width: 15%;">Área</th><th style="width: 25%;">Resultado</th><th style="width: 20%;">Imágenes</th></tr></thead>
+            <tbody>
+                {% for bien in bienes_revisados %}
+                <tr>
+                    <td class="align-top">{{ bien.No_Inventario }}</td>
+                    <td class="align-top">{{ bien.Descripcion_Del_Bien }}</td>
+                    <td class="align-top">{{ bien.nombre_area or 'N/A' }}</td>
+                    <td class="align-top">
+                        <p><strong>Estatus:</strong> {% if bien.estatus_hallazgo == 'Localizado' %}<span class="font-medium">Localizado</span>{% elif bien.estatus_hallazgo == 'Localizado con Discrepancia' %}<span class="font-medium">Con Discrepancia</span>{% endif %}</p>
+                        <p><strong>Condición:</strong> {{ bien.condicion_fisica_reportada or 'N/A' }}</p>
+                        <p><strong>Obs:</strong> {{ bien.observaciones or 'Ninguna' }}</p>
+                    </td>
+                    <td class="align-top">
+                        <div class="flex flex-wrap gap-1">
+                            {% for foto_path in fotos_por_detalle.get(bien.id, []) %}
+                                <img src="{{ url_for('bienes.serve_uploaded_file', filename=foto_path, _external=True) }}" class="object-cover">
+                            {% endfor %}
+                        </div>
+                    </td>
+                </tr>
+                {% else %}
+                <tr><td colspan="5" class="text-center p-4">Aún no se ha revisado ningún bien.</td></tr>
+                {% endfor %}
+            </tbody>
+            </table>
+        </div>
+    </div>
+</body>
+</html>

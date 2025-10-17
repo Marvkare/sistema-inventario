@@ -34,7 +34,6 @@ COLUMN_MAPPING = {
     "NO. DE INVENTARIO": "No_Inventario",
     "NO. FACTURA": "No_Factura",
     "NO. DE CUENTA": "No_Cuenta",
-    "NO. DE RESGUARDO": "No_Resguardo",
     "PROVEEDOR": "Proveedor",
     "DESCRIPCION DEL BIEN": "Descripcion_Del_Bien",
     "DESCRIPCION CORTA DEL BIEN": "Descripcion_Corta_Del_Bien",
@@ -45,21 +44,32 @@ COLUMN_MAPPING = {
     "FECHA FACTURA": "Fecha_Factura",
     "COSTO INICIAL": "Costo_Inicial",
     "DEPRECIACION ACUMULADA": "Depreciacion_Acumulada",
-    "COSTO FINAL": "Costo_Final_Cantidad",
+    "COSTO FINAL": "Costo_Final",
     "CANTIDAD": "Cantidad",
     "ESTADO DEL BIEN": "Estado_Del_Bien",
     "MARCA": "Marca",
     "MODELO": "Modelo",
     "NUMERO DE SERIE": "Numero_De_Serie",
     "TIPO DE ALTA": "Tipo_De_Alta",
-    "UBICACION": "Ubicacion",
+    "CLASIFICACION LEGAL": "Clasificacion_Legal",
+    "AREA PRESUPUESTAL": "Area_Presupuestal",
+    "DOCUMENTO PROPIEDAD": "Documento_Propiedad",
+    "FECHA DOCUMENTO PROPIEDAD": "Fecha_Documento_Propiedad",
+    "VALOR EN LIBROS": "Valor_En_Libros",
+    "FECHA ADQUISICION/ALTA": "Fecha_Adquisicion_Alta",
+   #Datos de resguardo 
     "AREA": "id_area_nombre", # Se usará para buscar o crear el id_area
+    "UBICACION": "Ubicacion",
+    "NO. DE RESGUARDO": "No_Resguardo",
     "TIPO DE RESGUARDO": "Tipo_De_Resguardo",
     "FECHA DE RESGUARDO": "Fecha_Resguardo",
     "NO. DE TRABAJADOR": "No_Trabajador",
     "PUESTO TRABAJADOR": "Puesto_Trabajador",
+    "RFC TRABAJADOR": "RFC_Trabajador",
+    "NO. DE NOMINA TRABAJADOR": "No_Nomina_Trabajador",
     "NOMBRE DEL RESGUARDANTE": "Nombre_Del_Resguardante",
     "NOMBRE DIRECTOR/JEFES DE AREA": "Nombre_Director_Jefe_De_Area"
+    
 }
 # Columnas de la base de datos (se pueden obtener dinámicamente o definir aquí)
 # Si las obtienes dinámicamente, considera mover esa lógica a database.py
@@ -69,7 +79,7 @@ VALID_DB_COLUMNS = [
     "No_Trabajador", "Proveedor", "Fecha_Resguardo",
     "Descripcion_Del_Bien", "Descripcion_Fisica", "Area", "Rubro", "Poliza",
     "Fecha_Poliza", "Sub_Cuenta_Armonizadora", "Fecha_Factura", "Costo_Inicial",
-    "Depreciacion_Acumulada", "Costo_Final_Cantidad", "Cantidad",
+    "Depreciacion_Acumulada", "Costo_Final", "Cantidad",
     "Puesto", "Nombre_Director_Jefe_De_Area", 
     "Numero_De_Serie", "Tipo_De_Resguardo", "Adscripcion_Direccion_Area",
     "Nombre_Del_Resguardante", "Estado_Del_Bien", "Marca", "Modelo",
@@ -84,7 +94,7 @@ FULL_DB_COLUMNS = [
     "id", "No_Inventario", "No_Factura", "No_Cuenta", "No_Resguardo", "No_Trabajador",
     "Proveedor", "Fecha_Resguardo", "Descripcion_Del_Bien", "Descripcion_Fisica",
     "Area", "Rubro", "Poliza", "Fecha_Poliza", "Sub_Cuenta_Armonizadora",
-    "Fecha_Factura", "Costo_Inicial", "Depreciacion_Acumulada", "Costo_Final_Cantidad",
+    "Fecha_Factura", "Costo_Inicial", "Depreciacion_Acumulada", "Costo_Final",
     "Cantidad", "Puesto", "Nombre_Director_Jefe_De_Area",
     "Tipo_De_Resguardo", "Adscripcion_Direccion_Area", "Nombre_Del_Resguardante",
     "Estado_Del_Bien", "Marca", "Modelo", "Numero_De_Serie", "Imagen_Path",
@@ -92,40 +102,58 @@ FULL_DB_COLUMNS = [
 ]
 
 AVAILABLE_COLUMNS = [
+    # --- Columnas Clave de Identificación ---
     'No_Inventario',
-    'No_Factura',
-    'No_Cuenta',
     'No_Resguardo',
-    'No_Trabajador',
-    'Proveedor',
-    'Fecha_Resguardo',
-    'Descripcion_Del_Bien',
-    'Descripcion_Fisica',
-    'Area',
-    'Rubro',
-    'Poliza',
-    'Fecha_Poliza',
-    'Sub_Cuenta_Armonizadora',
-    'Fecha_Factura',
-    'Costo_Inicial',
-    'Depreciacion_Acumulada',
-    'Costo_Final_Cantidad',
-    'Cantidad',
     
-    'Puesto',
-    'Nombre_Director_Jefe_De_Area',
-    'Tipo_De_Resguardo',
-    'Adscripcion_Direccion_Area',
-    'Nombre_Del_Resguardante',
-    'Estado_Del_Bien',
+    # --- Columnas Descriptivas del Bien ---
+    'Descripcion_Del_Bien',
+    'Descripcion_Corta_Del_Bien',
     'Marca',
     'Modelo',
     'Numero_De_Serie',
+    'Estado_Del_Bien',
+    'Cantidad',
+
+    # --- Columnas del Resguardo y Ubicación ---
+    'Nombre_Del_Resguardante',
+    'Area',  # Representa el nombre del área (a.nombre)
+    'Ubicacion',
+    'Puesto_Trabajador',
+    'No_Trabajador',
+    'RFC_Trabajador',
+    'No_Nomina_Trabajador',
+    'Nombre_Director_Jefe_De_Area',
+    'Tipo_De_Resguardo',
+    'Fecha_Resguardo',
+
+    # --- Columnas Financieras y de Adquisición ---
+    'Costo_Inicial',
+    'Costo_Final',
+    'Depreciacion_Acumulada',
+    'Valor_En_Libros',
+    'No_Factura',
+    'Fecha_Factura',
+    'Proveedor',
+    'No_Cuenta',
+    'Poliza',
+    'Fecha_Poliza',
+    'Rubro',
+    'Sub_Cuenta_Armonizadora',
+    
+    # --- Columnas Administrativas y Legales ---
+    'Tipo_De_Alta',
+    'Fecha_Adquisicion_Alta',
+    'Clasificacion_Legal',
+    'Area_Presupuestal',
+    'Documento_Propiedad',
+    'Fecha_Documento_Propiedad',
+    
+    # --- Columnas de Estado y Virtuales ---
+    'Activo',
     'imagenPath_bien',
     'imagenPath_resguardo',
-    'Activo'
 ]
-
 # The name of the Area column in the Excel file
 EXCEL_AREA_COL_NAME = 'Area'
 
@@ -134,7 +162,7 @@ BIENES_COLUMNS = [
     'No_Inventario', 'No_Factura', 'No_Cuenta',  'Proveedor',
     'Descripcion_Del_Bien', 'Descripcion_Corta_Del_Bien', 'Rubro', 'Poliza',
     'Fecha_Poliza', 'Sub_Cuenta_Armonizadora', 'Fecha_Factura', 'Costo_Inicial',
-    'Depreciacion_Acumulada', 'Costo_Final_Cantidad', 'Cantidad', 'Estado_Del_Bien',
+    'Depreciacion_Acumulada', 'Costo_Final', 'Cantidad', 'Estado_Del_Bien',
     'Marca', 'Modelo', 'Numero_De_Serie', 'Tipo_De_Alta'
 ]
 

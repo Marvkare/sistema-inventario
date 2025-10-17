@@ -6,285 +6,648 @@
     <title>{% block title %}Sistema de Resguardos{% endblock %}</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
-    <!--<script src="../static/js/tailwindscss-3.4.17.js"></script>-->
-
-
-
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    {% block styles %}
-    {% endblock %} 
     
-    {% block head %}{% endblock %}
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-        html, body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f3f4f6;
-            min-height: 100vh;
-            overflow: hidden; /* Esto previene el scroll de la página principal */
+        :root {
+            /* Paleta oficial "Atitalaquia Se Transforma 2024-2027" */
+            --color-burgundy: 106, 46, 77;     /* #6A2E4D - Borgoña Institucional */
+            --color-beige: 188, 155, 106;      /* #BC9B6A - Beige Arena */
+            --color-white: 255, 255, 255;      /* #FFFFFF - Blanco */
+            
+            /* Colores adicionales para el diseño */
+            --color-burgundy-dark: 85, 30, 58; /* #551E3A - Borgoña Oscuro */
+            --color-burgundy-light: 125, 60, 95; /* #7D3C5F - Borgoña Claro */
+            --color-beige-dark: 160, 130, 85;  /* #A08255 - Beige Oscuro */
+            --color-beige-light: 215, 195, 160; /* #D7C3A0 - Beige Claro */
+            --color-gray: 245, 245, 245;       /* #F5F5F5 - Gris Claro */
+            
+            /* Gradientes */
+            --gradient-primary: linear-gradient(135deg, #6A2E4D 0%, #551E3A 100%);
+            --gradient-accent: linear-gradient(135deg, #BC9B6A 0%, #A08255 100%);
+            --gradient-content: linear-gradient(135deg, #FFFFFF 0%, #F5F5F5 100%);
+            --gradient-header: linear-gradient(90deg, rgba(106, 46, 77, 0.9) 0%, rgba(85, 30, 58, 0.9) 100%);
+            --gradient-indicator: linear-gradient(180deg, #BC9B6A 0%, #A08255 100%);
+            
+            /* Texto */
+            --text-light: 255, 255, 255;       /* Blanco */
+            --text-muted: 215, 195, 160;       /* Beige Claro */
+            --text-dark: 106, 46, 77;          /* Borgoña */
+            
+            /* Fondos y bordes */
+            --bg-overlay: 255, 255, 255;       /* Blanco */
+            --bg-overlay-opacity: 0.08;
+            --border-overlay: 255, 255, 255;
+            --border-overlay-opacity: 0.15;
+            
+            /* Estados hover/active */
+            --hover-opacity: 0.25;
+            --active-opacity: 0.35;
+            --border-hover-opacity: 0.4;
+            --border-active-opacity: 0.6;
+            
+            /* Sombras */
+            --shadow-color: 106, 46, 77;
+            --shadow-opacity: 0.2;
+            --shadow-active-opacity: 0.3;
+            
+            /* Transiciones */
+            --transition-duration: 0.3s;
+            --transition-timing: ease-out;
         }
-        body {
-            display: flex;
+
+        * {
+            box-sizing: border-box;
         }
-        .header-container {
-            max-width: 100%;
-            padding: 1rem;
-            margin: auto;
-        }
-        .flash-message {
-            position: fixed;
-            top: 1rem;
-            right: 1rem;
-            z-index: 1000;
-            padding: 0.75rem 1.25rem;
-            border-radius: 0.5rem;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            animation: fadein 0.5s, fadeout 0.5s 5.5s forwards;
-        }
-        .flash-success {
-            background-color: #d1e7dd;
-            color: #0f5132;
-            border: 1px solid #badbcc;
-        }
-        .flash-error {
-            background-color: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
-        }
-        .flash-warning {
-            background-color: #fff3cd;
-            color: #664d03;
-            border: 1px solid #ffeeba;
-        }
-        @keyframes fadein {
-            from { opacity: 0; transform: translateY(-20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        @keyframes fadeout {
-            from { opacity: 1; }
-            to { opacity: 0; display: none; }
-        }
-        .no-data {
-            text-align: center;
-            padding: 2rem;
-            color: #6b7280;
-            font-size: 1.125rem;
+
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background: var(--gradient-primary);
+            margin: 0;
+            padding: 0;
         }
         
-        /* Estilos para el menú y el botón de alternancia */
-        .sidebar {
-            width: 16rem;
-            transition: transform 0.3s ease;
+        .sidebar-gradient {
+            background: var(--gradient-primary);
             position: fixed;
             top: 0;
             left: 0;
-            height: 100vh;
-            z-index: 900;
+            z-index: 40;
         }
         
-        .sidebar-toggle-btn {
+        .nav-link { 
+            display: flex;
+            align-items: center;
+            padding: 0.75rem;
+            font-weight: 500;
+            border-radius: 0.75rem;
+            transition: all 0.3s var(--transition-timing);
+            color: rgb(var(--text-muted));
+            background: rgba(var(--bg-overlay), var(--bg-overlay-opacity));
+            border: 1px solid rgba(var(--border-overlay), var(--border-overlay-opacity));
+        }
+        
+        .nav-link:hover {
+            background: rgba(var(--color-beige), var(--hover-opacity));
+            border-color: rgba(var(--color-beige), var(--border-hover-opacity));
+            transform: translateX(5px);
+            box-shadow: 0 4px 12px rgba(var(--shadow-color), var(--shadow-opacity));
+            color: rgb(var(--text-light));
+        }
+        
+        .nav-link.active {
+            background: rgba(var(--color-beige), var(--active-opacity));
+            border-color: rgba(var(--color-beige), var(--border-active-opacity));
+            box-shadow: 0 4px 12px rgba(var(--color-beige), var(--shadow-active-opacity));
+            color: rgb(var(--text-light));
+        }
+        
+        .nav-link i { 
+            width: 1.5rem;
+            text-align: center;
+            font-size: 1.125rem;
+            transition: transform var(--transition-duration);
+        }
+        
+        .nav-link:hover i {
+            transform: scale(1.1);
+        }
+        
+        .menu-toggle {
+            background: var(--gradient-accent);
+            box-shadow: 0 4px 15px rgba(var(--shadow-color), 0.25);
+            transition: all var(--transition-duration) ease;
+            border: 2px solid rgb(var(--color-burgundy-dark));
             position: fixed;
-            top: 1rem;
-            left: 1rem;
-            z-index: 950;
-            transition: transform 0.3s ease;
-        }
-
-        .main-content {
-            margin-left: 16rem;
-            flex-grow: 1;
-            transition: margin-left 0.3s ease;
-            padding: 2rem;
-            height: 100vh; /* Altura completa para que sea scrollable */
-            overflow-y: auto; /* Aquí se agrega el scroll de la tabla */
+            top: 1.5rem;
+            left: 1.5rem;
+            z-index: 50;
+            padding: 0.75rem;
+            color: rgb(var(--color-burgundy));
+            border-radius: 0.75rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
         
-        /* Estado del menú oculto */
-        body.menu-hidden .sidebar {
-            transform: translateX(-16rem);
+        .menu-toggle:hover {
+            box-shadow: 0 6px 20px rgba(var(--shadow-color), 0.35);
+            filter: brightness(1.1);
         }
         
-        body.menu-hidden .sidebar-toggle-btn {
-            left: 1rem;
+        .menu-toggle:active {
+            transform: scale(0.95);
+            transition: transform 0.1s ease;
         }
         
-        body.menu-hidden .main-content {
-            margin-left: 0;
+        .sidebar-header {
+            background: var(--gradient-header);
+            border-bottom: 2px solid rgba(var(--color-beige), 0.3);
         }
-
-        /* Estilos de barra de desplazamiento personalizada (Webkit) */
-        /* Para el menú lateral */
-        .sidebar .flex-grow.overflow-y-auto::-webkit-scrollbar {
-            width: 8px; /* Ancho de la barra */
+        
+        .scrollbar-custom::-webkit-scrollbar {
+            width: 4px;
         }
-
-        .sidebar .flex-grow.overflow-y-auto::-webkit-scrollbar-track {
-            background: #2d3748; /* Fondo de la pista (gris oscuro) */
+        
+        .scrollbar-custom::-webkit-scrollbar-track {
+            background: rgba(var(--color-beige), 0.1);
             border-radius: 10px;
         }
-
-        .sidebar .flex-grow.overflow-y-auto::-webkit-scrollbar-thumb {
-            background: #4a5568; /* Color del "pulgar" de la barra (gris más claro) */
+        
+        .scrollbar-custom::-webkit-scrollbar-thumb {
+            background: rgba(var(--color-beige), 0.5);
             border-radius: 10px;
         }
-
-        .sidebar .flex-grow.overflow-y-auto::-webkit-scrollbar-thumb:hover {
-            background: #5a67d8; /* Color del "pulgar" al pasar el ratón (azul/morado) */
+        
+        .scrollbar-custom::-webkit-scrollbar-thumb:hover {
+            background: rgba(var(--color-beige), 0.7);
+        }
+        
+        .menu-indicator {
+            position: absolute;
+            right: -10px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 4px;
+            height: 0;
+            background: var(--gradient-indicator);
+            border-radius: 2px;
+            transition: all var(--transition-duration) ease;
+        }
+        
+        .nav-link:hover .menu-indicator {
+            height: 20px;
+        }
+        
+        .nav-link.active .menu-indicator {
+            height: 30px;
+        }
+        
+        .pulse-dot {
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+        
+        .main-content-gradient {
+            background: var(--gradient-content);
+            min-height: 100vh;
         }
 
-        /* Para el contenido principal (donde está la tabla) */
-        .main-content::-webkit-scrollbar {
-            width: 10px; /* Ancho de la barra */
+        /* Clases de utilidad basadas en variables */
+        .text-burgundy {
+            color: rgb(var(--color-burgundy));
+        }
+        
+        .text-beige {
+            color: rgb(var(--color-beige));
+        }
+        
+        .bg-burgundy {
+            background-color: rgb(var(--color-burgundy));
+        }
+        
+        .bg-beige {
+            background-color: rgb(var(--color-beige));
+        }
+        
+        .border-beige {
+            border-color: rgb(var(--color-beige));
+        }
+        
+        .gold-text {
+            color: rgb(var(--color-beige));
+            text-shadow: 0 1px 2px rgba(var(--color-burgundy), 0.3);
         }
 
-        .main-content::-webkit-scrollbar-track {
-            background: #e2e8f0; /* Fondo de la pista (gris claro) */
-            border-radius: 10px;
+        /* Overlay para cerrar menú en móvil */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 35;
         }
 
-        .main-content::-webkit-scrollbar-thumb {
-            background: #a0aec0; /* Color del "pulgar" de la barra (gris medio) */
-            border-radius: 10px;
+        @media (max-width: 767px) {
+            .sidebar-overlay.active {
+                display: block;
+            }
+            
+            .menu-toggle {
+                position: fixed;
+                top: 1.5rem;
+                left: 1.5rem;
+                transform: none !important;
+            }
         }
 
-        .main-content::-webkit-scrollbar-thumb:hover {
-            background: #667eea; /* Color del "pulgar" al pasar el ratón (azul) */
+        /* Estados específicos para el menú abierto/cerrado */
+        .sidebar-open .menu-toggle {
+            left: calc(288px + 1.5rem); /* 72 * 4 = 288px + 1.5rem */
+        }
+        
+        @media (max-width: 767px) {
+            .sidebar-open .menu-toggle {
+                left: calc(100% - 4.5rem);
+            }
         }
     </style>
-    <style type="text/tailwindcss">
-        @theme {
-            --color-verde-mexicano-oscuro: #006B3D;
-            --color-verde-mexicano-medio: #008542;
-            --color-verde-mexicano-claro: #78BB42;
-            --color-rojo-mexicano: #BF0A30;
-            --color-blanco-mexicano: #FFFFFF;
-        }
-</style>
+    
+    {% block styles %}{% endblock %} 
+    {% block head %}{% endblock %}
 </head>
-<body class="bg-gray-100">
-    <button id="menu-toggle" class="sidebar-toggle-btn p-3 bg-blue-600 text-white rounded-full shadow-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-        <i class="fas fa-bars"></i>
-    </button>
+<body class="overflow-hidden">
 
-    <aside id="sidebar" class="sidebar bg-gray-900 text-white p-6 flex flex-col justify-between border-r border-gray-700 shadow-xl">
-        <div class="flex-grow flex flex-col h-full">
-            <h1 class="text-2xl font-bold mb-6 text-indigo-400">Control de Resguardos</h1>
-            
-            <div class="flex-grow overflow-y-auto pr-2">
-                <ul class="space-y-4">
-                    <li>
-                        <a href="{{ url_for('bienes.agregar_bien') }}" class="flex items-center p-3 font-medium text-gray-300 rounded-lg hover:bg-gray-700 hover:text-white transition-colors duration-200 transform hover:scale-105">
-                            <i class="fas fa-plus mr-4 w-6 text-center"></i>
-                            <span>Formulario de Bienes</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="{{ url_for('resguardos.crear_resguardo') }}" class="flex items-center p-3 font-medium text-gray-300 rounded-lg hover:bg-gray-700 hover:text-white transition-colors duration-200 transform hover:scale-105">
-                            <i class="fas fa-plus mr-4 w-6 text-center"></i>
-                            <span>Formulario de Resguardo</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="{{ url_for('resguardos.carga_masiva') }}" class="flex items-center p-3 font-medium text-gray-300 rounded-lg hover:bg-gray-700 hover:text-white transition-colors duration-200 transform hover:scale-105">
-                            <i class="fas fa-plus mr-4 w-6 text-center"></i>
-                            <span>Carga Masiva de Resguardos</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="{{ url_for('bienes.listar_bienes') }}" class="flex items-center p-3 font-medium text-gray-300 rounded-lg hover:bg-gray-700 hover:text-white transition-colors duration-200 transform hover:scale-105">
-                            <i class="fas fa-list-ul mr-4 w-6 text-center"></i>
-                            <span>Ver Todos los Bienes</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="{{ url_for('resguardos.ver_resguardos') }}" class="flex items-center p-3 font-medium text-gray-300 rounded-lg hover:bg-gray-700 hover:text-white transition-colors duration-200 transform hover:scale-105">
-                            <i class="fas fa-list-ul mr-4 w-6 text-center"></i>
-                            <span>Ver Todos los Resguardos</span>
-                        </a>
-                    </li>
-                    
-                    <li>
-                        <a href="{{ url_for('resguardos.ver_resguardos_sujeto_control') }}" class="flex items-center p-3 font-medium text-gray-300 rounded-lg hover:bg-gray-700 hover:text-white transition-colors duration-200 transform hover:scale-105">
-                            <i class="fas fa-sort-amount-down-alt mr-4 w-6 text-center"></i>
-                            <span>Tabla Sujeto Control</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="{{ url_for('errors.handle_errors') }}" class="flex items-center p-3 font-medium text-gray-300 rounded-lg hover:bg-gray-700 hover:text-white transition-colors duration-200 transform hover:scale-105">
-                            <i class="fas fa-exclamation-triangle mr-4 w-6 text-center"></i>
-                            <span>Revisar Errores</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="{{ url_for('plantillas.crear_plantilla') }}" class="flex items-center p-3 font-medium text-gray-300 rounded-lg hover:bg-gray-700 hover:text-white transition-colors duration-200 transform hover:scale-105">
-                            <i class="fas fa-magic mr-4 w-6 text-center"></i>
-                            <span>Crear Plantilla de Consulta</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="{{ url_for('plantillas.ver_plantillas') }}" class="flex items-center p-3 font-medium text-gray-300 rounded-lg hover:bg-gray-700 hover:text-white transition-colors duration-200 transform hover:scale-105">
-                            <i class="fas fa-file-alt mr-4 w-6 text-center"></i>
-                            <span>Lista de Plantillas</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="{{ url_for('areas.manage_areas') }}" class="flex items-center p-3 font-medium text-gray-300 rounded-lg hover:bg-gray-700 hover:text-white transition-colors duration-200 transform hover:scale-105">
-                            <i class="fas fa-building mr-4 w-6 text-center"></i>
-                            <span>Gestionar Áreas</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="{{ url_for('etiquetas.imprimir_etiquetas') }}" class="flex items-center p-3 font-medium text-gray-300 rounded-lg hover:bg-gray-700 hover:text-white transition-colors duration-200 transform hover:scale-105">
-                            <i class="fas fa-tag mr-4 w-6 text-center"></i>
-                            <span>Generador de Etiquetas</span>
-                        </a>
-                    </li>
-                </ul>
+    <!-- Overlay para móvil -->
+    <div id="sidebar-overlay" class="sidebar-overlay"></div>
+
+    <!-- Sidebar con Paleta "Atitalaquia Se Transforma" -->
+    <aside id="sidebar" class="fixed top-0 left-0 z-40 w-72 h-screen sidebar-gradient p-0 flex flex-col border-r border-beige shadow-2xl transition-all duration-500 ease-in-out transform -translate-x-full">
+        <!-- Header del Sidebar -->
+        <div class="sidebar-header p-6 flex-shrink-0">
+            <div class="flex items-center space-x-3">
+               <div class="w-12 h-12 rounded-xl flex items-center justify-center shadow-lg" 
+                style="background: linear-gradient(135deg, rgb(var(--color-beige)) 0%, rgb(var(--color-beige-light)) 100%); border: 2px solid rgb(var(--color-beige-light));">
+                <i class="fas fa-shield-alt text-xl font-bold" style="color: rgb(var(--color-burgundy));"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold gold-text">ATITALAQUIA</h1>
+                    <p class="text-sm text-white mt-1 font-semibold">SE TRANSFORMA</p>
+                    <p class="text-xs text-beige mt-1">2024-2027</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Navegación -->
+        <div class="flex-grow overflow-y-auto py-4 px-4 scrollbar-custom">
+            <ul class="space-y-2">
+                <!-- Grupo: Gestión Principal -->
+                <li class="px-3 py-2">
+                    <p class="text-xs font-semibold text-beige-light uppercase tracking-wider mb-2 flex items-center">
+                        <i class="fas fa-tachometer-alt mr-2 text-beige"></i>
+                        Gestión Principal
+                    </p>
+                </li>
+                
+                <li class="relative">
+                    <a href="{{ url_for('bienes.agregar_bien') }}" class="nav-link group">
+                        <div class="menu-indicator"></div>
+                        <i class="fas fa-plus-circle fa-fw mr-3 text-beige-light"></i>
+                        <span>Formulario de Bienes</span>
+                        <i class="fas fa-chevron-right ml-auto text-xs text-beige-light group-hover:text-white transition-colors"></i>
+                    </a>
+                </li>
+                
+                <li class="relative">
+                    <a href="{{ url_for('resguardos.crear_resguardo') }}" class="nav-link group">
+                        <div class="menu-indicator"></div>
+                        <i class="fas fa-file-signature fa-fw mr-3 text-beige-light"></i>
+                        <span>Formulario de Resguardo</span>
+                        <i class="fas fa-chevron-right ml-auto text-xs text-beige-light group-hover:text-white transition-colors"></i>
+                    </a>
+                </li>
+                
+                <li class="relative">
+                    <a href="{{ url_for('resguardos.carga_masiva') }}" class="nav-link group">
+                        <div class="menu-indicator"></div>
+                        <i class="fas fa-file-upload fa-fw mr-3 text-beige-light"></i>
+                        <span>Carga Masiva</span>
+                        <i class="fas fa-chevron-right ml-auto text-xs text-beige-light group-hover:text-white transition-colors"></i>
+                    </a>
+                </li>
+
+                <!-- Grupo: Consultas y Reportes -->
+                <li class="px-3 py-2 mt-6">
+                    <p class="text-xs font-semibold text-beige-light uppercase tracking-wider mb-2 flex items-center">
+                        <i class="fas fa-chart-bar mr-2 text-beige"></i>
+                        Consultas y Reportes
+                    </p>
+                </li>
+                
+                <li class="relative">
+                    <a href="{{ url_for('bienes.listar_bienes') }}" class="nav-link group">
+                        <div class="menu-indicator"></div>
+                        <i class="fas fa-boxes fa-fw mr-3 text-beige-light"></i>
+                        <span>Ver Todos los Bienes</span>
+                        <i class="fas fa-chevron-right ml-auto text-xs text-beige-light group-hover:text-white transition-colors"></i>
+                    </a>
+                </li>
+                
+                <li class="relative">
+                    <a href="{{ url_for('resguardos.ver_resguardos') }}" class="nav-link group">
+                        <div class="menu-indicator"></div>
+                        <i class="fas fa-list-ul fa-fw mr-3 text-beige-light"></i>
+                        <span>Ver Todos los Resguardos</span>
+                        <i class="fas fa-chevron-right ml-auto text-xs text-beige-light group-hover:text-white transition-colors"></i>
+                    </a>
+                </li>
+                
+                <li class="relative">
+                    <a href="{{ url_for('resguardos.ver_resguardos_sujeto_control') }}" class="nav-link group">
+                        <div class="menu-indicator"></div>
+                        <i class="fas fa-sort-amount-down-alt fa-fw mr-3 text-beige-light"></i>
+                        <span>Tabla Sujeto Control</span>
+                        <i class="fas fa-chevron-right ml-auto text-xs text-beige-light group-hover:text-white transition-colors"></i>
+                    </a>
+                </li>
+
+                <!-- Grupo: Configuración -->
+                <li class="px-3 py-2 mt-6">
+                    <p class="text-xs font-semibold text-beige-light uppercase tracking-wider mb-2 flex items-center">
+                        <i class="fas fa-cogs mr-2 text-beige"></i>
+                        Configuración
+                    </p>
+                </li>
+                
+                <li class="relative">
+                    <a href="{{ url_for('errors.handle_errors') }}" class="nav-link group">
+                        <div class="menu-indicator"></div>
+                        <i class="fas fa-exclamation-triangle fa-fw mr-3 text-beige-light"></i>
+                        <span>Revisar Errores</span>
+                        <span class="pulse-dot w-2 h-2 bg-red-400 rounded-full ml-auto"></span>
+                    </a>
+                </li>
+                
+                <li class="relative">
+                    <a href="{{ url_for('plantillas.crear_plantilla') }}" class="nav-link group">
+                        <div class="menu-indicator"></div>
+                        <i class="fas fa-magic fa-fw mr-3 text-beige-light"></i>
+                        <span>Crear Plantilla</span>
+                        <i class="fas fa-chevron-right ml-auto text-xs text-beige-light group-hover:text-white transition-colors"></i>
+                    </a>
+                </li>
+                
+                <li class="relative">
+                    <a href="{{ url_for('plantillas.ver_plantillas') }}" class="nav-link group">
+                        <div class="menu-indicator"></div>
+                        <i class="fas fa-file-alt fa-fw mr-3 text-beige-light"></i>
+                        <span>Ver Plantillas</span>
+                        <i class="fas fa-chevron-right ml-auto text-xs text-beige-light group-hover:text-white transition-colors"></i>
+                    </a>
+                </li>
+                
+                <li class="relative">
+                    <a href="{{ url_for('areas.manage_areas') }}" class="nav-link group">
+                        <div class="menu-indicator"></div>
+                        <i class="fas fa-building fa-fw mr-3 text-beige-light"></i>
+                        <span>Gestionar Áreas</span>
+                        <i class="fas fa-chevron-right ml-auto text-xs text-beige-light group-hover:text-white transition-colors"></i>
+                    </a>
+                </li>
+                
+                <li class="relative">
+                    <a href="{{ url_for('etiquetas.imprimir_etiquetas') }}" class="nav-link group">
+                        <div class="menu-indicator"></div>
+                        <i class="fas fa-tags fa-fw mr-3 text-beige-light"></i>
+                        <span>Imprimir Etiquetas</span>
+                        <i class="fas fa-chevron-right ml-auto text-xs text-beige-light group-hover:text-white transition-colors"></i>
+                    </a>
+                </li>
+            </ul>
+        </div>
+
+        <!-- Footer del Sidebar -->
+        <div class="p-4 border-t border-beige flex-shrink-0">
+            <div class="text-center">
+                <p class="text-xs text-beige-light font-semibold">Sistema de Resguardos</p>
+                <p class="text-xs text-beige mt-1">ATITALAQUIA SE TRANSFORMA</p>
+                <p class="text-xs text-beige-dark mt-1">© 2024-2027 Todos los derechos reservados</p>
             </div>
         </div>
     </aside>
 
-    <div id="main-content" class="main-content flex-grow flex flex-col items-center">
-        <div class="header-container bg-white p-8 rounded-xl shadow-lg border border-gray-200 w-full max-w-4xl">
+    <!-- Botón de Toggle - POSICIÓN FIJA -->
+    <button id="menu-toggle" class="menu-toggle">
+        <i id="menu-icon" class="fas fa-bars text-lg font-bold"></i>
+    </button>
+
+    <!-- Contenido Principal -->
+    <main id="main-content" class="flex-grow h-screen overflow-y-auto transition-all duration-500 ease-in-out main-content-gradient ml-0">
+        
+        <!-- Mensajes Flash Mejorados -->
+        <div id="flash-container" class="fixed top-6 right-6 z-[1050] w-full max-w-md space-y-3">
             {% with messages = get_flashed_messages(with_categories=true) %}
                 {% if messages %}
                     {% for category, message in messages %}
-                        <div class="flash-message flash-{{ category }}">{{ message }}</div>
+                        <div class="flash-message p-4 rounded-xl shadow-2xl border-l-4 transform transition-all duration-500 ease-out animate-slide-in-right
+                            {% if category == 'success' %} bg-gradient-to-r from-green-50 to-emerald-50 border-green-600 text-green-800 
+                            {% elif category == 'danger' %} bg-gradient-to-r from-red-50 to-pink-50 border-red-600 text-red-800 
+                            {% else %} bg-gradient-to-r from-beige-light to-beige border-beige-dark text-burgundy {% endif %}">
+                            <div class="flex items-center">
+                                <i class="fas {% if category == 'success' %}fa-check-circle{% elif category == 'danger' %}fa-exclamation-circle{% else %}fa-info-circle{% endif %} mr-3 text-lg"></i>
+                                <div class="flex-1">
+                                    <p class="font-semibold">{{ message }}</p>
+                                </div>
+                                <button onclick="this.parentElement.parentElement.remove()" class="ml-4 text-gray-400 hover:text-gray-600">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        </div>
                     {% endfor %}
                 {% endif %}
             {% endwith %}
-
-            {% block content %}{% endblock %}
         </div>
-    </div>
+
+        {% block content %}{% endblock %}
+        
+    </main>
     
     <script>
         document.addEventListener('DOMContentLoaded', () => {
+            // Sistema de persistencia del estado del menú
+            const MENU_STATE_KEY = 'sidebarState';
+            
+            // Elementos del DOM
+            const menuToggleBtn = document.getElementById('menu-toggle');
+            const sidebar = document.getElementById('sidebar');
+            const mainContent = document.getElementById('main-content');
+            const menuIcon = document.getElementById('menu-icon');
+            const sidebarOverlay = document.getElementById('sidebar-overlay');
+            const body = document.body;
+
+            // Estado del menú
+            let isMenuOpen = false;
+
+            // Funciones para manejar el estado
+            const saveMenuState = (isOpen) => {
+                localStorage.setItem(MENU_STATE_KEY, isOpen ? 'open' : 'closed');
+            };
+
+            const getMenuState = () => {
+                return localStorage.getItem(MENU_STATE_KEY) || 'closed';
+            };
+
+            const openMenu = () => {
+                console.log('Abriendo menú...');
+                sidebar.classList.remove('-translate-x-full');
+                sidebar.classList.add('translate-x-0');
+                mainContent.classList.add('md:ml-72');
+                body.classList.add('sidebar-open');
+                menuIcon.classList.remove('fa-bars');
+                menuIcon.classList.add('fa-times');
+                
+                // Mostrar overlay en móvil
+                if (window.innerWidth < 768) {
+                    sidebarOverlay.classList.add('active');
+                }
+                
+                isMenuOpen = true;
+                saveMenuState(true);
+            };
+
+            const closeMenu = () => {
+                console.log('Cerrando menú...');
+                sidebar.classList.remove('translate-x-0');
+                sidebar.classList.add('-translate-x-full');
+                mainContent.classList.remove('md:ml-72');
+                body.classList.remove('sidebar-open');
+                menuIcon.classList.remove('fa-times');
+                menuIcon.classList.add('fa-bars');
+                
+                // Ocultar overlay en móvil
+                sidebarOverlay.classList.remove('active');
+                
+                isMenuOpen = false;
+                saveMenuState(false);
+            };
+
+            const toggleMenu = () => {
+                console.log('Toggle menu, estado actual:', isMenuOpen);
+                if (isMenuOpen) {
+                    closeMenu();
+                } else {
+                    openMenu();
+                }
+            };
+
+            // Inicializar estado del menú
+            const initializeMenuState = () => {
+                const savedState = getMenuState();
+                console.log('Estado guardado:', savedState);
+                
+                if (window.innerWidth >= 768) {
+                    // En desktop
+                    if (savedState === 'open') {
+                        openMenu();
+                    } else {
+                        closeMenu();
+                    }
+                } else {
+                    // En móvil siempre cerrado al inicio
+                    closeMenu();
+                }
+            };
+
+            // Manejo de mensajes flash
             const flashMessages = document.querySelectorAll('.flash-message');
             flashMessages.forEach(msg => {
                 setTimeout(() => {
+                    msg.style.transition = 'all 0.5s ease-in-out';
                     msg.style.opacity = '0';
-                    msg.style.display = 'none';
-                }, 6000);
+                    msg.style.transform = 'translateX(100%) scale(0.9)';
+                    setTimeout(() => {
+                        if (msg.parentNode) {
+                            msg.parentNode.removeChild(msg);
+                        }
+                    }, 500);
+                }, 5000);
             });
 
-            const menuToggleBtn = document.getElementById('menu-toggle');
-            const body = document.body;
+            // Event listeners
+            menuToggleBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('Click en botón toggle');
+                toggleMenu();
+            });
 
-            menuToggleBtn.addEventListener('click', () => {
-                body.classList.toggle('menu-hidden');
-                
-                const icon = menuToggleBtn.querySelector('i');
-                if (body.classList.contains('menu-hidden')) {
-                    icon.classList.remove('fa-bars');
-                    icon.classList.add('fa-arrow-right');
+            // Cerrar menú al hacer clic en el overlay (móvil)
+            sidebarOverlay.addEventListener('click', (e) => {
+                e.preventDefault();
+                console.log('Click en overlay');
+                closeMenu();
+            });
+
+            // Cerrar menú al hacer clic en un enlace del menú (móvil)
+            document.querySelectorAll('.nav-link').forEach(link => {
+                link.addEventListener('click', (e) => {
+                    if (window.innerWidth < 768) {
+                        console.log('Click en enlace móvil');
+                        closeMenu();
+                    }
+                });
+            });
+
+            // Manejar redimensionamiento
+            window.addEventListener('resize', () => {
+                console.log('Resize window');
+                if (window.innerWidth >= 768) {
+                    // En desktop, restaurar estado guardado
+                    const savedState = getMenuState();
+                    if (savedState === 'open') {
+                        openMenu();
+                    }
+                    // Ocultar overlay en desktop
+                    sidebarOverlay.classList.remove('active');
                 } else {
-                    icon.classList.remove('fa-arrow-right');
-                    icon.classList.add('fa-bars');
+                    // En móvil, asegurarse de que esté cerrado
+                    closeMenu();
                 }
             });
+
+            // Inicializar
+            initializeMenuState();
+
+            // Agregar clase active al enlace actual
+            const currentPath = window.location.pathname;
+            document.querySelectorAll('.nav-link').forEach(link => {
+                if (link.getAttribute('href') === currentPath) {
+                    link.classList.add('active');
+                }
+            });
+
+            // Debug
+            console.log('Elementos cargados:');
+            console.log('Menu toggle:', menuToggleBtn);
+            console.log('Sidebar:', sidebar);
+            console.log('Menu icon:', menuIcon);
         });
+        
     </script>
+    
+    <style>
+        @keyframes slide-in-right {
+            from {
+                opacity: 0;
+                transform: translateX(100%);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        
+        .animate-slide-in-right {
+            animation: slide-in-right 0.5s ease-out;
+        }
+    
+    
+    </style>
+    
     {% block scripts %}{% endblock %}
 </body>
 </html>

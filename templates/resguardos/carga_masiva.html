@@ -3,130 +3,240 @@
 {% block title %}Guía para Carga Masiva{% endblock %}
 
 {% block content %}
-<div class="min-h-screen bg-gray-100 py-8">
-    <div class="container mx-auto px-4">
-        <div class="bg-white rounded-xl shadow-lg border border-gray-200 p-6 md:p-8 max-w-4xl mx-auto">
-            
-            <div class="text-center mb-8">
-                <i class="fas fa-file-excel text-green-500 text-5xl mb-4"></i>
-                <h1 class="text-3xl font-bold text-gray-800">Guía para Carga Masiva con Excel</h1>
-                <p class="text-gray-600 mt-2">Sigue estas instrucciones para asegurar una importación de datos exitosa.</p>
+<div class="min-h-screen bg-gradient-to-br from-gray-50 to-beige-light/20 py-8 px-4">
+    <div class="max-w-6xl mx-auto">
+        <!-- Encabezado -->
+        <div class="bg-white rounded-2xl shadow-xl border border-beige-light overflow-hidden mb-8">
+            <div class="bg-gradient-to-r from-burgundy to-burgundy-dark p-6 text-white">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                    <div>
+                        <h1 class="text-2xl md:text-3xl font-bold">Guía para Carga Masiva con Excel</h1>
+                        <p class="text-beige-light mt-2">Sigue estas instrucciones para asegurar una importación de datos exitosa</p>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <div class="w-10 h-10 bg-beige rounded-full flex items-center justify-center">
+                            <i class="fas fa-file-excel text-burgundy text-lg"></i>
+                        </div>
+                    </div>
+                </div>
             </div>
+        </div>
 
-            <div class="space-y-6">
-                <div class="bg-blue-50 p-6 rounded-lg border border-blue-200">
-                    <h3 class="text-xl font-semibold mb-3 text-blue-800">Instrucciones Generales</h3>
-                    <ul class="list-disc list-inside text-gray-700 space-y-2">
-                        <li>Sube un archivo en formato `.xlsx` o `.xls`.</li>
-                        <li>Asegúrate de que los nombres de las columnas en tu Excel coincidan **exactamente** con los nombres de la lista de abajo.</li>
-                        <li>El sistema es sensible a mayúsculas, minúsculas y guiones bajos en los nombres de las columnas.</li>
-                        <li>La columna **"AREA"** es obligatoria para cada fila.</li>
-                    </ul>
+        <!-- Contenido Principal -->
+        <div class="bg-white rounded-2xl shadow-lg border border-beige-light overflow-hidden">
+            <div class="p-6 md:p-8 space-y-8">
+                <!-- Instrucciones Generales -->
+                <div class="mb-8">
+                    <div class="flex items-center mb-6">
+                        <div class="w-8 h-8 bg-burgundy rounded-full flex items-center justify-center mr-3">
+                            <i class="fas fa-info-circle text-white text-sm"></i>
+                        </div>
+                        <h2 class="text-xl font-bold text-burgundy">Instrucciones Generales</h2>
+                    </div>
+                    <div class="bg-beige-light/30 rounded-xl p-6 border-2 border-beige">
+                        <ul class="space-y-3">
+                            <li class="flex items-start">
+                                <i class="fas fa-check text-green-500 mt-1 mr-3"></i>
+                                <span class="text-gray-700">Sube un archivo en formato <strong>.xlsx</strong> o <strong>.xls</strong></span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-check text-green-500 mt-1 mr-3"></i>
+                                <span class="text-gray-700">Asegúrate de que los nombres de las columnas en tu Excel coincidan <strong>exactamente</strong> con los nombres de la lista</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-check text-green-500 mt-1 mr-3"></i>
+                                <span class="text-gray-700">El sistema es sensible a mayúsculas, minúsculas y guiones bajos en los nombres de las columnas</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-exclamation-triangle text-amber-500 mt-1 mr-3"></i>
+                                <span class="text-gray-700">La columna <strong class="text-burgundy">"AREA"</strong> es obligatoria para cada fila</span>
+                            </li>
+                        </ul>
+                    </div>
                 </div>
 
-                <div class="bg-gray-50 p-6 rounded-lg border border-gray-200">
-                    <h3 class="text-xl font-semibold mb-3 text-gray-700">Columnas Soportadas</h3>
-                    <p class="text-sm text-gray-600 mb-4">
-                        Haz clic en cualquier nombre de columna para copiarlo a tu portapapeles.
-                    </p>
-                    <ul class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-x-6 gap-y-3">
-                        {% for col in [
-
+                <!-- Columnas Soportadas -->
+                <div class="mb-8">
+                    <div class="flex items-center mb-6">
+                        <div class="w-8 h-8 bg-burgundy rounded-full flex items-center justify-center mr-3">
+                            <i class="fas fa-list-alt text-white text-sm"></i>
+                        </div>
+                        <h2 class="text-xl font-bold text-burgundy">Columnas Soportadas</h2>
+                    </div>
+                    <div class="bg-beige-light/30 rounded-xl p-6 border-2 border-beige">
+                        <p class="text-sm text-gray-600 mb-4 flex items-center">
+                            <i class="fas fa-mouse-pointer text-burgundy mr-2"></i>
+                            Haz clic en cualquier nombre de columna para copiarlo a tu portapapeles
+                        </p>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                           {% for col in [
     "NO. DE INVENTARIO",
     "NO. FACTURA",
-    "FECHA FACTURA",
+    "NO. DE CUENTA",
     "PROVEEDOR",
     "DESCRIPCION DEL BIEN",
     "DESCRIPCION CORTA DEL BIEN",
+    "RUBRO",
+    "NO.POLIZA",
+    "FECHA POLIZA",
+    "SUB-CTA. ARMONIZADORA",
+    "FECHA FACTURA",
+    "COSTO INICIAL",
+    "DEPRECIACION ACUMULADA",
+    "COSTO FINAL",
     "CANTIDAD",
     "ESTADO DEL BIEN",
     "MARCA",
     "MODELO",
     "NUMERO DE SERIE",
     "TIPO DE ALTA",
-    "NO. DE CUENTA",
-    "RUBRO",
-    "NO.POLIZA",
-    "FECHA POLIZA",
-    "SUB-CTA. ARMONIZADORA",
-    "COSTO INICIAL",
-    "DEPRECIACION ACUMULADA",
-    "COSTO FINAL",
-    "NO. DE RESGUARDO",
+    "CLASIFICACION LEGAL",
+    "AREA PRESUPUESTAL",
+    "DOCUMENTO PROPIEDAD",
+    "FECHA DOCUMENTO PROPIEDAD",
+    "VALOR EN LIBROS",
+    "FECHA ADQUISICION/ALTA",
     "AREA",
+
     "UBICACION",
+    "NO. DE RESGUARDO",
     "TIPO DE RESGUARDO",
     "FECHA DE RESGUARDO",
     "NO. DE TRABAJADOR",
     "PUESTO TRABAJADOR",
+    "RFC TRABAJADOR",
+    "NO. DE NOMINA TRABAJADOR",
     "NOMBRE DEL RESGUARDANTE",
-    "NOMBRE DIRECTOR/JEFES DE AREA",
-    "FACTURA",
-    "DESCRIPCION FISICAS DEL BIEN",
-    "PUESTO",
-    "FECHA RESGUARDO"
-]
- %}
-                        <li class="copyable-li flex items-center justify-between p-2 rounded-md hover:bg-gray-200 cursor-pointer transition-colors">
-                            <span class="font-mono text-sm text-gray-800">{{ col }}</span>
-                            <span class="copy-feedback text-xs text-green-600 font-semibold opacity-0 transition-opacity duration-300">¡Copiado!</span>
-                        </li>
-                        {% endfor %}
-                    </ul>
+    "NOMBRE DIRECTOR/JEFES DE AREA"
+] %} 
+                            <div class="copyable-item group relative bg-white rounded-lg border border-beige-light p-3 hover:border-burgundy hover:shadow-md transition-all duration-200 cursor-pointer">
+                                <div class="flex items-center justify-between">
+                                    <span class="font-mono text-sm text-gray-800 group-hover:text-burgundy">{{ col }}</span>
+                                    <i class="fas fa-copy text-gray-400 group-hover:text-burgundy text-xs"></i>
+                                </div>
+                                <span class="copy-feedback absolute -top-2 -right-2 bg-green-500 text-white text-xs px-2 py-1 rounded-full font-semibold opacity-0 transition-opacity duration-300 pointer-events-none">
+                                    ¡Copiado!
+                                </span>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
                 </div>
 
-                <!-- SECCIÓN AÑADIDA: Formulario de Carga de Archivos -->
-                <div class="bg-green-50 p-6 rounded-lg border border-green-200">
-                    <h3 class="text-xl font-semibold mb-3 text-green-800">Subir Archivo</h3>
-                    <p class="text-gray-600 mb-4">Una vez que tu archivo esté listo, súbelo aquí para iniciar el proceso de importación.</p>
-                    <form action="{{ url_for('excel_import.upload_excel') }}" method="post" enctype="multipart/form-data" class="flex flex-col sm:flex-row items-center space-y-4 sm:space-y-0 sm:space-x-4">
-                        <input type="file" name="excel_file" required class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-green-100 file:text-green-700 hover:file:bg-green-200 cursor-pointer">
-                        <button type="submit" class="w-full sm:w-auto bg-green-600 text-white px-6 py-2 rounded-lg shadow-md hover:bg-green-700 transition-colors font-medium flex items-center justify-center">
-                            <i class="fas fa-upload mr-2"></i> Subir Excel
-                        </button>
-                    </form>
+                <!-- Formulario de Carga -->
+                <div class="mb-8">
+                    <div class="flex items-center mb-6">
+                        <div class="w-8 h-8 bg-burgundy rounded-full flex items-center justify-center mr-3">
+                            <i class="fas fa-upload text-white text-sm"></i>
+                        </div>
+                        <h2 class="text-xl font-bold text-burgundy">Subir Archivo Excel</h2>
+                    </div>
+                    <div class="bg-beige-light/30 rounded-xl p-6 border-2 border-beige border-dashed">
+                        <p class="text-gray-600 mb-4 flex items-center">
+                            <i class="fas fa-lightbulb text-burgundy mr-2"></i>
+                            Una vez que tu archivo esté listo, súbelo aquí para iniciar el proceso de importación
+                        </p>
+                        <form action="{{ url_for('excel_import.upload_excel') }}" method="post" enctype="multipart/form-data" class="space-y-4">
+                            <div class="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
+                                <div class="flex-1">
+                                    <input type="file" 
+                                           name="excel_file" 
+                                           required 
+                                           accept=".xlsx,.xls"
+                                           class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-burgundy/50 focus:border-burgundy transition-all duration-200 bg-white/80 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-burgundy file:text-white hover:file:bg-burgundy-dark cursor-pointer">
+                                </div>
+                                <button type="submit" 
+                                        class="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-semibold rounded-xl shadow-sm text-white bg-gradient-to-r from-burgundy to-burgundy-dark hover:from-burgundy-dark hover:to-burgundy focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-burgundy transition-all duration-200 ease-in-out">
+                                    <i class="fas fa-upload mr-2"></i> Subir Excel
+                                </button>
+                            </div>
+                            <p class="text-xs text-gray-500 flex items-center">
+                                <i class="fas fa-info-circle text-burgundy mr-1"></i>
+                                Formatos aceptados: .xlsx, .xls
+                            </p>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Botones de Acción -->
+                <div class="flex flex-col sm:flex-row justify-between items-center gap-4 pt-6 border-t border-beige-light">
+                    <a href="{{ url_for('resguardos.crear_resguardo') }}" 
+                       class="inline-flex items-center justify-center px-6 py-3 border-2 border-beige text-base font-semibold rounded-xl text-burgundy bg-white hover:bg-beige-light/30 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-burgundy transition-all duration-200 ease-in-out order-2 sm:order-1">
+                        <i class="fas fa-arrow-left mr-2"></i> Volver al Formulario
+                    </a>
+                    <div class="text-center sm:text-right order-1 sm:order-2">
+                        <p class="text-sm text-gray-600 flex items-center justify-center sm:justify-end">
+                            <i class="fas fa-download text-burgundy mr-2"></i>
+                            ¿Necesitas una plantilla? <a href="#" class="text-burgundy hover:text-burgundy-dark font-semibold ml-1">Descargar ejemplo</a>
+                        </p>
+                    </div>
                 </div>
             </div>
-
-            <div class="mt-8 text-center">
-                 <a href="{{ url_for('resguardos.crear_resguardo') }}" class="inline-flex items-center px-6 py-2 border border-gray-300 text-base font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition duration-150 ease-in-out">
-                    <i class="fas fa-arrow-left mr-2"></i> Volver al Formulario
-                </a>
-            </div>
-
         </div>
     </div>
 </div>
 {% endblock %}
 
+{% block styles %}
+<style>
+    .bg-burgundy { background-color: #6A2E4D; }
+    .bg-burgundy-dark { background-color: #551E3A; }
+    .text-burgundy { color: #6A2E4D; }
+    .border-burgundy { border-color: #6A2E4D; }
+    .focus\:ring-burgundy\/50:focus { --tw-ring-color: rgb(106 46 77 / 0.5); }
+    .focus\:border-burgundy:focus { border-color: #6A2E4D; }
+    
+    .bg-beige { background-color: #BC9B6A; }
+    .bg-beige-light { background-color: #D7C3A0; }
+    .text-beige-light { color: #D7C3A0; }
+    .border-beige { border-color: #BC9B6A; }
+    .border-beige-light { border-color: #D7C3A0; }
+    
+    .from-burgundy { --tw-gradient-from: #6A2E4D; --tw-gradient-to: rgb(106 46 77 / 0); --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to); }
+    .to-burgundy-dark { --tw-gradient-to: #551E3A; }
+    
+    input:focus, select:focus, textarea:focus {
+        outline: none;
+        box-shadow: 0 0 0 2px rgb(106 46 77 / 0.1);
+    }
+    
+    .copyable-item {
+        transition: all 0.3s ease;
+    }
+    
+    .copyable-item:hover {
+        transform: translateY(-2px);
+    }
+</style>
+{% endblock %}
+
 {% block scripts %}
-{{ super() }}
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-    document.querySelectorAll('.copyable-li').forEach(item => {
+    document.querySelectorAll('.copyable-item').forEach(item => {
         item.addEventListener('click', () => {
-            // Obtiene el texto del span principal, eliminando espacios extra.
+            // Obtiene el texto del span principal
             const textToCopy = item.querySelector('span:first-child').textContent.trim();
             
-            // Crea un textarea temporal para usar la API del portapapeles.
+            // Crea un textarea temporal para usar la API del portapapeles
             const textArea = document.createElement('textarea');
             textArea.value = textToCopy;
-            textArea.style.position = 'fixed'; // Evita que se vea en la pantalla.
+            textArea.style.position = 'fixed';
             textArea.style.opacity = '0';
             document.body.appendChild(textArea);
             
             textArea.select();
             
             try {
-                document.execCommand('copy'); // Método compatible con la mayoría de navegadores.
+                document.execCommand('copy');
                 
-                // Muestra el feedback visual.
+                // Muestra el feedback visual
                 const feedback = item.querySelector('.copy-feedback');
                 if (feedback) {
                     feedback.style.opacity = '1';
                     setTimeout(() => {
                         feedback.style.opacity = '0';
-                    }, 1500); // El mensaje desaparece después de 1.5 segundos.
+                    }, 1500);
                 }
             } catch (err) {
                 console.error('No se pudo copiar el texto: ', err);
@@ -135,7 +245,19 @@ document.addEventListener('DOMContentLoaded', () => {
             document.body.removeChild(textArea);
         });
     });
+
+    // Efecto visual adicional para los items copiables
+    document.querySelectorAll('.copyable-item').forEach(item => {
+        item.addEventListener('mouseenter', () => {
+            item.style.borderColor = '#6A2E4D';
+        });
+        
+        item.addEventListener('mouseleave', () => {
+            if (!item.querySelector('.copy-feedback').style.opacity === '1') {
+                item.style.borderColor = '#D7C3A0';
+            }
+        });
+    });
 });
 </script>
 {% endblock %}
-

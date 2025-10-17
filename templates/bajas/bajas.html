@@ -1,0 +1,326 @@
+{% extends 'base.html' %}
+
+{% block title %}Gestión de Procesos de Baja{% endblock %}
+
+{% block content %}
+<div class="container mx-auto p-4 sm:p-6 lg:p-8">
+    
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
+        <h1 class="text-2xl md:text-3xl font-bold text-gray-700">Procesos de Baja de Bienes</h1>
+        <button id="openModalBtn" class="mt-4 sm:mt-0 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-300 ease-in-out flex items-center">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
+            </svg>
+            Iniciar Nuevo Proceso de Baja
+        </button>
+    </div>
+
+    <div class="bg-white shadow-lg rounded-xl overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm text-left text-gray-600">
+                <thead class="text-xs text-gray-700 uppercase bg-gray-50">
+                    <tr>
+                        <th scope="col" class="px-6 py-3">No. Inventario</th>
+                        <th scope="col" class="px-6 py-3">Descripción</th>
+                        <th scope="col" class="px-6 py-3">Solicitante</th>
+                        <th scope="col" class="px-6 py-3">Motivo</th>
+                        <th scope="col" class="px-6 py-3">Estatus</th>
+                        <th scope="col" class="px-6 py-3">Fecha de Inicio</th>
+                        <th scope="col" class="px-6 py-3">
+                            <span class="sr-only">Acciones</span>
+                        </th>
+                    </tr>
+                </thead>
+                <tbody id="tabla-procesos">
+                    {% for proceso in procesos %}
+                    <tr class="bg-white border-b hover:bg-gray-50">
+                        <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">{{ proceso.bien.No_Inventario }}</th>
+                        <td class="px-6 py-4">{{ proceso.bien.Descripcion_Corta_Del_Bien }}</td>
+                        <td class="px-6 py-4">{{ proceso.nombre_solicitante }}</td>
+                        <td class="px-6 py-4">{{ proceso.motivo }}</td>
+                        <td class="px-6 py-4">
+                            {% if proceso.estatus == 'Solicitado' %}
+                                <span class="bg-blue-100 text-blue-800 text-xs font-medium mr-2 px-2.5 py-0.5 rounded-full">Solicitado</span>
+                            {% elif proceso.estatus == 'En Dictamen Técnico' %}
+                                <span class="bg-yellow-100 text-yellow-800 text-xs font-medium mr-2 px-2.5 py-0.5 rounded-full">En Dictamen</span>
+                            {% else %}
+                                <span class="bg-gray-100 text-gray-800 text-xs font-medium mr-2 px-2.5 py-0.5 rounded-full">{{ proceso.estatus }}</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4">{{ proceso.fecha_inicio.strftime('%Y-%m-%d') }}</td>
+                        <td class="px-6 py-4 text-right">
+                            <a href="{{ url_for('bajas.ver_proceso', proceso_id=proceso.id) }}" class="font-medium text-blue-600 hover:underline">Ver Detalles</a>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="7" class="text-center text-gray-500 py-6">No hay procesos de baja registrados actualmente.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div id="newProcessModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 hidden flex items-center justify-center">
+    <div class="bg-white rounded-xl shadow-2xl w-11/12 md:w-3/4 lg:w-2/3 max-w-4xl max-h-[90vh] flex flex-col">
+        
+        <div class="flex justify-between items-center p-4 border-b">
+            <h3 class="text-xl font-semibold text-gray-800">Iniciar Nuevo Proceso de Baja</h3>
+            <button id="closeModalBtn" class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 ml-auto inline-flex items-center">
+                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
+            </button>
+        </div>
+
+        <div class="p-6 overflow-y-auto">
+            <div id="step1-search">
+                <h4 class="text-lg font-medium mb-4">Paso 1: Buscar y Seleccionar el Bien</h4>
+                <div class="bg-gray-50 p-4 rounded-lg">
+                    <label for="searchValue" class="block mb-2 text-sm font-medium text-gray-900">Buscar Bien:</label>
+                    <div class="flex">
+                        <input type="text" id="searchValue" class="rounded-l-lg bg-gray-50 border border-gray-300 text-gray-900 focus:ring-blue-500 focus:border-blue-500 block flex-1 min-w-0 w-full text-sm p-2.5" placeholder="Buscar por No. de Inventario, descripción, marca...">
+                        <button id="searchBtn" class="inline-flex items-center px-3 text-sm text-white bg-blue-600 rounded-r-md border border-blue-600 hover:bg-blue-700">Buscar</button>
+                    </div>
+                </div>
+                <div id="searchResults" class="mt-4 hidden">
+                     <p class="text-sm text-gray-600 mb-2">Resultados de la búsqueda:</p>
+                     <div id="loader" class="hidden text-center p-4">Cargando...</div>
+                     <div id="resultsTableContainer" class="max-h-60 overflow-y-auto border rounded-lg"></div>
+                     <p id="noResults" class="hidden text-center p-4 text-gray-500">No se encontraron bienes.</p>
+                </div>
+            </div>
+
+            <div id="step2-form" class="hidden">
+                <h4 class="text-lg font-medium mb-4">Paso 2: Completar Solicitud</h4>
+                <div id="bienDetails" class="mb-6 bg-blue-50 border border-blue-200 p-4 rounded-lg text-sm space-y-2"></div>
+                
+                <form id="bajaForm" enctype="multipart/form-data">
+                    <input type="hidden" id="id_bien" name="id_bien">
+                    <div class="space-y-6">
+                        <div>
+                            <label for="motivo" class="block mb-2 text-sm font-medium text-gray-900">Motivo de la Baja <span class="text-red-600">*</span></label>
+                            <select id="motivo" name="motivo" required class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
+                                <option value="" disabled selected>Seleccione un motivo</option>
+                                <option value="Obsolescencia">Obsolescencia</option>
+                                <option value="Inutilidad">Inutilidad por deterioro</option>
+                                <option value="Robo">Robo o Extravío</option>
+                                <option value="Siniestro">Siniestro</option>
+                                <option value="Enajenación">Enajenación (Venta)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="justificacion_solicitud" class="block mb-2 text-sm font-medium text-gray-900">Justificación Detallada <span class="text-red-600">*</span></label>
+                            <textarea id="justificacion_solicitud" name="justificacion_solicitud" rows="4" required class="block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500" placeholder="Explique detalladamente las razones..."></textarea>
+                        </div>
+                        <div>
+                            <label for="solicitud_file" class="block mb-2 text-sm font-medium text-gray-900">Documento de Solicitud de Baja <span class="text-red-600">*</span></label>
+                            <input type="file" id="solicitud_file" name="solicitud_file" required class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"/>
+                            <p class="mt-1 text-xs text-gray-500">Archivo PDF, JPG o PNG que formaliza la solicitud.</p>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="flex items-center justify-end p-4 border-t space-x-2">
+            <button id="cancelBtn" type="button" class="text-gray-500 bg-white hover:bg-gray-100 focus:ring-4 focus:outline-none focus:ring-blue-300 rounded-lg border border-gray-200 text-sm font-medium px-5 py-2.5 hover:text-gray-900">Cancelar</button>
+            <button id="submitBtn" type="submit" form="bajaForm" class="hidden bg-blue-600 hover:bg-blue-700 focus:ring-4 focus:outline-none focus:ring-blue-300 text-white font-medium rounded-lg text-sm px-5 py-2.5">Guardar e Iniciar Proceso</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    // --- Elementos del DOM ---
+    const openModalBtn = document.getElementById('openModalBtn');
+    const newProcessModal = document.getElementById('newProcessModal');
+    const closeModalBtn = document.getElementById('closeModalBtn');
+    const cancelBtn = document.getElementById('cancelBtn');
+    const searchBtn = document.getElementById('searchBtn');
+    const searchValueInput = document.getElementById('searchValue');
+    const searchResultsDiv = document.getElementById('searchResults');
+    const resultsTableContainer = document.getElementById('resultsTableContainer');
+    const loader = document.getElementById('loader');
+    const noResults = document.getElementById('noResults');
+    const step1 = document.getElementById('step1-search');
+    const step2 = document.getElementById('step2-form');
+    const submitBtn = document.getElementById('submitBtn');
+    const bajaForm = document.getElementById('bajaForm');
+    const bienDetailsDiv = document.getElementById('bienDetails');
+    const idBienInput = document.getElementById('id_bien');
+
+    // --- Funciones del Modal ---
+    const openModal = () => newProcessModal.classList.remove('hidden');
+    const closeModal = () => {
+        newProcessModal.classList.add('hidden');
+        resetModal();
+    };
+
+    const resetModal = () => {
+        step1.classList.remove('hidden');
+        step2.classList.add('hidden');
+        submitBtn.classList.add('hidden');
+        searchResultsDiv.classList.add('hidden');
+        resultsTableContainer.innerHTML = '';
+        bajaForm.reset();
+        searchValueInput.value = '';
+        bienDetailsDiv.innerHTML = '';
+        idBienInput.value = '';
+    };
+
+    openModalBtn.addEventListener('click', openModal);
+    closeModalBtn.addEventListener('click', closeModal);
+    cancelBtn.addEventListener('click', closeModal);
+
+    // --- Lógica de Búsqueda ---
+    const performSearch = async () => {
+        const query = searchValueInput.value.trim();
+        if (!query) {
+            alert('Por favor, ingrese un término de búsqueda.');
+            return;
+        }
+
+        searchResultsDiv.classList.remove('hidden');
+        loader.classList.remove('hidden');
+        resultsTableContainer.innerHTML = '';
+        noResults.classList.add('hidden');
+        
+        try {
+            const response = await fetch(`{{ url_for('bajas.buscar_bienes_para_baja') }}?q=${query}`);
+            if (!response.ok) {
+                throw new Error(`Error HTTP: ${response.status}`);
+            }
+            const bienes = await response.json();
+
+            if (bienes.length > 0) {
+                displayResults(bienes);
+            } else {
+                noResults.classList.remove('hidden');
+            }
+        } catch (error) {
+            console.error('Error en la búsqueda:', error);
+            noResults.textContent = 'Ocurrió un error al realizar la búsqueda.';
+            noResults.classList.remove('hidden');
+        } finally {
+            loader.classList.add('hidden');
+        }
+    };
+    
+    const displayResults = (bienes) => {
+        const table = document.createElement('table');
+        table.className = 'w-full text-sm text-left';
+        table.innerHTML = `
+            <thead class="text-xs text-gray-700 uppercase bg-gray-100">
+                <tr>
+                    <th class="px-4 py-2">No. Inventario</th>
+                    <th class="px-4 py-2">Descripción</th>
+                    <th class="px-4 py-2"></th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        `;
+        const tbody = table.querySelector('tbody');
+        bienes.forEach(bien => {
+            const tr = document.createElement('tr');
+            tr.className = 'border-b hover:bg-blue-50';
+            tr.innerHTML = `
+                <td class="px-4 py-2 font-medium">${bien.No_Inventario}</td>
+                <td class="px-4 py-2">${bien.Descripcion_Del_Bien}</td>
+                <td class="px-4 py-2 text-right">
+                    <button class="select-bien-btn bg-green-600 hover:bg-green-700 text-white text-xs font-bold py-1 px-2 rounded" data-bien='${JSON.stringify(bien)}'>
+                        Seleccionar
+                    </button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+        resultsTableContainer.appendChild(table);
+    };
+
+    searchBtn.addEventListener('click', performSearch);
+    searchValueInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            performSearch();
+        }
+    });
+
+    // --- Lógica de Selección y Formulario ---
+    resultsTableContainer.addEventListener('click', (e) => {
+        if (e.target.classList.contains('select-bien-btn')) {
+            const bienData = JSON.parse(e.target.dataset.bien);
+            selectBien(bienData);
+        }
+    });
+
+    const selectBien = (bien) => {
+        step1.classList.add('hidden');
+        step2.classList.remove('hidden');
+        submitBtn.classList.remove('hidden');
+
+        idBienInput.value = bien.id;
+        
+        bienDetailsDiv.innerHTML = `
+            <h5 class="font-bold text-base mb-3 text-gray-900 border-b pb-2">Datos para el Proceso de Baja</h5>
+            <div class="grid grid-cols-2 gap-x-4 gap-y-2">
+                <div><p class="font-semibold">No. Inventario:</p><p>${bien.No_Inventario}</p></div>
+                <div><p class="font-semibold">Costo de Adquisición:</p><p>$${parseFloat(bien.Costo_Inicial).toFixed(2)}</p></div>
+                <div class="col-span-2"><p class="font-semibold">Descripción:</p><p>${bien.Descripcion_Del_Bien}</p></div>
+                <div class="col-span-2 mt-2 pt-2 border-t"><p class="font-semibold text-gray-600">Solicitante (Resguardante):</p><p class="font-bold text-gray-800">${bien.nombre_solicitante || 'No especificado'}</p></div>
+                <div class="col-span-2 mt-1"><p class="font-semibold text-gray-600">Jefe de Área (Vo.Bo.):</p><p class="font-bold text-gray-800">${bien.nombre_jefe_area || 'No especificado'}</p></div>
+            </div>
+        `;
+    };
+
+    // --- Lógica de Envío de Formulario ---
+    bajaForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Guardando...';
+
+        const formData = new FormData(bajaForm);
+        
+        if (!formData.get('motivo') || !formData.get('justificacion_solicitud').trim()) {
+            alert('Los campos Motivo y Justificación son obligatorios.');
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Guardar e Iniciar Proceso';
+            return;
+        }
+
+        const solicitudFile = formData.get('solicitud_file');
+        if (!solicitudFile || solicitudFile.size === 0) {
+            alert('Debe adjuntar el Documento de Solicitud de Baja para continuar.');
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Guardar e Iniciar Proceso';
+            return;
+        }
+
+        try {
+            const response = await fetch(`{{ url_for('bajas.crear_proceso_baja') }}`, {
+                method: 'POST',
+                body: formData 
+            });
+            
+            const result = await response.json();
+
+            if (!response.ok) {
+                throw new Error(result.error || 'Error en el servidor');
+            }
+            
+            alert('Proceso de baja iniciado exitosamente.');
+            window.location.reload();
+
+        } catch(error) {
+            console.error('Error al crear el proceso:', error);
+            alert(`Ocurrió un error al iniciar el proceso: ${error.message}`);
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Guardar e Iniciar Proceso';
+        }
+    });
+});
+</script>
+{% endblock %}

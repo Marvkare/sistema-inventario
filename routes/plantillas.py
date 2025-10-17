@@ -50,7 +50,7 @@ def get_filtered_resguardo_data(selected_columns, filters, limit=None):
             'Descripcion_Del_Bien': 'b', 'Descripcion_Corta_Del_Bien': 'b', 'Rubro': 'b',
             'Poliza': 'b', 'Fecha_Poliza': 'b', 'Sub_Cuenta_Armonizadora': 'b',
             'Fecha_Factura': 'b', 'Costo_Inicial': 'b', 'Depreciacion_Acumulada': 'b',
-            'Costo_Final_Cantidad': 'b', 'Cantidad': 'b', 'Estado_Del_Bien': 'b',
+            'Costo_Final': 'b', 'Cantidad': 'b', 'Estado_Del_Bien': 'b',
             'Marca': 'b', 'Modelo': 'b', 'Numero_De_Serie': 'b', 'Tipo_De_Alta': 'b',
             'Area': 'a'
         }
@@ -319,13 +319,24 @@ def exportar_excel(template_id):
         if not filtered_data:
             flash("No se encontraron datos para los filtros seleccionados.", 'warning')
             return redirect(url_for('plantillas.ver_plantillas'))
-            
-        # Crear DataFrame ANTES del bloque de escritura
+
+        # --- BLOQUE DE CORRECCIÓN: TRANSFORMA LAS LISTAS DE IMÁGENES ---
+        for row in filtered_data:
+            if 'imagenPath_bien' in row and row['imagenPath_bien']:
+                for i, path in enumerate(row['imagenPath_bien']):
+                    row[f'imagen_bien_{i+1}'] = path
+            if 'imagenPath_resguardo' in row and row['imagenPath_resguardo']:
+                for i, path in enumerate(row['imagenPath_resguardo']):
+                    row[f'imagen_resguardo_{i+1}'] = path
+        # --- FIN DEL BLOQUE DE CORRECCIÓN ---
+
         df = pd.DataFrame(filtered_data)
         
         excel_file_buffer = BytesIO()
 
         with pd.ExcelWriter(excel_file_buffer, engine='xlsxwriter') as writer:
+            # ... (el resto de tu código para generar el Excel no necesita cambios)
+            # Ahora funcionará porque encontrará las columnas 'imagen_resguardo_1', etc.
             sheet_name = template['name'][:31] if template['name'] else 'Reporte'
             workbook = writer.book
             worksheet = workbook.add_worksheet(sheet_name) 
@@ -358,6 +369,7 @@ def exportar_excel(template_id):
             for row_num, row_data in enumerate(filtered_data):
                 excel_row = row_num + 1
                 has_images = any(row_data.get(col) for col in [f'imagen_bien_{i+1}' for i in range(max_bien_images)] + [f'imagen_resguardo_{i+1}' for i in range(max_resguardo_images)])
+                
                 if has_images:
                     worksheet.set_row(excel_row, image_row_height)
 
@@ -367,8 +379,11 @@ def exportar_excel(template_id):
                     if col_name.startswith('imagen_'):
                         if value:
                             try:
+                                # Corrección para construir la ruta de la imagen de forma segura
                                 filename = os.path.basename(str(value))
-                                image_path = os.path.join(UPLOAD_FOLDER, filename)
+                                # La ruta en la BD puede tener '/uploads/', lo quitamos si UPLOAD_FOLDER ya lo tiene.
+                                relative_path = str(value).lstrip('/uploads').lstrip('/')
+                                image_path = os.path.join(UPLOAD_FOLDER, relative_path)
                                 
                                 if os.path.exists(image_path):
                                     img = Image.open(image_path)
@@ -395,13 +410,15 @@ def exportar_excel(template_id):
                     else:
                         worksheet.write(excel_row, col_num, value, data_format)
 
+            # ... resto del código para ajustar ancho de columnas
             for col_num, col_name in enumerate(all_columns_in_order):
                 if col_name.startswith('imagen_'):
                     worksheet.set_column(col_num, col_num, 25)
                 else:
                     max_len = 0
                     if col_name in df.columns:
-                        max_len = max(len(str(col_name)), df[col_name].astype(str).map(len).max())
+                        # Asegurar que no haya valores nulos que causen error en .map(len)
+                        max_len = max(len(str(col_name)), df[col_name].dropna().astype(str).map(len).max()) if not df[col_name].dropna().empty else len(str(col_name))
                     else:
                         max_len = len(str(col_name))
                     worksheet.set_column(col_num, col_num, min(max_len + 2, 50))
@@ -418,6 +435,7 @@ def exportar_excel(template_id):
     finally:
         if conn:
             conn.close()
+            
 
 @plantillas_bp.route('/preview_query', methods=['POST'])
 @login_required

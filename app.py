@@ -58,6 +58,8 @@ from routes.admin import admin_bp
 from routes.bienes import bienes_bp
 from routes.traspaso import traspaso_bp
 from routes.etiquetas import etiquetas_bp
+from routes.bajas import bajas_bp
+from routes.inventarios import inventarios_bp  # Asegúrate de importar el blueprint de inventarios
 
 # Ejecutar la inicialización de las tablas
 init_tables()
@@ -83,6 +85,8 @@ app.register_blueprint(admin_bp)
 app.register_blueprint(bienes_bp)
 app.register_blueprint(traspaso_bp)
 app.register_blueprint(etiquetas_bp)
+app.register_blueprint(bajas_bp)
+app.register_blueprint(inventarios_bp)  # Registrar el blueprint de inventarios
 
 # --- RUTAS DE AUTENTICACIÓN Y CONFIGURACIÓN INICIAL ---
 

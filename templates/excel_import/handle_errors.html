@@ -1,66 +1,132 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="container mx-auto px-4 py-8">
-    <h1 class="text-3xl font-bold text-gray-800 mb-4">Revisión de Errores de Importación de Excel</h1>
-    <p class="text-gray-600 mb-6">
-        Se encontraron <span class="font-bold">{{ errors|length }}</span> filas con errores en el archivo que subiste. 
-        Por favor, revisa los detalles, edita las filas para corregirlas o elimínalas si no son necesarias.
-    </p>
+<div class="min-h-screen bg-gradient-to-br from-gray-50 to-beige-light/20 py-8 px-4">
+    <div class="max-w-7xl mx-auto">
+        <!-- Encabezado -->
+        <div class="bg-white rounded-2xl shadow-xl border border-beige-light overflow-hidden mb-8">
+            <div class="bg-gradient-to-r from-burgundy to-burgundy-dark p-6 text-white">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                    <div>
+                        <h1 class="text-2xl md:text-3xl font-bold">Revisión de Errores de Importación</h1>
+                        <p class="text-beige-light mt-2">
+                            Se encontraron <span class="font-bold">{{ errors|length }}</span> filas con errores en el archivo
+                        </p>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <div class="w-10 h-10 bg-beige rounded-full flex items-center justify-center">
+                            <i class="fas fa-exclamation-triangle text-burgundy text-lg"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-    <div class="bg-white shadow-lg rounded-lg overflow-x-auto">
-        <table class="min-w-full divide-y divide-gray-200">
-            <thead class="bg-gray-50">
-                <tr>
-                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        No. Inventario
-                    </th>
-                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        No. Resguardo
-                    </th>
-                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Descripción del Error
-                    </th>
-                    <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Acciones
-                    </th>
-                </tr>
-            </thead>
-            <tbody class="bg-white divide-y divide-gray-200">
-                {% for error in errors %}
-                <tr class="hover:bg-gray-50">
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {{ error.get('No_Inventario', 'N/A') }}
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {{ error.get('No_Resguardo', 'N/A') }}
-                    </td>
-                    <td class="px-6 py-4 text-sm text-red-600 font-medium">
-                        {{ error.error_message }}
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-center">
-                        <a href="{{ url_for('excel_import.edit_error_row', error_id=error.id) }}" class="text-indigo-600 hover:text-indigo-900 font-medium">
-                            Editar
-                        </a>
-                    </td>
-                </tr>
-                {% else %}
-                <tr>
-                    <td colspan="4" class="px-6 py-4 text-center text-gray-500">
-                        No se encontraron errores para mostrar.
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
+        <!-- Contenido Principal -->
+        <div class="bg-white rounded-2xl shadow-lg border border-beige-light overflow-hidden">
+            <div class="p-6">
+                <!-- Información General -->
+                <div class="bg-beige-light/30 rounded-xl p-4 mb-6 border border-beige">
+                    <div class="flex items-center">
+                        <i class="fas fa-info-circle text-burgundy mr-3"></i>
+                        <p class="text-gray-700">
+                            Revisa los detalles, edita las filas para corregirlas o elimínalas si no son necesarias.
+                        </p>
+                    </div>
+                </div>
 
-    <div class="mt-6">
-        <a href="{{ url_for('resguardos.crear_resguardo') }}" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-            <i class="fas fa-arrow-left mr-2"></i>
-            Volver al Formulario de Carga
-        </a>
+                <!-- Tabla de Errores -->
+                <div class="overflow-x-auto rounded-lg border border-beige-light">
+                    <table class="min-w-full">
+                        <thead>
+                            <tr class="bg-gradient-to-r from-burgundy to-burgundy-dark text-white">
+                                <th class="py-4 px-6 text-left font-semibold uppercase text-sm">No. Inventario</th>
+                                <th class="py-4 px-6 text-left font-semibold uppercase text-sm">No. Resguardo</th>
+                                <th class="py-4 px-6 text-left font-semibold uppercase text-sm">Descripción del Error</th>
+                                <th class="py-4 px-6 text-center font-semibold uppercase text-sm">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody class="text-gray-600">
+                            {% for error in errors %}
+                            <tr class="border-b border-beige-light hover:bg-red-50 transition-colors duration-200">
+                                <td class="py-4 px-6">
+                                    <span class="font-mono text-sm bg-gray-100 px-3 py-1 rounded" title="{{ error.get('No_Inventario', 'N/A') }}">
+                                        {{ error.get('No_Inventario', 'N/A') }}
+                                    </span>
+                                </td>
+                                <td class="py-4 px-6">
+                                    <span class="font-mono text-sm bg-gray-100 px-3 py-1 rounded" title="{{ error.get('No_Resguardo', 'N/A') }}">
+                                        {{ error.get('No_Resguardo', 'N/A') }}
+                                    </span>
+                                </td>
+                                <td class="py-4 px-6">
+                                    <div class="flex items-start">
+                                        <i class="fas fa-exclamation-circle text-red-500 mt-1 mr-3"></i>
+                                        <span class="text-red-600 font-medium" title="{{ error.error_message }}">
+                                            {{ error.error_message }}
+                                        </span>
+                                    </div>
+                                </td>
+                                <td class="py-4 px-6">
+                                    <div class="flex justify-center">
+                                        <a href="{{ url_for('excel_import.edit_error_row', error_id=error.id) }}" 
+                                           class="inline-flex items-center justify-center px-4 py-2 bg-burgundy hover:bg-burgundy-dark text-white rounded-xl font-semibold transition-all duration-200 hover:scale-105"
+                                           title="Editar esta fila">
+                                            <i class="fas fa-edit mr-2"></i>
+                                            Editar
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="4" class="py-8 text-center">
+                                    <div class="flex flex-col items-center justify-center text-gray-500">
+                                        <i class="fas fa-check-circle text-4xl mb-4 text-green-500"></i>
+                                        <p class="text-lg font-semibold">No se encontraron errores</p>
+                                        <p class="text-sm mt-2">Todas las filas se importaron correctamente</p>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Botones de Acción -->
+                <div class="flex flex-col sm:flex-row justify-between items-center gap-4 mt-6 pt-6 border-t border-beige-light">
+                    <a href="{{ url_for('resguardos.crear_resguardo') }}" 
+                       class="inline-flex items-center justify-center px-6 py-3 border-2 border-beige text-base font-semibold rounded-xl text-burgundy bg-white hover:bg-beige-light/30 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-burgundy transition-all duration-200 ease-in-out">
+                        <i class="fas fa-arrow-left mr-2"></i> Volver al Formulario de Carga
+                    </a>
+                    
+                    {% if errors %}
+                    <div class="text-sm text-gray-600 bg-beige-light/30 px-4 py-2 rounded-lg">
+                        <i class="fas fa-info-circle text-burgundy mr-2"></i>
+                        {{ errors|length }} error(es) por corregir
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 {% endblock %}
 
+{% block styles %}
+<style>
+    .bg-burgundy { background-color: #6A2E4D; }
+    .bg-burgundy-dark { background-color: #551E3A; }
+    .text-burgundy { color: #6A2E4D; }
+    .border-burgundy { border-color: #6A2E4D; }
+    
+    .bg-beige { background-color: #BC9B6A; }
+    .bg-beige-light { background-color: #D7C3A0; }
+    .text-beige-light { color: #D7C3A0; }
+    .border-beige { border-color: #BC9B6A; }
+    .border-beige-light { border-color: #D7C3A0; }
+    
+    .from-burgundy { --tw-gradient-from: #6A2E4D; --tw-gradient-to: rgb(106 46 77 / 0); --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to); }
+    .to-burgundy-dark { --tw-gradient-to: #551E3A; }
+</style>
+{% endblock %}

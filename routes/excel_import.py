@@ -29,7 +29,7 @@ def convert_to_db_type(db_col, value):
         except (ValueError, TypeError):
             raise ValueError(f"Formato de fecha no válido: '{value}'")
 
-    if db_col in ["Costo_Inicial", "Depreciacion_Acumulada", "Costo_Final_Cantidad"]:
+    if db_col in ["Costo_Inicial", "Depreciacion_Acumulada", "Costo_Final"]:
         try:
             cleaned_value = re.sub(r'[^\d.]', '', str(value))
             if cleaned_value == '': return None
@@ -51,16 +51,50 @@ def get_or_create_bien(cursor, bien_data):
     no_inventario = bien_data.get('No_Inventario')
     if not no_inventario:
         raise ValueError("La columna 'No_Inventario' es obligatoria.")
+    
     cursor.execute("SELECT id FROM bienes WHERE No_Inventario = %s", (no_inventario,))
     result = cursor.fetchone()
-    if result: return result['id']
+    if result: 
+        return result['id']
     
+    # --- CORRECCIÓN: Asegurar campos obligatorios ---
+    # Campos obligatorios según el modelo Bienes
+    required_fields = {
+        'Clasificacion_Legal': 'Dominio Privado',  # Valor por defecto
+        'Cantidad': 1,  # Valor por defecto
+        'Activo': 1,  # Valor por defecto
+        'usuario_id_registro': current_user.id  # Usuario actual
+    }
+    
+    print("Required fields:", required_fields)
+    print("Bien data antes:", bien_data)
+    
+    # Agregar campos obligatorios que no estén en bien_data
+    for field, default_value in required_fields.items():
+        if field not in bien_data or bien_data[field] is None:
+            bien_data[field] = default_value
+    
+    print("Bien data después:", bien_data)  # <-- Agregar este print para verificar
+    
+    # Preparar la consulta de inserción
     cols = ', '.join(f"`{col}`" for col in bien_data.keys())
     placeholders = ', '.join(['%s'] * len(bien_data))
     query = f"INSERT INTO bienes ({cols}) VALUES ({placeholders})"
-    cursor.execute(query, tuple(bien_data.values()))
-    return cursor.lastrowid
-
+    
+    try:
+        print("Query:", query)  # <-- Ver la consulta SQL
+        print("Values:", tuple(bien_data.values()))  # <-- Ver los valores
+        cursor.execute(query, tuple(bien_data.values()))
+        return cursor.lastrowid
+    except Exception as e:
+        # Si hay error de duplicado, intentar obtener el ID existente
+        if "Duplicate entry" in str(e) and "No_Inventario" in str(e):
+            cursor.execute("SELECT id FROM bienes WHERE No_Inventario = %s", (no_inventario,))
+            result = cursor.fetchone()
+            if result:
+                return result['id']
+        raise e
+    
 def get_or_create_area(cursor, area_name):
     if not area_name or pd.isna(area_name): return None
     cursor.execute("SELECT id FROM areas WHERE nombre = %s", (area_name,))
@@ -145,7 +179,7 @@ def upload_excel():
                 id_area = get_or_create_area(cursor, area_name)
                 if not id_area: raise ValueError("El campo 'Area' es obligatorio.")
                 
-                resguardo_data.update({'id_bien': id_bien, 'id_area': id_area, 'Activo': 1})
+                resguardo_data.update({'id_bien': id_bien, 'id_area': id_area, 'Activo': 1, 'usuario_id_registro': current_user.id})
 
                 cols = ', '.join(f"`{col}`" for col in resguardo_data.keys())
                 placeholders = ', '.join(['%s'] * len(resguardo_data))
@@ -272,6 +306,7 @@ def upload_excel():
     
     return redirect(url_for('resguardos.crear_resguardo'))
 
+
 @excel_import_bp.route('/handle_errors')
 @login_required
 @permission_required('excel_import.handle_errors')
@@ -366,7 +401,6 @@ def edit_error_row(error_id):
         cursor = conn.cursor(dictionary=True)
 
         if request.method == 'POST':
-            # Lógica para guardar la fila corregida (sin cambios)
             form_data = request.form.to_dict()
             try:
                 bien_data = {}
@@ -381,6 +415,10 @@ def edit_error_row(error_id):
                         elif db_col in RESGUARDOS_COLUMNS:
                             resguardo_data[db_col] = cleaned_value
                 
+                # --- CORRECCIÓN: Asegurar que Clasificacion_Legal tenga un valor ---
+                if 'Clasificacion_Legal' not in bien_data or not bien_data['Clasificacion_Legal']:
+                    bien_data['Clasificacion_Legal'] = 'Dominio Público'  # Valor por defecto
+                
                 id_bien = get_or_create_bien(cursor, bien_data)
 
                 area_name = form_data.get("Area")
@@ -388,7 +426,7 @@ def edit_error_row(error_id):
                 if not id_area:
                     raise ValueError(f"El área '{area_name}' no es válida.")
                 
-                resguardo_data.update({'id_bien': id_bien, 'id_area': id_area, 'Activo': 1})
+                resguardo_data.update({'id_bien': id_bien, 'id_area': id_area, 'Activo': 1, 'usuario_id_registro': current_user.id})
 
                 cols = ', '.join(f"`{col}`" for col in resguardo_data.keys())
                 placeholders = ', '.join(['%s'] * len(resguardo_data))
@@ -416,7 +454,7 @@ def edit_error_row(error_id):
             flash("Fila de error no encontrada.", "warning")
             return redirect(url_for('excel_import.handle_errors'))
 
-        # --- CAMBIO CLAVE: Pre-formatear las fechas para la plantilla ---
+        # Pre-formatear las fechas para la plantilla
         error_data['Fecha_Resguardo'] = try_format_date_for_html(error_data.get('Fecha_Resguardo'))
         error_data['Fecha_Poliza'] = try_format_date_for_html(error_data.get('Fecha_Poliza'))
         error_data['Fecha_Factura'] = try_format_date_for_html(error_data.get('Fecha_Factura'))

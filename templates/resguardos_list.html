@@ -1,176 +1,307 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="container mx-auto px-4 mt-5">
-    <div class="flex items-center justify-between mb-6">
-        <h1 class="text-3xl font-bold text-gray-800">
-            {% if is_sujeto_control %}
-                Resguardos Sujeto de Control
-            {% else %}
-                Lista de Resguardos
-            {% endif %}
-        </h1>
-        <a href="{{ url_for('resguardos.crear_resguardo') }}" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg shadow-md transition-all duration-300 flex items-center gap-2">
-            <i class="fas fa-plus-circle"></i> Agregar Nuevo Resguardo
-        </a>
-    </div>
-
-    {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-            {% for category, message in messages %}
-                <div class="bg-{{ category|replace('danger', 'red')|replace('success', 'green')|replace('warning', 'yellow')|replace('info', 'blue') }}-100 border border-{{ category|replace('danger', 'red')|replace('success', 'green')|replace('warning', 'yellow')|replace('info', 'blue') }}-400 text-{{ category|replace('danger', 'red')|replace('success', 'green')|replace('warning', 'yellow')|replace('info', 'blue') }}-700 px-4 py-3 rounded relative mb-4" role="alert">
-                    <span class="block sm:inline">{{ message }}</span>
+<div class="min-h-screen bg-gradient-to-br from-gray-50 to-beige-light/20 py-8 px-4">
+    <div class="max-w-7xl mx-auto">
+        <!-- Encabezado -->
+        <div class="bg-white rounded-2xl shadow-xl border border-beige-light overflow-hidden mb-8">
+            <div class="bg-gradient-to-r from-burgundy to-burgundy-dark p-6 text-white">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                    <div>
+                        <h1 class="text-2xl md:text-3xl font-bold">
+                            {% if is_sujeto_control %}
+                                Resguardos Sujeto de Control
+                            {% else %}
+                                Lista de Resguardos
+                            {% endif %}
+                        </h1>
+                        <p class="text-beige-light mt-2">
+                            Gestión y administración de resguardos del sistema
+                        </p>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <a href="{{ url_for('resguardos.crear_resguardo') }}" 
+                           class="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-semibold rounded-xl shadow-sm text-white bg-gradient-to-r from-burgundy to-burgundy-dark hover:from-burgundy-dark hover:to-burgundy focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-burgundy transition-all duration-200 ease-in-out">
+                            <i class="fas fa-plus-circle mr-2"></i> Agregar Nuevo Resguardo
+                        </a>
+                    </div>
                 </div>
-            {% endfor %}
-        {% endif %}
-    {% endwith %}
+            </div>
+        </div>
 
-    <div class="bg-white p-4 rounded-lg shadow-md mb-6">
-        <h5 class="text-lg font-semibold text-gray-700 mb-2">🔍 Buscar Resguardo</h5>
-        <form action="{{ request.path }}" method="GET" class="flex flex-wrap items-center gap-4">
-            <div class="flex items-center gap-2">
-                <label for="search_column" class="font-bold text-gray-700 whitespace-nowrap">Buscar en:</label>
-                <select name="search_column" id="search_column" class="p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
-                    <option value="all" {% if search_column == 'all' %}selected{% endif %}>Todas las Columnas</option>
-                    {% for col in available_columns_for_search %}
-                        <option value="{{ col }}" {% if search_column == col %}selected{% endif %}>{{ col.replace('_', ' ') }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-            <div class="flex-grow flex items-center gap-2">
-                <label for="search_query" class="font-bold text-gray-700 whitespace-nowrap">Texto a buscar:</label>
-                <input type="text" name="search_query" id="search_query" value="{{ search_query | default('') }}" placeholder="Escribe aquí..." class="p-2 border border-gray-300 rounded-md flex-grow focus:ring-blue-500 focus:border-blue-500">
-            </div>
-            <div class="flex items-center gap-2">
-                <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md shadow-sm transition-colors duration-200">Aplicar Filtro</button>
-                <a href="{{ request.path }}" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-md shadow-sm transition-colors duration-200">Limpiar Filtros</a>
-            </div>
-        </form>
-    </div>
-
-    <div class="overflow-x-auto rounded-lg shadow-md">
-        <table class="min-w-full leading-normal">
-            <thead class="bg-gray-50">
-                <tr class="bg-blue-600 text-white uppercase text-sm leading-normal">
-                    <th class="py-3 px-6 text-left">No. Resguardo</th>
-                    <th class="py-3 px-6 text-left">No. Inventario</th>
-                    <th class="py-3 px-6 text-left">Descripción Del Bien</th>
-                    <th class="py-3 px-6 text-left">Nombre Resguardante</th>
-                    <th class="py-3 px-6 text-left">Área</th>
-                    <th class="py-3 px-6 text-left">Fecha Resguardo</th>
-                    <th class="py-3 px-6 text-center">Acciones</th>
-                </tr>
-            </thead>
-            <tbody class="text-gray-600 text-sm font-light">
-                {% for resguardo in resguardos %}
-                    <tr class="
-                        {% if resguardo.Activo %}
-                            bg-green-100 hover:bg-green-200
-                        {% else %}
-                            bg-red-100 hover:bg-red-200
-                        {% endif %}
-                        border-b border-gray-200"
-                        title="Resguardo {% if resguardo.Activo %}Activo{% else %}Inactivo{% endif %}">
-                        <td class="py-3 px-6 text-left whitespace-nowrap" title="{{ resguardo.No_Resguardo | default('') }}">{{ resguardo.No_Resguardo | default('') }}</td>
-                        <td class="py-3 px-6 text-left whitespace-nowrap" title="{{ resguardo.No_Inventario | default('') }}">{{ resguardo.No_Inventario | default('') }}</td>
-                        <td class="py-3 px-6 text-left max-w-[200px] overflow-hidden text-ellipsis whitespace-nowrap" title="{{ resguardo.Descripcion_Del_Bien | default('') }}">{{ resguardo.Descripcion_Del_Bien | default('') }}</td>
-                        <td class="py-3 px-6 text-left max-w-[150px] overflow-hidden text-ellipsis whitespace-nowrap" title="{{ resguardo.Nombre_Del_Resguardante | default('') }}">{{ resguardo.Nombre_Del_Resguardante | default('') }}</td>
-                        <td class="py-3 px-6 text-left whitespace-nowrap" title="{{ resguardo.Area_Nombre | default('') }}">{{ resguardo.Area_Nombre | default('') }}</td>
-                        <td class="py-3 px-6 text-left whitespace-nowrap" title="{{ resguardo.Fecha_Resguardo | default('') }}">{{ resguardo.Fecha_Resguardo | default('') }}</td>
-                        <td class="py-3 px-6 text-center">
-                            <div class="flex item-center justify-center space-x-2">
-                                <a href="{{ url_for('resguardos.editar_resguardo', id_resguardo=resguardo.id) }}" class="bg-yellow-400 hover:bg-yellow-500 text-gray-900 py-1 px-2 rounded-lg transition-colors duration-300" title="Editar">
-                                    <i class="fas fa-edit"></i>
-                                </a>
-                                <a href="{{ url_for('resguardos.ver_resguardo', id_resguardo=resguardo.id) }}" class="bg-blue-500 hover:bg-blue-600 text-white py-1 px-2 rounded-lg transition-colors duration-300" title="Ver Detalles">
-                                    <i class="fas fa-eye"></i>
-                                </a>
-                                <a href="{{ url_for('traspaso.traspasar_resguardo', id_resguardo_anterior=resguardo.id) }}" class="bg-gray-400 hover:bg-gray-500 text-white py-1 px-2 rounded-lg transition-colors duration-300" title="Traspasar">
-                                    <i class="fas fa-exchange-alt"></i>
-                                </a>
-                            </div>
-                        </td>
-                    </tr>
-                {% else %}
-                    <tr>
-                        <td colspan="7" class="py-4 text-center text-gray-500">
-                            No hay resguardos para mostrar con los filtros aplicados.
-                        </td>
-                    </tr>
+        <!-- Mensajes Flash -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="mb-6 p-4 rounded-lg border-l-4 {% if category == 'success' %}bg-green-100 border-green-500 text-green-700{% elif category == 'danger' %}bg-red-100 border-red-500 text-red-700{% else %}bg-blue-100 border-blue-500 text-blue-700{% endif %}">
+                        <div class="flex items-center">
+                            <i class="fas {% if category == 'success' %}fa-check-circle{% elif category == 'danger' %}fa-exclamation-triangle{% else %}fa-info-circle{% endif %} mr-3"></i>
+                            <span>{{ message }}</span>
+                        </div>
+                    </div>
                 {% endfor %}
-            </tbody>
-        </table>
+            {% endif %}
+        {% endwith %}
+
+        <!-- Búsqueda y Filtros -->
+        <div class="bg-white rounded-2xl shadow-lg border border-beige-light overflow-hidden mb-6">
+            <div class="flex items-center bg-gradient-to-r from-burgundy/10 to-burgundy/5 p-4 border-b border-beige-light">
+                <div class="w-8 h-8 bg-burgundy rounded-full flex items-center justify-center mr-3">
+                    <i class="fas fa-search text-white text-sm"></i>
+                </div>
+                <h2 class="text-xl font-bold text-burgundy">Buscar Resguardo</h2>
+            </div>
+            <div class="p-6">
+                <form action="{{ request.path }}" method="GET" class="space-y-4 md:space-y-0 md:flex md:items-end md:gap-4">
+                    <div class="flex-1">
+                        <label for="search_column" class="block text-sm font-semibold text-gray-700 mb-2">
+                            Buscar en:
+                        </label>
+                        <select name="search_column" id="search_column" 
+                                class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-burgundy/50 focus:border-burgundy transition-all duration-200 bg-white/80">
+                            <option value="all" {% if search_column == 'all' %}selected{% endif %}>Todas las Columnas</option>
+                            {% for col in available_columns_for_search %}
+                                <option value="{{ col }}" {% if search_column == col %}selected{% endif %}>
+                                    {{ col.replace('_', ' ').title() }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="flex-1">
+                        <label for="search_query" class="block text-sm font-semibold text-gray-700 mb-2">
+                            Texto a buscar:
+                        </label>
+                        <input type="text" 
+                               name="search_query" 
+                               id="search_query" 
+                               value="{{ search_query | default('') }}" 
+                               placeholder="Escribe aquí..." 
+                               class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-burgundy/50 focus:border-burgundy transition-all duration-200 bg-white/80">
+                    </div>
+                    <div class="flex gap-2 pt-2">
+                        <button type="submit" 
+                                class="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-semibold rounded-xl shadow-sm text-white bg-gradient-to-r from-burgundy to-burgundy-dark hover:from-burgundy-dark hover:to-burgundy focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-burgundy transition-all duration-200 ease-in-out">
+                            <i class="fas fa-filter mr-2"></i> Aplicar Filtro
+                        </button>
+                        <a href="{{ request.path }}" 
+                           class="inline-flex items-center justify-center px-6 py-3 border-2 border-beige text-base font-semibold rounded-xl text-burgundy bg-white hover:bg-beige-light/30 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-burgundy transition-all duration-200 ease-in-out">
+                            <i class="fas fa-times mr-2"></i> Limpiar
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Tabla de Resguardos -->
+        <div class="bg-white rounded-2xl shadow-lg border border-beige-light overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="min-w-full">
+                    <thead>
+                        <tr class="bg-gradient-to-r from-burgundy to-burgundy-dark text-white">
+                            <th class="py-4 px-6 text-left font-semibold uppercase text-sm">No. Resguardo</th>
+                            <th class="py-4 px-6 text-left font-semibold uppercase text-sm">No. Inventario</th>
+                            <th class="py-4 px-6 text-left font-semibold uppercase text-sm">Descripción Del Bien</th>
+                            <th class="py-4 px-6 text-left font-semibold uppercase text-sm">Nombre Resguardante</th>
+                            <th class="py-4 px-6 text-left font-semibold uppercase text-sm">Área</th>
+                            <th class="py-4 px-6 text-left font-semibold uppercase text-sm">Fecha Resguardo</th>
+                            <th class="py-4 px-6 text-center font-semibold uppercase text-sm">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody class="text-gray-600">
+                        {% for resguardo in resguardos %}
+                            <tr class="border-b border-beige-light hover:bg-beige-light/20 transition-colors duration-200
+                                {% if not resguardo.Activo %}bg-red-50 hover:bg-red-100{% endif %}">
+                                <td class="py-4 px-6">
+                                    <div class="flex items-center">
+                                        {% if not resguardo.Activo %}
+                                            <i class="fas fa-ban text-red-500 mr-2" title="Resguardo Inactivo"></i>
+                                        {% endif %}
+                                        <span class="font-medium text-gray-900" title="{{ resguardo.No_Resguardo | default('') }}">
+                                            {{ resguardo.No_Resguardo | default('N/A') }}
+                                        </span>
+                                    </div>
+                                </td>
+                                <td class="py-4 px-6">
+                                    <span class="font-mono text-sm bg-gray-100 px-2 py-1 rounded" title="{{ resguardo.No_Inventario | default('') }}">
+                                        {{ resguardo.No_Inventario | default('N/A') }}
+                                    </span>
+                                </td>
+                                <td class="py-4 px-6 max-w-xs">
+                                    <div class="truncate" title="{{ resguardo.Descripcion_Del_Bien | default('') }}">
+                                        {{ resguardo.Descripcion_Del_Bien | default('N/A') }}
+                                    </div>
+                                </td>
+                                <td class="py-4 px-6">
+                                    <div class="truncate max-w-xs" title="{{ resguardo.Nombre_Del_Resguardante | default('') }}">
+                                        {{ resguardo.Nombre_Del_Resguardante | default('N/A') }}
+                                    </div>
+                                </td>
+                                <td class="py-4 px-6">
+                                    <span class="bg-burgundy/10 text-burgundy px-3 py-1 rounded-full text-sm font-medium" 
+                                          title="{{ resguardo.Area_Nombre | default('') }}">
+                                        {{ resguardo.Area_Nombre | default('N/A') }}
+                                    </span>
+                                </td>
+                                <td class="py-4 px-6">
+                                    <span class="text-sm text-gray-500" title="{{ resguardo.Fecha_Resguardo | default('') }}">
+                                        {{ resguardo.Fecha_Resguardo | default('N/A') }}
+                                    </span>
+                                </td>
+                                <td class="py-4 px-6">
+                                    <div class="flex justify-center space-x-2">
+                                        <a href="{{ url_for('resguardos.editar_resguardo', id_resguardo=resguardo.id) }}" 
+                                           class="inline-flex items-center justify-center w-10 h-10 bg-yellow-500 hover:bg-yellow-600 text-white rounded-xl transition-all duration-200 hover:scale-105"
+                                           title="Editar">
+                                            <i class="fas fa-edit text-sm"></i>
+                                        </a>
+                                        <a href="{{ url_for('resguardos.ver_resguardo', id_resguardo=resguardo.id) }}" 
+                                           class="inline-flex items-center justify-center w-10 h-10 bg-blue-500 hover:bg-blue-600 text-white rounded-xl transition-all duration-200 hover:scale-105"
+                                           title="Ver Detalles">
+                                            <i class="fas fa-eye text-sm"></i>
+                                        </a>
+                                        {% if resguardo.Activo %}
+                                            <a href="{{ url_for('traspaso.traspasar_resguardo', id_resguardo_anterior=resguardo.id) }}" 
+                                               class="inline-flex items-center justify-center w-10 h-10 bg-green-500 hover:bg-green-600 text-white rounded-xl transition-all duration-200 hover:scale-105"
+                                               title="Traspasar">
+                                                <i class="fas fa-exchange-alt text-sm"></i>
+                                            </a>
+                                        {% else %}
+                                            <span class="inline-flex items-center justify-center w-10 h-10 bg-gray-400 text-white rounded-xl cursor-not-allowed"
+                                                  title="Resguardo Inactivo - No se puede traspasar">
+                                                <i class="fas fa-ban text-sm"></i>
+                                            </span>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                        {% else %}
+                            <tr>
+                                <td colspan="7" class="py-8 text-center">
+                                    <div class="flex flex-col items-center justify-center text-gray-500">
+                                        <i class="fas fa-inbox text-4xl mb-4 opacity-50"></i>
+                                        <p class="text-lg font-semibold">No hay resguardos para mostrar</p>
+                                        <p class="text-sm mt-2">No se encontraron resguardos con los filtros aplicados</p>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Paginación -->
+        {% if total_pages > 1 %}
+        <div class="flex flex-col sm:flex-row justify-between items-center gap-4 mt-6 pt-6 border-t border-beige-light">
+            <div class="text-sm text-gray-600">
+                Mostrando página {{ current_page }} de {{ total_pages }}
+            </div>
+            <div class="flex justify-center space-x-2 flex-wrap">
+                {% if current_page > 1 %}
+                    <a href="{{ url_for('resguardos.ver_resguardos', page=current_page-1, search_column=search_column, search_query=search_query) }}" 
+                       class="inline-flex items-center justify-center px-4 py-2 border-2 border-beige text-sm font-semibold rounded-xl text-burgundy bg-white hover:bg-beige-light/30 transition-all duration-200">
+                        <i class="fas fa-chevron-left mr-2"></i> Anterior
+                    </a>
+                {% else %}
+                    <span class="inline-flex items-center justify-center px-4 py-2 border-2 border-gray-300 text-sm font-semibold rounded-xl text-gray-400 bg-gray-100 cursor-not-allowed">
+                        <i class="fas fa-chevron-left mr-2"></i> Anterior
+                    </span>
+                {% endif %}
+
+                {% set pages_to_show = 5 %}
+                {% set start_page = (current_page - (pages_to_show // 2))|int %}
+                {% set end_page = (current_page + (pages_to_show // 2))|int %}
+
+                {% if start_page < 1 %}
+                    {% set start_page = 1 %}
+                    {% set end_page = (pages_to_show)|int %}
+                {% endif %}
+
+                {% if end_page > total_pages %}
+                    {% set end_page = total_pages %}
+                    {% set start_page = (total_pages - pages_to_show + 1)|int %}
+                    {% if start_page < 1 %}
+                        {% set start_page = 1 %}
+                    {% endif %}
+                {% endif %}
+
+                {% if start_page > 1 %}
+                    <a href="{{ url_for('resguardos.ver_resguardos', page=1, search_column=search_column, search_query=search_query) }}" 
+                       class="inline-flex items-center justify-center w-10 h-10 border-2 border-beige text-sm font-semibold rounded-xl text-burgundy bg-white hover:bg-beige-light/30 transition-all duration-200">
+                        1
+                    </a>
+                    {% if start_page > 2 %}
+                        <span class="inline-flex items-center justify-center w-10 h-10 text-sm font-semibold text-gray-400">...</span>
+                    {% endif %}
+                {% endif %}
+
+                {% for p in range(start_page, end_page + 1) %}
+                    {% if p == current_page %}
+                        <span class="inline-flex items-center justify-center w-10 h-10 text-sm font-semibold text-white bg-burgundy rounded-xl shadow-md cursor-default">
+                            {{ p }}
+                        </span>
+                    {% else %}
+                        <a href="{{ url_for('resguardos.ver_resguardos', page=p, search_column=search_column, search_query=search_query) }}" 
+                           class="inline-flex items-center justify-center w-10 h-10 border-2 border-beige text-sm font-semibold rounded-xl text-burgundy bg-white hover:bg-beige-light/30 transition-all duration-200">
+                            {{ p }}
+                        </a>
+                    {% endif %}
+                {% endfor %}
+
+                {% if end_page < total_pages %}
+                    {% if end_page < total_pages - 1 %}
+                        <span class="inline-flex items-center justify-center w-10 h-10 text-sm font-semibold text-gray-400">...</span>
+                    {% endif %}
+                    <a href="{{ url_for('resguardos.ver_resguardos', page=total_pages, search_column=search_column, search_query=search_query) }}" 
+                       class="inline-flex items-center justify-center w-10 h-10 border-2 border-beige text-sm font-semibold rounded-xl text-burgundy bg-white hover:bg-beige-light/30 transition-all duration-200">
+                        {{ total_pages }}
+                    </a>
+                {% endif %}
+
+                {% if current_page < total_pages %}
+                    <a href="{{ url_for('resguardos.ver_resguardos', page=current_page+1, search_column=search_column, search_query=search_query) }}" 
+                       class="inline-flex items-center justify-center px-4 py-2 border-2 border-beige text-sm font-semibold rounded-xl text-burgundy bg-white hover:bg-beige-light/30 transition-all duration-200">
+                        Siguiente <i class="fas fa-chevron-right ml-2"></i>
+                    </a>
+                {% else %}
+                    <span class="inline-flex items-center justify-center px-4 py-2 border-2 border-gray-300 text-sm font-semibold rounded-xl text-gray-400 bg-gray-100 cursor-not-allowed">
+                        Siguiente <i class="fas fa-chevron-right ml-2"></i>
+                    </span>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
     </div>
-    
-    {% if total_pages > 1 %}
-    <div class="flex justify-center mt-6 space-x-2 flex-wrap">
-        {% if current_page > 1 %}
-            <a href="{{ url_for('resguardos.ver_resguardos', page=current_page-1, search_column=search_column, search_query=search_query) }}" class="px-4 py-2 text-sm font-semibold text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors duration-300">
-                Anterior
-            </a>
-        {% else %}
-            <span class="px-4 py-2 text-sm font-semibold text-gray-400 bg-gray-100 rounded-lg cursor-not-allowed">
-                Anterior
-            </span>
-        {% endif %}
-
-        {% set pages_to_show = 5 %}
-        {% set start_page = (current_page - (pages_to_show // 2))|int %}
-        {% set end_page = (current_page + (pages_to_show // 2))|int %}
-
-        {% if start_page < 1 %}
-            {% set start_page = 1 %}
-            {% set end_page = (pages_to_show)|int %}
-        {% endif %}
-
-        {% if end_page > total_pages %}
-            {% set end_page = total_pages %}
-            {% set start_page = (total_pages - pages_to_show + 1)|int %}
-            {% if start_page < 1 %}
-                {% set start_page = 1 %}
-            {% endif %}
-        {% endif %}
-
-        {% if start_page > 1 %}
-            <a href="{{ url_for('resguardos.ver_resguardos', page=1, search_column=search_column, search_query=search_query) }}" class="px-4 py-2 text-sm font-semibold text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors duration-300">1</a>
-            {% if start_page > 2 %}
-                <span class="px-4 py-2 text-sm font-semibold text-gray-500">...</span>
-            {% endif %}
-        {% endif %}
-
-        {% for p in range(start_page, end_page + 1) %}
-            {% if p == current_page %}
-                <span class="px-4 py-2 text-sm font-semibold text-white bg-blue-600 rounded-lg shadow-md cursor-default">
-                    {{ p }}
-                </span>
-            {% else %}
-                <a href="{{ url_for('resguardos.ver_resguardos', page=p, search_column=search_column, search_query=search_query) }}" class="px-4 py-2 text-sm font-semibold text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors duration-300">
-                    {{ p }}
-                </a>
-            {% endif %}
-        {% endfor %}
-
-        {% if end_page < total_pages %}
-            {% if end_page < total_pages - 1 %}
-                <span class="px-4 py-2 text-sm font-semibold text-gray-500">...</span>
-            {% endif %}
-            <a href="{{ url_for('resguardos.ver_resguardos', page=total_pages, search_column=search_column, search_query=search_query) }}" class="px-4 py-2 text-sm font-semibold text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors duration-300">{{ total_pages }}</a>
-        {% endif %}
-
-        {% if current_page < total_pages %}
-            <a href="{{ url_for('resguardos.ver_resguardos', page=current_page+1, search_column=search_column, search_query=search_query) }}" class="px-4 py-2 text-sm font-semibold text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors duration-300">
-                Siguiente
-            </a>
-        {% else %}
-            <span class="px-4 py-2 text-sm font-semibold text-gray-400 bg-gray-100 rounded-lg cursor-not-allowed">
-                Siguiente
-            </span>
-        {% endif %}
-    </div>
-    {% endif %}
-
 </div>
 {% endblock %}
 
-{% block scripts %}
-    {% endblock %}
+{% block styles %}
+<style>
+    .bg-burgundy { background-color: #6A2E4D; }
+    .bg-burgundy-dark { background-color: #551E3A; }
+    .text-burgundy { color: #6A2E4D; }
+    .border-burgundy { border-color: #6A2E4D; }
+    .focus\:ring-burgundy\/50:focus { --tw-ring-color: rgb(106 46 77 / 0.5); }
+    .focus\:border-burgundy:focus { border-color: #6A2E4D; }
+    
+    .bg-beige { background-color: #BC9B6A; }
+    .bg-beige-light { background-color: #D7C3A0; }
+    .text-beige-light { color: #D7C3A0; }
+    .border-beige { border-color: #BC9B6A; }
+    .border-beige-light { border-color: #D7C3A0; }
+    
+    .from-burgundy { --tw-gradient-from: #6A2E4D; --tw-gradient-to: rgb(106 46 77 / 0); --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to); }
+    .to-burgundy-dark { --tw-gradient-to: #551E3A; }
+    
+    input:focus, select:focus, textarea:focus {
+        outline: none;
+        box-shadow: 0 0 0 2px rgb(106 46 77 / 0.1);
+    }
+    
+    .truncate {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+</style>
+{% endblock %}

@@ -1,120 +1,366 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="container mx-auto px-4 py-8">
-    <div class="bg-white shadow-lg rounded-xl overflow-hidden">
-        <div class="px-6 py-4 bg-verde-mexicano-oscuro text-blanco-mexicano">
-            <h2 class="text-3xl font-bold">Detalles del Bien</h2>
-            <p class="text-xl font-light mt-1">{{ bien.No_Inventario }}</p>
-            <p><strong>Registrado por el usuario:</strong> <span class="text-gray-700 font-medium text-verde-mexicano-oscuro">{{ bien.registrado_por_nombre or 'N/A' }}</span></p>
-        </div>
-        <div class="p-6 md:p-8">
-            
-            <h3 class="text-2xl font-semibold mb-4 text-verde-mexicano-medio border-b-2 border-verde-mexicano-claro pb-2">Información General y Técnica</h3>
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-4 mb-6">
-                <p><strong>No. de Inventario:</strong> <span class="text-gray-700">{{ bien.No_Inventario or 'N/A' }}</span></p>
-                <p><strong>Cantidad:</strong> <span class="text-gray-700">{{ bien.Cantidad or 'N/A' }}</span></p>
-                <p><strong>Estado del Bien:</strong> <span class="text-gray-700 font-medium">{{ bien.Estado_Del_Bien or 'N/A' }}</span></p>
-                <p><strong>Marca:</strong> <span class="text-gray-700">{{ bien.Marca or 'N/A' }}</span></p>
-                <p><strong>Modelo:</strong> <span class="text-gray-700">{{ bien.Modelo or 'N/A' }}</span></p>
-                <p><strong>No. Serie:</strong> <span class="text-gray-700">{{ bien.Numero_De_Serie or 'N/A' }}</span></p>
-            </div>
-            <div class="space-y-2">
-                 <p><strong>Descripción Corta:</strong> <span class="text-gray-700">{{ bien.Descripcion_Corta_Del_Bien or 'N/A' }}</span></p>
-                 <p><strong>Descripción Completa:</strong> <span class="text-gray-700">{{ bien.Descripcion_Del_Bien or 'N/A' }}</span></p>
-            </div>
-
-            <hr class="my-8">
-
-            <h3 class="text-2xl font-semibold mb-4 text-verde-mexicano-medio border-b-2 border-verde-mexicano-claro pb-2">Clasificación y Adquisición</h3>
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-4">
-                <p><strong>Clasificación Legal:</strong> <span class="text-gray-700 font-medium">{{ bien.Clasificacion_Legal or 'N/A' }}</span></p>
-                <p><strong>Área Presupuestal:</strong> <span class="text-gray-700">{{ bien.Area_Presupuestal or 'N/A' }}</span></p>
-                <p><strong>Tipo de Alta:</strong> <span class="text-gray-700">{{ bien.Tipo_De_Alta or 'N/A' }}</span></p>
-                <p><strong>Fecha de Adquisición/Alta:</strong> <span class="text-gray-700">{{ bien.Fecha_Adquisicion_Alta or 'N/A' }}</span></p>
-                <p><strong>Documento de Propiedad:</strong> <span class="text-gray-700">{{ bien.Documento_Propiedad or 'N/A' }}</span></p>
-                <p><strong>Fecha del Documento:</strong> <span class="text-gray-700">{{ bien.Fecha_Documento_Propiedad or 'N/A' }}</span></p>
-                <p><strong>Proveedor:</strong> <span class="text-gray-700">{{ bien.Proveedor or 'N/A' }}</span></p>
-            </div>
-
-            <hr class="my-8">
-
-            <h3 class="text-2xl font-semibold mb-4 text-verde-mexicano-medio border-b-2 border-verde-mexicano-claro pb-2">Información Contable y Financiera</h3>
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-4">
-                <p><strong>Costo Inicial:</strong> <span class="text-gray-700">${{ "%.2f"|format(bien.Costo_Inicial|float) if bien.Costo_Inicial is not none else 'N/A' }}</span></p>
-                <p><strong>Depreciación Acumulada:</strong> <span class="text-gray-700">${{ "%.2f"|format(bien.Depreciacion_Acumulada|float) if bien.Depreciacion_Acumulada is not none else 'N/A' }}</span></p>
-                <p><strong>Costo Final:</strong> <span class="text-gray-700">${{ "%.2f"|format(bien.Costo_Final_Cantidad|float) if bien.Costo_Final_Cantidad is not none else 'N/A' }}</span></p>
-                <p><strong>Valor en Libros:</strong> <span class="text-gray-700">${{ "%.2f"|format(bien.Valor_En_Libros|float) if bien.Valor_En_Libros is not none else 'N/A' }}</span></p>
-                <p><strong>No. Factura:</strong> <span class="text-gray-700">{{ bien.No_Factura or 'N/A' }}</span></p>
-                <p><strong>Fecha Factura:</strong> <span class="text-gray-700">{{ bien.Fecha_Factura or 'N/A' }}</span></p>
-                <p><strong>Póliza:</strong> <span class="text-gray-700">{{ bien.Poliza or 'N/A' }}</span></p>
-                <p><strong>Fecha Póliza:</strong> <span class="text-gray-700">{{ bien.Fecha_Poliza or 'N/A' }}</span></p>
-                <p><strong>No. Cuenta:</strong> <span class="text-gray-700">{{ bien.No_Cuenta or 'N/A' }}</span></p>
-                <p><strong>Subcuenta Armonizadora:</strong> <span class="text-gray-700">{{ bien.Sub_Cuenta_Armonizadora or 'N/A' }}</span></p>
-                <p><strong>Rubro:</strong> <span class="text-gray-700">{{ bien.Rubro or 'N/A' }}</span></p>
-            </div>
-
-            <hr class="my-8">
-
-            <h3 class="text-2xl font-semibold mb-4 text-verde-mexicano-medio border-b-2 border-verde-mexicano-claro pb-2">Historial de Resguardos</h3>
-            {% if resguardos %}
-            <div class="space-y-4">
-                {% for resguardo in resguardos %}
-                <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg shadow-sm hover:bg-gray-100 transition">
-                    <div>
-                        <p class="font-semibold text-lg text-gray-800">No. de Resguardo: {{ resguardo.No_Resguardo }}</p>
-                        <p class="text-sm text-gray-600">Resguardante: {{ resguardo.Nombre_Del_Resguardante }}</p>
-                        <p class="text-sm text-gray-500">
-                            Estado:
-                            {% if resguardo.Activo %}
-                                <span class="font-bold text-green-600">Activo</span>
-                            {% else %}
-                                <span class="font-bold text-red-600">Inactivo</span>
-                            {% endif %}
-                        </p>
+<div class="min-h-screen bg-gradient-to-br from-verde-mexicano-claro/10 to-verde-mexicano-oscuro/5 p-4 sm:p-6 md:p-8">
+    <div class="max-w-7xl mx-auto">
+        <!-- Encabezado principal -->
+        <div class="bg-white rounded-2xl shadow-xl border border-verde-mexicano-claro overflow-hidden mb-6">
+            <div class="bg-gradient-to-r from-verde-mexicano-oscuro to-verde-mexicano-medio p-6 text-blanco-mexicano">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                    <div class="flex-1">
+                        <h1 class="text-2xl md:text-3xl font-bold">Detalles del Bien</h1>
+                        <div class="flex flex-wrap items-center gap-3 mt-3">
+                            <span class="bg-blanco-mexicano/20 px-4 py-2 rounded-full text-sm font-semibold border border-blanco-mexicano/30">
+                                {{ bien.No_Inventario }}
+                            </span>
+                            <span class="bg-verde-mexicano-claro/20 px-4 py-2 rounded-full text-sm font-semibold flex items-center">
+                                <i class="fas fa-user-circle mr-2"></i>
+                                Registrado por: {{ bien.registrado_por_nombre or 'N/A' }}
+                            </span>
+                        </div>
                     </div>
-                     <a href="{{ url_for('resguardos.ver_resguardo', id_resguardo=resguardo.id) }}" class="btn-secondary">
-                        <i class="fas fa-eye mr-2"></i> Ver Resguardo
-                    </a>
-                </div>
-                {% endfor %}
-            </div>
-            {% else %}
-            <div class="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 rounded-lg" role="alert">
-                <p class="font-bold">Atención</p>
-                <p>Este bien no tiene resguardos asociados.</p>
-            </div>
-            {% endif %}
-
-            <hr class="my-8">
-
-            <h3 class="text-2xl font-semibold mb-4 text-verde-mexicano-medio border-b-2 border-verde-mexicano-claro pb-2">Imágenes del Bien</h3>
-            {% if imagenes %}
-                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                    {% for imagen_filename in imagenes %}
-                    <div class="relative group">
-                        <a href="{{ url_for('bienes.serve_uploaded_file', filename=imagen_filename) }}" target="_blank">
-                            <img src="{{ url_for('bienes.serve_uploaded_file', filename=imagen_filename) }}" class="w-full h-32 object-cover rounded-lg shadow-md group-hover:opacity-75 transition duration-300" alt="Imagen del Bien">
+                    <div class="flex flex-wrap gap-3">
+                        <a href="{{ url_for('bienes.editar_bien', bien_id=bien.id) }}" 
+                           class="btn-primary bg-blanco-mexicano/20 hover:bg-blanco-mexicano/30 border-blanco-mexicano/30 text-blanco-mexicano">
+                            <i class="fas fa-edit mr-2"></i> Editar Bien
+                        </a>
+                        <a href="{{ url_for('bienes.listar_bienes') }}" 
+                           class="btn-secondary bg-blanco-mexicano/20 hover:bg-blanco-mexicano/30 border-blanco-mexicano/30 text-blanco-mexicano">
+                            <i class="fas fa-arrow-left mr-2"></i> Volver
                         </a>
                     </div>
-                    {% endfor %}
                 </div>
-            {% else %}
-                <div class="bg-blue-100 border-l-4 border-blue-500 text-blue-700 p-4 rounded-lg" role="alert">
-                    <p class="font-bold">Información</p>
-                    <p>Este bien no tiene imágenes adjuntas.</p>
-                </div>
-            {% endif %}
+            </div>
         </div>
 
-       <div class="px-6 py-4 bg-gray-50 border-t border-gray-200 flex flex-col sm:flex-row justify-end items-center space-y-3 sm:space-y-0 sm:space-x-4">
-            <a href="{{ url_for('bienes.editar_bien', bien_id=bien.id) }}" class="btn-primary w-full sm:w-auto">
-                <i class="fas fa-edit mr-2"></i> Editar Bien
-            </a>
-            <a href="{{ url_for('bienes.listar_bienes') }}" class="btn-secondary w-full sm:w-auto">
-                <i class="fas fa-arrow-left mr-2"></i> Volver al listado
-            </a>
+        <!-- Contenido principal en tarjetas -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Columna izquierda: Información General -->
+            <div class="lg:col-span-2 space-y-6">
+                <!-- Información General y Técnica -->
+                <div class="bg-white rounded-2xl shadow-lg border border-verde-mexicano-claro overflow-hidden">
+                    <div class="bg-gradient-to-r from-verde-mexicano-claro/20 to-verde-mexicano-medio/20 p-5 border-b border-verde-mexicano-claro">
+                        <h2 class="text-xl font-bold text-verde-mexicano-oscuro flex items-center">
+                            <i class="fas fa-info-circle text-verde-mexicano-medio mr-3"></i>
+                            Información General y Técnica
+                        </h2>
+                    </div>
+                    <div class="p-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div class="space-y-1">
+                                <p class="text-xs font-semibold text-verde-mexicano-oscuro uppercase tracking-wide">No. de Inventario</p>
+                                <p class="text-lg font-bold text-gray-900">{{ bien.No_Inventario or 'N/A' }}</p>
+                            </div>
+                            <div class="space-y-1">
+                                <p class="text-xs font-semibold text-verde-mexicano-oscuro uppercase tracking-wide">Cantidad</p>
+                                <p class="text-lg font-bold text-gray-900">{{ bien.Cantidad or 'N/A' }}</p>
+                            </div>
+                            <div class="space-y-1">
+                                <p class="text-xs font-semibold text-verde-mexicano-oscuro uppercase tracking-wide">Estado del Bien</p>
+                                <p class="text-lg font-bold text-gray-900">{{ bien.Estado_Del_Bien or 'N/A' }}</p>
+                            </div>
+                            <div class="space-y-1">
+                                <p class="text-xs font-semibold text-verde-mexicano-oscuro uppercase tracking-wide">Marca</p>
+                                <p class="text-lg font-bold text-gray-900">{{ bien.Marca or 'N/A' }}</p>
+                            </div>
+                            <div class="space-y-1">
+                                <p class="text-xs font-semibold text-verde-mexicano-oscuro uppercase tracking-wide">Modelo</p>
+                                <p class="text-lg font-bold text-gray-900">{{ bien.Modelo or 'N/A' }}</p>
+                            </div>
+                            <div class="space-y-1">
+                                <p class="text-xs font-semibold text-verde-mexicano-oscuro uppercase tracking-wide">No. Serie</p>
+                                <p class="text-lg font-bold text-gray-900">{{ bien.Numero_De_Serie or 'N/A' }}</p>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-6 space-y-4">
+                            <div class="space-y-1">
+                                <p class="text-xs font-semibold text-verde-mexicano-oscuro uppercase tracking-wide">Descripción Corta</p>
+                                <p class="text-base text-gray-700 bg-gray-50 p-3 rounded-lg border border-gray-200">{{ bien.Descripcion_Corta_Del_Bien or 'N/A' }}</p>
+                            </div>
+                            <div class="space-y-1">
+                                <p class="text-xs font-semibold text-verde-mexicano-oscuro uppercase tracking-wide">Descripción Completa</p>
+                                <p class="text-base text-gray-700 bg-gray-50 p-3 rounded-lg border border-gray-200">{{ bien.Descripcion_Del_Bien or 'N/A' }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Información Contable y Financiera -->
+                <div class="bg-white rounded-2xl shadow-lg border border-verde-mexicano-claro overflow-hidden">
+                    <div class="bg-gradient-to-r from-verde-mexicano-claro/20 to-verde-mexicano-medio/20 p-5 border-b border-verde-mexicano-claro">
+                        <h2 class="text-xl font-bold text-verde-mexicano-oscuro flex items-center">
+                            <i class="fas fa-chart-line text-verde-mexicano-medio mr-3"></i>
+                            Información Contable y Financiera
+                        </h2>
+                    </div>
+                    <div class="p-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            <div class="space-y-1">
+                                <p class="text-xs font-semibold text-verde-mexicano-oscuro uppercase tracking-wide">Costo Inicial</p>
+                                <p class="text-lg font-bold text-gray-900">${{ "%.2f"|format(bien.Costo_Inicial|float) if bien.Costo_Inicial is not none else 'N/A' }}</p>
+                            </div>
+                            <div class="space-y-1">
+                                <p class="text-xs font-semibold text-verde-mexicano-oscuro uppercase tracking-wide">Depreciación Acumulada</p>
+                                <p class="text-lg font-bold text-gray-900">${{ "%.2f"|format(bien.Depreciacion_Acumulada|float) if bien.Depreciacion_Acumulada is not none else 'N/A' }}</p>
+                            </div>
+                            <div class="space-y-1">
+                                <p class="text-xs font-semibold text-verde-mexicano-oscuro uppercase tracking-wide">Costo Final</p>
+                                <p class="text-lg font-bold text-gray-900">${{ "%.2f"|format(bien.Costo_Final|float) if bien.Costo_Final is not none else 'N/A' }}</p>
+                            </div>
+                            <div class="space-y-1">
+                                <p class="text-xs font-semibold text-verde-mexicano-oscuro uppercase tracking-wide">Valor en Libros</p>
+                                <p class="text-lg font-bold text-gray-900">${{ "%.2f"|format(bien.Valor_En_Libros|float) if bien.Valor_En_Libros is not none else 'N/A' }}</p>
+                            </div>
+                            <div class="space-y-1">
+                                <p class="text-xs font-semibold text-verde-mexicano-oscuro uppercase tracking-wide">No. Factura</p>
+                                <p class="text-lg font-bold text-gray-900">{{ bien.No_Factura or 'N/A' }}</p>
+                            </div>
+                            <div class="space-y-1">
+                                <p class="text-xs font-semibold text-verde-mexicano-oscuro uppercase tracking-wide">Fecha Factura</p>
+                                <p class="text-lg font-bold text-gray-900">{{ bien.Fecha_Factura or 'N/A' }}</p>
+                            </div>
+                            <div class="space-y-1">
+                                <p class="text-xs font-semibold text-verde-mexicano-oscuro uppercase tracking-wide">Póliza</p>
+                                <p class="text-lg font-bold text-gray-900">{{ bien.Poliza or 'N/A' }}</p>
+                            </div>
+                            <div class="space-y-1">
+                                <p class="text-xs font-semibold text-verde-mexicano-oscuro uppercase tracking-wide">Fecha Póliza</p>
+                                <p class="text-lg font-bold text-gray-900">{{ bien.Fecha_Poliza or 'N/A' }}</p>
+                            </div>
+                            <div class="space-y-1">
+                                <p class="text-xs font-semibold text-verde-mexicano-oscuro uppercase tracking-wide">No. Cuenta</p>
+                                <p class="text-lg font-bold text-gray-900">{{ bien.No_Cuenta or 'N/A' }}</p>
+                            </div>
+                            <div class="space-y-1">
+                                <p class="text-xs font-semibold text-verde-mexicano-oscuro uppercase tracking-wide">Subcuenta Armonizadora</p>
+                                <p class="text-lg font-bold text-gray-900">{{ bien.Sub_Cuenta_Armonizadora or 'N/A' }}</p>
+                            </div>
+                            <div class="space-y-1">
+                                <p class="text-xs font-semibold text-verde-mexicano-oscuro uppercase tracking-wide">Rubro</p>
+                                <p class="text-lg font-bold text-gray-900">{{ bien.Rubro or 'N/A' }}</p>
+                            </div>
+                        </div>
+                        <div class="bg-white rounded-2xl shadow-lg border border-verde-mexicano-claro overflow-hidden">
+                    <div class="bg-gradient-to-r from-verde-mexicano-claro/20 to-verde-mexicano-medio/20 p-5 border-b border-verde-mexicano-claro">
+                        <h2 class="text-xl font-bold text-verde-mexicano-oscuro flex items-center">
+                            <i class="fas fa-clipboard-list text-verde-mexicano-medio mr-3"></i>
+                            Historial en Inventarios
+                        </h2>
+                    </div>
+                    <div class="p-6">
+                        {% if historial_inventarios %}
+                        <div class="space-y-6">
+                            {% for historial in historial_inventarios %}
+                            <div class="bg-gray-50 rounded-xl p-4 border border-gray-200">
+                                <h3 class="font-bold text-lg text-gray-800">{{ historial.inventario_nombre }}</h3>
+                                <p class="text-sm text-gray-500 mb-4">Fecha de Inicio: {{ historial.fecha_inicio.strftime('%d/%m/%Y') }}</p>
+                                
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                                    <div class="space-y-1">
+                                        <p class="font-semibold text-gray-600">Creado por:</p>
+                                        <p class="text-gray-800">{{ historial.creador_nombre }}</p>
+                                    </div>
+                                    <div class="space-y-1">
+                                        <p class="font-semibold text-gray-600">Brigada Asignada:</p>
+                                        <ul class="list-disc list-inside text-gray-800">
+                                            {% for miembro in brigadas_por_inventario.get(historial.inventario_id, []) %}
+                                                <li>{{ miembro }}</li>
+                                            {% else %}
+                                                <li>No asignada</li>
+                                            {% endfor %}
+                                        </ul>
+                                    </div>
+                                    <div class="space-y-1">
+                                        <p class="font-semibold text-gray-600">Resguardante Esperado:</p>
+                                        <p class="text-gray-800">{{ historial.Nombre_Del_Resguardante or 'N/A' }}</p>
+                                    </div>
+                                    <div class="space-y-1">
+                                        <p class="font-semibold text-gray-600">Jefe de Área Esperado:</p>
+                                        <p class="text-gray-800">{{ historial.Nombre_Director_Jefe_De_Area or 'N/A' }}</p>
+                                    </div>
+                                </div>
+
+                                {% set fotos = fotos_por_detalle.get(historial.detalle_id, []) %}
+                                {% if fotos %}
+                                <div class="mt-4">
+                                    <p class="font-semibold text-gray-600 text-sm mb-2">Evidencia Fotográfica del Inventario:</p>
+                                    <div class="grid grid-cols-3 sm:grid-cols-4 gap-2">
+                                        {% for foto_filename in fotos %}
+                                        <a href="{{ url_for('bienes.serve_uploaded_file', filename=foto_filename) }}" target="_blank" class="group">
+                                            <div class="aspect-square overflow-hidden rounded-lg border bg-gray-100">
+                                                <img src="{{ url_for('bienes.serve_uploaded_file', filename=foto_filename) }}" alt="Foto de inventario" class="h-full w-full object-cover">
+                                            </div>
+                                        </a>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                                {% endif %}
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% else %}
+                        <div class="flex flex-col items-center justify-center bg-gray-50 rounded-xl text-gray-500 h-32 p-4 border-2 border-dashed border-gray-300">
+                            <i class="fas fa-folder-open text-3xl mb-2 opacity-50"></i>
+                            <p class="text-sm text-center">Este bien no ha participado en ningún inventario registrado.</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+            </div> <div class="space-y-6">
+                    </div>
+                </div>
+                
+            </div>
+
+            <!-- Columna derecha: Información Adicional -->
+            <div class="space-y-6">
+                <!-- Clasificación y Adquisición -->
+                <div class="bg-white rounded-2xl shadow-lg border border-verde-mexicano-claro overflow-hidden">
+                    <div class="bg-gradient-to-r from-verde-mexicano-claro/20 to-verde-mexicano-medio/20 p-5 border-b border-verde-mexicano-claro">
+                        <h2 class="text-xl font-bold text-verde-mexicano-oscuro flex items-center">
+                            <i class="fas fa-tags text-verde-mexicano-medio mr-3"></i>
+                            Clasificación y Adquisición
+                        </h2>
+                    </div>
+                    <div class="p-6">
+                        <div class="space-y-5">
+                            <div class="space-y-1">
+                                <p class="text-xs font-semibold text-verde-mexicano-oscuro uppercase tracking-wide">Clasificación Legal</p>
+                                <p class="text-base font-bold text-gray-900">{{ bien.Clasificacion_Legal or 'N/A' }}</p>
+                            </div>
+                            <div class="space-y-1">
+                                <p class="text-xs font-semibold text-verde-mexicano-oscuro uppercase tracking-wide">Área Presupuestal</p>
+                                <p class="text-base font-bold text-gray-900">{{ bien.Area_Presupuestal or 'N/A' }}</p>
+                            </div>
+                            <div class="space-y-1">
+                                <p class="text-xs font-semibold text-verde-mexicano-oscuro uppercase tracking-wide">Tipo de Alta</p>
+                                <p class="text-base font-bold text-gray-900">{{ bien.Tipo_De_Alta or 'N/A' }}</p>
+                            </div>
+                            <div class="space-y-1">
+                                <p class="text-xs font-semibold text-verde-mexicano-oscuro uppercase tracking-wide">Fecha de Adquisición/Alta</p>
+                                <p class="text-base font-bold text-gray-900">{{ bien.Fecha_Adquisicion_Alta or 'N/A' }}</p>
+                            </div>
+                            <div class="space-y-1">
+                                <p class="text-xs font-semibold text-verde-mexicano-oscuro uppercase tracking-wide">Documento de Propiedad</p>
+                                <p class="text-base font-bold text-gray-900">{{ bien.Documento_Propiedad or 'N/A' }}</p>
+                            </div>
+                            <div class="space-y-1">
+                                <p class="text-xs font-semibold text-verde-mexicano-oscuro uppercase tracking-wide">Fecha del Documento</p>
+                                <p class="text-base font-bold text-gray-900">{{ bien.Fecha_Documento_Propiedad or 'N/A' }}</p>
+                            </div>
+                            <div class="space-y-1">
+                                <p class="text-xs font-semibold text-verde-mexicano-oscuro uppercase tracking-wide">Proveedor</p>
+                                <p class="text-base font-bold text-gray-900">{{ bien.Proveedor or 'N/A' }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+
+                <!-- Historial de Resguardos -->
+                <div class="bg-white rounded-2xl shadow-lg border border-verde-mexicano-claro overflow-hidden">
+                    <div class="bg-gradient-to-r from-verde-mexicano-claro/20 to-verde-mexicano-medio/20 p-5 border-b border-verde-mexicano-claro">
+                        <h2 class="text-xl font-bold text-verde-mexicano-oscuro flex items-center">
+                            <i class="fas fa-history text-verde-mexicano-medio mr-3"></i>
+                            Historial de Resguardos
+                        </h2>
+                    </div>
+                    <div class="p-6">
+                        {% if resguardos %}
+                        <div class="space-y-4 max-h-80 overflow-y-auto pr-2">
+                            {% for resguardo in resguardos %}
+                            <div class="bg-gray-50 rounded-xl p-4 border border-gray-200 hover:border-verde-mexicano-claro transition-colors duration-200">
+                                <div class="flex justify-between items-start mb-2">
+                                    <h4 class="font-bold text-gray-800">No. {{ resguardo.No_Resguardo }}</h4>
+                                    {% if resguardo.Activo %}
+                                        <span class="bg-green-100 text-green-800 text-xs font-semibold px-2.5 py-0.5 rounded-full">Activo</span>
+                                    {% else %}
+                                        <span class="bg-red-100 text-red-800 text-xs font-semibold px-2.5 py-0.5 rounded-full">Inactivo</span>
+                                    {% endif %}
+                                </div>
+                                <p class="text-sm text-gray-600 mb-3">Resguardante: {{ resguardo.Nombre_Del_Resguardante }}</p>
+                                <a href="{{ url_for('resguardos.ver_resguardo', id_resguardo=resguardo.id) }}" 
+                                   class="w-full flex items-center justify-center px-3 py-2 text-black rounded-lg text-sm font-medium transition-colors duration-200">
+                                    <i class="fas fa-eye mr-2"></i> Ver Detalles
+                                </a>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% else %}
+                        <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-lg">
+                            <div class="flex items-center">
+                                <i class="fas fa-exclamation-triangle text-yellow-500 mr-3 text-xl"></i>
+                                <div>
+                                    <p class="font-bold text-yellow-800">Atención</p>
+                                    <p class="text-yellow-700 text-sm">Este bien no tiene resguardos asociados.</p>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Imágenes del Bien -->
+                <div class="bg-white rounded-2xl shadow-lg border border-verde-mexicano-claro overflow-hidden">
+                    <div class="bg-gradient-to-r from-verde-mexicano-claro/20 to-verde-mexicano-medio/20 p-5 border-b border-verde-mexicano-claro">
+                        <h2 class="text-xl font-bold text-verde-mexicano-oscuro flex items-center">
+                            <i class="fas fa-images text-verde-mexicano-medio mr-3"></i>
+                            Imágenes del Bien
+                        </h2>
+                    </div>
+                    <div class="p-6">
+                        {% if imagenes %}
+                            <div class="grid grid-cols-2 gap-3">
+                                {% for imagen_filename in imagenes %}
+                                <a href="{{ url_for('bienes.serve_uploaded_file', filename=imagen_filename) }}" target="_blank" class="group">
+                                    <div class="aspect-square overflow-hidden rounded-xl border-2 border-gray-200 bg-gray-100 group-hover:border-verde-mexicano-medio transition-all duration-300">
+                                        <img src="{{ url_for('bienes.serve_uploaded_file', filename=imagen_filename) }}" 
+                                             alt="Imagen del Bien" 
+                                             class="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105">
+                                    </div>
+                                </a>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <div class="flex flex-col items-center justify-center bg-gray-50 rounded-xl text-gray-500 h-32 p-4 border-2 border-dashed border-gray-300">
+                                <i class="fas fa-image text-3xl mb-2 opacity-50"></i>
+                                <p class="text-sm text-center">No hay imágenes adjuntas</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block styles %}
+{{ super() }}
+<style>
+    .btn-primary, .btn-secondary {
+        @apply inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg shadow-sm transition-colors duration-150;
+    }
+    
+    /* Scroll personalizado para el historial de resguardos */
+    .overflow-y-auto::-webkit-scrollbar {
+        width: 6px;
+    }
+    
+    .overflow-y-auto::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 10px;
+    }
+    
+    .overflow-y-auto::-webkit-scrollbar-thumb {
+        background: #c1c1c1;
+        border-radius: 10px;
+    }
+    
+    .overflow-y-auto::-webkit-scrollbar-thumb:hover {
+        background: #a8a8a8;
+    }
+</style>
 {% endblock %}
