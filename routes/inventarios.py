@@ -1,6 +1,6 @@
 # inventario_routes.py
 
-from flask import Blueprint, render_template, request, redirect, url_for, flash, current_app
+from flask import Blueprint, render_template, request, redirect, url_for, flash, current_app, make_response, Response
 from flask_login import login_required, current_user
 import traceback
 import math
@@ -669,41 +669,51 @@ def generar_reporte(inventario_id):
 
 @inventarios_bp.route('/<int:inventario_id>/reporte/pdf')
 @login_required
-@permission_required('inventarios.descargar_reporte_pdf')
+@permission_required('inventarios.descargar_reporte_pdf') # o el permiso que corresponda
 def descargar_reporte_pdf(inventario_id):
+    """
+    Genera un reporte en PDF de un inventario y lo muestra en el navegador para previsualización.
+    """
     conn = None
     try:
         conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
 
         fecha_generacion_reporte = datetime.now()
-        # --- SECCIÓN 1: RECOPILACIÓN DE DATOS (IDÉNTICA A generar_reporte) ---
-        
-        # 1a. Obtener datos del inventario principal
+
+        # --- SECCIÓN 1: RECOPILACIÓN DE DATOS ---
+
+        # 1a. Obtener datos del inventario principal y brigada
         cursor.execute("SELECT * FROM inventarios WHERE id = %s", (inventario_id,))
         inventario = cursor.fetchone()
         if not inventario:
             flash("Inventario no encontrado.", "danger")
             return redirect(url_for('inventarios.listar_inventarios'))
 
-        # 1b. Obtener Brigada del Inventario
-        cursor.execute("SELECT u.username FROM user u JOIN inventario_brigadas ib ON u.id = ib.user_id WHERE ib.inventario_id = %s ORDER BY u.username", (inventario_id,))
+        cursor.execute("""
+            SELECT u.username FROM user u
+            JOIN inventario_brigadas ib ON u.id = ib.user_id
+            WHERE ib.inventario_id = %s ORDER BY u.username
+        """, (inventario_id,))
         brigada = [row['username'] for row in cursor.fetchall()]
 
-        # 1c. Obtener todos los detalles de bienes
+        # 1b. Obtener todos los detalles de bienes y nombre del verificador
         sql_detalles = """
-            SELECT d.*, b.No_Inventario, b.Descripcion_Del_Bien, b.Valor_En_Libros,
-                   r.Nombre_Director_Jefe_De_Area, a.nombre as nombre_area 
+            SELECT
+                d.*, b.No_Inventario, b.Descripcion_Del_Bien, b.Valor_En_Libros,
+                r.Nombre_Director_Jefe_De_Area, a.nombre as nombre_area,
+                u.username as nombre_verificador
             FROM inventario_detalle d
             JOIN bienes b ON d.id_bien = b.id
             LEFT JOIN resguardos r ON d.id_resguardo_esperado = r.id
             LEFT JOIN areas a ON d.id_area_esperada = a.id
+            LEFT JOIN user u ON d.id_usuario_verificador = u.id
             WHERE d.id_inventario = %s
         """
         cursor.execute(sql_detalles, (inventario_id,))
         todos_los_detalles = cursor.fetchall()
-        
-        # 1d. Obtener todas las fotos
+
+        # 1c. Obtener todas las fotos de los detalles
         detalle_ids = [d['id'] for d in todos_los_detalles]
         fotos_por_detalle = {}
         if detalle_ids:
@@ -712,10 +722,11 @@ def descargar_reporte_pdf(inventario_id):
             fotos = cursor.fetchall()
             for foto in fotos:
                 detalle_id = foto['id_inventario_detalle']
-                if detalle_id not in fotos_por_detalle: fotos_por_detalle[detalle_id] = []
+                if detalle_id not in fotos_por_detalle:
+                    fotos_por_detalle[detalle_id] = []
                 fotos_por_detalle[detalle_id].append(foto['ruta_archivo'])
 
-        # 1e. Procesar y clasificar los datos
+        # 1d. Procesar y clasificar los datos
         faltantes_por_area, discrepancias_por_area, correctos_por_area = {}, {}, {}
         bienes_revisados = []
         area_jefe_map = {}
@@ -723,7 +734,10 @@ def descargar_reporte_pdf(inventario_id):
             area = detalle['nombre_area'] or 'Sin Área Asignada'
             jefe = detalle.get('Nombre_Director_Jefe_De_Area') or 'No Asignado'
             if area not in area_jefe_map: area_jefe_map[area] = jefe
-            if detalle['estatus_hallazgo'] != 'Pendiente': bienes_revisados.append(detalle)
+
+            if detalle['estatus_hallazgo'] != 'Pendiente':
+                bienes_revisados.append(detalle)
+
             es_faltante = (detalle['estatus_hallazgo'] == 'No Localizado') or \
                           (inventario['estatus'] == 'Finalizado' and detalle['estatus_hallazgo'] == 'Pendiente')
             if es_faltante:
@@ -735,15 +749,19 @@ def descargar_reporte_pdf(inventario_id):
             elif detalle['estatus_hallazgo'] == 'Localizado':
                 if area not in correctos_por_area: correctos_por_area[area] = []
                 correctos_por_area[area].append(detalle)
-        
-        # 1f. Obtener los bienes sobrantes
-        cursor.execute("SELECT * FROM inventario_sobrantes WHERE id_inventario = %s", (inventario_id,))
+
+        # 1e. Obtener los bienes sobrantes
+        cursor.execute("""
+            SELECT s.*, u.username as nombre_capturador FROM inventario_sobrantes s
+            LEFT JOIN user u ON s.id_usuario_captura = u.id
+            WHERE s.id_inventario = %s
+        """, (inventario_id,))
         bienes_sobrantes = cursor.fetchall()
 
 
         # --- SECCIÓN 2: GENERACIÓN DEL PDF ---
 
-        # 2a. Renderizar la plantilla HTML específica para PDF a una cadena de texto
+        # 2a. Renderizar la plantilla HTML a una cadena de texto
         html_string = render_template(
             'inventarios/reporte_inventario_pdf.html',
             fecha_generacion=fecha_generacion_reporte,
@@ -759,12 +777,13 @@ def descargar_reporte_pdf(inventario_id):
             fotos_por_detalle=fotos_por_detalle
         )
 
-        # 2b. Usar WeasyPrint para convertir la cadena HTML en un archivo PDF en memoria
+        # 2b. Convertir la cadena HTML a PDF en memoria
         pdf_file = HTML(string=html_string, base_url=request.base_url).write_pdf()
 
-        # 2c. Crear y devolver una respuesta de Flask con el archivo PDF para descargar
-        response = Response(pdf_file, mimetype='application/pdf')
-        response.headers['Content-Disposition'] = f'attachment; filename=reporte_{inventario.get("nombre", "inventario")}.pdf'
+        # 2c. Crear la respuesta y configurarla para VISTA PREVIA
+        response = make_response(pdf_file)
+        response.headers['Content-Type'] = 'application/pdf'
+        response.headers['Content-Disposition'] = f'inline; filename=reporte_{inventario.get("nombre", "inventario")}.pdf'
         
         return response
 

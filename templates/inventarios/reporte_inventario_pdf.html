@@ -2,112 +2,530 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Reporte: {{ inventario.nombre }}</title>
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reporte de Inventario - {{ inventario.nombre }}</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        /* Estilos específicos para el PDF */
-        @page {
-            size: letter;
-            /* Se redujo el margen para dar más espacio al contenido */
-            margin: 0.5in; 
+    /* --- Configuración General --- */
+    body { 
+        font-family: Arial, sans-serif; 
+        margin: 20px; 
+        color: #333; 
+        background-color: #f4f4f4; 
+    }
+    .container { 
+        max-width: 850px; 
+        margin: auto; 
+        border: 1px solid #ccc; 
+        padding: 20px; 
+        background-color: #fff; 
+    }
+    .header { 
+        display: flex; 
+        justify-content: space-between; 
+        align-items: center; 
+        margin-bottom: 20px; 
+        text-align: center; 
+    }
+    .header-text h1 { 
+        margin: 0; 
+        color: #000000; 
+        font-size: 1.2em; 
+    }
+    .title { 
+        text-align: center; 
+        font-weight: bold; 
+        font-size: 1.2em; 
+        margin-bottom: 25px; 
+        border: 1px solid #888; 
+        padding: 8px; 
+        background-color: #E9ECEF;
+    }
+    .details-grid { 
+        display: grid; 
+        grid-template-columns: 1fr 1fr; 
+        gap: 10px; 
+        margin-bottom: 10px; 
+    }
+    .details-grid > div, .details-grid-full-width, .description-section { 
+        display: flex; 
+        border: 1px solid #888; 
+        overflow: hidden; 
+    }
+    .details-grid-full-width, .description-section { 
+        margin-bottom: 20px; 
+        flex-direction: column; 
+    }
+    .label { 
+        background-color: #E9ECEF; 
+        font-weight: bold; 
+        padding: 8px 12px; 
+        border-right: 1px solid #888; 
+        flex-basis: 160px; 
+        flex-shrink: 0; 
+        text-align: center; 
+        display: flex; 
+        align-items: center; 
+        justify-content: center; 
+    }
+    .value { 
+        background-color: #FFFFFF; 
+        padding: 8px 12px; 
+        flex-grow: 1; 
+        display: flex; 
+        align-items: center; 
+        flex-wrap: wrap; 
+    }
+    .description-section .label { 
+        flex-basis: auto; 
+        width: 100%; 
+        border-right: none; 
+        border-bottom: 1px solid #888; 
+    }
+    .description-section .value { 
+        line-height: 1.5; 
+    }
+    .description-section .value strong { 
+        margin-left: 15px; 
+    }
+    .footer { 
+        margin-top: 20px; 
+        display: grid; 
+        grid-template-columns: 1fr 1fr; 
+        gap: 20px; 
+        text-align: center; 
+    }
+    .signature-box { 
+        border: 1px solid #888; 
+        display: flex; 
+        flex-direction: column; 
+    }
+    .signature-title { 
+        background-color: #E9ECEF; 
+        font-weight: bold; 
+        padding: 8px; 
+        border-bottom: 1px solid #888; 
+    }
+    .signature-name { 
+        background-color: #FFFFFF; 
+        padding: 8px; 
+        min-height: 80px; 
+        display: flex; 
+        align-items: flex-end; 
+        justify-content: center; 
+        font-weight: bold; 
+    }
+    .section-title { 
+        text-align: center; 
+        font-weight: bold; 
+        margin-top: 40px; 
+        background-color: #E9ECEF; 
+        padding: 8px; 
+        border: 1px solid #888; 
+    }
+    
+    /* --- Estilos para tablas de reporte --- */
+    .report-table { 
+        width: 100%; 
+        border-collapse: collapse; 
+        margin-top: 10px; 
+    }
+    .report-table th, .report-table td { 
+        border: 1px solid #888; 
+        padding: 8px; 
+        text-align: left; 
+    }
+    .report-table th { 
+        background-color: #E9ECEF; 
+        font-weight: bold; 
+    }
+    .report-table tr:nth-child(even) { 
+        background-color: #f9f9f9; 
+    }
+    
+    /* --- Estilos para iconos --- */
+    .icon { 
+        margin-right: 8px; 
+        width: 16px; 
+        text-align: center; 
+    }
+    .icon-red { color: #dc2626; }
+    .icon-green { color: #16a34a; }
+    .icon-blue { color: #2563eb; }
+    .icon-yellow { color: #d97706; }
+    .icon-gray { color: #6b7280; }
+    
+    /* --- Estilos para estadísticas --- */
+    .stats-grid { 
+        display: grid; 
+        grid-template-columns: repeat(5, 1fr); 
+        gap: 10px; 
+        margin-bottom: 20px; 
+    }
+    .stat-box { 
+        border: 1px solid #888; 
+        text-align: center; 
+        padding: 10px; 
+    }
+    .stat-value { 
+        font-size: 1.5em; 
+        font-weight: bold; 
+        margin: 5px 0; 
+    }
+    .stat-label { 
+        font-size: 0.9em; 
+        font-weight: bold; 
+    }
+    
+    /* --- Estilos para imágenes --- */
+    .image-grid { 
+        display: flex; 
+        flex-wrap: wrap; 
+        gap: 5px; 
+        margin-top: 5px; 
+    }
+    .thumbnail { 
+        width: 50px; 
+        height: 50px; 
+        object-fit: cover; 
+        border: 1px solid #ddd; 
+    }
+    
+    /* =============================================== */
+    /* === REGLAS ESPECIALES PARA IMPRESIÓN === */
+    /* =============================================== */
+    @media print {
+        /* --- Optimizaciones para caber en una página --- */
+        body { font-size: 11px; }
+        .details-grid { gap: 5px; margin-bottom: 5px; }
+        .footer { margin-top: 15px; gap: 15px; }
+        .signature-name { min-height: 60px; }
+        .section-title { margin-top: 20px; }
+        .report-table th, .report-table td { padding: 5px; }
+
+        /* --- Reglas generales de impresión --- */
+        body { margin: 0; background-color: #fff; }
+        .container { 
+            border: none; 
+            box-shadow: none; 
+            width: 100%; 
+            max-width: 100%; 
+            padding: 0; 
+        }
+        * { 
+            -webkit-print-color-adjust: exact !important; 
+            print-color-adjust: exact !important; 
+        }
+
+        /* --- NUEVO: ESTILOS PARA EXPANDIR A PÁGINA COMPLETA --- */
+        html, body {
+            height: 100%; /* Asegura que el cuerpo ocupe toda la altura de la página */
         }
         body {
-            font-family: sans-serif;
-            font-size: 10pt;
+            display: flex; /* Convierte al body en un contenedor flexible */
         }
+        .container {
+            display: flex;
+            flex-direction: column; /* Alinea los hijos en columna */
+            flex-grow: 1; /* Permite que el contenedor crezca para llenar el espacio disponible */
+            padding: 6mm; /* Ajusta el padding para impresión */
+            box-sizing: border-box; /* Incluye el padding en el tamaño total */
+        }   
+        /* La pieza final: empuja el último bloque de firmas hacia abajo */
+        .section-title + .footer {
+            margin-top: auto;
+        }
+        
+        /* Control de saltos de página */
         .page-break {
             page-break-before: always;
         }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        th, td {
-            border: 1px solid #e2e8f0;
-            padding: 6px; /* Ligeramente reducido para que quepa más info */
-            text-align: left;
-            word-wrap: break-word; /* Evita que el texto largo desborde la celda */
-        }
-        th {
-            background-color: #f7fafc;
-        }
-        img {
-            max-width: 80px; /* Ajustado para el nuevo layout */
-            max-height: 80px;
-        }
-    </style>
+    }
+    
+    @page {
+        size: letter;
+        margin: 6mm; /* Tu margen personalizado */
+        border: #888 solid 1px;
+    }
+</style>
 </head>
 <body>
 
-    <h1 class="text-2xl font-bold text-gray-800">Reporte de Conciliación de Inventario</h1>
-    <p class="text-lg text-gray-600">{{ inventario.nombre }}</p>
-    <p class="text-sm text-gray-500">Generado el: {{ fecha_generacion.strftime('%d/%m/%Y %H:%M') }}</p>
-    <div class="border-t my-4"></div>
-
-    <div class="bg-white border rounded-lg mb-6">
-        <h2 class="text-lg font-semibold text-gray-800 border-b p-3">Información General</h2>
-        <div class="grid grid-cols-2 gap-x-6 p-3 text-sm">
-            <div>
-                <dt class="font-medium text-gray-500 mb-1">Áreas y Jefes Involucrados</dt>
-                <dd class="mt-1 text-gray-900 space-y-1">
-                    {% for area, jefe in area_jefe_map.items() %}
-                    <div><p><span class="font-semibold">{{ area }}:</span> {{ jefe }}</p></div>
-                    {% else %}<p>No hay áreas asignadas.</p>{% endfor %}
-                </dd>
+    <div class="container">
+        <div class="header">
+            <img src="{{ url_for('static', filename='./images/atitalaquia_logo.jpg') }}" alt="Logo Atitalaquia" style="height: 60px;">
+            <div class="header-text">
+                <h1>MUNICIPIO DE ATITALAQUIA, HGO.</h1>
+                <h2>SISTEMA DE INVENTARIOS</h2>
             </div>
-            <div>
-                <dt class="font-medium text-gray-500 mb-1">Personal de la Brigada</dt>
-                <dd class="mt-1 text-gray-900">
-                    <ul class="list-disc list-inside">{% for miembro in brigada %}<li>{{ miembro }}</li>{% else %}<li>No hay personal asignado.</li>{% endfor %}</ul>
-                </dd>
-            </div>
+            <img src="{{ url_for('static', filename='./images/image_e8b1f6.png') }}" alt="Logo Hidalgo" style="height: 100px;">
         </div>
-    </div>
 
-    <div class="space-y-6">
-        <div>
-            <h3 class="text-lg font-bold p-2 text-red-800 bg-red-50 rounded-t-lg">Bienes Faltantes</h3>
-            {% for nombre_area, bienes_en_area in faltantes_por_area.items() %}
-                <h4 class="font-semibold text-gray-700 p-2 bg-gray-100 border-l border-r">Área: {{ nombre_area }}</h4>
-                <table><thead><tr><th class="w-1/4">No. Inventario</th><th>Descripción</th></tr></thead>
-                <tbody>{% for bien in bienes_en_area %}<tr><td>{{ bien.No_Inventario }}</td><td>{{ bien.Descripcion_Del_Bien }}</td></tr>{% endfor %}</tbody></table>
-            {% else %}<p class="p-4 border text-center text-sm text-gray-500">No hay bienes faltantes.</p>{% endfor %}
+        <div class="title">
+            <i class="fas fa-clipboard-list icon"></i> REPORTE DE CONCILIACIÓN DE INVENTARIO
+        </div>
+
+        <!-- Información General del Inventario -->
+        <div class="details-grid">
+            <div>
+                <div class="label"><i class="fas fa-signature icon"></i> NOMBRE</div>
+                <div class="value">{{ inventario.nombre }}</div>
+            </div>
+            <div>
+                <div class="label"><i class="fas fa-tag icon"></i> TIPO</div>
+                <div class="value">{{ inventario.tipo }}</div>
+            </div>
+            <div>
+                <div class="label"><i class="fas fa-calendar-alt icon"></i> FECHA INICIO</div>
+                <div class="value">{{ inventario.fecha_inicio.strftime('%d/%m/%Y') }}</div>
+            </div>
+            <div>
+                <div class="label"><i class="fas fa-info-circle icon"></i> ESTATUS</div>
+                <div class="value">{{ inventario.estatus }}</div>
+            </div>
         </div>
         
-        <div class="page-break">
-            <h3 class="text-lg font-bold p-2 text-blue-800 bg-blue-50 rounded-t-lg">Bienes Sobrantes</h3>
-            <table><thead><tr><th class="w-1/2">Descripción Capturada</th><th class="w-1/2">Marca/Modelo/Serie</th></tr></thead>
-            <tbody>{% for bien in bienes_sobrantes %}<tr><td>{{ bien.descripcion_bien }}</td><td>{{ bien.marca or 'N/A' }} / {{ bien.modelo or 'N/A' }} / {{ bien.numero_serie or 'N/A' }}</td></tr>{% else %}<tr><td colspan="2" class="text-center p-4">No se registraron bienes sobrantes.</td></tr>{% endfor %}</tbody></table>
+        <div class="details-grid-full-width" style="flex-direction: row;">
+            <div class="label"><i class="fas fa-users icon"></i> BRIGADA DE TRABAJO</div>
+            <div class="value">
+                {% for miembro in brigada %}
+                    {{ miembro }}{% if not loop.last %}, {% endif %}
+                {% else %}
+                    No hay personal asignado
+                {% endfor %}
+            </div>
         </div>
 
-        <div class="page-break">
-            <h3 class="text-lg font-bold p-2 text-gray-800 bg-gray-100 rounded-t-lg">Bitácora de Verificación de Bienes</h3>
-            <table><thead><tr><th style="width: 15%;">No. Inventario</th><th style="width: 25%;">Descripción</th><th style="width: 15%;">Área</th><th style="width: 25%;">Resultado</th><th style="width: 20%;">Imágenes</th></tr></thead>
-            <tbody>
-                {% for bien in bienes_revisados %}
+        <!-- Estadísticas del Inventario -->
+        <div class="section-title">
+            <i class="fas fa-chart-bar icon"></i> ESTADÍSTICAS DEL INVENTARIO
+        </div>
+        
+        <div class="stats-grid">
+            <div class="stat-box">
+                <div class="stat-label"><i class="fas fa-boxes icon icon-blue"></i> REGISTRADOS</div>
+                <div class="stat-value">{{ total_registrado }}</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label"><i class="fas fa-times-circle icon icon-red"></i> FALTANTES</div>
+                <div class="stat-value">{{ (faltantes_por_area.values()|map('length')|sum) }}</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label"><i class="fas fa-plus-circle icon icon-blue"></i> SOBRANTES</div>
+                <div class="stat-value">{{ bienes_sobrantes|length }}</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label"><i class="fas fa-exclamation-triangle icon icon-yellow"></i> DISCREPANCIAS</div>
+                <div class="stat-value">{{ (discrepancias_por_area.values()|map('length')|sum) }}</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label"><i class="fas fa-check-circle icon icon-green"></i> CORRECTOS</div>
+                <div class="stat-value">{{ (correctos_por_area.values()|map('length')|sum) }}</div>
+            </div>
+        </div>
+
+        <!-- Bienes Faltantes -->
+        <div class="section-title">
+            <i class="fas fa-times-circle icon icon-red"></i> BIENES FALTANTES ({{ (faltantes_por_area.values()|map('length')|sum) }})
+        </div>
+        
+        {% for nombre_area, bienes_en_area in faltantes_por_area.items() %}
+        <div class="details-grid-full-width" style="flex-direction: row; margin-bottom: 5px;">
+            <div class="label" style="background-color: #fee2e2;"><i class="fas fa-building icon"></i> ÁREA: {{ nombre_area }}</div>
+        </div>
+        
+        {% if bienes_en_area %}
+        <table class="report-table">
+            <thead>
                 <tr>
-                    <td class="align-top">{{ bien.No_Inventario }}</td>
-                    <td class="align-top">{{ bien.Descripcion_Del_Bien }}</td>
-                    <td class="align-top">{{ bien.nombre_area or 'N/A' }}</td>
-                    <td class="align-top">
-                        <p><strong>Estatus:</strong> {% if bien.estatus_hallazgo == 'Localizado' %}<span class="font-medium">Localizado</span>{% elif bien.estatus_hallazgo == 'Localizado con Discrepancia' %}<span class="font-medium">Con Discrepancia</span>{% endif %}</p>
-                        <p><strong>Condición:</strong> {{ bien.condicion_fisica_reportada or 'N/A' }}</p>
-                        <p><strong>Obs:</strong> {{ bien.observaciones or 'Ninguna' }}</p>
+                    <th><i class="fas fa-hashtag icon"></i> No. INVENTARIO</th>
+                    <th><i class="fas fa-align-left icon"></i> DESCRIPCIÓN</th>
+                    <th><i class="fas fa-user-check icon"></i> VERIFICADO POR</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for bien in bienes_en_area %}
+                <tr>
+                    <td>{{ bien.No_Inventario }}</td>
+                    <td>{{ bien.Descripcion_Del_Bien }}</td>
+                    <td>{{ bien.nombre_verificador or 'No aplica' }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="details-grid-full-width">
+            <div class="value" style="text-align: center; font-style: italic;">
+                No hay bienes faltantes en esta área
+            </div>
+        </div>
+        {% endif %}
+        {% else %}
+        <div class="details-grid-full-width">
+            <div class="value" style="text-align: center; font-style: italic;">
+                No hay bienes faltantes en el inventario
+            </div>
+        </div>
+        {% endfor %}
+
+        <!-- Bienes Sobrantes -->
+        <div class="section-title page-break">
+            <i class="fas fa-plus-circle icon icon-blue"></i> BIENES SOBRANTES ({{ bienes_sobrantes|length }})
+        </div>
+        
+        {% if bienes_sobrantes %}
+        <table class="report-table">
+            <thead>
+                <tr>
+                    <th><i class="fas fa-align-left icon"></i> DESCRIPCIÓN CAPTURADA</th>
+                    <th><i class="fas fa-tags icon"></i> MARCA / MODELO / SERIE</th>
+                    <th><i class="fas fa-user-plus icon"></i> CAPTURADO POR</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for bien in bienes_sobrantes %}
+                <tr>
+                    <td>{{ bien.descripcion_bien }}</td>
+                    <td>{{ bien.marca or 'N/A' }} / {{ bien.modelo or 'N/A' }} / {{ bien.numero_serie or 'N/A' }}</td>
+                    <td>{{ bien.nombre_capturador or 'N/A' }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="details-grid-full-width">
+            <div class="value" style="text-align: center; font-style: italic;">
+                No se registraron bienes sobrantes
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Bienes con Discrepancias -->
+        <div class="section-title page-break">
+            <i class="fas fa-exclamation-triangle icon icon-yellow"></i> BIENES CON DISCREPANCIAS ({{ (discrepancias_por_area.values()|map('length')|sum) }})
+        </div>
+        
+        {% for nombre_area, bienes_en_area in discrepancias_por_area.items() %}
+        <div class="details-grid-full-width" style="flex-direction: row; margin-bottom: 5px;">
+            <div class="label" style="background-color: #fef3c7;"><i class="fas fa-building icon"></i> ÁREA: {{ nombre_area }}</div>
+        </div>
+        
+        {% if bienes_en_area %}
+        <table class="report-table">
+            <thead>
+                <tr>
+                    <th><i class="fas fa-hashtag icon"></i> No. INVENTARIO</th>
+                    <th><i class="fas fa-align-left icon"></i> DESCRIPCIÓN</th>
+                    <th><i class="fas fa-clipboard icon"></i> OBSERVACIONES</th>
+                    <th><i class="fas fa-images icon"></i> IMÁGENES</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for bien in bienes_en_area %}
+                <tr>
+                    <td>{{ bien.No_Inventario }}</td>
+                    <td>{{ bien.Descripcion_Del_Bien }}</td>
+                    <td>
+                        <strong>Condición:</strong> {{ bien.condicion_fisica_reportada or 'N/A' }}<br>
+                        <strong>Observaciones:</strong> {{ bien.observaciones or 'Ninguna' }}<br>
+                        <strong>Verificado por:</strong> {{ bien.nombre_verificador or 'N/A' }}
                     </td>
-                    <td class="align-top">
-                        <div class="flex flex-wrap gap-1">
+                    <td>
+                        <div class="image-grid">
                             {% for foto_path in fotos_por_detalle.get(bien.id, []) %}
-                                <img src="{{ url_for('bienes.serve_uploaded_file', filename=foto_path, _external=True) }}" class="object-cover">
+                                <img src="{{ url_for('bienes.serve_uploaded_file', filename=foto_path, _external=True) }}" class="thumbnail">
+                            {% else %}
+                                <span style="font-style: italic; font-size: 0.8em;">Sin imágenes</span>
                             {% endfor %}
                         </div>
                     </td>
                 </tr>
-                {% else %}
-                <tr><td colspan="5" class="text-center p-4">Aún no se ha revisado ningún bien.</td></tr>
                 {% endfor %}
             </tbody>
-            </table>
+        </table>
+        {% else %}
+        <div class="details-grid-full-width">
+            <div class="value" style="text-align: center; font-style: italic;">
+                No hay bienes con discrepancias en esta área
+            </div>
+        </div>
+        {% endif %}
+        {% else %}
+        <div class="details-grid-full-width">
+            <div class="value" style="text-align: center; font-style: italic;">
+                No hay bienes con discrepancias en el inventario
+            </div>
+        </div>
+        {% endfor %}
+
+        <!-- Bitácora de Verificación -->
+        <div class="section-title page-break">
+            <i class="fas fa-clipboard-list icon icon-gray"></i> BITÁCORA DE VERIFICACIÓN ({{ bienes_revisados|length }})
+        </div>
+        
+        {% if bienes_revisados %}
+        <table class="report-table">
+            <thead>
+                <tr>
+                    <th><i class="fas fa-hashtag icon"></i> No. INVENTARIO</th>
+                    <th><i class="fas fa-align-left icon"></i> DESCRIPCIÓN</th>
+                    <th><i class="fas fa-building icon"></i> ÁREA</th>
+                    <th><i class="fas fa-search icon"></i> RESULTADO</th>
+                    <th><i class="fas fa-images icon"></i> IMÁGENES</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for bien in bienes_revisados %}
+                <tr>
+                    <td>{{ bien.No_Inventario }}</td>
+                    <td>{{ bien.Descripcion_Del_Bien }}</td>
+                    <td>{{ bien.nombre_area or 'N/A' }}</td>
+                    <td>
+                        <strong>Estatus:</strong> 
+                        {% if bien.estatus_hallazgo == 'Localizado' %}
+                            <span style="color: #16a34a;"><i class="fas fa-check-circle icon"></i> Localizado</span>
+                        {% elif bien.estatus_hallazgo == 'Localizado con Discrepancia' %}
+                            <span style="color: #d97706;"><i class="fas fa-exclamation-triangle icon"></i> Con Discrepancia</span>
+                        {% elif bien.estatus_hallazgo == 'No Localizado' %}
+                            <span style="color: #dc2626;"><i class="fas fa-times-circle icon"></i> No Localizado</span>
+                        {% endif %}<br>
+                        <strong>Condición:</strong> {{ bien.condicion_fisica_reportada or 'N/A' }}<br>
+                        <strong>Observaciones:</strong> {{ bien.observaciones or 'Ninguna' }}<br>
+                        <strong>Verificado por:</strong> {{ bien.nombre_verificador or 'N/A' }}
+                    </td>
+                    <td>
+                        <div class="image-grid">
+                            {% for foto_path in fotos_por_detalle.get(bien.id, []) %}
+                                <img src="{{ url_for('bienes.serve_uploaded_file', filename=foto_path, _external=True) }}" class="thumbnail">
+                            {% else %}
+                                <span style="font-style: italic; font-size: 0.8em;">Sin imágenes</span>
+                            {% endfor %}
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="details-grid-full-width">
+            <div class="value" style="text-align: center; font-style: italic;">
+                Aún no se ha revisado ningún bien
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Firmas -->
+        
+
+
+        
+        <!-- Pie de página -->
+        <div class="details-grid-full-width" style="margin-top: 30px; text-align: center; font-size: 0.8em; color: #666;">
+            <div class="value">
+                Reporte generado el {{ fecha_generacion.strftime('%d/%m/%Y a las %H:%M') }} | Sistema de Inventarios - Atitalaquia Se Transforma 2024-2027
+            </div>
         </div>
     </div>
+
 </body>
 </html>

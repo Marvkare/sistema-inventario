@@ -1,204 +1,290 @@
-{# templates/inventarios/gestionar_inventario.html #}
-
 {% extends "base.html" %}
 
 {% block title %}Gestionando: {{ inventario.nombre }}{% endblock %}
 
 {% block content %}
+<div class="min-h-screen bg-gradient-to-br from-gray-50 to-beige-light/20 py-8 px-4">
+    <div class="max-w-7xl mx-auto">
+        
+        <!-- Encabezado Principal -->
+        <div class="bg-white rounded-2xl shadow-xl border border-beige-light overflow-hidden mb-8">
+            <div class="bg-gradient-to-r from-burgundy to-burgundy-dark p-6 text-white">
+                <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
+                    <div class="flex-1">
+                        <h1 class="text-2xl md:text-3xl font-bold">{{ inventario.nombre }}</h1>
+                        <p class="text-beige-light mt-2">
+                            <i class="fas fa-calendar-alt mr-2"></i>
+                            Iniciado el: {{ inventario.fecha_inicio.strftime('%d de %B de %Y') }}
+                        </p>
+                    </div>
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+                        <a href="{{ url_for('inventarios.listar_inventarios') }}" 
+                           class="inline-flex items-center px-4 py-2 border-2 border-beige-light text-beige-light hover:bg-beige-light/10 rounded-xl transition-all duration-200">
+                            <i class="fas fa-arrow-left mr-2"></i>
+                            Regresar
+                        </a>
 
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-
-    <div class="bg-white p-6 shadow-lg rounded-lg mb-8">
-        <div class="flex flex-wrap justify-between items-start gap-4">
-            <div>
-                <h1 class="text-3xl font-bold text-gray-800">{{ inventario.nombre }}</h1>
-                <p class="mt-1 text-sm text-gray-500">Iniciado el: {{ inventario.fecha_inicio.strftime('%d de %B de %Y') }}</p>
-            </div>
-            <div class="flex items-center space-x-4">
-                <a href="{{ url_for('inventarios.listar_inventarios') }}" class="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
-                    <svg class="w-5 h-5 mr-2 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M12.79 5.23a.75.75 0 01-.02 1.06L8.832 10l3.938 3.71a.75.75 0 11-1.04 1.08l-4.5-4.25a.75.75 0 010-1.08l4.5-4.25a.75.75 0 011.06.02z" clip-rule="evenodd" /></svg>
-                    Regresar
-                </a>
-
-                {% if inventario.estatus == 'Planificado' %}
-                <form action="{{ url_for('inventarios.cambiar_estatus_inventario', inventario_id=inventario.id, accion='comenzar') }}" method="POST" onsubmit="return confirm('¿Deseas iniciar el levantamiento físico?');">
-                    <button type="submit" class="inline-flex items-center px-3 py-2 border border-transparent shadow-sm text-sm leading-4 font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">Comenzar Levantamiento</button>
-                </form>
-                {% elif inventario.estatus == 'En Progreso' %}
-                <form action="{{ url_for('inventarios.cambiar_estatus_inventario', inventario_id=inventario.id, accion='conciliar') }}" method="POST" onsubmit="return confirm('¿Has terminado de capturar todos los hallazgos?');">
-                    <button type="submit" class="inline-flex items-center px-3 py-2 border border-transparent shadow-sm text-sm leading-4 font-medium rounded-md text-white bg-yellow-500 hover:bg-yellow-600">Mover a Conciliación</button>
-                </form>
-                {% elif inventario.estatus == 'En Conciliación' %}
-                 <form action="{{ url_for('inventarios.cambiar_estatus_inventario', inventario_id=inventario.id, accion='finalizar') }}" method="POST" onsubmit="return confirm('¿Estás seguro de finalizar? Esta acción es irreversible.');">
-                    <button type="submit" class="inline-flex items-center px-3 py-2 border border-transparent shadow-sm text-sm leading-4 font-medium rounded-md text-white bg-green-600 hover:bg-green-700">Finalizar Inventario</button>
-                </form>
-                {% endif %}
-                
-                <span class="text-sm font-medium text-gray-600">Estatus: {{ inventario.estatus }}
-                </span>
+                        {% if inventario.estatus == 'Planificado' %}
+                        <form action="{{ url_for('inventarios.cambiar_estatus_inventario', inventario_id=inventario.id, accion='comenzar') }}" method="POST" onsubmit="return confirm('¿Deseas iniciar el levantamiento físico?');">
+                            <button type="submit" class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-semibold rounded-xl shadow-lg transition-all duration-300 transform hover:scale-105">
+                                <i class="fas fa-play-circle mr-2"></i>
+                                Comenzar Levantamiento
+                            </button>
+                        </form>
+                        {% elif inventario.estatus == 'En Progreso' %}
+                        <form action="{{ url_for('inventarios.cambiar_estatus_inventario', inventario_id=inventario.id, accion='conciliar') }}" method="POST" onsubmit="return confirm('¿Has terminado de capturar todos los hallazgos?');">
+                            <button type="submit" class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white font-semibold rounded-xl shadow-lg transition-all duration-300 transform hover:scale-105">
+                                <i class="fas fa-exchange-alt mr-2"></i>
+                                Mover a Conciliación
+                            </button>
+                        </form>
+                        {% elif inventario.estatus == 'En Conciliación' %}
+                        <form action="{{ url_for('inventarios.cambiar_estatus_inventario', inventario_id=inventario.id, accion='finalizar') }}" method="POST" onsubmit="return confirm('¿Estás seguro de finalizar? Esta acción es irreversible.');">
+                            <button type="submit" class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-semibold rounded-xl shadow-lg transition-all duration-300 transform hover:scale-105">
+                                <i class="fas fa-flag-checkered mr-2"></i>
+                                Finalizar Inventario
+                            </button>
+                        </form>
+                        {% endif %}
+                        
+                        <span class="inline-flex items-center px-3 py-2 bg-white/10 rounded-xl text-beige-light font-semibold">
+                            <i class="fas fa-info-circle mr-2"></i>
+                            Estatus: {{ inventario.estatus }}
+                        </span>
+                    </div>
                 </div>
-        </div>
-    </div>
-
-    <div class="border-b border-gray-200 mb-6">
-        <nav class="-mb-px flex space-x-8" aria-label="Tabs">
-            <button id="tab-verificar" class="tab-button whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm border-indigo-500 text-indigo-600">Bienes a Verificar</button>
-            <button id="tab-sobrantes" class="tab-button whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300">Bienes Sobrantes ({{ sobrantes|length }})</button>
-        </nav>
-    </div>
-
-    <div id="tab-verificar-content" class="tab-content space-y-6">
-        <div class="text-center">
-            <h2 class="text-xl font-bold text-gray-800">Cédula de Levantamiento por Área</h2>
-            <p class="mt-1 text-sm text-gray-500">Haz clic en cada área para ver y gestionar sus bienes correspondientes.</p>
-        </div>
-
-        <div class="mb-6 px-1">
-            <label for="search-bienes-input" class="sr-only">Buscar Bien</label>
-            <input type="search" id="search-bienes-input" placeholder="🔍 Buscar por No. Inventario, Descripción, Resguardante..." class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
-        </div>        
-        
-        
-{% for nombre_area, detalles_en_area in detalles_agrupados.items() %}
-        <details class="bg-white shadow-lg rounded-lg overflow-hidden transition-all duration-300" open>
-            <summary class="p-4 cursor-pointer flex justify-between items-center font-medium text-gray-900 hover:bg-gray-50">
-                <div>
-                    <span class="text-lg font-semibold">Área: {{ nombre_area }}</span>
-                    {% if detalles_en_area and detalles_en_area[0].Nombre_Director_Jefe_De_Area %}
-                    <p class="text-sm text-gray-500">Jefe de Área: {{ detalles_en_area[0].Nombre_Director_Jefe_De_Area }}</p>
-                    {% endif %}
-                </div>
-                <span class="text-sm px-3 py-1 rounded-full bg-blue-100 text-blue-800">{{ detalles_en_area|length }} bienes</span>
-            </summary>
-            <div class="border-t border-gray-200 overflow-x-auto">
-                <table class="min-w-full divide-y divide-gray-200">
-                    <thead class="bg-gray-50">
-                        <tr>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">No. Inventario</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Descripción</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Resguardante Esperado</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estatus Hallazgo</th>
-                            <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody class="bg-white divide-y divide-gray-200">
-                        {% for detalle in detalles_en_area %}
-                        <tr class="bien-row">
-                            <td class="px-6 py-4 whitespace-nowrap text-sm font-mono text-gray-700">{{ detalle.No_Inventario }}</td>
-                            <td class="px-6 py-4 text-sm text-gray-600">{{ detalle.Descripcion_Del_Bien }}</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ detalle.nombre_resguardante_esperado }}</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                {% if detalle.estatus_hallazgo == 'Pendiente' %}<span class="text-gray-500">Pendiente</span>{% elif detalle.estatus_hallazgo == 'Localizado' %}<span class="text-green-600">Localizado</span>{% elif detalle.estatus_hallazgo == 'No Localizado' %}<span class="text-red-600">No Localizado</span>{% elif detalle.estatus_hallazgo == 'Localizado con Discrepancia' %}<span class="text-yellow-600">Con Discrepancia</span>{% endif %}
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-center text-sm">
-    {# Solo mostramos botones de acción si el inventario está en progreso #}
-    {% if inventario.estatus == 'En Progreso' %}
-
-        {# Si el bien aún no se ha revisado, el botón es "Revisar" #}
-        {% if detalle.estatus_hallazgo == 'Pendiente' %}
-            <button class="revisar-btn text-indigo-600 hover:text-indigo-900 font-medium" 
-                    data-detalle-id="{{ detalle.id }}"
-                    data-inventario-id="{{ detalle.id_inventario }}"
-                    data-no-inventario="{{ detalle.No_Inventario or '' }}"
-                    data-descripcion="{{ detalle.Descripcion_Del_Bien or '' }}"
-                    data-action="revisar">
-                Revisar
-            </button>
-        
-        {# Si el bien ya fue revisado (cualquier estado excepto pendiente), el botón es "Editar" #}
-        {% else %}
-            <button class="revisar-btn text-green-600 hover:text-green-900 font-medium" 
-                    data-detalle-id="{{ detalle.id }}"
-                    data-inventario-id="{{ detalle.id_inventario }}"
-                    data-no-inventario="{{ detalle.No_Inventario or '' }}"
-                    data-descripcion="{{ detalle.Descripcion_Del_Bien or '' }}"
-                    data-action="editar">
-                Editar
-            </button>
-        {% endif %}
-
-    {# Si el inventario no está en progreso, no se puede hacer ninguna acción #}
-    {% else %}
-        <span class="text-gray-400 font-medium">-</span>
-    {% endif %}
-</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
             </div>
-        </details>
-        {% else %}
-            <div class="bg-white shadow-lg rounded-lg p-12 text-center">
-                <h3 class="text-lg font-medium text-gray-700">No hay bienes asignados</h3>
+        </div>
+
+        <!-- Pestañas de Navegación -->
+        <div class="bg-white rounded-2xl shadow-lg border border-beige-light overflow-hidden mb-6">
+            <div class="border-b border-beige-light">
+                <nav class="-mb-px flex space-x-8 px-6" aria-label="Tabs">
+                    <button id="tab-verificar" class="tab-button whitespace-nowrap py-4 px-1 border-b-2 font-semibold text-sm border-burgundy text-burgundy flex items-center">
+                        <i class="fas fa-clipboard-check mr-2"></i>
+                        Bienes a Verificar
+                    </button>
+                    <button id="tab-sobrantes" class="tab-button whitespace-nowrap py-4 px-1 border-b-2 font-semibold text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 flex items-center">
+                        <i class="fas fa-boxes mr-2"></i>
+                        Bienes Sobrantes ({{ sobrantes|length }})
+                    </button>
+                </nav>
+            </div>
+        </div>
+
+        <!-- Contenido de Pestaña: Bienes a Verificar -->
+        <div id="tab-verificar-content" class="tab-content space-y-6">
+            <!-- Encabezado de Sección -->
+            <div class="text-center bg-white rounded-2xl shadow-lg border border-beige-light p-6">
+                <h2 class="text-xl font-bold text-burgundy mb-2 flex items-center justify-center">
+                    <i class="fas fa-tasks mr-3"></i>
+                    Cédula de Levantamiento por Área
+                </h2>
+                <p class="text-gray-600">Haz clic en cada área para ver y gestionar sus bienes correspondientes.</p>
+            </div>
+
+            <!-- Barra de Búsqueda -->
+            <div class="bg-white rounded-2xl shadow-lg border border-beige-light p-4">
+                <label for="search-bienes-input" class="sr-only">Buscar Bien</label>
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <i class="fas fa-search text-gray-400"></i>
+                    </div>
+                    <input type="search" id="search-bienes-input" 
+                           placeholder="Buscar por No. Inventario, Descripción, Resguardante..." 
+                           class="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-burgundy/50 focus:border-burgundy transition-all duration-200 bg-white">
+                </div>
+            </div>
+            
+            <!-- Lista de Áreas y Bienes -->
+            {% for nombre_area, detalles_en_area in detalles_agrupados.items() %}
+            <details class="bg-white shadow-lg rounded-2xl border border-beige-light overflow-hidden transition-all duration-300" open>
+                <summary class="p-6 cursor-pointer flex justify-between items-center font-semibold text-gray-900 hover:bg-beige-light/20 transition-colors duration-200">
+                    <div class="flex-1">
+                        <div class="flex items-center mb-2">
+                            <i class="fas fa-building text-burgundy mr-3 text-lg"></i>
+                            <span class="text-lg font-bold">Área: {{ nombre_area }}</span>
+                        </div>
+                        {% if detalles_en_area and detalles_en_area[0].Nombre_Director_Jefe_De_Area %}
+                        <p class="text-sm text-gray-600 flex items-center">
+                            <i class="fas fa-user-tie text-burgundy mr-2"></i>
+                            Jefe de Área: {{ detalles_en_area[0].Nombre_Director_Jefe_De_Area }}
+                        </p>
+                        {% endif %}
+                    </div>
+                    <span class="inline-flex items-center px-4 py-2 bg-burgundy text-white text-sm font-bold rounded-full">
+                        <i class="fas fa-box mr-2"></i>
+                        {{ detalles_en_area|length }} bienes
+                    </span>
+                </summary>
+                <div class="border-t border-beige-light overflow-x-auto">
+                    <table class="w-full text-sm text-left text-gray-600">
+                        <thead class="text-xs text-gray-700 uppercase bg-gray-50 border-b border-beige-light">
+                            <tr>
+                                <th class="px-6 py-4 font-semibold">No. Inventario</th>
+                                <th class="px-6 py-4 font-semibold">Descripción</th>
+                                <th class="px-6 py-4 font-semibold">Resguardante Esperado</th>
+                                <th class="px-6 py-4 font-semibold">Estatus Hallazgo</th>
+                                <th class="px-6 py-4 font-semibold text-center">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-beige-light">
+                            {% for detalle in detalles_en_area %}
+                            <tr class="bien-row bg-white hover:bg-beige-light/10 transition-colors duration-200">
+                                <td class="px-6 py-4 whitespace-nowrap font-mono text-gray-800 font-semibold">
+                                    {{ detalle.No_Inventario }}
+                                </td>
+                                <td class="px-6 py-4 text-gray-700">
+                                    {{ detalle.Descripcion_Del_Bien }}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-gray-600">
+                                    {{ detalle.nombre_resguardante_esperado }}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    {% if detalle.estatus_hallazgo == 'Pendiente' %}
+                                        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-gray-100 text-gray-800 border border-gray-300">
+                                            <i class="fas fa-clock mr-1"></i> Pendiente
+                                        </span>
+                                    {% elif detalle.estatus_hallazgo == 'Localizado' %}
+                                        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-green-100 text-green-800 border border-green-300">
+                                            <i class="fas fa-check-circle mr-1"></i> Localizado
+                                        </span>
+                                    {% elif detalle.estatus_hallazgo == 'No Localizado' %}
+                                        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-red-100 text-red-800 border border-red-300">
+                                            <i class="fas fa-times-circle mr-1"></i> No Localizado
+                                        </span>
+                                    {% elif detalle.estatus_hallazgo == 'Localizado con Discrepancia' %}
+                                        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-yellow-100 text-yellow-800 border border-yellow-300">
+                                            <i class="fas fa-exclamation-triangle mr-1"></i> Con Discrepancia
+                                        </span>
+                                    {% endif %}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-center">
+                                    {% if inventario.estatus == 'En Progreso' %}
+                                        {% if detalle.estatus_hallazgo == 'Pendiente' %}
+                                            <button class="revisar-btn inline-flex items-center text-burgundy hover:text-burgundy-dark font-semibold transition-colors duration-200 group"
+                                                    data-detalle-id="{{ detalle.id }}"
+                                                    data-inventario-id="{{ detalle.id_inventario }}"
+                                                    data-no-inventario="{{ detalle.No_Inventario or '' }}"
+                                                    data-descripcion="{{ detalle.Descripcion_Del_Bien or '' }}"
+                                                    data-action="revisar">
+                                                <i class="fas fa-edit group-hover:scale-110 transition-transform duration-300 mr-2"></i>
+                                                Revisar
+                                            </button>
+                                        {% else %}
+                                            <button class="revisar-btn inline-flex items-center text-green-600 hover:text-green-800 font-semibold transition-colors duration-200 group"
+                                                    data-detalle-id="{{ detalle.id }}"
+                                                    data-inventario-id="{{ detalle.id_inventario }}"
+                                                    data-no-inventario="{{ detalle.No_Inventario or '' }}"
+                                                    data-descripcion="{{ detalle.Descripcion_Del_Bien or '' }}"
+                                                    data-action="editar">
+                                                <i class="fas fa-pencil-alt group-hover:scale-110 transition-transform duration-300 mr-2"></i>
+                                                Editar
+                                            </button>
+                                        {% endif %}
+                                    {% else %}
+                                        <span class="text-gray-400 font-medium">-</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </details>
+            {% else %}
+            <div class="bg-white rounded-2xl shadow-lg border border-beige-light p-12 text-center">
+                <i class="fas fa-inbox text-4xl text-gray-300 mb-4"></i>
+                <h3 class="text-lg font-semibold text-gray-700">No hay bienes asignados</h3>
                 <p class="mt-1 text-sm text-gray-500">No se encontraron bienes en las áreas seleccionadas para este inventario.</p>
             </div>
-        {% endfor %}
-    </div>
+            {% endfor %}
+        </div>
 
-    <div id="tab-sobrantes-content" class="tab-content hidden">
-    <div class="bg-white shadow-lg rounded-lg overflow-hidden">
-        <div class="p-6 flex justify-between items-center">
-            <div>
-                <h2 class="text-lg font-medium text-gray-900">Bienes Sobrantes Encontrados</h2>
-                <p class="mt-1 text-sm text-gray-500">Bienes encontrados en campo que no estaban en la lista original.</p>
+        <!-- Contenido de Pestaña: Bienes Sobrantes -->
+        <div id="tab-sobrantes-content" class="tab-content hidden">
+            <div class="bg-white rounded-2xl shadow-lg border border-beige-light overflow-hidden">
+                <div class="p-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <div class="flex-1">
+                        <h2 class="text-xl font-bold text-burgundy mb-2 flex items-center">
+                            <i class="fas fa-boxes mr-3"></i>
+                            Bienes Sobrantes Encontrados
+                        </h2>
+                        <p class="text-gray-600">Bienes encontrados en campo que no estaban en la lista original.</p>
+                    </div>
+                    {% if inventario.estatus != 'Planificado' %}
+                    <button id="abrir-modal-sobrante" class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-semibold rounded-xl shadow-lg transition-all duration-300 transform hover:scale-105">
+                        <i class="fas fa-plus-circle mr-2"></i>
+                        Registrar Bien Sobrante
+                    </button>
+                    {% endif %}
+                </div>
+                
+                <div class="border-t border-beige-light overflow-x-auto">
+                    <table class="w-full text-sm text-left text-gray-600">
+                        <thead class="text-xs text-gray-700 uppercase bg-gray-50 border-b border-beige-light">
+                            <tr>
+                                <th class="px-6 py-4 font-semibold">Descripción</th>
+                                <th class="px-6 py-4 font-semibold">Marca / Modelo / Serie</th>
+                                <th class="px-6 py-4 font-semibold">Estado de Resolución</th>
+                                <th class="px-6 py-4 font-semibold text-center">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-beige-light">
+                            {% for sobrante in sobrantes %}
+                            <tr class="bg-white hover:bg-beige-light/10 transition-colors duration-200">
+                                <td class="px-6 py-4 text-gray-700">
+                                    {{ sobrante.descripcion_bien }}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-gray-600">
+                                    {{ sobrante.marca or 'N/A' }} / {{ sobrante.modelo or 'N/A' }} / {{ sobrante.numero_serie or 'N/A' }}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-blue-100 text-blue-800 border border-blue-300">
+                                        {{ sobrante.estatus_resolucion }}
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-center">
+                                    <a href="#" class="inline-flex items-center text-burgundy hover:text-burgundy-dark font-semibold transition-colors duration-200">
+                                        <i class="fas fa-cog mr-2"></i>
+                                        Gestionar
+                                    </a>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="4" class="text-center text-gray-500 py-8">
+                                    <i class="fas fa-inbox text-3xl text-gray-300 mb-3"></i>
+                                    <p>No se han registrado bienes sobrantes.</p>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
             </div>
-            {% if inventario.estatus != 'Planificado' %}
-            <button id="abrir-modal-sobrante" class="inline-flex items-center px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-md shadow-sm hover:bg-green-700">
-                Registrar Bien Sobrante
-            </button>
-            {% endif %}
-        </div>
-        
-        <div class="border-t border-gray-200 overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50">
-                    <tr>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Descripción</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Marca / Modelo / Serie</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado de Resolución</th>
-                        <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
-                    </tr>
-                </thead>
-                <tbody class="bg-white divide-y divide-gray-200">
-                    {% for sobrante in sobrantes %}
-                    <tr>
-                        <td class="px-6 py-4 text-sm text-gray-600">{{ sobrante.descripcion_bien }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {{ sobrante.marca or 'N/A' }} / {{ sobrante.modelo or 'N/A' }} / {{ sobrante.numero_serie or 'N/A' }}
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-700">{{ sobrante.estatus_resolucion }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-center text-sm">
-                            <a href="#" class="text-indigo-600 hover:text-indigo-900 font-medium">Gestionar</a>
-                        </td>
-                    </tr>
-                    {% else %}
-                    <tr>
-                        <td colspan="4" class="text-center text-gray-500 py-8">No se han registrado bienes sobrantes.</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
         </div>
     </div>
 </div>
 
-</div>
-
+<!-- Modal para Bien Sobrante -->
 <div id="sobrante-modal" class="fixed inset-0 z-50 overflow-y-auto hidden">
     <div class="flex items-end justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
-        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" id="sobrante-modal-backdrop"></div>
+        <div class="fixed inset-0 bg-gray-500/75 backdrop-blur-sm transition-opacity" id="sobrante-modal-backdrop"></div>
         <span class="hidden sm:inline-block sm:align-middle sm:h-screen">&#8203;</span>
         
-        <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+        <div class="inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full border border-beige-light">
             <form action="{{ url_for('inventarios.agregar_sobrante', inventario_id=inventario.id) }}" method="POST" enctype="multipart/form-data">
-                <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-                    <h3 class="text-lg leading-6 font-medium text-gray-900">Registrar Bien Sobrante</h3>
-                    <div class="mt-6 space-y-4">
-                        
+                <div class="bg-white px-6 pt-6 pb-4">
+                    <h3 class="text-xl font-bold text-burgundy mb-4 flex items-center">
+                        <i class="fas fa-plus-circle mr-3"></i>
+                        Registrar Bien Sobrante
+                    </h3>
+                    <div class="mt-4 space-y-4">
+                        <!-- Los campos del formulario se mantienen exactamente igual -->
                         <div>
-                            <label for="sobrante-area" class="block text-sm font-medium text-gray-700">Área donde se encontró</label>
-                            <select id="sobrante-area" name="id_area_encontrado" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                            <label for="sobrante-area" class="block text-sm font-semibold text-gray-700 mb-2">Área donde se encontró</label>
+                            <select id="sobrante-area" name="id_area_encontrado" required class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-burgundy/50 focus:border-burgundy transition-all duration-200 bg-white">
                                 <option value="" disabled selected>-- Selecciona un área --</option>
                                 {% for area in todas_las_areas %}
                                     <option value="{{ area.id }}">{{ area.nombre }}</option>
@@ -207,28 +293,28 @@
                         </div>
 
                         <div>
-                            <label for="sobrante-descripcion" class="block text-sm font-medium text-gray-700">Descripción Detallada</label>
-                            <textarea id="sobrante-descripcion" name="descripcion_bien" rows="3" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"></textarea>
+                            <label for="sobrante-descripcion" class="block text-sm font-semibold text-gray-700 mb-2">Descripción Detallada</label>
+                            <textarea id="sobrante-descripcion" name="descripcion_bien" rows="3" required class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-burgundy/50 focus:border-burgundy transition-all duration-200 bg-white resize-none"></textarea>
                         </div>
                         
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
-                                <label for="sobrante-marca" class="block text-sm font-medium text-gray-700">Marca</label>
-                                <input type="text" name="marca" id="sobrante-marca" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                                <label for="sobrante-marca" class="block text-sm font-semibold text-gray-700 mb-2">Marca</label>
+                                <input type="text" name="marca" id="sobrante-marca" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-burgundy/50 focus:border-burgundy transition-all duration-200 bg-white">
                             </div>
                             <div>
-                                <label for="sobrante-modelo" class="block text-sm font-medium text-gray-700">Modelo</label>
-                                <input type="text" name="modelo" id="sobrante-modelo" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                                <label for="sobrante-modelo" class="block text-sm font-semibold text-gray-700 mb-2">Modelo</label>
+                                <input type="text" name="modelo" id="sobrante-modelo" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-burgundy/50 focus:border-burgundy transition-all duration-200 bg-white">
                             </div>
                         </div>
                         <div>
-                            <label for="sobrante-serie" class="block text-sm font-medium text-gray-700">Número de Serie</label>
-                            <input type="text" name="numero_serie" id="sobrante-serie" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                            <label for="sobrante-serie" class="block text-sm font-semibold text-gray-700 mb-2">Número de Serie</label>
+                            <input type="text" name="numero_serie" id="sobrante-serie" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-burgundy/50 focus:border-burgundy transition-all duration-200 bg-white">
                         </div>
                         
                         <div>
-                            <label for="sobrante-condicion" class="block text-sm font-medium text-gray-700">Condición Física</label>
-                            <select id="sobrante-condicion" name="condicion_fisica" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                            <label for="sobrante-condicion" class="block text-sm font-semibold text-gray-700 mb-2">Condición Física</label>
+                            <select id="sobrante-condicion" name="condicion_fisica" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-burgundy/50 focus:border-burgundy transition-all duration-200 bg-white">
                                 <option>Bueno</option>
                                 <option>Regular</option>
                                 <option>Malo</option>
@@ -236,65 +322,101 @@
                         </div>
                         
                         <div>
-                            <label class="block text-sm font-medium text-gray-700">Fotografías</label>
-                            <input type="file" name="fotos_sobrante" id="sobrante-fotos-input" multiple class="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100"/>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Fotografías</label>
+                            <input type="file" name="fotos_sobrante" id="sobrante-fotos-input" multiple class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-burgundy file:text-white hover:file:bg-burgundy-dark transition-all duration-200"/>
                             <div id="sobrante-fotos-preview-container" class="mt-4 grid grid-cols-3 sm:grid-cols-4 gap-4">
-                                </div>
+                                <!-- Preview de imágenes -->
+                            </div>
                         </div>
-
                     </div>
                 </div>
-                <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-                    <button type="submit" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 font-medium text-white hover:bg-blue-700 sm:ml-3 sm:w-auto sm:text-sm">Registrar</button>
-                    <button type="button" id="sobrante-modal-cancelar" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white font-medium text-gray-700 hover:bg-gray-50 sm:mt-0 sm:w-auto sm:text-sm">Cancelar</button>
+                <div class="bg-gray-50 px-6 py-4 sm:flex sm:flex-row-reverse rounded-b-2xl">
+                    <button type="submit" class="w-full inline-flex justify-center items-center px-4 py-3 bg-gradient-to-r from-burgundy to-burgundy-dark hover:from-burgundy-dark hover:to-burgundy text-white font-semibold rounded-xl shadow-lg transition-all duration-300 transform hover:scale-105 sm:ml-3 sm:w-auto sm:text-sm">
+                        <i class="fas fa-save mr-2"></i> Registrar
+                    </button>
+                    <button type="button" id="sobrante-modal-cancelar" class="mt-3 w-full inline-flex justify-center items-center px-4 py-3 border-2 border-gray-300 text-gray-700 font-semibold bg-white hover:bg-gray-50 rounded-xl transition-all duration-200 sm:mt-0 sm:w-auto sm:text-sm">
+                        <i class="fas fa-times mr-2"></i> Cancelar
+                    </button>
                 </div>
             </form>
         </div>
     </div>
 </div>
 
+<!-- Modal para Revisar/Editar Bien -->
 <div id="revisar-modal" class="fixed inset-0 z-50 overflow-y-auto hidden">
     <div class="flex items-end justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
-        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" id="modal-backdrop"></div>
+        <div class="fixed inset-0 bg-gray-500/75 backdrop-blur-sm transition-opacity" id="modal-backdrop"></div>
         <span class="hidden sm:inline-block sm:align-middle sm:h-screen">&#8203;</span>
-        <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+        <div class="inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full border border-beige-light">
             <form method="POST" enctype="multipart/form-data">
                 <input type="hidden" name="detalle_id" id="modal-detalle-id">
                 <input type="hidden" name="inventario_id" id="modal-inventario-id"> 
                 <div id="existing-fotos-container" class="mt-2 grid grid-cols-3 gap-4">
+                    <!-- Fotos existentes -->
                 </div>
                 <div id="fotos-a-eliminar-container"></div>
-                <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                <div class="bg-white px-6 pt-6 pb-4">
                     <div class="sm:flex sm:items-start">
                         <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
-                            <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">Revisar Bien: <span class="font-mono" id="modal-no-inventario"></span></h3>
-                            <p class="text-sm text-gray-500" id="modal-descripcion"></p>
+                            <h3 class="text-xl font-bold text-burgundy mb-2 flex items-center" id="modal-title">
+                                <i class="fas fa-edit mr-3"></i>
+                                Revisar Bien: <span class="font-mono ml-2" id="modal-no-inventario"></span>
+                            </h3>
+                            <p class="text-sm text-gray-600 bg-beige-light/20 p-3 rounded-xl" id="modal-descripcion"></p>
                         </div>
                     </div>
                     <div class="mt-6 space-y-6">
                         <div>
-                            <label class="text-base font-medium text-gray-900">Estatus del Hallazgo</label>
-                            <fieldset class="mt-2"><div class="space-y-2"><div class="flex items-center"><input id="estatus-localizado" name="estatus_hallazgo" type="radio" value="Localizado" class="h-4 w-4 border-gray-300 text-indigo-600 focus:ring-indigo-500"><label for="estatus-localizado" class="ml-3 block text-sm font-medium text-gray-700">Localizado</label></div><div class="flex items-center"><input id="estatus-no-localizado" name="estatus_hallazgo" type="radio" value="No Localizado" class="h-4 w-4 border-gray-300 text-indigo-600 focus:ring-indigo-500"><label for="estatus-no-localizado" class="ml-3 block text-sm font-medium text-gray-700">No Localizado</label></div><div class="flex items-center"><input id="estatus-discrepancia" name="estatus_hallazgo" type="radio" value="Localizado con Discrepancia" class="h-4 w-4 border-gray-300 text-indigo-600 focus:ring-indigo-500"><label for="estatus-discrepancia" class="ml-3 block text-sm font-medium text-gray-700">Localizado con Discrepancia</label></div></div></fieldset>
-                        </div>
-                        <div>
-                            <label for="condicion" class="block text-sm font-medium text-gray-700">Condición Física Reportada</label>
-                            <select id="condicion" name="condicion_fisica" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"><option value="Bueno">Bueno</option><option value="Regular">Regular</option><option value="Malo">Malo</option></select>
-                        </div>
-                        <div>
-                            <label for="observaciones" class="block text-sm font-medium text-gray-700">Observaciones</label>
-                            <textarea id="observaciones" name="observaciones" rows="3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" placeholder="Ej: Ubicado en la oficina contigua, presenta un golpe en la esquina..."></textarea>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700">Añadir Evidencia Fotográfica</label>
-                            <input type="file" name="fotos" id="fotos-input" multiple class="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100"/>
-                            <div id="fotos-preview-container" class="mt-4 grid grid-cols-3 gap-4">
+                            <label class="text-base font-semibold text-gray-900 mb-3 flex items-center">
+                                <i class="fas fa-search mr-2"></i>
+                                Estatus del Hallazgo
+                            </label>
+                            <fieldset class="mt-2">
+                                <div class="space-y-3">
+                                    <div class="flex items-center bg-gray-50 p-3 rounded-xl hover:bg-gray-100 transition-colors duration-200">
+                                        <input id="estatus-localizado" name="estatus_hallazgo" type="radio" value="Localizado" class="h-4 w-4 border-gray-300 text-burgundy focus:ring-burgundy/50">
+                                        <label for="estatus-localizado" class="ml-3 block text-sm font-medium text-gray-700">Localizado</label>
+                                    </div>
+                                    <div class="flex items-center bg-gray-50 p-3 rounded-xl hover:bg-gray-100 transition-colors duration-200">
+                                        <input id="estatus-no-localizado" name="estatus_hallazgo" type="radio" value="No Localizado" class="h-4 w-4 border-gray-300 text-burgundy focus:ring-burgundy/50">
+                                        <label for="estatus-no-localizado" class="ml-3 block text-sm font-medium text-gray-700">No Localizado</label>
+                                    </div>
+                                    <div class="flex items-center bg-gray-50 p-3 rounded-xl hover:bg-gray-100 transition-colors duration-200">
+                                        <input id="estatus-discrepancia" name="estatus_hallazgo" type="radio" value="Localizado con Discrepancia" class="h-4 w-4 border-gray-300 text-burgundy focus:ring-burgundy/50">
+                                        <label for="estatus-discrepancia" class="ml-3 block text-sm font-medium text-gray-700">Localizado con Discrepancia</label>
+                                    </div>
                                 </div>
+                            </fieldset>
+                        </div>
+                        <div>
+                            <label for="condicion" class="block text-sm font-semibold text-gray-700 mb-2">Condición Física Reportada</label>
+                            <select id="condicion" name="condicion_fisica" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-burgundy/50 focus:border-burgundy transition-all duration-200 bg-white">
+                                <option value="Bueno">Bueno</option>
+                                <option value="Regular">Regular</option>
+                                <option value="Malo">Malo</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="observaciones" class="block text-sm font-semibold text-gray-700 mb-2">Observaciones</label>
+                            <textarea id="observaciones" name="observaciones" rows="3" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-burgundy/50 focus:border-burgundy transition-all duration-200 bg-white resize-none" placeholder="Ej: Ubicado en la oficina contigua, presenta un golpe en la esquina..."></textarea>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Añadir Evidencia Fotográfica</label>
+                            <input type="file" name="fotos" id="fotos-input" multiple class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-burgundy file:text-white hover:file:bg-burgundy-dark transition-all duration-200"/>
+                            <div id="fotos-preview-container" class="mt-4 grid grid-cols-3 gap-4">
+                                <!-- Preview de imágenes nuevas -->
+                            </div>
                         </div>
                     </div>
                 </div>
-                <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-                    <button type="submit" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700">Guardar Cambios</button>
-                    <button type="button" id="modal-cancelar" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50">Cancelar</button>
+                <div class="bg-gray-50 px-6 py-4 sm:flex sm:flex-row-reverse rounded-b-2xl">
+                    <button type="submit" class="w-full inline-flex justify-center items-center px-4 py-3 bg-gradient-to-r from-burgundy to-burgundy-dark hover:from-burgundy-dark hover:to-burgundy text-white font-semibold rounded-xl shadow-lg transition-all duration-300 transform hover:scale-105">
+                        <i class="fas fa-save mr-2"></i> Guardar Cambios
+                    </button>
+                    <button type="button" id="modal-cancelar" class="mt-3 w-full inline-flex justify-center items-center px-4 py-3 border-2 border-gray-300 text-gray-700 font-semibold bg-white hover:bg-gray-50 rounded-xl transition-all duration-200 sm:mt-0 sm:ml-3 sm:w-auto">
+                        <i class="fas fa-times mr-2"></i> Cancelar
+                    </button>
                 </div>
             </form>
         </div>
@@ -302,39 +424,60 @@
 </div>
 
 <style>
-    .tab-button.active { border-color: #6366f1; color: #4f46e5; }
-    .tab-content.hidden { display: none; }
+    .bg-burgundy { background-color: #6A2E4D; }
+    .bg-burgundy-dark { background-color: #551E3A; }
+    .text-burgundy { color: #6A2E4D; }
+    .border-burgundy { border-color: #6A2E4D; }
+    .focus\:ring-burgundy\/50:focus { --tw-ring-color: rgb(106 46 77 / 0.5); }
+    .focus\:border-burgundy:focus { border-color: #6A2E4D; }
+    
+    .bg-beige { background-color: #BC9B6A; }
+    .bg-beige-light { background-color: #D7C3A0; }
+    .text-beige-light { color: #D7C3A0; }
+    .border-beige { border-color: #BC9B6A; }
+    .border-beige-light { border-color: #D7C3A0; }
+    
+    .from-burgundy { --tw-gradient-from: #6A2E4D; --tw-gradient-to: rgb(106 46 77 / 0); --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to); }
+    .to-burgundy-dark { --tw-gradient-to: #551E3A; }
+
+    .tab-button.active { 
+        border-color: #6A2E4D; 
+        color: #6A2E4D; 
+    }
+    .tab-content.hidden { 
+        display: none; 
+    }
     .preview-image-wrapper {
-    position: relative;
-}
-.preview-image {
-    width: 100%;
-    height: 100px;
-    object-fit: cover;
-    border-radius: 0.375rem; /* rounded-md */
-    border: 1px solid #e5e7eb; /* border-gray-200 */
-}
-.remove-image-btn {
-    position: absolute;
-    top: -0.5rem;
-    right: -0.5rem;
-    background-color: #ef4444; /* bg-red-500 */
-    color: white;
-    border-radius: 9999px; /* rounded-full */
-    width: 1.5rem; /* w-6 */
-    height: 1.5rem; /* h-6 */
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 0.875rem; /* text-sm */
-    font-weight: bold;
-    cursor: pointer;
-    border: 2px solid white;
-    transition: background-color 0.2s;
-}
-.remove-image-btn:hover {
-    background-color: #dc2626; /* bg-red-600 */
-}
+        position: relative;
+    }
+    .preview-image {
+        width: 100%;
+        height: 100px;
+        object-fit: cover;
+        border-radius: 0.75rem;
+        border: 1px solid #D7C3A0;
+    }
+    .remove-image-btn {
+        position: absolute;
+        top: -0.5rem;
+        right: -0.5rem;
+        background-color: #ef4444;
+        color: white;
+        border-radius: 9999px;
+        width: 1.5rem;
+        height: 1.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.875rem;
+        font-weight: bold;
+        cursor: pointer;
+        border: 2px solid white;
+        transition: background-color 0.2s;
+    }
+    .remove-image-btn:hover {
+        background-color: #dc2626;
+    }
 </style>
 
 <script>

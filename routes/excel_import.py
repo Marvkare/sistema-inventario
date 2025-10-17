@@ -37,14 +37,31 @@ def convert_to_db_type(db_col, value):
         except (ValueError, TypeError):
              raise ValueError(f"Formato de número decimal no válido: '{value}'")
 
-    if db_col in ["Cantidad", "No_Nomina_Trabajador"]:
+    if db_col == "No_Nomina_Trabajador":
+        print(f"Procesando No. Nómina: {value}")
         try:
-            cleaned_value = re.sub(r'[^\d]', '', str(value))
-            if cleaned_value == '': return None
-            return int(float(cleaned_value))
+            # Si el valor es nulo o una cadena vacía, regresa None.
+            if value is None or str(value).strip() == '':
+                return None
+            
+            # Convierte a float primero y luego a entero.
+            return int(float(value))
+
         except (ValueError, TypeError):
-             raise ValueError(f"Formato de número entero no válido: '{value}'")
+            raise ValueError(f"Formato de número para Nómina no válido: '{value}'")
     
+    if db_col == "Cantidad":
+        print(f"Procesando Cantidad: {value}")
+        try:
+            # Si el valor es nulo o una cadena vacía, regresa None.
+            if value is None or str(value).strip() == '':
+                return None
+            
+            # Convierte a float primero y luego a entero para manejar correctamente "1.0".
+            return int(float(value))
+
+        except (ValueError, TypeError):
+            raise ValueError(f"Formato de número para Cantidad no válido: '{value}'")
     return str(value)
 
 def get_or_create_bien(cursor, bien_data):
@@ -61,7 +78,6 @@ def get_or_create_bien(cursor, bien_data):
     # Campos obligatorios según el modelo Bienes
     required_fields = {
         'Clasificacion_Legal': 'Dominio Privado',  # Valor por defecto
-        'Cantidad': 1,  # Valor por defecto
         'Activo': 1,  # Valor por defecto
         'usuario_id_registro': current_user.id  # Usuario actual
     }

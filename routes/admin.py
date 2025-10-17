@@ -6,7 +6,14 @@ from extensions import db
 from models import User, Role
 from wtforms import StringField, validators, PasswordField
 from flask_admin.contrib.sqla.fields import QuerySelectField
-from decorators import admin_required
+from decorators import admin_required, permission_required
+from datetime import datetime, timedelta
+from flask import render_template, request
+from flask_login import login_required
+from models import ActivityLog, User # Asegúrate de importar tus modelos
+
+from sqlalchemy import or_
+
 
 # Define the blueprint for your custom admin routes.
 admin_bp = Blueprint('admin', __name__, url_prefix='/admin')
@@ -65,3 +72,65 @@ def admin_dashboard():
 @login_required
 def admin_settings():
     return render_template('admin/settings.html')
+
+
+
+# ... (dentro de tu Blueprint de administración) ...
+
+@admin_bp.route('/activity-log')
+@login_required
+@permission_required('admin.view_activity_log') # Un permiso recomendado
+def view_activity_log():
+    """
+    Muestra los logs de actividad con filtros y paginación.
+    """
+    # Obtener el número de página de los argumentos de la URL, por defecto es 1
+    page = request.args.get('page', 1, type=int)
+    
+    # Construir la consulta base, uniendo con User para poder filtrar por nombre
+    query = ActivityLog.query.join(User, User.id == ActivityLog.user_id, isouter=True)
+
+    # --- Aplicar filtros desde los argumentos de la URL ---
+    user_id = request.args.get('user_id')
+    category = request.args.get('category')
+    start_date = request.args.get('start_date')
+    end_date = request.args.get('end_date')
+    search_term = request.args.get('search_term')
+
+    if user_id:
+        query = query.filter(ActivityLog.user_id == user_id)
+    if category:
+        query = query.filter(ActivityLog.category == category)
+    if start_date:
+        query = query.filter(ActivityLog.timestamp >= start_date)
+    if end_date:
+        # Añadimos un día a la fecha final para incluir todos los logs de ese día
+        end_date_dt = datetime.strptime(end_date, '%Y-%m-%d') + timedelta(days=1)
+        query = query.filter(ActivityLog.timestamp < end_date_dt)
+    if search_term:
+        # Búsqueda flexible en acción, detalles o ID del recurso
+        search_like = f"%{search_term}%"
+        query = query.filter(or_(
+            ActivityLog.action.ilike(search_like),
+            ActivityLog.details.ilike(search_like),
+            ActivityLog.resource_id.ilike(search_like)
+        ))
+
+    # --- Obtener datos para los menús desplegables de los filtros ---
+    # Obtener todos los usuarios para el <select>
+    users = User.query.order_by(User.username).all()
+    # Obtener todas las categorías distintas para el <select>
+    categories = db.session.query(ActivityLog.category).distinct().order_by(ActivityLog.category).all()
+
+    # Ordenar por fecha descendente y paginar los resultados
+    logs = query.order_by(ActivityLog.timestamp.desc()).paginate(
+        page=page, per_page=20, error_out=False
+    )
+
+    return render_template(
+        'admin/activity_log.html', 
+        logs=logs,
+        users=users,
+        categories=[c[0] for c in categories if c[0]], # Limpiar la lista de categorías
+        filters=request.args # Pasar los filtros actuales para mantenerlos en el formulario
+    )

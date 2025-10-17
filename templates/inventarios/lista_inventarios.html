@@ -1,60 +1,172 @@
-{# templates/inventarios/lista_inventarios.html #}
-
 {% extends "base.html" %}
 
 {% block title %}Gestión de Inventarios{% endblock %}
 
 {% block content %}
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-
-    <header class="flex justify-between items-center mb-8">
-        <div>
-            <h1 class="text-3xl font-bold text-gray-800">Gestión de Inventarios</h1>
-            <p class="mt-1 text-sm text-gray-500">Vista general de todos los procesos de inventario.</p>
+<div class="min-h-screen bg-gradient-to-br from-gray-50 to-beige-light/20 py-8 px-4">
+    <div class="max-w-7xl mx-auto">
+        
+        <!-- Encabezado -->
+        <div class="bg-white rounded-2xl shadow-xl border border-beige-light overflow-hidden mb-8">
+            <div class="bg-gradient-to-r from-burgundy to-burgundy-dark p-6 text-white">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                    <div class="flex-1">
+                        <h1 class="text-2xl md:text-3xl font-bold">Gestión de Inventarios</h1>
+                        <p class="text-beige-light mt-2">Vista general de todos los procesos de inventario</p>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <div class="w-12 h-12 bg-beige rounded-full flex items-center justify-center shadow-lg">
+                            <i class="fas fa-clipboard-list text-burgundy text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
-        <div>
-            <a href="{{ url_for('inventarios.crear_inventario') }}" class="inline-flex items-center justify-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md shadow-sm hover:bg-blue-700">
-                <svg class="h-5 w-5 mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clip-rule="evenodd" /></svg>
+
+        <!-- Botón de acción -->
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
+            <div>
+                <h2 class="text-xl md:text-2xl font-bold text-burgundy">Inventarios Activos</h2>
+                <p class="text-gray-600 mt-1">Seguimiento y gestión de procesos de inventario</p>
+            </div>
+            <a href="{{ url_for('inventarios.crear_inventario') }}" 
+               class="mt-4 sm:mt-0 bg-gradient-to-r from-burgundy to-burgundy-dark hover:from-burgundy-dark hover:to-burgundy text-white font-bold py-3 px-6 rounded-xl shadow-lg transition-all duration-300 transform hover:scale-105 flex items-center">
+                <i class="fas fa-plus-circle mr-2"></i>
                 Iniciar Nuevo Inventario
             </a>
         </div>
-    </header>
 
-    <div class="bg-white shadow-lg rounded-lg overflow-hidden">
-        <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50">
-                    <tr>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nombre</th>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tipo</th>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Alcance</th>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estatus</th>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha de Inicio</th>
-                        <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
-                    </tr>
-                </thead>
-                <tbody class="bg-white divide-y divide-gray-200">
-                    {% for inventario in inventarios %}
-                    <tr>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ inventario.nombre }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ inventario.tipo }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            <span class="font-semibold">{{ inventario.num_areas }}</span> Áreas / 
-                            <span class="font-semibold">{{ inventario.num_bienes }}</span> Bienes
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            {% if inventario.estatus == 'Planificado' %}<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">{{ inventario.estatus }}</span>{% elif inventario.estatus == 'En Progreso' %}<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">{{ inventario.estatus }}</span>{% elif inventario.estatus == 'En Conciliación' %}<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">{{ inventario.estatus }}</span>{% elif inventario.estatus == 'Finalizado' %}<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">{{ inventario.estatus }}</span>{% elif inventario.estatus == 'Cancelado' %}<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">{{ inventario.estatus }}</span>{% endif %}
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ inventario.fecha_inicio.strftime('%d de %B de %Y') }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
-                            <a href="{{ url_for('inventarios.gestionar_inventario', inventario_id=inventario.id) }}" class="text-indigo-600 hover:text-indigo-900 mr-4">Gestionar</a>
-                            <a href="{{ url_for('inventarios.generar_reporte', inventario_id=inventario.id) }}" class="text-gray-500 hover:text-gray-800">Reporte</a>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+        <!-- Tabla de inventarios -->
+        <div class="bg-white rounded-2xl shadow-lg border border-beige-light overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm text-left text-gray-600">
+                    <thead class="text-xs text-gray-700 uppercase bg-gray-50 border-b border-beige-light">
+                        <tr>
+                            <th scope="col" class="px-6 py-4 font-semibold">Nombre</th>
+                            <th scope="col" class="px-6 py-4 font-semibold">Tipo</th>
+                            <th scope="col" class="px-6 py-4 font-semibold">Alcance</th>
+                            <th scope="col" class="px-6 py-4 font-semibold">Estatus</th>
+                            <th scope="col" class="px-6 py-4 font-semibold">Fecha de Inicio</th>
+                            <th scope="col" class="px-6 py-4 font-semibold text-center">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-beige-light">
+                        {% for inventario in inventarios %}
+                        <tr class="bg-white hover:bg-beige-light/20 transition-colors duration-200">
+                            <!-- Nombre -->
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="flex items-center">
+                                    <i class="fas fa-clipboard-check text-burgundy mr-3 text-lg"></i>
+                                    <div>
+                                        <p class="font-semibold text-gray-900">{{ inventario.nombre }}</p>
+                                    </div>
+                                </div>
+                            </td>
+                            
+                            <!-- Tipo -->
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="text-gray-700">{{ inventario.tipo }}</span>
+                            </td>
+                            
+                            <!-- Alcance -->
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="flex flex-col space-y-1">
+                                    <span class="inline-flex items-center text-sm">
+                                        <i class="fas fa-building text-burgundy mr-2 text-xs"></i>
+                                        <span class="font-semibold text-burgundy">{{ inventario.num_areas }}</span>
+                                        <span class="text-gray-600 ml-1">Áreas</span>
+                                    </span>
+                                    <span class="inline-flex items-center text-sm">
+                                        <i class="fas fa-box text-burgundy mr-2 text-xs"></i>
+                                        <span class="font-semibold text-burgundy">{{ inventario.num_bienes }}</span>
+                                        <span class="text-gray-600 ml-1">Bienes</span>
+                                    </span>
+                                </div>
+                            </td>
+                            
+                            <!-- Estatus -->
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                {% if inventario.estatus == 'Planificado' %}
+                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-gray-100 text-gray-800 border border-gray-300">
+                                        <i class="fas fa-clock mr-1"></i> Planificado
+                                    </span>
+                                {% elif inventario.estatus == 'En Progreso' %}
+                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-blue-100 text-blue-800 border border-blue-300">
+                                        <i class="fas fa-spinner fa-spin mr-1"></i> En Progreso
+                                    </span>
+                                {% elif inventario.estatus == 'En Conciliación' %}
+                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-yellow-100 text-yellow-800 border border-yellow-300">
+                                        <i class="fas fa-balance-scale mr-1"></i> En Conciliación
+                                    </span>
+                                {% elif inventario.estatus == 'Finalizado' %}
+                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-green-100 text-green-800 border border-green-300">
+                                        <i class="fas fa-check-circle mr-1"></i> Finalizado
+                                    </span>
+                                {% elif inventario.estatus == 'Cancelado' %}
+                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-red-100 text-red-800 border border-red-300">
+                                        <i class="fas fa-times-circle mr-1"></i> Cancelado
+                                    </span>
+                                {% endif %}
+                            </td>
+                            
+                            <!-- Fecha de Inicio -->
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="flex items-center text-gray-700">
+                                    <i class="fas fa-calendar-alt text-burgundy mr-2 text-sm"></i>
+                                    <span>{{ inventario.fecha_inicio.strftime('%d/%m/%Y') }}</span>
+                                </div>
+                            </td>
+                            
+                            <!-- Acciones -->
+                            <td class="px-6 py-4 whitespace-nowrap text-center">
+                                <div class="flex items-center justify-center space-x-3">
+                                    <a href="{{ url_for('inventarios.gestionar_inventario', inventario_id=inventario.id) }}" 
+                                       class="inline-flex items-center text-burgundy hover:text-burgundy-dark font-medium text-sm transition-colors duration-200 group">
+                                        <i class="fas fa-cog group-hover:rotate-90 transition-transform duration-300 mr-1"></i>
+                                        Gestionar
+                                    </a>
+                                    <span class="text-gray-300">|</span>
+                                    <a href="{{ url_for('inventarios.generar_reporte', inventario_id=inventario.id) }}" 
+                                       class="inline-flex items-center text-gray-600 hover:text-gray-800 font-medium text-sm transition-colors duration-200 group">
+                                        <i class="fas fa-chart-bar group-hover:scale-110 transition-transform duration-300 mr-1"></i>
+                                        Reporte
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="6" class="text-center text-gray-500 py-8">
+                                <div class="flex flex-col items-center justify-center">
+                                    <i class="fas fa-inbox text-4xl text-gray-300 mb-3"></i>
+                                    <p class="text-lg">No hay inventarios registrados</p>
+                                    <p class="text-sm text-gray-500 mt-1">Comience creando un nuevo inventario</p>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block styles %}
+<style>
+    .bg-burgundy { background-color: #6A2E4D; }
+    .bg-burgundy-dark { background-color: #551E3A; }
+    .text-burgundy { color: #6A2E4D; }
+    .border-burgundy { border-color: #6A2E4D; }
+    
+    .bg-beige { background-color: #BC9B6A; }
+    .bg-beige-light { background-color: #D7C3A0; }
+    .text-beige-light { color: #D7C3A0; }
+    .border-beige { border-color: #BC9B6A; }
+    .border-beige-light { border-color: #D7C3A0; }
+    
+    .from-burgundy { --tw-gradient-from: #6A2E4D; --tw-gradient-to: rgb(106 46 77 / 0); --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to); }
+    .to-burgundy-dark { --tw-gradient-to: #551E3A; }
+</style>
 {% endblock %}

@@ -1,236 +1,399 @@
-{# templates/inventarios/reporte_inventario.html #}
-
 {% extends "base.html" %}
 
 {% block title %}Reporte: {{ inventario.nombre }}{% endblock %}
 
 {% block content %}
-
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-
-    <div class="print:hidden">
-        <div class="flex justify-between items-center mb-6">
-            <div>
-                <h1 class="text-3xl font-bold text-gray-800">Reporte de Conciliación</h1>
-                <p class="text-lg text-gray-600">{{ inventario.nombre }}</p>
-            </div>
-            <div class="flex space-x-2">
-                <a href="{{ url_for('inventarios.gestionar_inventario', inventario_id=inventario.id) }}" class="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">Regresar</a>
-                <button onclick="window.print()" class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">Imprimir</button>
-                <a href="{{ url_for('inventarios.descargar_reporte_pdf', inventario_id=inventario.id) }}" class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-gray-600 hover:bg-gray-700">
-        Descargar PDF
-    </a>
+<div class="min-h-screen bg-gradient-to-br from-gray-50 to-beige-light/20 py-8 px-4">
+    <div class="max-w-7xl mx-auto">
+        
+        <!-- Encabezado Principal -->
+        <div class="bg-white rounded-2xl shadow-xl border border-beige-light overflow-hidden mb-8 print:hidden">
+            <div class="bg-gradient-to-r from-burgundy to-burgundy-dark p-6 text-white">
+                <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
+                    <div class="flex-1">
+                        <h1 class="text-2xl md:text-3xl font-bold">Reporte de Conciliación</h1>
+                        <p class="text-beige-light mt-2">{{ inventario.nombre }}</p>
+                    </div>
+                    <div class="flex flex-wrap gap-3">
+                        <a href="{{ url_for('inventarios.gestionar_inventario', inventario_id=inventario.id) }}" 
+                           class="inline-flex items-center px-4 py-2 border-2 border-beige-light text-beige-light hover:bg-beige-light/10 rounded-xl transition-all duration-200">
+                            <i class="fas fa-arrow-left mr-2"></i>
+                            Regresar
+                        </a>
+                        <button onclick="window.print()" 
+                                class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-semibold rounded-xl shadow-lg transition-all duration-300 transform hover:scale-105">
+                            <i class="fas fa-print mr-2"></i>
+                            Imprimir
+                        </button>
+                        <a href="{{ url_for('inventarios.descargar_reporte_pdf', inventario_id=inventario.id) }}" 
+   target="_blank" rel="noopener noreferrer"
+   class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white font-semibold rounded-xl shadow-lg transition-all duration-300 transform hover:scale-105">
+    <i class="fas fa-eye mr-2"></i>
+    Vista Previa (PDF)
+</a>
+                    </div>
+                </div>
             </div>
         </div>
-        <div class="bg-white p-6 shadow rounded-lg mb-8">
-            <h2 class="text-xl font-semibold text-gray-800 border-b pb-2 mb-4">Información General del Inventario</h2>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6 text-sm">
-                <div>
-                    <dt class="font-medium text-gray-500 mb-2">Áreas y Jefes Involucrados</dt>
-                    <dd class="mt-1 text-gray-900 space-y-2">
-                        {% for area, jefe in area_jefe_map.items() %}
-                        <div class="p-2 bg-gray-50 rounded">
-                            <p class="font-semibold">{{ area }}</p>
-                            <p class="text-gray-600 pl-2">- Jefe: {{ jefe }}</p>
+
+        <!-- Información General -->
+        <div class="bg-white rounded-2xl shadow-lg border border-beige-light overflow-hidden mb-8 print:hidden">
+            <div class="p-6">
+                <h2 class="text-xl font-bold text-burgundy mb-4 flex items-center">
+                    <i class="fas fa-info-circle mr-3"></i>
+                    Información General del Inventario
+                </h2>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-700 mb-3 flex items-center">
+                            <i class="fas fa-building text-burgundy mr-2"></i>
+                            Áreas y Jefes Involucrados
+                        </h3>
+                        <div class="space-y-3">
+                            {% for area, jefe in area_jefe_map.items() %}
+                            <div class="bg-beige-light/20 p-4 rounded-xl border border-beige-light">
+                                <p class="font-bold text-gray-800">{{ area }}</p>
+                                <p class="text-gray-600 text-sm mt-1 flex items-center">
+                                    <i class="fas fa-user-tie text-burgundy mr-2"></i>
+                                    Jefe: {{ jefe }}
+                                </p>
+                            </div>
+                            {% else %}
+                            <p class="text-gray-500 text-center py-4">No hay áreas asignadas.</p>
+                            {% endfor %}
                         </div>
-                        {% else %}<p>No hay áreas asignadas.</p>{% endfor %}
-                    </dd>
-                </div>
-                <div>
-                    <dt class="font-medium text-gray-500 mb-2">Personal de la Brigada</dt>
-                    <dd class="mt-1 text-gray-900">
-                        <ul class="list-disc list-inside">
-                        {% for miembro in brigada %}<li>{{ miembro }}</li>{% else %}<li>No hay personal asignado.</li>{% endfor %}
-                        </ul>
-                    </dd>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-700 mb-3 flex items-center">
+                            <i class="fas fa-users text-burgundy mr-2"></i>
+                            Personal de la Brigada
+                        </h3>
+                        <div class="bg-beige-light/20 p-4 rounded-xl border border-beige-light">
+                            <ul class="space-y-2">
+                                {% for miembro in brigada %}
+                                <li class="flex items-center text-gray-700">
+                                    <i class="fas fa-user-check text-burgundy mr-3 text-sm"></i>
+                                    {{ miembro }}
+                                </li>
+                                {% else %}
+                                <li class="text-gray-500 text-center">No hay personal asignado.</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
-        <div class="grid grid-cols-2 md:grid-cols-5 gap-6 mb-8">
-             <div class="bg-white p-5 shadow rounded-lg"><dt class="text-sm font-medium text-gray-500 truncate">Bienes Registrados</dt><dd class="mt-1 text-3xl font-semibold text-gray-900">{{ total_registrado }}</dd></div>
-             <div class="bg-red-50 p-5 shadow rounded-lg"><dt class="text-sm font-medium text-red-700 truncate">Faltantes</dt><dd class="mt-1 text-3xl font-semibold text-red-900">{{ (faltantes_por_area.values()|map('length')|sum) }}</dd></div>
-             <div class="bg-blue-50 p-5 shadow rounded-lg"><dt class="text-sm font-medium text-blue-700 truncate">Sobrantes</dt><dd class="mt-1 text-3xl font-semibold text-blue-900">{{ bienes_sobrantes|length }}</dd></div>
-             <div class="bg-yellow-50 p-5 shadow rounded-lg"><dt class="text-sm font-medium text-yellow-700 truncate">Con Discrepancias</dt><dd class="mt-1 text-3xl font-semibold text-yellow-900">{{ (discrepancias_por_area.values()|map('length')|sum) }}</dd></div>
-             <div class="bg-green-50 p-5 shadow rounded-lg">
-                <dt class="text-sm font-medium text-green-700 truncate">Correctos</dt>
-                <dd class="mt-1 text-3xl font-semibold text-green-900">{{ (correctos_por_area.values()|map('length')|sum) }}</dd></div>
+
+        <!-- Estadísticas Rápidas -->
+        <div class="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-8 print:hidden">
+            <div class="bg-white p-5 rounded-2xl shadow-lg border border-beige-light text-center">
+                <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                    <i class="fas fa-boxes text-blue-600 text-xl"></i>
+                </div>
+                <dt class="text-sm font-semibold text-gray-600">Bienes Registrados</dt>
+                <dd class="mt-1 text-2xl font-bold text-gray-900">{{ total_registrado }}</dd>
+            </div>
+            <div class="bg-white p-5 rounded-2xl shadow-lg border border-red-200 text-center">
+                <div class="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                    <i class="fas fa-times-circle text-red-600 text-xl"></i>
+                </div>
+                <dt class="text-sm font-semibold text-red-600">Faltantes</dt>
+                <dd class="mt-1 text-2xl font-bold text-red-900">{{ (faltantes_por_area.values()|map('length')|sum) }}</dd>
+            </div>
+            <div class="bg-white p-5 rounded-2xl shadow-lg border border-blue-200 text-center">
+                <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                    <i class="fas fa-plus-circle text-blue-600 text-xl"></i>
+                </div>
+                <dt class="text-sm font-semibold text-blue-600">Sobrantes</dt>
+                <dd class="mt-1 text-2xl font-bold text-blue-900">{{ bienes_sobrantes|length }}</dd>
+            </div>
+            <div class="bg-white p-5 rounded-2xl shadow-lg border border-yellow-200 text-center">
+                <div class="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                    <i class="fas fa-exclamation-triangle text-yellow-600 text-xl"></i>
+                </div>
+                <dt class="text-sm font-semibold text-yellow-600">Con Discrepancias</dt>
+                <dd class="mt-1 text-2xl font-bold text-yellow-900">{{ (discrepancias_por_area.values()|map('length')|sum) }}</dd>
+            </div>
+            <div class="bg-white p-5 rounded-2xl shadow-lg border border-green-200 text-center">
+                <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                    <i class="fas fa-check-circle text-green-600 text-xl"></i>
+                </div>
+                <dt class="text-sm font-semibold text-green-600">Correctos</dt>
+                <dd class="mt-1 text-2xl font-bold text-green-900">{{ (correctos_por_area.values()|map('length')|sum) }}</dd>
+            </div>
+        </div>
+
+        <!-- Secciones del Reporte -->
+        <div class="space-y-6">
+            
+            <!-- Bienes Faltantes -->
+            <details class="bg-white rounded-2xl shadow-lg border border-red-200 overflow-hidden" open>
+                <summary class="p-6 cursor-pointer font-bold text-red-800 bg-red-50 hover:bg-red-100 transition-colors duration-200 flex items-center">
+                    <i class="fas fa-times-circle mr-3 text-lg"></i>
+                    Bienes Faltantes ({{ (faltantes_por_area.values()|map('length')|sum) }})
+                </summary>
+                <div class="border-t border-red-200">
+                    {% for nombre_area, bienes_en_area in faltantes_por_area.items() %}
+                    <div class="p-4 border-b bg-red-50/30">
+                        <h4 class="font-bold text-gray-700 flex items-center">
+                            <i class="fas fa-building text-red-600 mr-2"></i>
+                            Área: {{ nombre_area }}
+                        </h4>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm text-left text-gray-600">
+                            <thead class="text-xs text-gray-700 uppercase bg-gray-50 border-b border-beige-light">
+                                <tr>
+                                    <th class="px-6 py-4 font-semibold">No. Inventario</th>
+                                    <th class="px-6 py-4 font-semibold">Descripción</th>
+                                    <th class="px-6 py-4 font-semibold">Verificado por</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-beige-light">
+                                {% for bien in bienes_en_area %}
+                                <tr class="bg-white hover:bg-red-50/20 transition-colors duration-200">
+                                    <td class="px-6 py-4 font-mono text-gray-800 font-semibold">{{ bien.No_Inventario }}</td>
+                                    <td class="px-6 py-4 text-gray-700">{{ bien.Descripcion_Del_Bien }}</td>
+                                    <td class="px-6 py-4 text-gray-600">{{ bien.nombre_verificador or 'No aplica' }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="p-8 text-center">
+                        <i class="fas fa-check-circle text-3xl text-green-500 mb-3"></i>
+                        <p class="text-gray-500">No hay bienes faltantes.</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </details>
+            
+            <!-- Bienes Sobrantes -->
+            <details class="bg-white rounded-2xl shadow-lg border border-blue-200 overflow-hidden" open>
+                <summary class="p-6 cursor-pointer font-bold text-blue-800 bg-blue-50 hover:bg-blue-100 transition-colors duration-200 flex items-center">
+                    <i class="fas fa-plus-circle mr-3 text-lg"></i>
+                    Bienes Sobrantes ({{ bienes_sobrantes|length }})
+                </summary>
+                <div class="border-t border-blue-200 overflow-x-auto">
+                    <table class="w-full text-sm text-left text-gray-600">
+                        <thead class="text-xs text-gray-700 uppercase bg-gray-50 border-b border-beige-light">
+                            <tr>
+                                <th class="px-6 py-4 font-semibold">Descripción Capturada</th>
+                                <th class="px-6 py-4 font-semibold">Marca/Modelo/Serie</th>
+                                <th class="px-6 py-4 font-semibold">Capturado por</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-beige-light">
+                            {% for bien in bienes_sobrantes %}
+                            <tr class="bg-white hover:bg-blue-50/20 transition-colors duration-200">
+                                <td class="px-6 py-4 text-gray-700">{{ bien.descripcion_bien }}</td>
+                                <td class="px-6 py-4 text-gray-600">
+                                    {{ bien.marca or 'N/A' }} / {{ bien.modelo or 'N/A' }} / {{ bien.numero_serie or 'N/A' }}
+                                </td>
+                                <td class="px-6 py-4 text-gray-600">{{ bien.nombre_capturador or 'N/A' }}</td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="3" class="text-center p-8">
+                                    <i class="fas fa-check-circle text-3xl text-green-500 mb-3"></i>
+                                    <p class="text-gray-500">No se registraron bienes sobrantes.</p>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </details>
+            
+            <!-- Bienes con Discrepancias -->
+            <details class="bg-white rounded-2xl shadow-lg border border-yellow-200 overflow-hidden" open>
+                <summary class="p-6 cursor-pointer font-bold text-yellow-800 bg-yellow-50 hover:bg-yellow-100 transition-colors duration-200 flex items-center">
+                    <i class="fas fa-exclamation-triangle mr-3 text-lg"></i>
+                    Bienes con Discrepancias ({{ (discrepancias_por_area.values()|map('length')|sum) }})
+                </summary>
+                <div class="border-t border-yellow-200">
+                    {% for nombre_area, bienes_en_area in discrepancias_por_area.items() %}
+                    <div class="p-4 border-b bg-yellow-50/30">
+                        <h4 class="font-bold text-gray-700 flex items-center">
+                            <i class="fas fa-building text-yellow-600 mr-2"></i>
+                            Área: {{ nombre_area }}
+                        </h4>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm text-left text-gray-600">
+                            <thead class="text-xs text-gray-700 uppercase bg-gray-50 border-b border-beige-light">
+                                <tr>
+                                    <th class="px-6 py-4 font-semibold">No. Inventario</th>
+                                    <th class="px-6 py-4 font-semibold">Descripción</th>
+                                    <th class="px-6 py-4 font-semibold">Observación</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-beige-light">
+                                {% for bien in bienes_en_area %}
+                                <tr class="bg-white hover:bg-yellow-50/20 transition-colors duration-200">
+                                    <td class="px-6 py-4 font-mono text-gray-800 font-semibold align-top">{{ bien.No_Inventario }}</td>
+                                    <td class="px-6 py-4 text-gray-700 align-top">{{ bien.Descripcion_Del_Bien }}</td>
+                                    <td class="px-6 py-4 text-gray-600 align-top">
+                                        <div class="space-y-2">
+                                            <p><strong class="text-gray-700">Condición:</strong> {{ bien.condicion_fisica_reportada or 'N/A' }}</p>
+                                            <p><strong class="text-gray-700">Observaciones:</strong> {{ bien.observaciones or 'Ninguna' }}</p>
+                                            <p><strong class="text-gray-700">Verificado por:</strong> {{ bien.nombre_verificador or 'N/A' }}</p>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="p-8 text-center">
+                        <i class="fas fa-check-circle text-3xl text-green-500 mb-3"></i>
+                        <p class="text-gray-500">No hay bienes con discrepancias.</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </details>
+
+            <!-- Bienes Localizados Correctamente -->
+            <details class="bg-white rounded-2xl shadow-lg border border-green-200 overflow-hidden">
+                <summary class="p-6 cursor-pointer font-bold text-green-800 bg-green-50 hover:bg-green-100 transition-colors duration-200 flex items-center">
+                    <i class="fas fa-check-circle mr-3 text-lg"></i>
+                    Bienes Localizados Correctamente ({{ (correctos_por_area.values()|map('length')|sum) }})
+                </summary>
+                <div class="border-t border-green-200">
+                    {% for nombre_area, bienes_en_area in correctos_por_area.items() %}
+                    <div class="p-4 border-b bg-green-50/30">
+                        <h4 class="font-bold text-gray-700 flex items-center">
+                            <i class="fas fa-building text-green-600 mr-2"></i>
+                            Área: {{ nombre_area }}
+                        </h4>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm text-left text-gray-600">
+                            <thead class="text-xs text-gray-700 uppercase bg-gray-50 border-b border-beige-light">
+                                <tr>
+                                    <th class="px-6 py-4 font-semibold">No. Inventario</th>
+                                    <th class="px-6 py-4 font-semibold">Descripción</th>
+                                    <th class="px-6 py-4 font-semibold">Verificado por</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-beige-light">
+                                {% for bien in bienes_en_area %}
+                                <tr class="bg-white hover:bg-green-50/20 transition-colors duration-200">
+                                    <td class="px-6 py-4 font-mono text-gray-800 font-semibold">{{ bien.No_Inventario }}</td>
+                                    <td class="px-6 py-4 text-gray-700">{{ bien.Descripcion_Del_Bien }}</td>
+                                    <td class="px-6 py-4 text-gray-600">{{ bien.nombre_verificador or 'N/A' }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="p-8 text-center">
+                        <i class="fas fa-info-circle text-3xl text-blue-500 mb-3"></i>
+                        <p class="text-gray-500">No se encontraron bienes sin incidencias.</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </details>
+
+            <!-- Bitácora de Verificación -->
+            <details class="bg-white rounded-2xl shadow-lg border border-beige-light overflow-hidden">
+                <summary class="p-6 cursor-pointer font-bold text-gray-800 bg-gray-50 hover:bg-gray-100 transition-colors duration-200 flex items-center">
+                    <i class="fas fa-clipboard-list mr-3 text-lg"></i>
+                    Bitácora de Verificación de Bienes ({{ bienes_revisados|length }})
+                </summary>
+                <div class="border-t border-beige-light overflow-x-auto">
+                    <table class="w-full text-sm text-left text-gray-600">
+                        <thead class="text-xs text-gray-700 uppercase bg-gray-50 border-b border-beige-light">
+                            <tr>
+                                <th class="px-6 py-4 font-semibold">No. Inventario</th>
+                                <th class="px-6 py-4 font-semibold">Descripción</th>
+                                <th class="px-6 py-4 font-semibold">Área</th>
+                                <th class="px-6 py-4 font-semibold">Resultado de la Revisión</th>
+                                <th class="px-6 py-4 font-semibold">Imágenes</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-beige-light">
+                            {% for bien in bienes_revisados %}
+                            <tr class="bg-white hover:bg-beige-light/10 transition-colors duration-200">
+                                <td class="px-6 py-4 font-mono text-gray-800 font-semibold align-top">{{ bien.No_Inventario }}</td>
+                                <td class="px-6 py-4 text-gray-700 align-top">{{ bien.Descripcion_Del_Bien }}</td>
+                                <td class="px-6 py-4 text-gray-600 align-top">{{ bien.nombre_area or 'N/A' }}</td>
+                                <td class="px-6 py-4 text-gray-600 align-top">
+                                    <div class="space-y-2">
+                                        <p>
+                                            <strong class="text-gray-700">Estatus:</strong> 
+                                            {% if bien.estatus_hallazgo == 'Localizado' %}
+                                                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-bold bg-green-100 text-green-800 border border-green-300">
+                                                    <i class="fas fa-check-circle mr-1"></i> Localizado
+                                                </span>
+                                            {% elif bien.estatus_hallazgo == 'Localizado con Discrepancia' %}
+                                                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-bold bg-yellow-100 text-yellow-800 border border-yellow-300">
+                                                    <i class="fas fa-exclamation-triangle mr-1"></i> Con Discrepancia
+                                                </span>
+                                            {% elif bien.estatus_hallazgo == 'No Localizado' %}
+                                                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-bold bg-red-100 text-red-800 border border-red-300">
+                                                    <i class="fas fa-times-circle mr-1"></i> No Localizado
+                                                </span>
+                                            {% endif %}
+                                        </p>
+                                        <p><strong class="text-gray-700">Condición:</strong> {{ bien.condicion_fisica_reportada or 'N/A' }}</p>
+                                        <p><strong class="text-gray-700">Observaciones:</strong> <span class="text-gray-600">{{ bien.observaciones or 'Ninguna' }}</span></p>
+                                        <p><strong class="text-gray-700">Verificado por:</strong> <span class="font-semibold text-gray-800">{{ bien.nombre_verificador or 'N/A' }}</span></p>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 align-top">
+                                    <div class="flex flex-wrap gap-2">
+                                        {% for foto_path in fotos_por_detalle.get(bien.id, []) %}
+                                            <a href="{{ url_for('bienes.serve_uploaded_file', filename=foto_path) }}" target="_blank" class="group">
+                                                <img src="{{ url_for('bienes.serve_uploaded_file', filename=foto_path) }}" 
+                                                     class="h-16 w-16 object-cover rounded-lg border-2 border-beige-light group-hover:border-burgundy transition-all duration-200">
+                                            </a>
+                                        {% else %}
+                                            <span class="text-gray-400 text-xs flex items-center">
+                                                <i class="fas fa-image mr-1"></i> Sin imágenes
+                                            </span>
+                                        {% endfor %}
+                                    </div>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="5" class="text-center p-8">
+                                    <i class="fas fa-inbox text-3xl text-gray-300 mb-3"></i>
+                                    <p class="text-gray-500">Aún no se ha revisado ningún bien.</p>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </details>
         </div>
     </div>
-<div class="space-y-6">
-        
-    <details class="bg-white shadow-lg rounded-lg overflow-hidden" open>
-        <summary class="p-4 cursor-pointer font-medium text-red-800 bg-red-50">Bienes Faltantes</summary>
-        <div class="border-t">
-        {% for nombre_area, bienes_en_area in faltantes_por_area.items() %}
-            <div class="p-4 border-b bg-red-50/50"><h4 class="font-semibold text-gray-700">Área: {{ nombre_area }}</h4></div>
-            <div class="overflow-x-auto">
-                <table class="min-w-full">
-                    <thead class="bg-gray-50">
-                        <tr>
-                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500">No. Inventario</th>
-                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500">Descripción</th>
-                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500">Verificado por</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-gray-200">
-                    {% for bien in bienes_en_area %}
-                        <tr>
-                            <td class="px-4 py-2 text-sm font-mono">{{ bien.No_Inventario }}</td>
-                            <td class="px-4 py-2 text-sm">{{ bien.Descripcion_Del_Bien }}</td>
-                            <td class="px-4 py-2 text-sm">{{ bien.nombre_verificador or 'No aplica' }}</td>
-                        </tr>
-                    {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        {% else %}
-            <p class="p-4 text-center text-sm text-gray-500">No hay bienes faltantes.</p>
-        {% endfor %}
-        </div>
-    </details>
-    
-    <details class="bg-white shadow-lg rounded-lg overflow-hidden" open>
-        <summary class="p-4 cursor-pointer font-medium text-blue-800 bg-blue-50">Bienes Sobrantes</summary>
-        <div class="border-t overflow-x-auto">
-            <table class="min-w-full">
-                <thead class="bg-gray-50">
-                    <tr>
-                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500">Descripción Capturada</th>
-                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500">Marca/Modelo/Serie</th>
-                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500">Capturado por</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-200">
-                {% for bien in bienes_sobrantes %}
-                    <tr>
-                        <td class="px-4 py-2 text-sm">{{ bien.descripcion_bien }}</td>
-                        <td class="px-4 py-2 text-sm">{{ bien.marca or 'N/A' }} / {{ bien.modelo or 'N/A' }} / {{ bien.numero_serie or 'N/A' }}</td>
-                        <td class="px-4 py-2 text-sm">{{ bien.nombre_capturador or 'N/A' }}</td>
-                    </tr>
-                {% else %}
-                    <tr><td colspan="3" class="text-center p-4 text-sm text-gray-500">No se registraron bienes sobrantes.</td></tr>
-                {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    </details>
-    
-    <details class="bg-white shadow-lg rounded-lg overflow-hidden" open>
-        <summary class="p-4 cursor-pointer font-medium text-yellow-800 bg-yellow-50">Bienes con Discrepancias</summary>
-        <div class="border-t">
-        {% for nombre_area, bienes_en_area in discrepancias_por_area.items() %}
-            <div class="p-4 border-b bg-yellow-50/50"><h4 class="font-semibold text-gray-700">Área: {{ nombre_area }}</h4></div>
-            <div class="overflow-x-auto">
-                <table class="min-w-full">
-                    <thead class="bg-gray-50">
-                        <tr>
-                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500">No. Inventario</th>
-                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500">Descripción</th>
-                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500">Observación</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-gray-200">
-                    {% for bien in bienes_en_area %}
-                        <tr>
-                            <td class="px-4 py-2 text-sm font-mono align-top">{{ bien.No_Inventario }}</td>
-                            <td class="px-4 py-2 text-sm align-top">{{ bien.Descripcion_Del_Bien }}</td>
-                            <td class="px-4 py-2 text-sm align-top">
-                                <p><strong>Condición:</strong> {{ bien.condicion_fisica_reportada or 'N/A' }}</p>
-                                <p><strong>Obs:</strong> {{ bien.observaciones or 'Ninguna' }}</p>
-                                <p><strong>Verificado por:</strong> {{ bien.nombre_verificador or 'N/A' }}</p>
-                            </td>
-                        </tr>
-                    {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        {% else %}
-            <p class="p-4 text-center text-sm text-gray-500">No hay bienes con discrepancias.</p>
-        {% endfor %}
-        </div>
-    </details>
-
-    <details class="bg-white shadow-lg rounded-lg overflow-hidden">
-        <summary class="p-4 cursor-pointer font-medium text-gray-700">Bienes Localizados Correctamente</summary>
-        <div class="border-t">
-        {% for nombre_area, bienes_en_area in correctos_por_area.items() %}
-            <div class="p-4 border-b"><h4 class="font-semibold text-gray-700">Área: {{ nombre_area }}</h4></div>
-            <div class="overflow-x-auto">
-                <table class="min-w-full">
-                    <thead class="bg-gray-50">
-                        <tr>
-                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500">No. Inventario</th>
-                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500">Descripción</th>
-                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500">Verificado por</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-gray-200">
-                    {% for bien in bienes_en_area %}
-                        <tr>
-                            <td class="px-4 py-2 text-sm font-mono">{{ bien.No_Inventario }}</td>
-                            <td class="px-4 py-2 text-sm">{{ bien.Descripcion_Del_Bien }}</td>
-                            <td class="px-4 py-2 text-sm">{{ bien.nombre_verificador or 'N/A' }}</td>
-                        </tr>
-                    {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        {% else %}
-            <p class="p-4 text-center text-sm text-gray-500">No se encontraron bienes sin incidencias.</p>
-        {% endfor %}
-        </div>
-    </details>
-
-    <details class="bg-white shadow-lg rounded-lg overflow-hidden">
-        <summary class="p-4 cursor-pointer font-medium text-gray-800">Bitácora de Verificación de Bienes ({{ bienes_revisados|length }})</summary>
-        <div class="border-t overflow-x-auto">
-            <table class="min-w-full">
-                <thead class="bg-gray-50">
-                    <tr>
-                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500">No. Inventario</th>
-                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500">Descripción</th>
-                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500">Área</th>
-                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500">Resultado de la Revisión</th>
-                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500">Imágenes</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-200">
-                {% for bien in bienes_revisados %}
-                    <tr>
-                        <td class="px-4 py-3 text-sm font-mono align-top">{{ bien.No_Inventario }}</td>
-                        <td class="px-4 py-3 text-sm align-top">{{ bien.Descripcion_Del_Bien }}</td>
-                        <td class="px-4 py-3 text-sm align-top">{{ bien.nombre_area or 'N/A' }}</td>
-                        <td class="px-4 py-3 text-sm align-top">
-                            <p><strong>Estatus:</strong> {% if bien.estatus_hallazgo == 'Localizado' %}<span class="font-medium text-green-600">Localizado</span>{% elif bien.estatus_hallazgo == 'Localizado con Discrepancia' %}<span class="font-medium text-yellow-600">Con Discrepancia</span>{% elif bien.estatus_hallazgo == 'No Localizado' %}<span class="font-medium text-red-600">No Localizado</span> {% endif %} </p>
-                            <p class="mt-1"><strong>Condición:</strong> {{ bien.condicion_fisica_reportada or 'N/A' }}</p>
-                            <p class="mt-1"><strong>Obs:</strong> <span class="text-gray-600">{{ bien.observaciones or 'Ninguna' }}</span></p>
-                            <p class="mt-1"><strong>Verificado por:</strong> <span class="font-medium text-gray-800">{{ bien.nombre_verificador or 'N/A' }}</span></p>
-                        </td>
-                        <td class="px-4 py-3 text-sm align-top">
-                            <div class="flex flex-wrap gap-2">
-                            {% for foto_path in fotos_por_detalle.get(bien.id, []) %}
-                                <a href="{{ url_for('bienes.serve_uploaded_file', filename=foto_path) }}" target="_blank">
-                                    <img src="{{ url_for('bienes.serve_uploaded_file', filename=foto_path) }}" class="h-16 w-16 object-cover rounded hover:opacity-75">
-                                </a>
-                            {% else %}
-                                <span class="text-gray-400 text-xs">Sin imágenes</span>
-                            {% endfor %}
-                            </div>
-                        </td>
-                    </tr>
-                {% else %}
-                    <tr>
-                        <td colspan="5" class="text-center p-4 text-sm text-gray-500">Aún no se ha revisado ningún bien.</td>
-                    </tr>
-                {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    </details>
 </div>
 
-</div>
-
-<style> @media print { body { background-color: white; } .print\:hidden { display: none; } details { page-break-inside: avoid; } } </style>
-
+<style>
+    @media print {
+        body { background-color: white; }
+        .print\:hidden { display: none; }
+        details { page-break-inside: avoid; }
+        .bg-beige-light\/20 { background-color: transparent; }
+        .border-beige-light { border-color: #D7C3A0; }
+    }
+    
+    .bg-burgundy { background-color: #6A2E4D; }
+    .bg-burgundy-dark { background-color: #551E3A; }
+    .text-burgundy { color: #6A2E4D; }
+    .border-burgundy { border-color: #6A2E4D; }
+    
+    .bg-beige { background-color: #BC9B6A; }
+    .bg-beige-light { background-color: #D7C3A0; }
+    .text-beige-light { color: #D7C3A0; }
+    .border-beige { border-color: #BC9B6A; }
+    .border-beige-light { border-color: #D7C3A0; }
+</style>
 {% endblock %}
