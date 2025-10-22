@@ -146,6 +146,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const form = document.getElementById('documentoForm');
     const dropZone = document.getElementById('dropZone');
     
+    const fileLabel = document.querySelector('label[for="archivos_adjuntos"]');
+
     let selectedFiles = [];
 
     // Manejar selección de archivos
@@ -178,6 +180,10 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log(`Archivos añadidos por drag & drop. Total ahora: ${selectedFiles.length}`, selectedFiles);
         
         renderPreviews();
+    });
+
+    fileLabel.addEventListener('click', (e) => {
+        e.stopPropagation();
     });
 
     function renderPreviews() {

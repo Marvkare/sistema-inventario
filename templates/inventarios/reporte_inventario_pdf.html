@@ -20,18 +20,40 @@
         padding: 20px; 
         background-color: #fff; 
     }
-    .header { 
-        display: flex; 
-        justify-content: space-between; 
-        align-items: center; 
-        margin-bottom: 20px; 
-        text-align: center; 
-    }
-    .header-text h1 { 
-        margin: 0; 
-        color: #000000; 
-        font-size: 1.2em; 
-    }
+
+    .header {
+    display: table;          /* 1. El contenedor principal se comporta como una tabla */
+    width: 100%;             /* La "tabla" ocupa todo el ancho */
+    table-layout: fixed;     /* Las columnas tendrán un ancho fijo y predecible */
+    margin-bottom: 20px;
+}
+
+/* 2. Le decimos a TODOS los hijos directos del header que se comporten como celdas */
+.header > * {
+    display: table-cell;     /* Se comportan como <td> */
+    vertical-align: middle;  /* Todo el contenido se alinea verticalmente al centro */
+    text-align: center;      /* El contenido de cada "celda" se centra horizontalmente */
+}
+
+/* 3. Definimos los anchos de cada "celda" para un control perfecto */
+.header .logo-izquierdo {
+    width: 100%;
+    text-align: left; /* Alineamos la imagen a la izquierda dentro de su celda */
+}
+
+.header .header-text {
+    width: 50%; /* La celda del texto ocupa el espacio central */
+}
+
+.header .logo-derecho {
+    width: 100%;
+    text-align: right; /* Alineamos la imagen a la derecha dentro de su celda */
+}
+
+/* Estilos para el texto dentro del header (sin cambios) */
+.header-text h1, .header-text h2 {
+    margin: 0;
+}
     .title { 
         text-align: center; 
         font-weight: bold; 
@@ -183,6 +205,7 @@
         flex-wrap: wrap; 
         gap: 5px; 
         margin-top: 5px; 
+        max-width: 160px;
     }
     .thumbnail { 
         width: 50px; 
@@ -252,14 +275,22 @@
 <body>
 
     <div class="container">
-        <div class="header">
-            <img src="{{ url_for('static', filename='./images/atitalaquia_logo.jpg') }}" alt="Logo Atitalaquia" style="height: 60px;">
-            <div class="header-text">
-                <h1>MUNICIPIO DE ATITALAQUIA, HGO.</h1>
-                <h2>SISTEMA DE INVENTARIOS</h2>
-            </div>
-            <img src="{{ url_for('static', filename='./images/image_e8b1f6.png') }}" alt="Logo Hidalgo" style="height: 100px;">
-        </div>
+      <div class="header">
+    <img src="{{ url_for('static', filename='./images/atitalaquia_logo.jpg') }}" 
+         alt="Logo Atitalaquia" 
+         style="height: 60px;" 
+         class="logo-izquierdo">
+
+    <div class="header-text">
+        <h1>MUNICIPIO DE ATITALAQUIA, HGO.</h1>
+        <h2>SISTEMA DE INVENTARIOS</h2>
+    </div>
+    
+    <img src="{{ url_for('static', filename='./images/image_e8b1f6.png') }}" 
+         alt="Logo Hidalgo" 
+         style="height: 100px;" 
+         class="logo-derecho">
+</div>
 
         <div class="title">
             <i class="fas fa-clipboard-list icon"></i> REPORTE DE CONCILIACIÓN DE INVENTARIO
@@ -289,7 +320,7 @@
             <div class="label"><i class="fas fa-users icon"></i> BRIGADA DE TRABAJO</div>
             <div class="value">
                 {% for miembro in brigada %}
-                    {{ miembro }}{% if not loop.last %}, {% endif %}
+                    {{ miembro.full_name }}{% if not loop.last %}, {% endif %}
                 {% else %}
                     No hay personal asignado
                 {% endfor %}
@@ -522,7 +553,7 @@
         <!-- Pie de página -->
         <div class="details-grid-full-width" style="margin-top: 30px; text-align: center; font-size: 0.8em; color: #666;">
             <div class="value">
-                Reporte generado el {{ fecha_generacion.strftime('%d/%m/%Y a las %H:%M') }} | Sistema de Inventarios - Atitalaquia Se Transforma 2024-2027
+                Reporte generado el {{ fecha_generacion.strftime('%d/%m/%Y a las %H:%M') }} | Sistema de Inventarios - Atitalaquia Se Transforma 
             </div>
         </div>
     </div>

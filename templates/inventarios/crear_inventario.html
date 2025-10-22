@@ -56,6 +56,16 @@
                                     <option {% if form_data.tipo == 'Preventivo' %}selected{% endif %}>Preventivo</option>
                                 </select>
                             </div>
+                            <div class="mt-6">
+                                <label for="Tipo_De_Resguardo" class="block text-sm font-semibold text-gray-700 mb-2 flex items-center">
+                                    <i class="fas fa-shield-alt text-burgundy mr-2 text-xs"></i>
+                                    Tipo de Bienes a Inventariar <span class="text-red-600 ml-1">*</span>
+                                </label>
+                                <select id="Tipo_De_Resguardo" name="Tipo_De_Resguardo" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-burgundy/50 focus:border-burgundy transition-all duration-200 bg-white">
+                                    <option value="0" {% if form_data.Tipo_De_Resguardo == '0' %}selected{% endif %}>Resguardo</option>
+                                    <option value="1" {% if form_data.Tipo_De_Resguardo == '1' %}selected{% endif %}>Sujeto a Control</option>
+                                </select>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -69,36 +79,40 @@
                         </h2>
                         <p class="text-gray-600 mb-6">Seleccione las áreas que serán incluidas en este levantamiento</p>
                         
-                        <fieldset>
-                            <legend class="sr-only">Áreas</legend>
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                {% for area in areas %}
-                                <div class="relative bg-beige-light/20 p-4 rounded-xl border-2 border-beige-light hover:border-burgundy/50 transition-all duration-200 cursor-pointer">
-                                    <div class="flex items-start space-x-3">
-                                        <div class="flex h-5 items-center mt-1">
-                                            <input id="area-{{ area.id }}" name="area_ids" value="{{ area.id }}" type="checkbox"
-                                                   class="h-4 w-4 rounded border-gray-300 text-burgundy focus:ring-burgundy/50">
-                                        </div>
-                                        <div class="flex-1">
-                                            <label for="area-{{ area.id }}" class="block font-bold text-gray-800 cursor-pointer text-sm">
-                                                {{ area.nombre }}
-                                            </label>
-                                            <div class="mt-2 space-y-1 text-xs text-gray-600">
-                                                <p class="flex items-center">
-                                                    <i class="fas fa-user-tie text-burgundy mr-2"></i>
-                                                    Jefe de Área: <span class="font-medium ml-1">{{ area.jefe_de_area or 'No asignado' }}</span>
-                                                </p>
-                                                <p class="flex items-center">
-                                                    <i class="fas fa-boxes text-burgundy mr-2"></i>
-                                                    Bienes a verificar: <span class="font-bold text-burgundy ml-1">{{ area.num_bienes }}</span>
-                                                </p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                {% endfor %}
-                            </div>
-                        </fieldset>
+<fieldset>
+    <legend class="sr-only">Áreas</legend>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {% for area in areas %}
+        <div class="relative bg-beige-light/20 p-4 rounded-xl border-2 border-beige-light hover:border-burgundy/50 transition-all duration-200 cursor-pointer area-card"
+             data-bienes-normal="{{ area.num_bienes_normal }}"
+             data-bienes-control="{{ area.num_bienes_control }}">
+            
+            <div class="flex items-start space-x-3">
+                <div class="flex h-5 items-center mt-1">
+                    <input id="area-{{ area.id }}" name="area_ids" value="{{ area.id }}" type="checkbox"
+                           class="h-4 w-4 rounded border-gray-300 text-burgundy focus:ring-burgundy/50">
+                </div>
+                <div class="flex-1">
+                    <label for="area-{{ area.id }}" class="block font-bold text-gray-800 cursor-pointer text-sm">
+                        {{ area.nombre }}
+                    </label>
+                    <div class="mt-2 space-y-1 text-xs text-gray-600">
+                        <p class="flex items-center">
+                            <i class="fas fa-user-tie text-burgundy mr-2"></i>
+                            Jefe de Área: <span class="font-medium ml-1">{{ area.jefe_de_area or 'No asignado' }}</span>
+                        </p>
+                        <p class="flex items-center">
+                            <i class="fas fa-boxes text-burgundy mr-2"></i>
+                            Bienes a verificar: 
+                            <span class="font-bold text-burgundy ml-1 bienes-count">{{ area.num_bienes_normal }}</span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</fieldset>
                     </div>
                 </div>
                 
@@ -173,4 +187,49 @@
     .from-burgundy { --tw-gradient-from: #6A2E4D; --tw-gradient-to: rgb(106 46 77 / 0); --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to); }
     .to-burgundy-dark { --tw-gradient-to: #551E3A; }
 </style>
+{% endblock %}
+
+
+{% block scripts %}
+<script>
+    // Esperamos a que todo el contenido de la página se haya cargado
+    document.addEventListener('DOMContentLoaded', function () {
+        
+        // 1. Seleccionamos los elementos con los que vamos a trabajar
+        const tipoResguardoSelect = document.getElementById('Tipo_De_Resguardo');
+        const areaCards = document.querySelectorAll('.area-card');
+
+        // 2. Creamos una función para actualizar los contadores
+        function actualizarContadores() {
+            // Obtenemos el valor seleccionado: '0' para Normal, '1' para Control
+            const seleccion = tipoResguardoSelect.value;
+
+            // 3. Recorremos cada tarjeta de área
+            areaCards.forEach(card => {
+                // Seleccionamos el <span> específico dentro de esta tarjeta
+                const contadorSpan = card.querySelector('.bienes-count');
+                let numeroBienes = 0;
+
+                // 4. Decidimos qué número mostrar basado en la selección
+                if (seleccion === '0') {
+                    // Si es 'Resguardo', tomamos el valor de data-bienes-normal
+                    numeroBienes = card.dataset.bienesNormal;
+                } else {
+                    // Si es 'Sujeto a Control', tomamos el valor de data-bienes-control
+                    numeroBienes = card.dataset.bienesControl;
+                }
+
+                // 5. Actualizamos el texto del <span> con el número correcto
+                contadorSpan.textContent = numeroBienes;
+            });
+        }
+
+        // 6. Añadimos un "oyente" que llame a nuestra función cada vez que el select cambie
+        tipoResguardoSelect.addEventListener('change', actualizarContadores);
+
+        // Opcional pero recomendado: Llama a la función una vez al cargar la página
+        // para asegurar que el estado inicial es el correcto.
+        actualizarContadores();
+    });
+</script>
 {% endblock %}

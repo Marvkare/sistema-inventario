@@ -55,7 +55,43 @@
                 </div>
             </div>
         </div>
-
+        <div class="bg-white rounded-2xl shadow-lg border border-beige-light overflow-hidden mb-6">
+            <div class="p-6">
+                <div class="flex justify-between items-center mb-3">
+                    <h3 class="text-lg font-semibold text-gray-700 flex items-center">
+                        <i class="fas fa-users text-burgundy mr-2"></i>
+                        Personal de la Brigada
+                    </h3>
+                    
+                    {% if inventario.estatus in ['Planificado', 'En Progreso'] %}
+                        <div class="flex items-center gap-2">
+                            <button id="abrir-modal-remover-brigada" class="inline-flex items-center px-3 py-1 bg-red-100 hover:bg-red-200 text-red-700 font-semibold rounded-lg text-sm transition-all duration-200">
+                                <i class="fas fa-user-minus mr-2"></i>
+                                Remover
+                            </button>
+                            <button id="abrir-modal-brigada" class="inline-flex items-center px-3 py-1 bg-burgundy/10 hover:bg-burgundy/20 text-burgundy font-semibold rounded-lg text-sm transition-all duration-200">
+                                <i class="fas fa-plus mr-2"></i>
+                                Añadir
+                            </button>
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <div class="bg-beige-light/20 p-4 rounded-xl border border-beige-light">
+                    <ul class="space-y-2">
+                        {% for miembro in brigada %}
+                        <li class="flex items-center text-gray-700">
+                            <i class="fas fa-user-check text-burgundy mr-3 text-sm"></i>
+                            <span class="font-medium">{{ miembro.full_name }}</span>
+                            <span class="text-gray-500 ml-2">({{ miembro.username }})</span>
+                        </li>
+                        {% else %}
+                        <li class="text-gray-500 text-center">No hay personal asignado.</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+</div>
         <!-- Pestañas de Navegación -->
         <div class="bg-white rounded-2xl shadow-lg border border-beige-light overflow-hidden mb-6">
             <div class="border-b border-beige-light">
@@ -335,6 +371,95 @@
                         <i class="fas fa-save mr-2"></i> Registrar
                     </button>
                     <button type="button" id="sobrante-modal-cancelar" class="mt-3 w-full inline-flex justify-center items-center px-4 py-3 border-2 border-gray-300 text-gray-700 font-semibold bg-white hover:bg-gray-50 rounded-xl transition-all duration-200 sm:mt-0 sm:w-auto sm:text-sm">
+                        <i class="fas fa-times mr-2"></i> Cancelar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div id="brigada-modal" class="fixed inset-0 z-50 overflow-y-auto hidden">
+    <div class="flex items-end justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+        <div class="fixed inset-0 bg-gray-500/75 backdrop-blur-sm transition-opacity" id="brigada-modal-backdrop"></div>
+        <span class="hidden sm:inline-block sm:align-middle sm:h-screen">&#8203;</span>
+        
+        <div class="inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full border border-beige-light">
+            <form action="{{ url_for('inventarios.agregar_miembros_brigada', inventario_id=inventario.id) }}" method="POST">
+                <div class="bg-white px-6 pt-6 pb-4">
+                    <h3 class="text-xl font-bold text-burgundy mb-4 flex items-center">
+                        <i class="fas fa-user-plus mr-3"></i>
+                        Añadir Miembros a la Brigada
+                    </h3>
+                    <div class="mt-4 space-y-4">
+                        <div>
+                            <label for="brigada-usuarios" class="block text-sm font-semibold text-gray-700 mb-2">
+                                Seleccionar usuarios para añadir
+                            </label>
+                            <select id="brigada-usuarios" name="user_ids" multiple required 
+                                    class="w-full h-60 px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-burgundy/50 focus:border-burgundy transition-all duration-200 bg-white">
+                                {% for user in usuarios_disponibles %}
+                                    <option value="{{ user.id }}">{{ user.full_name }} ({{ user.username }})</option>
+                                {% else %}
+                                    <option value="" disabled>No hay más usuarios disponibles para añadir.</option>
+                                {% endfor %}
+                            </select>
+                            <p class="text-xs text-gray-500 mt-2">Mantén presionada la tecla Ctrl (o Cmd en Mac) para seleccionar múltiples usuarios.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-gray-50 px-6 py-4 sm:flex sm:flex-row-reverse rounded-b-2xl">
+                    <button type="submit" class="w-full inline-flex justify-center items-center px-4 py-3 bg-gradient-to-r from-burgundy to-burgundy-dark hover:from-burgundy-dark hover:to-burgundy text-white font-semibold rounded-xl shadow-lg transition-all duration-300 transform hover:scale-105 sm:ml-3 sm:w-auto sm:text-sm">
+                        <i class="fas fa-plus-circle mr-2"></i> Añadir Miembros
+                    </button>
+                    <button type="button" id="brigada-modal-cancelar" class="mt-3 w-full inline-flex justify-center items-center px-4 py-3 border-2 border-gray-300 text-gray-700 font-semibold bg-white hover:bg-gray-50 rounded-xl transition-all duration-200 sm:mt-0 sm:w-auto sm:text-sm">
+                        <i class="fas fa-times mr-2"></i> Cancelar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div id="remover-brigada-modal" class="fixed inset-0 z-50 overflow-y-auto hidden">
+    <div class="flex items-end justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+        <div class="fixed inset-0 bg-gray-500/75 backdrop-blur-sm transition-opacity" id="remover-brigada-modal-backdrop"></div>
+        <span class="hidden sm:inline-block sm:align-middle sm:h-screen">&#8203;</span>
+        
+        <div class="inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full border border-beige-light">
+            <form action="{{ url_for('inventarios.remover_miembros_brigada', inventario_id=inventario.id) }}" method="POST">
+                <div class="bg-white px-6 pt-6 pb-4">
+                    <h3 class="text-xl font-bold text-red-700 mb-4 flex items-center">
+                        <i class="fas fa-user-minus mr-3"></i>
+                        Remover Miembros de la Brigada
+                    </h3>
+                    <div class="mt-4 space-y-4">
+                        <div>
+                            <label for="brigada-usuarios-remover" class="block text-sm font-semibold text-gray-700 mb-2">
+                                Seleccionar usuarios para remover
+                            </label>
+                            <select id="brigada-usuarios-remover" name="user_ids_remover" multiple required 
+                                    class="w-full h-60 px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-red-500/50 focus:border-red-500 transition-all duration-200 bg-white">
+                                
+                                {% for miembro in brigada %}
+                                    {% if miembro.id == inventario.id_usuario_creador %}
+                                        <option value="{{ miembro.id }}" disabled class="text-gray-400">
+                                            {{ miembro.full_name }} (Creador - No se puede remover)
+                                        </option>
+                                    {% else %}
+                                        <option value="{{ miembro.id }}">{{ miembro.full_name }} ({{ miembro.username }})</option>
+                                    {% endif %}
+                                {% endfor %}
+                            </select>
+                            <p class="text-xs text-gray-500 mt-2">Mantén presionada la tecla Ctrl (o Cmd en Mac) para seleccionar múltiples usuarios.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-gray-50 px-6 py-4 sm:flex sm:flex-row-reverse rounded-b-2xl">
+                    <button type="submit" class="w-full inline-flex justify-center items-center px-4 py-3 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-semibold rounded-xl shadow-lg transition-all duration-300 transform hover:scale-105 sm:ml-3 sm:w-auto sm:text-sm">
+                        <i class="fas fa-trash-alt mr-2"></i> Remover Miembros
+                    </button>
+                    <button type="button" id="remover-brigada-modal-cancelar" class="mt-3 w-full inline-flex justify-center items-center px-4 py-3 border-2 border-gray-300 text-gray-700 font-semibold bg-white hover:bg-gray-50 rounded-xl transition-all duration-200 sm:mt-0 sm:w-auto sm:text-sm">
                         <i class="fas fa-times mr-2"></i> Cancelar
                     </button>
                 </div>
@@ -728,6 +853,102 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
+// ===================================================================
+    // NUEVA SECCIÓN: LÓGICA PARA MODAL "AÑADIR BRIGADA"
+    // ===================================================================
+
+    // --- Constantes para el Modal "Añadir Brigada" ---
+    const brigadaModal = document.getElementById('brigada-modal');
+    const brigadaModalBackdrop = document.getElementById('brigada-modal-backdrop');
+    const brigadaModalCancelar = document.getElementById('brigada-modal-cancelar');
+    const abrirBrigadaModalBtn = document.getElementById('abrir-modal-brigada');
+
+    // --- Funciones para el Modal "Añadir Brigada" ---
+    function openBrigadaModal() {
+        if (!brigadaModal) return;
+        brigadaModal.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeBrigadaModal() {
+        if (!brigadaModal) return;
+        brigadaModal.classList.add('hidden');
+        document.body.style.overflow = 'auto';
+        // Opcional: resetear el formulario si es necesario
+        // document.querySelector('#brigada-modal form').reset();
+    }
+
+    // --- Asignación de Eventos (Listeners) ---
+    if (abrirBrigadaModalBtn) abrirBrigadaModalBtn.addEventListener('click', openBrigadaModal);
+    if (brigadaModalBackdrop) brigadaModalBackdrop.addEventListener('click', closeBrigadaModal);
+    if (brigadaModalCancelar) brigadaModalCancelar.addEventListener('click', closeBrigadaModal);
+
+
+    // ===================================================================
+    // 5. CERRAR MODALES CON LA TECLA ESCAPE (MODIFICADO)
+    // ===================================================================
+    document.addEventListener('keydown', function(event) {
+        if (event.key === 'Escape') {
+            if (revisarModal && !revisarModal.classList.contains('hidden')) {
+                closeRevisarModal();
+            }
+            if (sobranteModal && !sobranteModal.classList.contains('hidden')) {
+                closeSobranteModal();
+            }
+            // --- LÍNEA AÑADIDA ---
+            if (brigadaModal && !brigadaModal.classList.contains('hidden')) {
+                closeBrigadaModal();
+            }
+        }
+    });
+
+    // ===================================================================
+    // NUEVA SECCIÓN: LÓGICA PARA MODAL "REMOVER BRIGADA"
+    // ===================================================================
+
+    // --- Constantes para el Modal "Remover Brigada" ---
+    const removerBrigadaModal = document.getElementById('remover-brigada-modal');
+    const removerBrigadaModalBackdrop = document.getElementById('remover-brigada-modal-backdrop');
+    const removerBrigadaModalCancelar = document.getElementById('remover-brigada-modal-cancelar');
+    const abrirRemoverBrigadaBtn = document.getElementById('abrir-modal-remover-brigada');
+
+    // --- Funciones para el Modal "Remover Brigada" ---
+    function openRemoverBrigadaModal() {
+        if (!removerBrigadaModal) return;
+        removerBrigadaModal.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeRemoverBrigadaModal() {
+        if (!removerBrigadaModal) return;
+        removerBrigadaModal.classList.add('hidden');
+        document.body.style.overflow = 'auto';
+    }
+
+    // --- Asignación de Eventos (Listeners) ---
+    if (abrirRemoverBrigadaBtn) abrirRemoverBrigadaBtn.addEventListener('click', openRemoverBrigadaModal);
+    if (removerBrigadaModalBackdrop) removerBrigadaModalBackdrop.addEventListener('click', closeRemoverBrigadaModal);
+    if (removerBrigadaModalCancelar) removerBrigadaModalCancelar.addEventListener('click', closeRemoverBrigadaModal);
+
+    // =CAL MODIFICACIÓN AL MANEJADOR DE LA TECLA 'ESCAPE' ==================
+    document.addEventListener('keydown', function(event) {
+        if (event.key === 'Escape') {
+            if (revisarModal && !revisarModal.classList.contains('hidden')) {
+                closeRevisarModal();
+            }
+            if (sobranteModal && !sobranteModal.classList.contains('hidden')) {
+                closeSobranteModal();
+            }
+            if (brigadaModal && !brigadaModal.classList.contains('hidden')) {
+                closeBrigadaModal();
+            }
+            // --- LÍNEA AÑADIDA ---
+            if (removerBrigadaModal && !removerBrigadaModal.classList.contains('hidden')) {
+                closeRemoverBrigadaModal();
+            }
+        }
+    });
+
 const sobranteFotosInput = document.getElementById('sobrante-fotos-input');
     const sobrantePreviewContainer = document.getElementById('sobrante-fotos-preview-container');
     let sobranteFileStore = new DataTransfer(); // Almacén de archivos exclusivo para este modal
@@ -779,5 +1000,7 @@ const sobranteFotosInput = document.getElementById('sobrante-fotos-input');
         sobranteFotosInput.files = sobranteFileStore.files;
         renderSobrantePreviews(); // Re-dibujamos las miniaturas
     }
+
+
 </script>
 {% endblock %}

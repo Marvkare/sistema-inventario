@@ -1,0 +1,125 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Administrar Roles{% endblock %}
+
+{% block content %}
+
+    {# =================================================================== #}
+    {# VISTA DE LISTA DE ROLES #}
+    {# =================================================================== #}
+    {% if request.endpoint == 'admin_users.list_roles' %}
+        <div class="container mx-auto p-4 sm:p-0">
+            <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-4 mb-6">
+                <div>
+                    <h1 class="text-2xl font-bold text-gray-800">Administrar Roles</h1>
+                    <p class="text-sm text-gray-500 mt-1">Crea, edita y asigna permisos a los roles del sistema.</p>
+                </div>
+                <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3">
+                    <a href="{{ url_for('admin_users.create_role') }}" class="inline-flex items-center justify-center px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 transition-colors">
+                        <i class="fas fa-plus mr-2"></i>Crear Rol
+                    </a>
+                    <a href="{{ url_for('admin_users.list_users') }}" class="inline-flex items-center justify-center px-4 py-2 bg-gray-200 text-gray-700 font-semibold rounded-lg hover:bg-gray-300 transition-colors">
+                        Ver Usuarios
+                    </a>
+                </div>
+            </div>
+
+            <div class="bg-white shadow-lg rounded-lg overflow-hidden">
+                <div class="overflow-x-auto table-responsive">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nombre del Rol</th>
+                                <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden sm:table-cell">Descripción</th>
+                                <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            {% for r in roles %}
+                            <tr class="hover:bg-gray-50">
+                                <td class="px-4 py-4 whitespace-nowrap">
+                                    <span class="font-bold text-gray-900">{{ r.name }}</span>
+                                    <p class="text-xs text-gray-500 sm:hidden mt-1">{{ r.description | truncate(60) }}</p>
+                                </td>
+                                <td class="px-4 py-4 whitespace-normal text-sm text-gray-600 hidden sm:table-cell">
+                                    {{ r.description }}
+                                </td>
+                                <td class="px-4 py-4 whitespace-nowrap text-sm font-medium">
+                                    <div class="flex flex-col sm:flex-row sm:items-center gap-2">
+                                        <a href="{{ url_for('admin_users.manage_permissions', role_id=r.id) }}" class="text-green-600 hover:text-green-900" title="Gestionar Permisos">
+                                            <i class="fas fa-shield-alt mr-1 sm:mr-0"></i><span class="sm:hidden"> Permisos</span>
+                                        </a>
+                                        <a href="{{ url_for('admin_users.edit_role', role_id=r.id) }}" class="text-indigo-600 hover:text-indigo-900" title="Editar Rol">
+                                            <i class="fas fa-edit mr-1 sm:mr-0"></i><span class="sm:hidden"> Editar</span>
+                                        </a>
+                                        </div>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="3" class="text-center py-10 text-gray-500">
+                                    <i class="fas fa-folder-open text-3xl mb-2"></i>
+                                    <p>No hay roles registrados.</p>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+{# =================================================================== #}
+    {# FORMULARIO UNIFICADO PARA CREAR Y EDITAR ROLES #}
+    {# =================================================================== #}
+    {% else %}
+        <div class="max-w-lg mx-auto bg-white p-6 sm:p-8 rounded-xl shadow-lg border border-gray-200">
+            <div class="flex items-center mb-6">
+                <a href="{{ url_for('admin_users.list_roles') }}" class="text-gray-500 hover:text-gray-700 mr-3 p-2 rounded-full hover:bg-gray-100">
+                    <i class="fas fa-arrow-left"></i>
+                </a>
+                <h1 class="text-2xl font-bold text-gray-800">
+                    {% if role %}
+                        Editar Rol: <span class="text-indigo-600">{{ role.name }}</span>
+                    {% else %}
+                        Crear Nuevo Rol
+                    {% endif %}
+                </h1>
+            </div>
+            
+            <form method="POST" action="{% if role %}{{ url_for('admin_users.edit_role', role_id=role.id) }}{% else %}{{ url_for('admin_users.create_role') }}{% endif %}" class="space-y-6">
+                
+                <div>
+                    <label for="name" class="block text-sm font-medium text-gray-700">Nombre del Rol</label>
+                    <input type="text" id="name" name="name" 
+                           {# ✅ CORRECCIÓN: Añadir el valor solo si 'role' existe #}
+                           {% if role %} value="{{ role.name or '' }}" {% endif %}
+                           required 
+                           class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                           placeholder="Ej: Administrador">
+                </div>
+
+                <div>
+                    <label for="description" class="block text-sm font-medium text-gray-700">Descripción</label>
+                    <textarea id="description" name="description" rows="4"
+                              class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                              placeholder="Describe brevemente las responsabilidades de este rol...">{# ✅ CORRECCIÓN: Añadir el contenido solo si 'role' existe #}{% if role %}{{ role.description or '' }}{% endif %}</textarea>
+                </div>
+
+                <div class="flex flex-col sm:flex-row-reverse sm:gap-x-3 gap-y-3 pt-4 border-t border-gray-200">
+                    <button type="submit" class="w-full sm:w-auto inline-flex justify-center items-center px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-md shadow-sm transition-colors">
+                        {% if role %}
+                            <i class="fas fa-save mr-2"></i>Guardar Cambios
+                        {% else %}
+                            <i class="fas fa-plus-circle mr-2"></i>Crear Rol
+                        {% endif %}
+                    </button>
+                    <a href="{{ url_for('admin_users.list_roles') }}" class="w-full sm:w-auto inline-flex justify-center items-center px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold rounded-md transition-colors">
+                        Cancelar
+                    </a>
+                </div>
+            </form>
+        </div>
+    {% endif %}
+
+{% endblock %}

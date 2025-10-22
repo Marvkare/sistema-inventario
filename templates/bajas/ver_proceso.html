@@ -397,7 +397,90 @@
 
 <!-- Modal de Disposición Final (placeholder) -->
 <div id="disposicionModal" class="fixed inset-0 bg-gray-600/50 backdrop-blur-sm overflow-y-auto h-full w-full z-50 hidden flex items-center justify-center p-4">
-    <!-- El contenido del modal se cargaría dinámicamente -->
+    <div class="relative w-full max-w-2xl mx-auto">
+        <div class="bg-white rounded-2xl shadow-xl border border-beige-light overflow-hidden">
+
+            <div class="bg-gradient-to-r from-burgundy to-burgundy-dark p-6 text-white flex justify-between items-center">
+                <div>
+                    <h2 class="text-2xl font-bold">Registrar Disposición Final</h2>
+                    <p class="text-beige-light mt-1 text-sm">Indique el método de desincorporación del bien.</p>
+                </div>
+                <button type="button" id="closeDisposicionModal" class="text-beige-light hover:text-white text-3xl font-light transition-colors duration-200" aria-label="Cerrar modal">
+                    &times;
+                </button>
+            </div>
+
+            <form id="disposicionForm" action="{{ url_for('bajas.registrar_disposicion_final', proceso_id=proceso.id) }}" method="POST">
+
+                <div class="p-8 space-y-6 bg-white">
+
+                    <div>
+                        <label for="tipo_disposicion" class="block text-sm font-semibold text-gray-700 mb-2 flex items-center">
+                            <i class="fas fa-recycle text-burgundy mr-2"></i>
+                            Tipo de Disposición <span class="text-red-600 ml-1">*</span>
+                        </label>
+                        <select id="tipo_disposicion" name="tipo_disposicion" required
+                                class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-burgundy/50 focus:border-burgundy transition-all duration-200 bg-white">
+                            <option value="" disabled selected>Seleccione un método...</option>
+                            <option value="Enajenación">Enajenación (Venta)</option>
+                            <option value="Donación">Donación</option>
+                            <option value="Destrucción">Destrucción</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label for="fecha_disposicion" class="block text-sm font-semibold text-gray-700 mb-2 flex items-center">
+                            <i class="fas fa-calendar-alt text-burgundy mr-2"></i>
+                            Fecha de Disposición <span class="text-red-600 ml-1">*</span>
+                        </label>
+                        <input type="date" id="fecha_disposicion" name="fecha_disposicion" required
+                               class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-burgundy/50 focus:border-burgundy transition-all duration-200">
+                    </div>
+
+                    <div class="space-y-4">
+                        <div id="campo_enajenacion" class="hidden space-y-2 bg-beige-light/20 p-4 rounded-xl border border-beige-light">
+                            <label for="valor_enajenacion" class="block text-sm font-semibold text-gray-700">
+                                <i class="fas fa-dollar-sign text-burgundy mr-2"></i>
+                                Valor de Enajenación (Venta) <span class="text-red-600 ml-1">*</span>
+                            </label>
+                            <input type="number" id="valor_enajenacion" name="valor_enajenacion" step="0.01" min="0" placeholder="0.00"
+                                   class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-burgundy/50 focus:border-burgundy transition-all duration-200">
+                        </div>
+
+                        <div id="campo_donacion" class="hidden space-y-2 bg-beige-light/20 p-4 rounded-xl border border-beige-light">
+                            <label for="nombre_donatario" class="block text-sm font-semibold text-gray-700">
+                                <i class="fas fa-gift text-burgundy mr-2"></i>
+                                Nombre del Donatario <span class="text-red-600 ml-1">*</span>
+                            </label>
+                            <input type="text" id="nombre_donatario" name="nombre_donatario" placeholder="Institución o persona receptora"
+                                   class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-burgundy/50 focus:border-burgundy transition-all duration-200">
+                        </div>
+
+                        <div id="campo_destruccion" class="hidden space-y-2 bg-beige-light/20 p-4 rounded-xl border border-beige-light">
+                            <label for="detalles_destruccion" class="block text-sm font-semibold text-gray-700">
+                                <i class="fas fa-burn text-burgundy mr-2"></i>
+                                Detalles de la Destrucción <span class="text-red-600 ml-1">*</span>
+                            </label>
+                            <textarea id="detalles_destruccion" name="detalles_destruccion" rows="3" placeholder="Describa el método de destrucción, lugar, y testigos si aplica."
+                                      class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-burgundy/50 focus:border-burgundy transition-all duration-200 resize-none"></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex flex-col sm:flex-row justify-end gap-4 p-6 border-t border-beige-light bg-gray-50 rounded-b-2xl">
+                    <button type="button" id="cancelDisposicionBtn"
+                       class="inline-flex items-center justify-center px-6 py-3 border-2 border-gray-300 text-base font-semibold rounded-xl text-gray-700 bg-white hover:bg-gray-50 transition-all duration-200 order-2 sm:order-1">
+                        <i class="fas fa-times mr-2"></i> Cancelar
+                    </button>
+                    <button type="submit"
+                            class="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-semibold rounded-xl shadow-lg text-white bg-gradient-to-r from-burgundy to-burgundy-dark hover:from-burgundy-dark hover:to-burgundy transition-all duration-300 transform hover:scale-105 order-1 sm:order-2">
+                        <i class="fas fa-save mr-2"></i>
+                        Guardar Disposición
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
 </div>
 {% endblock %}
 
@@ -422,42 +505,74 @@
 {% block scripts %}
 <script>
 document.addEventListener('DOMContentLoaded', () => {
+    // --- LÓGICA DEL MODAL DE DISPOSICIÓN ---
     const disposicionModal = document.getElementById('disposicionModal');
     const openDisposicionBtn = document.getElementById('openDisposicionBtn');
-    
-    // Lógica del Modal de Disposición
+    const closeDisposicionBtn = document.getElementById('closeDisposicionModal');
+    const cancelDisposicionBtn = document.getElementById('cancelDisposicionBtn');
+    const disposicionForm = document.getElementById('disposicionForm');
+
+    // Función para abrir
     if (openDisposicionBtn) {
         openDisposicionBtn.addEventListener('click', () => {
             disposicionModal.classList.remove('hidden');
         });
     }
 
-    // Cerrar modal al hacer clic fuera
+    // Función para cerrar (con el botón 'X' o 'Cancelar')
+    const closeModal = () => {
+        disposicionModal.classList.add('hidden');
+        // Opcional: resetear el formulario al cerrar
+        disposicionForm.reset();
+        // Disparar manualmente el evento 'change' para ocultar todos los campos condicionales
+        document.getElementById('tipo_disposicion').dispatchEvent(new Event('change'));
+    };
+
+    closeDisposicionBtn.addEventListener('click', closeModal);
+    cancelDisposicionBtn.addEventListener('click', closeModal);
+
+    // Cerrar modal al hacer clic fuera del contenido
     disposicionModal.addEventListener('click', (e) => {
         if (e.target === disposicionModal) {
-            disposicionModal.classList.add('hidden');
+            closeModal();
         }
     });
 
-    // Lógica para campos condicionales (si se implementa en el futuro)
+    // --- LÓGICA DE CAMPOS CONDICIONALES ---
     const tipoSelect = document.getElementById('tipo_disposicion');
-    if (tipoSelect) {
-        const campoEnajenacion = document.getElementById('campo_enajenacion');
-        const campoDonacion = document.getElementById('campo_donacion');
-        const campoDestruccion = document.getElementById('campo_destruccion');
+    const campoEnajenacion = document.getElementById('campo_enajenacion');
+    const campoDonacion = document.getElementById('campo_donacion');
+    const campoDestruccion = document.getElementById('campo_destruccion');
 
+    // Inputs dentro de los campos condicionales
+    const inputEnajenacion = document.getElementById('valor_enajenacion');
+    const inputDonacion = document.getElementById('nombre_donatario');
+    const inputDestruccion = document.getElementById('detalles_destruccion');
+
+    if (tipoSelect) {
         tipoSelect.addEventListener('change', (e) => {
             const tipo = e.target.value;
-            campoEnajenacion?.classList.add('hidden');
-            campoDonacion?.classList.add('hidden');
-            campoDestruccion?.classList.add('hidden');
 
+            // Ocultar todos y quitar 'required'
+            campoEnajenacion?.classList.add('hidden');
+            inputEnajenacion?.removeAttribute('required');
+
+            campoDonacion?.classList.add('hidden');
+            inputDonacion?.removeAttribute('required');
+
+            campoDestruccion?.classList.add('hidden');
+            inputDestruccion?.removeAttribute('required');
+
+            // Mostrar el campo relevante y añadir 'required'
             if (tipo === 'Enajenación') {
                 campoEnajenacion?.classList.remove('hidden');
+                inputEnajenacion?.setAttribute('required', 'required');
             } else if (tipo === 'Donación') {
                 campoDonacion?.classList.remove('hidden');
+                inputDonacion?.setAttribute('required', 'required');
             } else if (tipo === 'Destrucción') {
                 campoDestruccion?.classList.remove('hidden');
+                inputDestruccion?.setAttribute('required', 'required');
             }
         });
     }

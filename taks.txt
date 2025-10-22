@@ -1,0 +1,25 @@
+ 
+
+
+#1.- Agregra Nombres y numero de telefono a al modelo users 
+ 
+#2.- En oficios de trapasos redefinir el diseño del oficio y permitir archivos adjuntos
+    Agregamos vista para ver los traspasos y los detalles de traspaso 
+    bloqueamos la edicion de resguardo una ves trapasado el oficio
+
+#4.- Adaptar la interfaz de administrar usuarios roles y permisos a dispositivos mobiles 
+
+5.- #Actualizar el sistema de inventario para permitir inventarios de los resguardos tipo normal 
+    y resguardos sujeto control 
+
+    #Tambien ver la forma que los unicos que puedan revisar en el inventario son los que forman parte de la brigada
+    y solo poder agregar mas miembros a la brigada en proceso de levantamiento y al inicio del inventario
+
+    #Reparar la imagen que se colapsa en reportes de inventario pdf 
+
+    Agregar acta de levantamiento 
+
+#6.- Revisar con detalle el activiti log y definir que informacion rucial tenemos que guardar 
+
+
+7.- Revisar el flujo de trabajo de bajas de bienes 

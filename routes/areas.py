@@ -151,13 +151,25 @@ def manage_areas():
             if area_id: # Update existing area
                 # Ensure correct parameter order for UPDATE
                 cursor.execute("UPDATE areas SET nombre = %s, numero = %s WHERE id = %s", (area_name, area_numero, area_id))
-                log_activity("Actualizar nueva area","Areas",details="Se actualizo una nueva area")
+                log_activity(
+                        action="Actualización de Área", 
+                        category="Areas", 
+                        resource_id=area_id, 
+                        details=f"Se actualizó el área: {area_name}"
+                    )
                 flash(f"Área '{area_name}' actualizada correctamente.", 'success')
             else: # Add new area
                 # Ensure correct parameter order for INSERT
                 
                 cursor.execute("INSERT INTO areas (nombre, numero) VALUES (%s, %s)", (area_name, area_numero))
-                log_activity("Agreagar nueva area","Areas",details="Se agrego una nueva area")
+                new_area_id = cursor.lastrowid 
+
+                log_activity(
+                    action="Creación de Área", 
+                    category="Areas", 
+                    resource_id=new_area_id, 
+                    details=f"Se creó la nueva área: {area_name}"
+                )
                 flash(f"Área '{area_name}' agregada correctamente.", 'success')
             
             conn.commit()

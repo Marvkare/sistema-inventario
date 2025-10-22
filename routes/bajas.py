@@ -228,8 +228,8 @@ def crear_proceso_baja():
         log_activity(
             action="Inicio de Proceso de Baja con Documento", category="Bajas",
             resource_id=nuevo_proceso.id,
-            details=f"Se inició proceso para el bien '{bien.No_Inventario}' adjuntando solicitud '{filename}'."
-        )
+            details=f"Usuario '{current_user.username}' inició proceso para el bien '{bien.No_Inventario}' adjuntando solicitud '{filename}'."
+        ) 
 
         return jsonify({"message": "Proceso de baja iniciado exitosamente.", "proceso_id": nuevo_proceso.id}), 201
     
@@ -283,7 +283,7 @@ def cargar_documento(proceso_id):
             action="Carga de Documento",
             category="Bajas",
             resource_id=proceso.id,
-            details=f"Se cargó el documento '{tipo_documento}' para el proceso de baja ID {proceso.id}"
+            details=f"Usuario '{current_user.username}' cargó el documento '{tipo_documento}' para el proceso de baja ID {proceso.id}"
         )
         flash(f"Documento '{tipo_documento}' cargado exitosamente.", "success")
 
@@ -393,7 +393,7 @@ def crear_documento_expediente(proceso_id):
                 action="Creación de Expediente de Baja", 
                 category="Bajas", 
                 resource_id=proceso.id,
-                details=f"Se creó el expediente '{tipo_documento}' para el proceso #{proceso.id}."
+                details=f"Usuario '{current_user.username}' creó el expediente '{tipo_documento}' para el proceso #{proceso.id}."
             )
             
             return jsonify({
@@ -469,14 +469,14 @@ def actualizar_estatus(proceso_id):
         # Registra la actividad principal
         log_activity(
             action="Cambio de Estatus de Proceso", category="Bajas", resource_id=proceso.id,
-            details=f"El estatus del proceso #{proceso.id} cambió de '{estatus_anterior}' a '{nuevo_estatus}'."
+            details=f"Usuario '{current_user.username}' cambió el estatus del proceso #{proceso.id} de '{estatus_anterior}' a '{nuevo_estatus}'."
         )
 
         # Si se finalizó, registra también la baja del bien
         if nuevo_estatus == 'Finalizado' and bien_a_dar_de_baja:
             log_activity(
                 action="Baja de Bien", category="Bienes", resource_id=bien_a_dar_de_baja.id,
-                details=f"El bien '{bien_a_dar_de_baja.No_Inventario}' fue dado de baja permanentemente."
+                details=f"El bien '{bien_a_dar_de_baja.No_Inventario}' fue dado de baja permanentemente por '{current_user.username}' (Proceso #{proceso.id})."
             )
 
         flash(f"El estatus del proceso ha sido actualizado a '{nuevo_estatus}'.", "success")
@@ -499,10 +499,7 @@ def registrar_disposicion_final(proceso_id):
         flash("El proceso de baja no fue encontrado.", "danger")
         return redirect(url_for('bajas.gestionar_bajas'))
 
-    # --- Validaciones ---
-    if proceso.estatus != 'Autorizado para Disposición':
-        flash("Error: Solo se puede registrar la disposición en procesos autorizados.", "warning")
-        return redirect(url_for('bajas.ver_proceso', proceso_id=proceso_id))
+    
 
     if proceso.disposicion_final:
         flash("Error: Ya existe un registro de disposición final para este proceso.", "warning")

@@ -1,0 +1,349 @@
+{% extends "base.html" %}
+
+{% block title %}Traspasar Resguardo{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto py-6 sm:px-6 lg:px-8">
+    <div class="bg-white overflow-hidden shadow-xl sm:rounded-lg p-6">
+        <h2 class="text-2xl font-bold text-gray-800 mb-6">Traspasar Resguardo: {{ resguardo_anterior.No_Inventario }}</h2>
+        
+        <div id="js-flash-container"></div>
+
+        <form id="traspasoForm" method="post" enctype="multipart/form-data" class="space-y-6">
+
+            <div class="mb-8 p-6 bg-red-50 rounded-lg border-l-4 border-red-400">
+                <h3 class="text-xl font-semibold text-red-800 mb-4 flex items-center"><i class="fas fa-user-slash text-red-500 mr-3"></i>Información del Resguardo Anterior</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                    <div><p><strong class="font-medium text-red-700">No. de Resguardo:</strong> {{ resguardo_anterior.No_Resguardo }}</p><p><strong class="font-medium text-red-700">Resguardante Anterior:</strong> {{ resguardo_anterior.Nombre_Del_Resguardante }}</p></div>
+                    <div><p><strong class="font-medium text-red-700">Área Anterior:</strong> {{ resguardo_anterior.Area_Anterior_Nombre }}</p><p><strong class="font-medium text-red-700">Fecha de Asignación:</strong> {{ resguardo_anterior.Fecha_Resguardo }}</p></div>
+                </div>
+            </div>
+
+            <div class="mb-8 p-6 bg-gray-50 rounded-lg border-l-4 border-gray-400">
+                <h3 class="text-xl font-semibold text-gray-800 mb-4 flex items-center"><i class="fas fa-box-open text-gray-600 mr-3"></i>Datos del Bien</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                    <div><p><strong class="font-medium text-gray-700">No. de Inventario:</strong> {{ resguardo_anterior.No_Inventario }}</p><p><strong class="font-medium text-gray-700">Proveedor:</strong> {{ resguardo_anterior.Proveedor or 'N/A' }}</p></div>
+                    <div><p><strong class="font-medium text-gray-700">Descripción:</strong> {{ resguardo_anterior.Descripcion_Corta_Del_Bien or 'N/A' }}</p><p><strong class="font-medium text-gray-700">Número de Serie:</strong> {{ resguardo_anterior.Numero_De_Serie or 'N/A' }}</p></div>
+                </div>
+            </div>
+            
+            <div class="mb-8 p-6 bg-green-50 rounded-lg border-l-4 border-green-400">
+                <h3 class="text-xl font-semibold text-green-800 mb-4 flex items-center"><i class="fas fa-user-plus text-green-500 mr-3"></i>Información del Nuevo Resguardante</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div><label for="No_Resguardo_Nuevo" class="block text-sm font-medium text-gray-700">No. de Resguardo</label><input type="text" id="No_Resguardo_Nuevo" name="No_Resguardo_Nuevo" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" value="{{resguardo_anterior.No_Resguardo}}" required readonly></div>
+                    <div><label for="Area_Nueva">Área Nueva</label><select name="Area_Nueva" id="Area_Nueva" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required><option value="">Seleccione un área...</option>{% for area in areas %}<option value="{{ area.id }}">{{ area.nombre }}</option>{% endfor %}</select></div>
+                    <div><label for="Ubicacion_Nueva" class="block text-sm font-medium text-gray-700">Ubicación (Nueva)</label><input type="text" id="Ubicacion_Nueva" name="Ubicacion_Nueva" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"></div>
+                    <div><label for="Nombre_Del_Resguardante_Nuevo" class="block text-sm font-medium text-gray-700">Nombre del Resguardante (Nuevo)</label><input type="text" id="Nombre_Del_Resguardante_Nuevo" name="Nombre_Del_Resguardante_Nuevo" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required></div>
+                    <div><label for="No_Trabajador_Nuevo" class="block text-sm font-medium text-gray-700">No. Trabajador (Nuevo)</label><input type="text" id="No_Trabajador_Nuevo" name="No_Trabajador_Nuevo" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"></div>
+                    <div><label for="Puesto_Trabajador_Nuevo" class="block text-sm font-medium text-gray-700">Puesto (Nuevo)</label><input type="text" id="Puesto_Trabajador_Nuevo" name="Puesto_Trabajador_Nuevo" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"></div>
+                    <div><label for="No_Nomina_Trabajador_Nuevo" class="block text-sm font-medium text-gray-700">No. Nómina (Nuevo)</label><input type="number" id="No_Nomina_Trabajador_Nuevo" name="No_Nomina_Trabajador_Nuevo" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"></div>
+                    <div><label for="Fecha_Resguardo_Nuevo" class="block text-sm font-medium text-gray-700">Fecha del Resguardo (Nuevo)</label><input type="date" id="Fecha_Resguardo_Nuevo" name="Fecha_Resguardo_Nuevo" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required></div>
+                    <div><label for="Nombre_Director_Jefe_De_Area_Nueva" class="block text-sm font-medium text-gray-700">Nombre Director/Jefe de Área (Nueva)</label><input type="text" id="Nombre_Director_Jefe_De_Area_Nueva" name="Nombre_Director_Jefe_De_Area_Nueva" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"></div>
+                    <div><label for="Tipo_De_Resguardo_Display" class="block text-sm font-medium text-gray-700">Tipo de Resguardo</label><input type="text" id="Tipo_De_Resguardo_Display" class="mt-1 block w-full bg-gray-100 rounded-md border-gray-300 shadow-sm" value="{% if resguardo_anterior.Tipo_De_Resguardo == 1 %}Sujeto de Control{% else %}Resguardo Normal{% endif %}" readonly><input type="hidden" name="Tipo_De_Resguardo_Nuevo" value="{{ resguardo_anterior.Tipo_De_Resguardo }}"></div>
+                </div>
+                <div class="mt-6">
+                    <label class="block text-sm font-medium text-gray-700">Imagen del Bien en su Nuevo Estado/Ubicación</label>
+                    <input type="file" name="imagen_nuevo_resguardo" id="nuevo-resguardo-fotos-input" class="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:bg-gray-50 hover:file:bg-gray-100"/>
+                    <div id="nuevo-resguardo-fotos-preview-container" class="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-4"></div>
+                </div>
+            </div>
+
+            <!-- SECCIÓN DE OFICIOS - AHORA VACÍA -->
+            <div id="oficios-container" class="space-y-6">
+                <!-- Los oficios se generarán dinámicamente aquí -->
+            </div>
+
+            <div class="flex justify-between items-center mt-4">
+                <button type="button" id="add-oficio-btn" class="inline-flex items-center px-4 py-2 border border-dashed border-gray-400 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                    <i class="fas fa-plus mr-2"></i>Agregar Oficio de Traspaso
+                </button>
+                <button type="submit" class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700">
+                    <i class="fas fa-save mr-2"></i>Confirmar Traspaso
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<template id="oficio-template">
+    <div class="oficio-block mb-8 p-6 bg-blue-50 rounded-lg border-l-4 border-blue-400">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-xl font-semibold text-blue-800 flex items-center">
+                <i class="fas fa-file-invoice text-blue-500 mr-3"></i>Oficio de Traspaso #<span class="oficio-number">1</span>
+            </h3>
+            <button type="button" class="remove-oficio-btn text-red-500 hover:text-red-700" title="Eliminar este oficio">
+                <i class="fas fa-trash-alt"></i>
+            </button>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Nombre del Solicitante</label>
+                <input type="text" name="Nombre_Solicitante" class="nombre-solicitante-input mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" required>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Área Solicitante</label>
+                <select name="Area_Solicitante" class="area-solicitante-select mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" required>
+                    <option value="" disabled selected>-- Selecciona un área --</option>
+                    {% for area in areas %}
+                        <option value="{{ area.id }}">{{ area.nombre }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Jefe de Área Solicitante</label>
+                <input type="text" name="Jefe_Area_Solicitante" class="jefe-area-input mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" required>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Dependencia</label>
+                <input type="text" name="Dependencia_Oficio" class="dependencia-input mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Oficio Clave</label>
+                <input type="text" name="Oficio_clave" class="oficio-clave-input mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Lugar y Fecha</label>
+                <input type="date" name="Lugar_Fecha_Oficio" class="fecha-oficio-input mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" required>
+            </div>
+            <div class="md:col-span-2 lg:col-span-3">
+                <label class="block text-sm font-medium text-gray-700">Asunto</label>
+                <textarea name="Asunto_Oficio" rows="3" class="asunto-textarea mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" required></textarea>
+            </div>
+            <div class="md:col-span-2 lg:col-span-3">
+                <label class="block text-sm font-medium text-gray-700">Archivos Adjuntos del Oficio</label>
+                <input type="file" name="fotos_oficio" class="file-input-oficio mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-gray-50 hover:file:bg-gray-100" multiple />
+                <div class="fotos-oficio-preview-container mt-4 grid grid-cols-2 sm:grid-cols-4 gap-4"></div>
+            </div> 
+        </div>
+    </div>
+</template>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const traspasoForm = document.getElementById('traspasoForm');
+    const oficiosContainer = document.getElementById('oficios-container');
+    const addOficioBtn = document.getElementById('add-oficio-btn');
+    const oficioTemplate = document.getElementById('oficio-template');
+    let oficioIndex = 0; // Empezamos en 0 para que el primero sea 1
+
+    // Almacén para archivos
+    const fileStores = {};
+
+    // ===================================================================
+    // FUNCIONES PARA PREVISUALIZACIÓN DE IMÁGENES
+    // ===================================================================
+    function initializeFileInput(fileInput) {
+        if (!fileInput) return;
+        
+        const inputId = fileInput.id;
+        if (!fileStores[inputId]) {
+            fileStores[inputId] = [];
+        }
+
+        fileInput.addEventListener('change', function(event) {
+            const files = Array.from(event.target.files);
+            const previewContainer = this.nextElementSibling;
+            
+            if (!previewContainer) {
+                console.error('No se encontró contenedor de preview para:', inputId);
+                return;
+            }
+
+            // Agregar nuevos archivos al almacén
+            files.forEach(file => {
+                const exists = fileStores[inputId].some(f => 
+                    f.name === file.name && f.size === file.size
+                );
+                if (!exists) {
+                    fileStores[inputId].push(file);
+                }
+            });
+
+            renderPreviews(inputId, previewContainer);
+        });
+    }
+
+    function renderPreviews(inputId, container) {
+        container.innerHTML = '';
+        const files = fileStores[inputId];
+
+        files.forEach((file, index) => {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const wrapper = document.createElement('div');
+                wrapper.className = 'preview-image-wrapper';
+                wrapper.innerHTML = `
+                    <img src="${e.target.result}" class="preview-image">
+                    <button type="button" class="remove-image-btn" data-input-id="${inputId}" data-index="${index}">×</button>
+                `;
+                container.appendChild(wrapper);
+            };
+            reader.readAsDataURL(file);
+        });
+    }
+
+    // Eliminar imágenes
+    document.addEventListener('click', function(e) {
+        if (e.target.closest('.remove-image-btn')) {
+            const btn = e.target.closest('.remove-image-btn');
+            const inputId = btn.dataset.inputId;
+            const index = parseInt(btn.dataset.index);
+            
+            if (fileStores[inputId]) {
+                fileStores[inputId].splice(index, 1);
+                const fileInput = document.getElementById(inputId);
+                const previewContainer = fileInput.nextElementSibling;
+                renderPreviews(inputId, previewContainer);
+            }
+        }
+    });
+
+    // ===================================================================
+    // FUNCIONES PARA OFICIOS DINÁMICOS
+    // ===================================================================
+    function createOficio() {
+        oficioIndex++;
+        const newOficioElement = oficioTemplate.content.cloneNode(true);
+        
+        // Actualizar número del oficio
+        newOficioElement.querySelector('.oficio-number').textContent = oficioIndex;
+        
+        // Actualizar todos los names e ids con el índice
+        const elementsToUpdate = newOficioElement.querySelectorAll('[name]');
+        elementsToUpdate.forEach(element => {
+            const originalName = element.getAttribute('name');
+            const newName = `${originalName}_${oficioIndex}`;
+            element.setAttribute('name', newName);
+            element.setAttribute('id', newName);
+        });
+        
+        // Agregar al DOM
+        oficiosContainer.appendChild(newOficioElement);
+        
+        // Inicializar el file input
+        const newFileInput = oficiosContainer.querySelector(`.oficio-block:last-child .file-input-oficio`);
+        if (newFileInput) {
+            initializeFileInput(newFileInput);
+        }
+        
+        updateOficioNumbers();
+        updateUI();
+    }
+
+    function removeOficio(oficioBlock) {
+        const fileInput = oficioBlock.querySelector('.file-input-oficio');
+        if (fileInput && fileStores[fileInput.id]) {
+            delete fileStores[fileInput.id];
+        }
+        oficioBlock.remove();
+        updateOficioNumbers();
+        updateUI();
+    }
+
+    function updateOficioNumbers() {
+        const blocks = oficiosContainer.querySelectorAll('.oficio-block');
+        blocks.forEach((block, index) => {
+            const numberSpan = block.querySelector('.oficio-number');
+            if (numberSpan) {
+                numberSpan.textContent = index + 1;
+            }
+        });
+    }
+
+    function updateUI() {
+        const oficiosCount = oficiosContainer.querySelectorAll('.oficio-block').length;
+        const submitBtn = traspasoForm.querySelector('button[type="submit"]');
+        
+        // Mostrar/ocultar botón de eliminar según la cantidad
+        const removeBtns = oficiosContainer.querySelectorAll('.remove-oficio-btn');
+        removeBtns.forEach(btn => {
+            btn.style.display = oficiosCount > 1 ? 'block' : 'none';
+        });
+        
+        // Deshabilitar/enabled el botón de enviar
+        if (submitBtn) {
+            if (oficiosCount === 0) {
+                submitBtn.disabled = true;
+                submitBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                submitBtn.classList.remove('bg-blue-600', 'hover:bg-blue-700');
+                submitBtn.classList.add('bg-gray-400');
+            } else {
+                submitBtn.disabled = false;
+                submitBtn.classList.remove('opacity-50', 'cursor-not-allowed', 'bg-gray-400');
+                submitBtn.classList.add('bg-blue-600', 'hover:bg-blue-700');
+            }
+        }
+    }
+
+    // ===================================================================
+    // EVENT LISTENERS
+    // ===================================================================
+    addOficioBtn.addEventListener('click', createOficio);
+
+    oficiosContainer.addEventListener('click', function(e) {
+        if (e.target.closest('.remove-oficio-btn')) {
+            const oficioBlock = e.target.closest('.oficio-block');
+            removeOficio(oficioBlock);
+        }
+    });
+
+    traspasoForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        // Validar que haya al menos un oficio
+        const oficiosCount = oficiosContainer.querySelectorAll('.oficio-block').length;
+        if (oficiosCount === 0) {
+            alert('Debe agregar al menos un oficio de traspaso');
+            return;
+        }
+
+        const formData = new FormData(this);
+        
+        // Agregar archivos al FormData
+        for (const inputId in fileStores) {
+            const files = fileStores[inputId];
+            const inputName = document.getElementById(inputId)?.name;
+            
+            if (inputName && files.length > 0) {
+                formData.delete(inputName);
+                files.forEach(file => {
+                    formData.append(inputName, file);
+                });
+            }
+        }
+        
+        try {
+            const response = await fetch(this.action, {
+                method: 'POST',
+                body: formData
+            });
+            
+            const result = await response.json();
+            if (response.ok && result.redirect_url) {
+                window.location.href = result.redirect_url;
+            } else {
+                alert(result.message || 'Error al procesar la solicitud');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('Error de conexión');
+        }
+    });
+
+    // ===================================================================
+    // INICIALIZACIÓN
+    // ===================================================================
+    // Crear primer oficio automáticamente
+    createOficio();
+    
+    // Inicializar input de resguardo de fotos
+    initializeFileInput(document.getElementById('nuevo-resguardo-fotos-input'));
+    
+    // Actualizar UI inicial
+    updateUI();
+});
+</script>
+{% endblock %}

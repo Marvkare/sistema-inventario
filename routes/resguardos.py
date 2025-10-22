@@ -15,6 +15,7 @@ from decorators import permission_required
 from log_activity import log_activity
 from models import Resguardo, Bienes, Area
 import math
+
 resguardos_bp = Blueprint('resguardos', __name__)
 
 
@@ -108,7 +109,12 @@ def crear_resguardo():
                     cursor.execute("INSERT INTO imagenes_resguardo (id_resguardo, ruta_imagen) VALUES (%s, %s)", (id_resguardo, unique_filename))
             
             conn.commit()
-            log_activity(action='Creación de Resguardo', category='Resguardos', resource_id=id_resguardo)
+            log_activity(
+                action='Creación de Resguardo', 
+                category='Resguardos', 
+                resource_id=id_resguardo, 
+                details=f"Usuario '{current_user.username}' creó el resguardo No. Resguardo: {form_data.get('No_Resguardo')}"
+            )
             # --- CORRECCIÓN: Se retorna solo el JSON, que es lo esperado para un envío de formulario con JS ---
             jsonify({"message": "Resguardo creado exitosamente.", "category": "success", "redirect_url": url_for('resguardos.ver_resguardos')}), 200
             return redirect(url_for('resguardos.ver_resguardos'))
@@ -142,7 +148,13 @@ def crear_resguardo_de_bien(id_bien):
         if not bien_data:
             flash("Bien no encontrado.", "danger")
             return redirect(url_for('bienes.listar_bienes'))
-
+        
+        log_activity(
+            action="Carga de Formulario Resguardo",
+            category="Resguardos",
+            resource_id=id_bien,
+            details=f"Usuario '{current_user.username}' cargó el formulario para crear un resguardo para el bien No. Inventario: {bien_data.get('No_Inventario')}"
+        )
         # --- CORRECCIÓN CLAVE ---
         # Ahora también se obtienen las imágenes existentes del bien.
         cursor.execute("SELECT id, ruta_imagen FROM imagenes_bien WHERE id_bien = %s", (id_bien,))
@@ -171,6 +183,28 @@ def editar_resguardo(id_resguardo):
     try:
         conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
+
+        # --- VALIDACIÓN INICIAL (LA PARTE MÁS IMPORTANTE) ---
+        # 1. Obtenemos los datos del resguardo ANTES de cualquier otra lógica.
+        sql_select = """
+            SELECT r.*, b.*, r.id AS resguardo_id, b.id AS bien_id, a.id as Area_id 
+            FROM resguardos r 
+            JOIN bienes b ON r.id_bien = b.id 
+            JOIN areas a ON r.id_area = a.id 
+            WHERE r.id = %s AND r.Activo = 1
+        """
+        cursor.execute(sql_select, (id_resguardo,))
+        resguardo_data = cursor.fetchone()
+
+        # La validación ahora es más simple.
+        # Si no se encuentra un resguardo (porque no existe O porque está inactivo), se redirige.
+        if not resguardo_data:
+            flash("El resguardo no existe o está inactivo y no puede ser editado.", "warning")
+            return redirect(url_for('resguardos.ver_resguardos'))
+
+        # --- Si la validación pasa, el código continúa ---
+        
+        areas = get_areas_for_form()
 
         if request.method == 'POST':
             form_data = request.form
@@ -238,7 +272,12 @@ def editar_resguardo(id_resguardo):
                     cursor.execute("INSERT INTO imagenes_resguardo (id_resguardo, ruta_imagen) VALUES (%s, %s)", (id_resguardo, unique_filename))
 
             conn.commit()
-            log_activity(action='Edición de Resguardo', category='Resguardos', resource_id=id_resguardo)
+            log_activity(
+                action='Edición de Resguardo', 
+                category='Resguardos', 
+                resource_id=id_resguardo, 
+                details=f"Usuario '{current_user.username}' editó el resguardo No. Resguardo {form_data.get('No_Resguardo')}"
+            )
             flash('Resguardo actualizado exitosamente.', 'success')
 
             return redirect(url_for('resguardos.ver_resguardos'))
@@ -253,7 +292,7 @@ def editar_resguardo(id_resguardo):
         imagenes_bien_db = cursor.fetchall()
         cursor.execute("SELECT id, ruta_imagen FROM imagenes_resguardo WHERE id_resguardo = %s", (resguardo_data['resguardo_id'],))
         imagenes_resguardo_db = cursor.fetchall()
-        print(resguardo_data)
+        #print(resguardo_data)
         return render_template('resguardos/resguardo_form.html', is_edit=True, form_data=resguardo_data, areas=areas, imagenes_bien_db=imagenes_bien_db, imagenes_resguardo_db=imagenes_resguardo_db)
 
     except Exception as e:
@@ -386,7 +425,12 @@ def delete_resguardo(id):
         query = "DELETE FROM resguardo WHERE No_Folio = %s"
         cursor.execute(query, (id,))
         conn.commit()
-        log_activity(action='Resguardos', resource='Resguardo', resource_id=id, details=f'Se elimino resguardo y bien, ID: {id}')
+        log_activity(
+            action='Eliminación de Resguardo', 
+            category='Resguardos', 
+            resource_id=id, 
+            details=f"Usuario '{current_user.username}' eliminó el resguardo y bien asociado, ID resguardo: {id}"
+        )
         flash("Resguardo eliminado correctamente.", 'success')
     except mysql.connector.Error as err:
         flash(f"Error al eliminar resguardo: {err}", 'error')
@@ -395,13 +439,6 @@ def delete_resguardo(id):
         cursor.close()
         conn.close()
     return redirect(url_for('index'))
-
-
-
-
-# En tu archivo routes/resguardos.py
-
-# ... (tus otras importaciones como Flask, render_template, request, etc.)
 
 # =================================================================
 # VISTAS DE RESGUARDOS (RUTAS)

@@ -140,7 +140,11 @@ def login():
             login_user(user)
             flash('¡Inicio de sesión exitoso!', 'success')
             next_page = request.args.get('next')
-            log_activity(action=f"Inicio de sesión del usuario: {username}", category="Login")
+            log_activity(
+                action="Inicio de Sesión", 
+                category="Login", 
+                details=f"El usuario '{username}' ha iniciado sesión."
+            )
             db.session.commit()
             return redirect(next_page or url_for('resguardos.ver_resguardos'))
         else:
@@ -151,7 +155,11 @@ def login():
 @app.route('/logout')
 @login_required
 def logout():
-    log_activity(action=f"Cierre de sesión del usuario: {current_user.username}", category="Logout")
+    log_activity(
+        action="Cierre de Sesión", 
+        category="Logout", 
+        details=f"El usuario '{current_user.username}' ha cerrado sesión."
+    )
     db.session.commit()
     logout_user()
     return redirect(url_for('login'))

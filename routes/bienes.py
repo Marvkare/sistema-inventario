@@ -152,7 +152,12 @@ def agregar_bien():
                     cursor.execute("INSERT INTO imagenes_bien (id_bien, ruta_imagen) VALUES (%s, %s)", (id_bien, unique_filename))
 
             conn.commit()
-            log_activity(action="Creación de Bien", category="Bienes", resource_id=id_bien, details=f"Se creó el bien: {form_data.get('No_Inventario')}")
+            log_activity(
+                action="Creación de Bien", 
+                category="Bienes", 
+                resource_id=id_bien, 
+                details=f"Usuario '{current_user.username}' creó el bien: {form_data.get('No_Inventario')}"
+            )
             flash('Bien agregado exitosamente.', 'success')
             return redirect(url_for('bienes.listar_bienes'))
 
@@ -230,7 +235,12 @@ def editar_bien(bien_id):
                     cursor.execute("INSERT INTO imagenes_bien (id_bien, ruta_imagen) VALUES (%s, %s)", (bien_id, unique_filename))
 
             conn.commit()
-            log_activity(action="Edición de Bien", category="Bienes", resource_id=bien_id, details=f"Se editó el bien: {form_data.get('No_Inventario')}")
+            log_activity(
+                action="Edición de Bien", 
+                category="Bienes", 
+                resource_id=bien_id, 
+                details=f"Usuario '{current_user.username}' editó el bien: {form_data.get('No_Inventario')}"
+            )
             flash('Bien actualizado exitosamente.', 'success')
             return redirect(url_for('bienes.listar_bienes'))
 
@@ -265,19 +275,45 @@ def eliminar_bien(bien_id):
         conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
 
+        # 1. Obtener el nombre del bien para los mensajes y verificar que existe
         cursor.execute("SELECT No_Inventario FROM bienes WHERE id = %s", (bien_id,))
         bien = cursor.fetchone()
         
+        if not bien:
+            flash("Error: El bien que intenta eliminar no existe.", 'danger')
+            return redirect(url_for('bienes.listar_bienes'))
+
+        # --- ¡NUEVA VALIDACIÓN AÑADIDA! ---
+        # 2. Contar cuántos resguardos (activos o inactivos) están ligados a este bien
+        cursor.execute("SELECT COUNT(*) AS total FROM resguardos WHERE id_bien = %s", (bien_id,))
+        resguardo_count = cursor.fetchone()['total']
+
+        # 3. Si el conteo es mayor a 0, bloquear la eliminación
+        if resguardo_count > 0:
+            flash(f"Error: No se puede eliminar el bien '{bien['No_Inventario']}'. Tiene {resguardo_count} resguardo(s) históricos asociados.", 'danger')
+            return redirect(url_for('bienes.listar_bienes'))
+        # --- FIN DE LA VALIDACIÓN ---
+
+        # 4. Si el conteo es 0, proceder con la eliminación
         cursor.execute("DELETE FROM bienes WHERE id = %s", (bien_id,))
         conn.commit()
         
-        if bien:
-            log_activity(action="Eliminación de Bien", category="Bienes", resource_id=bien_id, details=f"Se eliminó el bien: {bien['No_Inventario']}")
-        
-        flash('Bien eliminado exitosamente.', 'success')
+        # 5. Registrar la eliminación exitosa
+        log_activity(
+            action="Eliminación de Bien", 
+            category="Bienes", 
+            resource_id=bien_id, 
+            details=f"Usuario '{current_user.username}' eliminó el bien sin resguardo: {bien['No_Inventario']}"
+        )
+        flash('Bien eliminado exitosamente (no tenía resguardos asociados).', 'success')
+
     except Exception as e:
         if conn: conn.rollback()
-        flash(f'Error al eliminar el bien: {e}', 'danger')
+        # Captura genérica por si otra tabla (ej. inventarios, bajas) tiene una FK
+        if '1451' in str(e): # Error 1451 es "Cannot delete or update a parent row: a foreign key constraint fails"
+             flash(f"Error: No se puede eliminar el bien '{bien['No_Inventario']}', está referenciado en otro módulo (ej. inventarios, procesos de baja).", 'danger')
+        else:
+            flash(f'Error al eliminar el bien: {e}', 'danger')
     finally:
         if conn and conn.is_connected(): conn.close()
         
@@ -296,11 +332,12 @@ def ver_detalles_bien(bien_id):
         sql_bien = """
             SELECT 
                 b.*, 
-                u.username AS registrado_por_nombre 
+                u.username AS registrado_por_username,
+                u.nombres AS registrado_por_nombres
             FROM bienes b
             JOIN user u ON b.usuario_id_registro = u.id
             WHERE b.id = %s
-        """
+        """ 
         cursor.execute(sql_bien, (bien_id,))
         bien = cursor.fetchone()
         
@@ -320,8 +357,10 @@ def ver_detalles_bien(bien_id):
                 d.id AS detalle_id,
                 i.id AS inventario_id,
                 i.nombre AS inventario_nombre,
+                i.tipo AS inventario_tipo,          -- ✅ LÍNEA AÑADIDA
                 i.fecha_inicio,
-                uc.username AS creador_nombre,
+                uc.username AS creador_username,
+                uc.nombres AS creador_nombres,
                 r.Nombre_Del_Resguardante,
                 r.Nombre_Director_Jefe_De_Area
             FROM inventario_detalle d
@@ -345,7 +384,7 @@ def ver_detalles_bien(bien_id):
             # 1. Obtener todas las brigadas de los inventarios involucrados
             format_strings = ','.join(['%s'] * len(inventario_ids))
             sql_brigadas = f"""
-                SELECT ib.inventario_id, u.username 
+                SELECT ib.inventario_id, u.username, u.nombres
                 FROM inventario_brigadas ib JOIN user u ON ib.user_id = u.id 
                 WHERE ib.inventario_id IN ({format_strings})
             """
@@ -354,8 +393,11 @@ def ver_detalles_bien(bien_id):
                 inv_id = row['inventario_id']
                 if inv_id not in brigadas_por_inventario:
                     brigadas_por_inventario[inv_id] = []
-                brigadas_por_inventario[inv_id].append(row['username'])
-
+                # Guardamos un diccionario con ambos datos para usarlo en la plantilla
+                brigadas_por_inventario[inv_id].append({
+                    'username': row['username'],
+                    'nombres': row['nombres']
+                })
             # 2. Obtener todas las fotos de los detalles de inventario involucrados
             format_strings = ','.join(['%s'] * len(detalle_ids))
             sql_fotos = f"SELECT id_inventario_detalle, ruta_archivo FROM inventario_fotos WHERE id_inventario_detalle IN ({format_strings})"

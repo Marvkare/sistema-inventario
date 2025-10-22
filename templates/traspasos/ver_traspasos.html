@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+
+{% block title %}Historial de Traspasos{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+
+    <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-4 mb-8">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-800">Historial de Traspasos</h1>
+            <p class="mt-1 text-sm text-gray-500">Consulta todos los traspasos de bienes registrados.</p>
+        </div>
+        <form method="GET" action="{{ url_for('traspaso.ver_traspasos') }}" class="w-full sm:w-72">
+            <div class="relative">
+                <input type="search" name="q" value="{{ search_query or '' }}"
+                       placeholder="Buscar por No. Inventario o Resguardante..."
+                       class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <i class="fas fa-search text-gray-400"></i>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <div class="bg-white shadow-lg rounded-lg overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">No. Inventario</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Fecha Traspaso</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Movimiento</th>
+                        <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">No. de Oficios</th>
+                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for traspaso in traspasos %}
+                    <tr>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="font-mono text-sm font-medium text-gray-900">{{ traspaso.No_Inventario }}</span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="text-sm text-gray-700">{{ traspaso.fecha_traspaso.strftime('%d/%m/%Y %H:%M') }}</span>
+                        </td>
+                        <td class="px-6 py-4">
+                            <div class="text-sm text-gray-500">
+                                <i class="fas fa-user-slash text-red-500 mr-1"></i> De: <span class="font-medium text-gray-800">{{ traspaso.Resguardante_Anterior }}</span> ({{ traspaso.Area_Anterior }})
+                            </div>
+                            <div class="text-sm text-gray-500 mt-1">
+                                <i class="fas fa-user-plus text-green-500 mr-1"></i> A: <span class="font-medium text-green-700">{{ traspaso.Resguardante_Actual }}</span> ({{ traspaso.Area_Actual }})
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-center">
+                            <span class="px-3 py-1 inline-flex text-sm leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+                                {{ traspaso.numero_oficios }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <a href="{{ url_for('traspaso.ver_detalles_traspaso', traspaso_id=traspaso.traspaso_id) }}" class="text-indigo-600 hover:text-indigo-900">
+                            Ver Detalles
+                        </a>
+                </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="4" class="text-center py-10 text-gray-500">
+                            {% if search_query %}
+                                <i class="fas fa-search text-3xl mb-2"></i>
+                                <p>No se encontraron traspasos que coincidan con "<span class="font-semibold">{{ search_query }}</span>".</p>
+                            {% else %}
+                                <i class="fas fa-folder-open text-3xl mb-2"></i>
+                                <p>No hay traspasos registrados.</p>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

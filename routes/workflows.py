@@ -4,7 +4,7 @@
 
 WORKFLOWS = {
     'Obsolescencia': {
-        'timeline': ['Solicitado', 'Pendiente de Comité', 'Autorizado para Disposición', 'Finalizado'],
+        'timeline': ['Solicitado', 'Fotografías del bien', 'Pendiente de Comité', 'Autorizado para Disposición', 'Finalizado'],
         'documentos_requeridos': {
             'Solicitud de Baja': 'Oficio inicial que arranca el proceso.',
             'Fotografías del bien': 'Evidencia fotográfica del estado actual del bien.',
@@ -18,6 +18,11 @@ WORKFLOWS = {
                 'documento_necesario': 'Dictamen Técnico',
                 'texto_accion': 'Enviar a Comité'
             },
+            'Fotografías del bien': {
+                'siguiente_estatus': 'Pendiente de Comité',
+                'documento_necesario': 'Fotografías del bien',
+                'texto_accion': 'Adjuntar Fotografías'
+            },
             'Pendiente de Comité': {
                 'siguiente_estatus': 'Autorizado para Disposición',
                 'documento_necesario': 'Acta de Comité',
@@ -25,7 +30,7 @@ WORKFLOWS = {
             },
             'Autorizado para Disposición': {
                 'siguiente_estatus': 'Finalizado',
-                'documento_necesario': 'Acta de Baja', # Requiere el acta final
+                'documento_necesario': 'Disposición Final', # Requiere el acta final
                 'texto_accion': 'Finalizar Proceso'
             }
         }

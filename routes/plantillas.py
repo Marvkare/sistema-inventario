@@ -174,7 +174,14 @@ def crear_plantilla():
             sql = "INSERT INTO query_templates (name, description, columns, filters) VALUES (%s, %s, %s, %s)"
             data_to_save = (template_name, template_description, columns_json, filters_json)
             cursor.execute(sql, data_to_save)
+            new_template_id = cursor.lastrowid
             conn.commit()
+            log_activity(
+                action="Creación de Plantilla",
+                category="Plantillas",
+                resource_id=new_template_id,
+                details=f"Usuario '{current_user.username}' creó la plantilla: {template_name}"
+            )
             flash(f"Plantilla '{template_name}' guardada exitosamente.", 'success')
             return redirect(url_for('plantillas.ver_plantillas'))
         except mysql.connector.IntegrityError:
@@ -227,8 +234,17 @@ def editar_plantilla(template_id):
             filters_json = json.dumps(filters)
 
             try:
-                cursor.execute("UPDATE query_templates SET name = %s, description = %s, columns = %s, filters = %s WHERE id = %s", (template_name, template_description, columns_json, filters_json, template_id))
+                # Cambiar a cursor normal para UPDATE
+                write_cursor = conn.cursor()
+                write_cursor.execute("UPDATE query_templates SET name = %s, description = %s, columns = %s, filters = %s WHERE id = %s", (template_name, template_description, columns_json, filters_json, template_id))
                 conn.commit()
+
+                log_activity(
+                    action="Edición de Plantilla",
+                    category="Plantillas",
+                    resource_id=template_id,
+                    details=f"Usuario '{current_user.username}' actualizó la plantilla: {template_name}"
+                )
                 flash(f"Plantilla '{template_name}' actualizada exitosamente.", 'success')
                 return redirect(url_for('plantillas.ver_plantillas'))
             except mysql.connector.IntegrityError:
@@ -281,11 +297,32 @@ def ver_plantillas():
 def eliminar_plantilla(template_id):
     """Ruta para eliminar una plantilla de consulta."""
     conn = None
+    template_name = f"ID {template_id}" # Valor por defecto por si falla la consulta
     try:
         conn = get_db_connection()
-        cursor = conn.cursor()
+        cursor = conn.cursor(dictionary=True) # Usar dictionary=True para leer el nombre
+
+        # --- AÑADIDO: Obtener el nombre ANTES de borrar ---
+        cursor.execute("SELECT name FROM query_templates WHERE id = %s", (template_id,))
+        template = cursor.fetchone()
+        if template:
+            template_name = template['name']
+        # --- FIN AÑADIDO ---
+
+        # Cambiar a cursor normal para DELETE
+        cursor = conn.cursor() 
         cursor.execute("DELETE FROM query_templates WHERE id = %s", (template_id,))
         conn.commit()
+
+        # --- AÑADIDO: Log de actividad ---
+        log_activity(
+            action="Eliminación de Plantilla",
+            category="Plantillas",
+            resource_id=template_id,
+            details=f"Usuario '{current_user.username}' eliminó la plantilla: {template_name}"
+        )
+        # --- FIN AÑADIDO ---
+
         flash("Plantilla eliminada exitosamente.", 'success')
     except Exception as e:
         flash(f"Error al eliminar la plantilla: {e}", 'danger')
@@ -293,7 +330,6 @@ def eliminar_plantilla(template_id):
         if conn:
             conn.close()
     return redirect(url_for('plantillas.ver_plantillas'))
-
 
 @plantillas_bp.route('/exportar_excel/<int:template_id>')
 @login_required
@@ -452,3 +488,4 @@ def preview_query():
     except Exception as e:
         traceback.print_exc()
         return jsonify({"error": f"Ocurrió un error inesperado. Detalle: {e}"}), 500
+        

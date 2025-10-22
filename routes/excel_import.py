@@ -151,9 +151,9 @@ def upload_excel():
         log_activity(
             action='INICIO_IMPORTACION_EXCEL',
             category='IMPORTACION',
-            details=f'Inicio de importación desde archivo: {file.filename}',
+            details=f"Usuario '{current_user.username}' inició importación desde archivo: {file.filename}",
             resource_id=upload_id
-        )
+        ) 
         db.session.commit()
     except Exception as log_error:
         print(f"Error inicial en log: {log_error}")
@@ -169,7 +169,7 @@ def upload_excel():
             log_activity(
                 action='ARCHIVO_LEIDO',
                 category='IMPORTACION',
-                details=f'Archivo leído correctamente. Filas: {len(df)}, Columnas: {len(df.columns)}',
+                details=f"Usuario '{current_user.username}' leyó un archivo. Filas: {len(df)}, Columnas: {len(df.columns)}",
                 resource_id=upload_id
             )
             db.session.commit()
@@ -228,7 +228,7 @@ def upload_excel():
                 log_activity(
                     action='DATOS_INSERTADOS',
                     category='IMPORTACION',
-                    details=f'Resguardos insertados exitosamente: {inserted_count}',
+                    details=f"Usuario '{current_user.username}': {inserted_count} resguardos insertados exitosamente.",
                     resource_id=upload_id
                 )
                 db.session.commit()
@@ -252,14 +252,14 @@ def upload_excel():
                 log_activity(
                     action='ERRORES_REGISTRADOS',
                     category='IMPORTACION',
-                    details=f'Errores registrados: {len(error_rows)} filas con problemas',
+                    details=f"Usuario '{current_user.username}': Se registraron {len(error_rows)} filas con problemas.",
                     resource_id=upload_id
                 )
                 
                 log_activity(
                     action='IMPORTACION_COMPLETADA_CON_ERRORES',
                     category='IMPORTACION',
-                    details=f'Importación completada. Exitosos: {inserted_count}, Errores: {len(error_rows)}',
+                    details=f"Usuario '{current_user.username}': Importación completada. Exitosos: {inserted_count}, Errores: {len(error_rows)}",
                     resource_id=upload_id
                 )
                 db.session.commit()
@@ -276,7 +276,7 @@ def upload_excel():
                 log_activity(
                     action='IMPORTACION_COMPLETADA_EXITOSA',
                     category='IMPORTACION',
-                    details=f'Importación completada exitosamente. Total resguardos: {inserted_count}',
+                    details=f"Usuario '{current_user.username}': Importación completada exitosamente. Total resguardos: {inserted_count}",
                     resource_id=upload_id
                 )
                 db.session.commit()
@@ -290,7 +290,7 @@ def upload_excel():
                 log_activity(
                     action='IMPORTACION_SIN_DATOS_VALIDOS',
                     category='IMPORTACION',
-                    details='El archivo no contenía filas válidas para importar',
+                    details=f"Usuario '{current_user.username}': El archivo no contenía filas válidas para importar.",
                     resource_id=upload_id
                 )
                 db.session.commit()
@@ -306,7 +306,7 @@ def upload_excel():
             log_activity(
                 action='ERROR_FATAL_IMPORTACION',
                 category='IMPORTACION',
-                details=f'Error fatal al procesar archivo: {str(e)}',
+                details=f"Usuario '{current_user.username}': Error fatal al procesar archivo: {str(e)}",
                 resource_id=upload_id
             )
             db.session.commit()

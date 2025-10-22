@@ -73,13 +73,14 @@
                                 {% for miembro in brigada %}
                                 <li class="flex items-center text-gray-700">
                                     <i class="fas fa-user-check text-burgundy mr-3 text-sm"></i>
-                                    {{ miembro }}
+                                    <span class="font-medium">{{ miembro.full_name }}</span>
+                                    <span class="text-gray-500 ml-2">({{ miembro.username }})</span>
                                 </li>
                                 {% else %}
                                 <li class="text-gray-500 text-center">No hay personal asignado.</li>
                                 {% endfor %}
                             </ul>
-                        </div>
+                        </div> 
                     </div>
                 </div>
             </div>

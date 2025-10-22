@@ -68,23 +68,34 @@ def listar_inventarios():
 @login_required
 @permission_required('inventarios.crear_inventario')
 def crear_inventario():
+    """
+    Gestiona la creación de un nuevo proceso de inventario.
+    
+    GET: Muestra el formulario con las áreas y usuarios disponibles.
+    POST: Procesa los datos del formulario, crea el inventario, asigna áreas y
+          brigada, y genera la cédula de levantamiento inicial.
+    """
     conn = None
     try:
         conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
 
+        # --- LÓGICA POST: PROCESAR EL FORMULARIO ---
         if request.method == 'POST':
-            # --- LÓGICA POST: PROCESAR EL FORMULARIO ---
             form_data = request.form
+            
+            # 1. Recolección de datos del formulario
             nombre = form_data.get('nombre')
             tipo = form_data.get('tipo')
+            tipo_resguardo_val = form_data.get('Tipo_De_Resguardo') # Recibe '0' o '1'
             area_ids = request.form.getlist('area_ids')
             user_ids = request.form.getlist('user_ids')
 
-            if not all([nombre, tipo, area_ids, user_ids]):
-                flash('Todos los campos son obligatorios.', 'warning')
+            # 2. Validación de datos de entrada
+            if not all([nombre, tipo, area_ids, user_ids]) or tipo_resguardo_val is None:
+                flash('Todos los campos son obligatorios. Por favor, complete toda la información.', 'warning')
                 # Si la validación falla, debemos recargar los datos para volver a mostrar el formulario
-                # Esta consulta es idéntica a la de la lógica GET
+                # Esta lógica es idéntica a la de la petición GET
                 sql_areas_con_detalle = """
                     SELECT a.id, a.nombre, COUNT(DISTINCT r.id_bien) AS num_bienes,
                            (SELECT r2.Nombre_Director_Jefe_De_Area FROM resguardos r2 WHERE r2.id_area = a.id AND r2.Nombre_Director_Jefe_De_Area IS NOT NULL LIMIT 1) AS jefe_de_area
@@ -96,34 +107,43 @@ def crear_inventario():
                 areas = cursor.fetchall()
                 cursor.execute("SELECT id, username FROM user ORDER BY username")
                 users = cursor.fetchall()
+                # Devolvemos el formulario con los datos que el usuario ya había ingresado
                 return render_template('inventarios/crear_inventario.html', areas=areas, users=users, form_data=form_data)
 
-            # --- INICIO DE LA TRANSACCIÓN ---
+            tipo_resguardo_int = int(tipo_resguardo_val)
+
+            # --- INICIO DE LA TRANSACCIÓN DE BASE DE DATOS ---
             
-            # 1. Crear el registro principal en la tabla 'inventarios'
-            sql_inventario = "INSERT INTO inventarios (nombre, tipo, estatus, id_usuario_creador) VALUES (%s, %s, 'Planificado', %s)"
-            cursor.execute(sql_inventario, (nombre, tipo, current_user.id))
+            # 3. Crear el registro principal en la tabla 'inventarios'
+            sql_inventario = """
+                INSERT INTO inventarios (nombre, tipo, tipo_resguardo_inventariado, estatus, id_usuario_creador) 
+                VALUES (%s, %s, %s, 'Planificado', %s)
+            """
+            cursor.execute(sql_inventario, (nombre, tipo, tipo_resguardo_int, current_user.id))
             inventario_id = cursor.lastrowid
 
-            # 2. Vincular las áreas seleccionadas
+            # 4. Vincular las áreas seleccionadas en la tabla pivote
             sql_areas = "INSERT INTO inventario_areas (inventario_id, area_id) VALUES (%s, %s)"
             area_values = [(inventario_id, int(area_id)) for area_id in area_ids]
             cursor.executemany(sql_areas, area_values)
 
-            # 3. Vincular los usuarios (brigada)
+            # 5. Vincular los usuarios (brigada) en la tabla pivote
             sql_brigada = "INSERT INTO inventario_brigadas (inventario_id, user_id) VALUES (%s, %s)"
             user_values = [(inventario_id, int(user_id)) for user_id in user_ids]
             cursor.executemany(sql_brigada, user_values)
             
-            # 4. Generar la "Cédula de Levantamiento" (los registros en 'inventario_detalle')
+            # 6. Generar la "Cédula de Levantamiento" inicial (registros en 'inventario_detalle')
             format_strings = ','.join(['%s'] * len(area_ids))
             sql_bienes_a_inventariar = f"""
                 SELECT b.id, r.id AS resguardo_id, r.id_area, r.Nombre_Del_Resguardante
                 FROM bienes b
                 JOIN resguardos r ON b.id = r.id_bien
-                WHERE r.Activo = 1 AND r.id_area IN ({format_strings})
+                WHERE r.Activo = 1 
+                  AND r.id_area IN ({format_strings})
+                  AND r.Tipo_De_Resguardo = %s
             """
-            cursor.execute(sql_bienes_a_inventariar, tuple(area_ids))
+            query_params = tuple(area_ids) + (tipo_resguardo_int,)
+            cursor.execute(sql_bienes_a_inventariar, query_params)
             bienes_en_areas = cursor.fetchall()
             
             if bienes_en_areas:
@@ -139,26 +159,39 @@ def crear_inventario():
                 ]
                 cursor.executemany(sql_detalle, detalle_values)
 
+            # 7. Confirmar todos los cambios en la base de datos
             conn.commit()
-            log_activity("Creación de Inventario", "Inventarios", inventario_id, f"Se creó el inventario '{nombre}' con {len(bienes_en_areas)} bienes a verificar.")
+            
+            log_activity(
+                    action="Creación de Inventario", 
+                    category="Inventarios", 
+                    resource_id=inventario_id, 
+                    details=f"Usuario '{current_user.username}' creó el inventario '{nombre}' con {len(bienes_en_areas)} bienes a verificar."
+                ) 
             flash(f'Inventario "{nombre}" creado exitosamente.', 'success')
             return redirect(url_for('inventarios.listar_inventarios'))
 
-        # --- LÓGICA GET: MOSTRAR EL FORMULARIO CON DATOS ENRIQUECIDOS ---
+        # --- LÓGICA GET: MOSTRAR EL FORMULARIO INICIAL ---
         sql_areas_con_detalle = """
-            SELECT 
-                a.id, 
-                a.nombre,
-                COUNT(DISTINCT r.id_bien) AS num_bienes,
-                (SELECT r2.Nombre_Director_Jefe_De_Area 
-                 FROM resguardos r2 
-                 WHERE r2.id_area = a.id AND r2.Nombre_Director_Jefe_De_Area IS NOT NULL 
-                 LIMIT 1) AS jefe_de_area
-            FROM areas a
-            LEFT JOIN resguardos r ON a.id = r.id_area AND r.Activo = 1
-            GROUP BY a.id, a.nombre
-            ORDER BY a.nombre
-        """
+                    SELECT 
+                        a.id, 
+                        a.nombre,
+                        (SELECT r2.Nombre_Director_Jefe_De_Area 
+                        FROM resguardos r2 
+                        WHERE r2.id_area = a.id AND r2.Nombre_Director_Jefe_De_Area IS NOT NULL 
+                        LIMIT 1) AS jefe_de_area,
+                        
+                        -- Contar bienes de resguardo normal (Tipo_De_Resguardo = 0)
+                        COUNT(DISTINCT CASE WHEN r.Tipo_De_Resguardo = 0 THEN r.id_bien END) AS num_bienes_normal,
+                        
+                        -- Contar bienes sujetos a control (Tipo_De_Resguardo = 1)
+                        COUNT(DISTINCT CASE WHEN r.Tipo_De_Resguardo = 1 THEN r.id_bien END) AS num_bienes_control
+                        
+                    FROM areas a
+                    LEFT JOIN resguardos r ON a.id = r.id_area AND r.Activo = 1
+                    GROUP BY a.id, a.nombre
+                    ORDER BY a.nombre
+                """
         cursor.execute(sql_areas_con_detalle)
         areas = cursor.fetchall()
         
@@ -168,11 +201,18 @@ def crear_inventario():
         return render_template('inventarios/crear_inventario.html', areas=areas, users=users, form_data={})
 
     except Exception as e:
-        if conn and conn.rollback: conn.rollback()
-        flash(f"Error al procesar la solicitud de inventario: {e}", 'danger')
-        traceback.print_exc()
+        # Si ocurre cualquier error, deshacer todos los cambios de la transacción
+        if conn and conn.is_connected():
+            conn.rollback()
+        
+        flash(f"Error crítico al procesar la solicitud de inventario: {e}", 'danger')
+        traceback.print_exc() # Imprime el error detallado en la consola del servidor para depuración
+        
+        # Redirigir a una página segura para evitar estados inconsistentes
         return redirect(url_for('inventarios.listar_inventarios'))
+    
     finally:
+        # Asegurarse de que la conexión a la base de datos siempre se cierre
         if conn and conn.is_connected():
             conn.close()
 
@@ -223,12 +263,36 @@ def gestionar_inventario(inventario_id):
         cursor.execute("SELECT * FROM inventario_sobrantes WHERE id_inventario = %s", (inventario_id,))
         sobrantes = cursor.fetchall()
 
+        # 1. Obtener la brigada actual (asumiendo que ya lo haces para tu plantilla)
+        cursor.execute("""
+            SELECT u.id, u.username, u.nombres AS full_name
+            FROM user u
+            JOIN inventario_brigadas ib ON u.id = ib.user_id
+            WHERE ib.inventario_id = %s
+            ORDER BY u.nombres
+        """, (inventario_id,))
+        brigada_actual = cursor.fetchall()
+        
+        # 2. Obtener usuarios que NO están en la brigada
+        cursor.execute("""
+            SELECT u.id, u.username, u.nombres AS full_name
+            FROM user u
+            WHERE u.id NOT IN (
+                SELECT ib.user_id FROM inventario_brigadas ib
+                WHERE ib.inventario_id = %s
+            )
+            ORDER BY u.nombres
+        """, (inventario_id,))
+        usuarios_disponibles = cursor.fetchall()
+
         return render_template(
             'inventarios/gestionar_inventario.html',
             inventario=inventario,
             detalles_agrupados=detalles_agrupados, 
             sobrantes=sobrantes,
-            todas_las_areas=todas_las_areas
+            todas_las_areas=todas_las_areas,
+            brigada=brigada_actual,
+            usuarios_disponibles=usuarios_disponibles
         )
 
     except Exception as e:
@@ -300,6 +364,19 @@ def actualizar_detalle(detalle_id):
         conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
 
+        # --- VALIDACIÓN DE PERTENENCIA A LA BRIGADA ---
+        cursor.execute("""
+            SELECT 1 FROM inventario_brigadas 
+            WHERE inventario_id = %s AND user_id = %s
+        """, (inventario_id, current_user.id))
+        
+        is_member = cursor.fetchone()
+
+        # 3. Si no es miembro, le negamos el acceso y redirigimos.
+        if not is_member:
+            flash('Acceso prohibido. No eres parte de la brigada asignada a este inventario.', 'danger')
+            return redirect(url_for('inventarios.gestionar_inventario', inventario_id=inventario_id))
+
         # --- Validación de estatus del inventario (sin cambios) ---
         cursor.execute("SELECT estatus FROM inventarios WHERE id = %s", (inventario_id,))
         inventario_actual = cursor.fetchone()
@@ -359,7 +436,12 @@ def actualizar_detalle(detalle_id):
         conn.commit()
         # Mensaje más genérico que aplica para revisión y edición
         flash("El detalle del bien ha sido actualizado correctamente.", "success")
-        log_activity("Actualización de Bien", "Inventarios", detalle_id, f"Se actualizó el detalle del bien en el inventario ID: {inventario_id}")
+        log_activity(
+            action="Actualización de Bien", 
+            category="Inventarios", 
+            resource_id=detalle_id, 
+            details=f"Usuario '{current_user.username}' actualizó el detalle del bien en el inventario ID: {inventario_id}"
+        )
 
     except Exception as e:
         if conn: conn.rollback()
@@ -409,7 +491,12 @@ def finalizar_inventario(inventario_id):
         """, (datetime.now(), inventario_id))
 
         conn.commit()
-        log_activity("Finalización de Inventario", "Inventarios", inventario_id, f"Se finalizó el inventario. {len(bienes_pendientes)} bienes marcados como faltantes.")
+        log_activity(
+            action="Finalización de Inventario", 
+            category="Inventarios", 
+            resource_id=inventario_id, 
+            details=f"Usuario '{current_user.username}' finalizó el inventario. {len(bienes_pendientes)} bienes marcados como faltantes."
+        )
         flash('El inventario ha sido finalizado exitosamente.', 'success')
 
     except Exception as e:
@@ -436,11 +523,16 @@ def cambiar_estatus_inventario(inventario_id, accion):
         cursor = conn.cursor(dictionary=True)
 
         # 1. Obtenemos el estado actual ANTES de hacer nada.
-        cursor.execute("SELECT estatus FROM inventarios WHERE id = %s", (inventario_id,))
+        cursor.execute("SELECT estatus, id_usuario_creador FROM inventarios WHERE id = %s", (inventario_id,))
         inventario_actual = cursor.fetchone()
         if not inventario_actual:
             flash("Inventario no encontrado.", "danger")
             return redirect(url_for('inventarios.listar_inventarios'))
+        
+        # Comparamos el ID del creador del inventario con el del usuario actual.
+        if inventario_actual['id_usuario_creador'] != current_user.id:
+            flash('Acción no permitida. Solo el usuario que creó el inventario puede cambiar su estatus.', 'danger')
+            return redirect(url_for('inventarios.gestionar_inventario', inventario_id=inventario_id))
         
         current_status = inventario_actual['estatus']
         nuevo_estatus = None
@@ -477,7 +569,12 @@ def cambiar_estatus_inventario(inventario_id, accion):
             cursor.execute("UPDATE inventarios SET estatus = %s WHERE id = %s", (nuevo_estatus, inventario_id))
 
         conn.commit()
-        log_activity("Cambio de Estatus", "Inventarios", inventario_id, mensaje_log)
+        log_activity(
+            action="Cambio de Estatus", 
+            category="Inventarios", 
+            resource_id=inventario_id, 
+            details=f"Usuario '{current_user.username}' cambió el estatus: {mensaje_log}"
+        )
         flash(f'El estatus del inventario se ha actualizado a "{nuevo_estatus}".', 'success')
 
     except Exception as e:
@@ -505,34 +602,52 @@ def agregar_sobrante(inventario_id):
         conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
 
-        # Validación de estatus: no se pueden agregar sobrantes a un inventario 'Planificado'
-        cursor.execute("SELECT estatus, id_area_encontrado FROM inventarios WHERE id = %s", (inventario_id,))
+        # Verificación de pertenencia a la brigada (Correcto)
+        cursor.execute("""
+            SELECT 1 FROM inventario_brigadas 
+            WHERE inventario_id = %s AND user_id = %s
+        """, (inventario_id, current_user.id))
+        
+        is_member = cursor.fetchone()
+        if not is_member:
+            flash('Acceso prohibido. No eres parte de la brigada asignada a este inventario.', 'danger')
+            return redirect(url_for('inventarios.gestionar_inventario', inventario_id=inventario_id))
+
+        # --- AQUÍ ESTÁ LA CORRECCIÓN ---
+        # Validación de estatus: solo se necesita el 'estatus' de la tabla 'inventarios'.
+        cursor.execute("SELECT estatus FROM inventarios WHERE id = %s", (inventario_id,))
         inventario = cursor.fetchone()
+        
         if not inventario or inventario['estatus'] == 'Planificado':
             flash('Acción no permitida en el estado actual del inventario.', 'warning')
             return redirect(url_for('inventarios.gestionar_inventario', inventario_id=inventario_id))
 
         form_data = request.form
-        cursor = conn.cursor() # Cursor normal para inserts
+        
+        # Asumimos que el usuario debe seleccionar el área donde encontró el bien.
+        # Es más seguro que obtener la primera área del inventario.
+        area_encontrado_id = form_data.get('id_area_encontrado') # Asegúrate de tener este campo en tu formulario
+        if not area_encontrado_id:
+             flash('Debe seleccionar el área donde se encontró el bien sobrante.', 'warning')
+             return redirect(url_for('inventarios.gestionar_inventario', inventario_id=inventario_id))
 
         # Insertar en la tabla 'inventario_sobrantes'
         sql_sobrante = """
             INSERT INTO inventario_sobrantes (
                 id_inventario, id_area_encontrado, descripcion_bien, marca, modelo, 
-                numero_serie, condicion_fisica, estatus_resolucion
-            ) VALUES (%s, %s, %s, %s, %s, %s, %s, 'Pendiente de Identificación')
+                numero_serie, condicion_fisica, estatus_resolucion, id_usuario_captura, fecha_captura
+            ) VALUES (%s, %s, %s, %s, %s, %s, %s, 'Pendiente de Identificación', %s, %s)
         """
-        # Asumimos que se encontró en la primera área del inventario, esto podría mejorarse
-        # pidiendo al usuario que seleccione el área donde lo encontró.
-        cursor.execute("SELECT area_id FROM inventario_areas WHERE inventario_id = %s LIMIT 1", (inventario_id,))
-        area_encontrado_id = cursor.fetchone()[0]
-
         values = (
-            inventario_id, area_encontrado_id, form_data.get('descripcion_bien'), form_data.get('marca'),
-            form_data.get('modelo'), form_data.get('numero_serie'), form_data.get('condicion_fisica')
+            inventario_id, area_encontrado_id, form_data.get('descripcion_bien'), 
+            form_data.get('marca'), form_data.get('modelo'), form_data.get('numero_serie'), 
+            form_data.get('condicion_fisica'), current_user.id, datetime.now()
         )
-        cursor.execute(sql_sobrante, values)
-        sobrante_id = cursor.lastrowid
+        
+        # Usar un cursor sin diccionario para operaciones de escritura
+        write_cursor = conn.cursor()
+        write_cursor.execute(sql_sobrante, values)
+        sobrante_id = write_cursor.lastrowid
         
         # Procesar y guardar fotos (si las hay)
         fotos = request.files.getlist('fotos_sobrante')
@@ -543,10 +658,15 @@ def agregar_sobrante(inventario_id):
                 foto.save(os.path.join(current_app.config['UPLOAD_FOLDER'], unique_filename))
                 
                 sql_foto = "INSERT INTO inventario_sobrante_fotos (id_inventario_sobrante, ruta_archivo) VALUES (%s, %s)"
-                cursor.execute(sql_foto, (sobrante_id, unique_filename))
+                write_cursor.execute(sql_foto, (sobrante_id, unique_filename))
 
         conn.commit()
-        log_activity("Registro de Sobrante", "Inventarios", sobrante_id, f"Se registró un bien sobrante en el inventario ID: {inventario_id}")
+        log_activity(
+            action="Registro de Sobrante", 
+            category="Inventarios", 
+            resource_id=sobrante_id, 
+            details=f"Usuario '{current_user.username}' registró un bien sobrante en el inventario ID: {inventario_id}"
+        )
         flash('Bien sobrante registrado exitosamente.', 'success')
 
     except Exception as e:
@@ -558,7 +678,6 @@ def agregar_sobrante(inventario_id):
             conn.close()
 
     return redirect(url_for('inventarios.gestionar_inventario', inventario_id=inventario_id))
-
 
 @inventarios_bp.route('/<int:inventario_id>/reporte')
 @login_required
@@ -575,8 +694,19 @@ def generar_reporte(inventario_id):
         if not inventario:
             flash("Inventario no encontrado.", "danger")
             return redirect(url_for('inventarios.listar_inventarios'))
-        cursor.execute("SELECT u.username FROM user u JOIN inventario_brigadas ib ON u.id = ib.user_id WHERE ib.inventario_id = %s ORDER BY u.username", (inventario_id,))
-        brigada = [row['username'] for row in cursor.fetchall()]
+        
+        # Consulta la brigada con 'username' y 'nombres' (alias 'full_name')
+        sql_brigada = """
+            SELECT u.username, u.nombres AS full_name, u.id
+            FROM user u 
+            JOIN inventario_brigadas ib ON u.id = ib.user_id 
+            WHERE ib.inventario_id = %s 
+            ORDER BY u.nombres
+        """
+        cursor.execute(sql_brigada, (inventario_id,))
+        
+        # Guarda la lista completa de diccionarios
+        brigada = cursor.fetchall()
 
         # 2. Obtener todos los detalles de bienes
         sql_detalles = """
@@ -690,13 +820,19 @@ def descargar_reporte_pdf(inventario_id):
             flash("Inventario no encontrado.", "danger")
             return redirect(url_for('inventarios.listar_inventarios'))
 
-        cursor.execute("""
-            SELECT u.username FROM user u
-            JOIN inventario_brigadas ib ON u.id = ib.user_id
-            WHERE ib.inventario_id = %s ORDER BY u.username
-        """, (inventario_id,))
-        brigada = [row['username'] for row in cursor.fetchall()]
-
+        # Consulta la brigada con 'username' y 'nombres' (alias 'full_name')
+        sql_brigada_pdf = """
+            SELECT u.username, u.nombres AS full_name, u.id
+            FROM user u 
+            JOIN inventario_brigadas ib ON u.id = ib.user_id 
+            WHERE ib.inventario_id = %s 
+            ORDER BY u.nombres
+        """
+        cursor.execute(sql_brigada_pdf, (inventario_id,))
+        
+        # Guarda la lista completa de diccionarios
+        brigada = cursor.fetchall()
+        
         # 1b. Obtener todos los detalles de bienes y nombre del verificador
         sql_detalles = """
             SELECT
@@ -794,3 +930,155 @@ def descargar_reporte_pdf(inventario_id):
     finally:
         if conn and conn.is_connected():
             conn.close()
+
+
+@inventarios_bp.route('/<int:inventario_id>/brigada/agregar', methods=['POST'])
+@login_required
+@permission_required('inventarios.gestionar_inventario') # O un permiso específico
+def agregar_miembros_brigada(inventario_id):
+    conn = None
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+
+        # 1. Validar el inventario y los permisos
+        cursor.execute("SELECT estatus, id_usuario_creador FROM inventarios WHERE id = %s", (inventario_id,))
+        inventario = cursor.fetchone()
+
+        if not inventario:
+            flash("Inventario no encontrado.", "danger")
+            return redirect(url_for('inventarios.listar_inventarios'))
+
+        # Asumimos que solo el creador puede añadir (puedes cambiar esta lógica)
+        if inventario['id_usuario_creador'] != current_user.id:
+            flash("Solo el creador del inventario puede añadir nuevos miembros.", "danger")
+            return redirect(url_for('inventarios.gestionar_inventario', inventario_id=inventario_id))
+
+        # 2. Validar el ESTATUS (la restricción clave)
+        if inventario['estatus'] not in ('Planificado', 'En Progreso'):
+            flash("No se pueden añadir miembros a la brigada en esta fase del inventario.", "warning")
+            return redirect(url_for('inventarios.gestionar_inventario', inventario_id=inventario_id))
+
+        # 3. Obtener los IDs de los nuevos usuarios desde el formulario
+        user_ids_a_agregar = request.form.getlist('user_ids')
+        if not user_ids_a_agregar:
+            flash("No se seleccionó ningún usuario para añadir.", "info")
+            return redirect(url_for('inventarios.gestionar_inventario', inventario_id=inventario_id))
+
+        # 4. Obtener brigada existente para evitar duplicados
+        cursor.execute("SELECT user_id FROM inventario_brigadas WHERE inventario_id = %s", (inventario_id,))
+        miembros_existentes = {row['user_id'] for row in cursor.fetchall()}
+
+        # 5. Preparar solo los IDs que realmente son nuevos
+        nuevos_miembros_values = []
+        for user_id in user_ids_a_agregar:
+            user_id_int = int(user_id)
+            if user_id_int not in miembros_existentes:
+                nuevos_miembros_values.append((inventario_id, user_id_int))
+
+        # 6. Insertar los nuevos miembros
+        if nuevos_miembros_values:
+            sql_insert = "INSERT INTO inventario_brigadas (inventario_id, user_id) VALUES (%s, %s)"
+            write_cursor = conn.cursor()
+            write_cursor.executemany(sql_insert, nuevos_miembros_values)
+            conn.commit()
+            flash(f"Se añadieron {len(nuevos_miembros_values)} nuevos miembros a la brigada.", "success")
+            log_activity(
+                action="Añadir Brigada", 
+                category="Inventarios", 
+                resource_id=inventario_id, 
+                details=f"Usuario '{current_user.username}' añadió {len(nuevos_miembros_values)} usuarios a la brigada."
+            )
+        else:
+            flash("Los usuarios seleccionados ya pertenecían a la brigada.", "info")
+
+    except Exception as e:
+        if conn: conn.rollback()
+        flash(f'Error al añadir miembros a la brigada: {e}', 'danger')
+        traceback.print_exc()
+    finally:
+        if conn and conn.is_connected():
+            conn.close()
+
+    return redirect(url_for('inventarios.gestionar_inventario', inventario_id=inventario_id))
+
+
+@inventarios_bp.route('/<int:inventario_id>/brigada/remover', methods=['POST'])
+@login_required
+@permission_required('inventarios.gestionar_inventario') # Re-usamos el permiso
+def remover_miembros_brigada(inventario_id):
+    conn = None
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+
+        # 1. Validar el inventario y los permisos del usuario
+        cursor.execute("SELECT estatus, id_usuario_creador FROM inventarios WHERE id = %s", (inventario_id,))
+        inventario = cursor.fetchone()
+
+        if not inventario:
+            flash("Inventario no encontrado.", "danger")
+            return redirect(url_for('inventarios.listar_inventarios'))
+
+        # Solo el creador del inventario puede remover miembros
+        if inventario['id_usuario_creador'] != current_user.id:
+            flash("Solo el creador del inventario puede remover miembros de la brigada.", "danger")
+            return redirect(url_for('inventarios.gestionar_inventario', inventario_id=inventario_id))
+
+        # 2. Validar el ESTATUS (misma restricción que para añadir)
+        if inventario['estatus'] not in ('Planificado', 'En Progreso'):
+            flash("No se pueden remover miembros de la brigada en esta fase del inventario.", "warning")
+            return redirect(url_for('inventarios.gestionar_inventario', inventario_id=inventario_id))
+
+        # 3. Obtener los IDs de los usuarios a remover
+        user_ids_a_remover = request.form.getlist('user_ids_remover')
+        if not user_ids_a_remover:
+            flash("No se seleccionó ningún usuario para remover.", "info")
+            return redirect(url_for('inventarios.gestionar_inventario', inventario_id=inventario_id))
+
+        # 4. Regla de negocio: No permitir que el creador sea removido
+        user_ids_validados = []
+        creador_id = inventario['id_usuario_creador']
+        intent_de_remover_creador = False
+
+        for user_id in user_ids_a_remover:
+            if int(user_id) == creador_id:
+                intent_de_remover_creador = True
+            else:
+                user_ids_validados.append(int(user_id))
+
+        if intent_de_remover_creador:
+            flash("El creador del inventario no puede ser removido de la brigada.", "warning")
+
+        # 5. Ejecutar la eliminación en la BD
+        if user_ids_validados:
+            # Crear placeholders (%s, %s, ...) para una consulta 'IN' segura
+            placeholders = ','.join(['%s'] * len(user_ids_validados))
+            sql_delete = f"DELETE FROM inventario_brigadas WHERE inventario_id = %s AND user_id IN ({placeholders})"
+            
+            # Los parámetros son el ID del inventario + la tupla de IDs de usuario
+            params = (inventario_id,) + tuple(user_ids_validados)
+            
+            write_cursor = conn.cursor()
+            write_cursor.execute(sql_delete, params)
+            conn.commit()
+            flash(f"Se removieron {len(user_ids_validados)} miembros de la brigada.", "success")
+            log_activity(
+                action="Remover Brigada", 
+                category="Inventarios", 
+                resource_id=inventario_id, 
+                details=f"Usuario '{current_user.username}' removió {len(user_ids_validados)} usuarios de la brigada."
+            )
+
+        elif not intent_de_remover_creador:
+            flash("No se seleccionó ningún miembro válido para remover.", "info")
+
+    except Exception as e:
+        if conn: conn.rollback()
+        flash(f'Error al remover miembros de la brigada: {e}', 'danger')
+        traceback.print_exc()
+    finally:
+        if conn and conn.is_connected():
+            conn.close()
+
+    return redirect(url_for('inventarios.gestionar_inventario', inventario_id=inventario_id))

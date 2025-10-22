@@ -33,7 +33,8 @@ class User(UserMixin, db.Model):
 
     reset_token = db.Column(db.String(255), unique=True, nullable=True)
     reset_token_expiration = db.Column(db.DateTime, nullable=True)
-    
+    nombres = db.Column(db.String(255), nullable=True, comment="Nombre completo del usuario")
+    telefono = db.Column(db.String(20), unique=True, nullable=True, comment="Número de teléfono de contacto")    
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -198,6 +199,12 @@ class OficiosTraspaso(db.Model):
     Fecha_Registro = db.Column(db.DateTime, default=datetime.utcnow)
     
     imagenes = db.relationship('ImagenesOficiosTraspaso', backref='oficio', lazy=True, cascade="all, delete-orphan")
+    Nombre_Solicitante = db.Column(db.String(255))
+    id_area_solicitante = db.Column(db.Integer, db.ForeignKey('areas.id'))
+    Jefe_Area_Solicitante = db.Column(db.String(255))
+
+    # --- Relaciones ---
+    area_solicitante = db.relationship('Area', foreign_keys=[id_area_solicitante])
     
     # --- CORRECCIÓN CLAVE: Se definen las relaciones de vuelta hacia Resguardo ---
     resguardo_anterior = db.relationship('Resguardo', foreign_keys=[id_resguardo_anterior], back_populates='oficios_traspaso_anteriores')
@@ -450,7 +457,12 @@ class Inventario(db.Model):
         default='Físico-Contable',
         comment="Distingue entre un inventario formal completo y una revisión rápida o preventiva."
     )
-    
+    tipo_resguardo_inventariado = db.Column(
+        db.Integer, 
+        nullable=False, 
+        server_default='0',
+        comment="Filtra los bienes a inventariar. 0=Resguardo, 1=Sujeto a Control."
+    ) 
     # Estatus general del proceso de inventariado.
     estatus = db.Column(
         Enum('Planificado', 'En Progreso', 'En Conciliación', 'Finalizado', 'Cancelado', name='estatus_inventario_enum'),

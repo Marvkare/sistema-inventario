@@ -63,15 +63,15 @@ Una herramienta fundamental para el control y la fiscalización. Permite generar
 
 | Componente      | Tecnología                                                                                                                                                                                                 |
 | --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Backend** |                                                                                               |
-| **Base de Datos** |  /                                                                                       |
+| **Backend** |    Python                                                                                           |
+| **Base de Datos** |  Mysql                                                                                       |
 | **ORM** |  con `Flask-SQLAlchemy`                                                                                                                     |
 | **Autenticación** |                                                                                                                                |
 | **Formularios** |                                                                                                                                           |
 | **Migraciones** |                                                                                                                                  |
 | **Reportes PDF** |                                                                                                                                                       |
 | **Imágenes** |                                                                                                                                             |
-| **Exportación** |  y  para futura exportación a Excel.                                              |
+| **Exportación** |   exportación a Excel.                                              |
 
 -----
 
