@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+
+{% block title %}Manual: Cómo Agregar un Bien{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url_for('manual.index') }}">Manual de Usuario</a></li>
+            <li class="breadcrumb-item"><a href="{{ url_for('manual.manual_bienes_pagina', pagina='index') }}">Módulo de Bienes</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Cómo Agregar un Bien</li>
+        </ol>
+    </nav>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <h1 class="card-title">Manual: Cómo Registrar (Agregar) un Bien Nuevo</h1>
+            <p class="lead">
+                Esta guía te mostrará paso a paso cómo registrar un nuevo bien (como una silla, computadora o vehículo) 
+                en el sistema de inventario.
+            </p>
+
+            <hr>
+
+            <h2>Paso 1: Ir a la Lista de Bienes</h2>
+            <p>
+                En el menú de navegación principal (normalmente a la izquierda), haz clic en la sección 
+                <strong>"Bienes"</strong> y luego en <strong>"Listar Bienes"</strong>.
+            </p>
+            
+
+            <hr>
+
+            <h2>Paso 2: Hacer Clic en "Agregar Bien"</h2>
+            <p>
+                Una vez en la pantalla de la lista de bienes, busca el botón verde 
+                <strong>"+ Agregar Bien"</strong> que se encuentra en la esquina superior derecha.
+            </p>
+            
+
+            <hr>
+
+            <h2>Paso 3: Llenar el Formulario</h2>
+            <p>
+                Aparecerá un formulario con muchos campos. Rellena la información solicitada.
+            </p>
+            
+            <h4>Campos Importantes:</h4>
+            <ul>
+                <li>
+                    <strong>No. Inventario:</strong> Es el número de etiqueta único del bien. Es obligatorio y no se puede repetir.
+                </li>
+                <li>
+                    <strong>Descripción Corta:</strong> Un nombre fácil de reconocer. Ej: "Laptop HP Pavillion" o "Escritorio de madera".
+                </li>
+                <li>
+                    <strong>Estado del Bien:</strong> Selecciona si el bien es "Bueno", "Regular" o "Malo".
+                </li>
+                <li>
+                    <strong>Clasificación Legal:</strong> Indica si es "Bien Mueble" o "Bien Inmueble".
+                </li>
+            </ul>
+            
+            <div class="alert alert-info">
+                <strong>Consejo 💡:</strong> Los campos con un asterisco rojo (*) son obligatorios. No podrás guardar si los dejas vacíos.
+            </div>
+
+            <hr>
+
+            <h2>Paso 4: Subir Imágenes (Opcional pero recomendado)</h2>
+            <p>
+                Puedes tomar fotos del bien con tu teléfono o cámara y subirlas.
+            </p>
+            <ol>
+                <li>Haz clic en el botón <strong>"Seleccionar archivos"</strong>.</li>
+                <li>Busca las fotos en tu computadora o teléfono.</li>
+                <li>Puedes seleccionar varias fotos a la vez.</li>
+            </ol>
+            <p>
+                Las imágenes ayudan a identificar visualmente el bien en el futuro, especialmente para los inventarios físicos.
+            </p>
+
+            <hr>
+
+            <h2>Paso 5: Guardar</h2>
+            <p>
+                Cuando hayas terminado de llenar la información, haz clic en el botón azul 
+                <strong>"Guardar Bien"</strong> que está al final del formulario.
+            </p>
+            
+            <p>
+                Si todo salió bien, el sistema te regresará a la lista principal y verás un mensaje verde 
+                de "Bien agregado exitosamente". ¡Y listo!
+            </p>
+
+            <div class="alert alert-danger">
+                <strong>¿Qué pasa si hay un error?</strong>
+                <p>
+                    Si falta un campo obligatorio o el "No. Inventario" ya existe, el sistema te mostrará un 
+                    mensaje de error en rojo. Simplemente corrige el campo que te indica y vuelve a
+                    hacer clic en "Guardar Bien".
+                </p>
+            </div>
+
+        </div>
+    </div>
+</div>
+{% endblock %}

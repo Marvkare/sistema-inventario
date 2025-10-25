@@ -23,3 +23,16 @@
 
 
 7.- Revisar el flujo de trabajo de bajas de bienes 
+
+8.- #Solcionar errores de css en  ver_resguardo, traspasar_resguardo, activity-log, imprimir_etiqetas, actualizar  ver_traspasos y detalles de traspasos
+    -Ver la forma de unificar la paleta de colores en un solo lugar     
+
+9.-# Agregar en carga masiva un excel con las columnas que seleccione el usuario 
+
+10.- #Actualizar el login
+
+
+
+
+
+Analisar los motivos de baja y los procesos en cada uno que documentos se requieren en cada proceso y que estructura tendran estos documentos 

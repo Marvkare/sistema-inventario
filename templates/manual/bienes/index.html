@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+
+{% block title %}Manual: Módulo de Bienes{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url_for('manual.index') }}">Manual de Usuario</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Módulo de Bienes</li>
+        </ol>
+    </nav>
+
+    <div class="card shadow-sm">
+        <div class="card-body p-4 p-md-5">
+            <h1 class="card-title text-primary">📦 Manual del Módulo de Bienes</h1>
+            <p class="lead">
+                Bienvenido a la sección de ayuda para el Módulo de Bienes.
+            </p>
+            <p>
+                Este módulo es el corazón del sistema, donde se registra y controla cada bien
+                patrimonial del municipio. Desde un escritorio hasta un vehículo, todo debe
+                ser registrado aquí.
+            </p>
+            <p>
+                Selecciona una guía para aprender a realizar una tarea específica:
+            </p>
+
+            <hr class="my-4">
+
+            <div class="list-group">
+                
+                <a href="{{ url_for('manual.manual_bienes_pagina', pagina='agregar') }}" 
+                   class="list-group-item list-group-item-action d-flex gap-3 py-3">
+                    <div class="fs-3 text-success">
+                        <i class="bi bi-plus-circle-fill"></i>
+                    </div>
+                    <div class="d-flex gap-2 w-100 justify-content-between">
+                        <div>
+                            <h5 class="mb-0">Cómo Agregar un Bien Nuevo</h5>
+                            <p class="mb-0 opacity-75">
+                                Aprende a registrar un bien en el sistema por primera vez.
+                            </p>
+                        </div>
+                    </div>
+                </a>
+
+                <a href="{{ url_for('manual.manual_bienes_pagina', pagina='listar') }}" 
+                   class="list-group-item list-group-item-action d-flex gap-3 py-3">
+                    <div class="fs-3 text-info">
+                        <i class="bi bi-search"></i>
+                    </div>
+                    <div class="d-flex gap-2 w-100 justify-content-between">
+                        <div>
+                            <h5 class="mb-0">Cómo Usar la Lista de Bienes (Buscar y Filtrar)</h5>
+                            <p class="mb-0 opacity-75">
+                                Domina la pantalla principal para encontrar bienes rápidamente.
+                            </p>
+                        </div>
+                    </div>
+                </a>
+
+                <a href="{{ url_for('manual.manual_bienes_pagina', pagina='editar') }}" 
+                   class="list-group-item list-group-item-action d-flex gap-3 py-3">
+                    <div class="fs-3 text-warning">
+                        <i class="bi bi-pencil-square"></i>
+                    </div>
+                    <div class="d-flex gap-2 w-100 justify-content-between">
+                        <div>
+                            <h5 class="mb-0">Cómo Editar la Información de un Bien</h5>
+                            <p class="mb-0 opacity-75">
+                                Corrige o actualiza los datos de un bien ya existente.
+                            </p>
+                        </div>
+                    </div>
+                </a>
+
+                <a href="{{ url_for('manual.manual_bienes_pagina', pagina='detalles') }}" 
+                   class="list-group-item list-group-item-action d-flex gap-3 py-3">
+                    <div class="fs-3 text-primary">
+                        <i class="bi bi-eye-fill"></i>
+                    </div>
+                    <div class="d-flex gap-2 w-100 justify-content-between">
+                        <div>
+                            <h5 class="mb-0">Entendiendo la Pantalla de "Detalles del Bien"</h5>
+                            <p class="mb-0 opacity-75">
+                                Qué significa cada campo, cómo ver las fotos y el historial.
+                            </p>
+                        </div>
+                    </div>
+                </a>
+
+                <a href="{{ url_for('manual.manual_bienes_pagina', pagina='eliminar') }}" 
+                   class="list-group-item list-group-item-action d-flex gap-3 py-3">
+                    <div class="fs-3 text-danger">
+                        <i class="bi bi-trash-fill"></i>
+                    </div>
+                    <div class="d-flex gap-2 w-100 justify-content-between">
+                        <div>
+                            <h5 class="mb-0">Cómo Eliminar un Bien</h5>
+                            <p class="mb-0 opacity-75">
+                                Cuándo se puede (y cuándo no se puede) eliminar un bien del sistema.
+                            </D>
+                        </div>
+                    </div>
+                </a>
+
+            </div>
+            </div>
+    </div>
+</div>
+{% endblock %}

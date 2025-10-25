@@ -5,7 +5,6 @@
 {% block content %}
 <div class="min-h-screen bg-gradient-to-br from-gray-50 to-beige-light/20 py-8 px-4">
     <div class="max-w-6xl mx-auto">
-        <!-- Encabezado -->
         <div class="bg-white rounded-2xl shadow-xl border border-beige-light overflow-hidden mb-8">
             <div class="bg-gradient-to-r from-burgundy to-burgundy-dark p-6 text-white">
                 <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -22,10 +21,8 @@
             </div>
         </div>
 
-        <!-- Contenido Principal -->
         <div class="bg-white rounded-2xl shadow-lg border border-beige-light overflow-hidden">
             <div class="p-6 md:p-8 space-y-8">
-                <!-- Instrucciones Generales -->
                 <div class="mb-8">
                     <div class="flex items-center mb-6">
                         <div class="w-8 h-8 bg-burgundy rounded-full flex items-center justify-center mr-3">
@@ -55,7 +52,6 @@
                     </div>
                 </div>
 
-                <!-- Columnas Soportadas -->
                 <div class="mb-8">
                     <div class="flex items-center mb-6">
                         <div class="w-8 h-8 bg-burgundy rounded-full flex items-center justify-center mr-3">
@@ -64,10 +60,18 @@
                         <h2 class="text-xl font-bold text-burgundy">Columnas Soportadas</h2>
                     </div>
                     <div class="bg-beige-light/30 rounded-xl p-6 border-2 border-beige">
-                        <p class="text-sm text-gray-600 mb-4 flex items-center">
-                            <i class="fas fa-mouse-pointer text-burgundy mr-2"></i>
-                            Haz clic en cualquier nombre de columna para copiarlo a tu portapapeles
-                        </p>
+                        
+                        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-3">
+                            <p class="text-sm text-gray-600 flex items-center">
+                                <i class="fas fa-check-square text-burgundy mr-2"></i>
+                                Selecciona las columnas y genera una plantilla de Excel.
+                            </p>
+                            <div class="flex items-center self-end sm:self-center">
+                                <input type="checkbox" id="select-all" class="h-4 w-4 text-burgundy rounded border-gray-300 focus:ring-burgundy">
+                                <label for="select-all" class="ml-2 text-sm font-medium text-gray-700 cursor-pointer">Seleccionar Todo</label>
+                            </div>
+                        </div>
+
                         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                            {% for col in [
     "NO. DE INVENTARIO",
@@ -109,10 +113,20 @@
     "NOMBRE DEL RESGUARDANTE",
     "NOMBRE DIRECTOR/JEFES DE AREA"
 ] %} 
-                            <div class="copyable-item group relative bg-white rounded-lg border border-beige-light p-3 hover:border-burgundy hover:shadow-md transition-all duration-200 cursor-pointer">
+                            <div class="copyable-item group relative bg-white rounded-lg border border-beige-light p-3 hover:border-burgundy hover:shadow-md transition-all duration-200">
                                 <div class="flex items-center justify-between">
-                                    <span class="font-mono text-sm text-gray-800 group-hover:text-burgundy">{{ col }}</span>
-                                    <i class="fas fa-copy text-gray-400 group-hover:text-burgundy text-xs"></i>
+                                    <div class="flex items-center flex-1 min-w-0">
+                                        <input type="checkbox" 
+                                               id="col_{{ loop.index }}" 
+                                               name="selected_column" 
+                                               value="{{ col }}" 
+                                               class="h-4 w-4 text-burgundy rounded border-gray-300 focus:ring-burgundy column-checkbox">
+                                        <label for="col_{{ loop.index }}" 
+                                               class="font-mono text-sm text-gray-800 group-hover:text-burgundy ml-3 cursor-pointer truncate" 
+                                               title="{{ col }}">{{ col }}</label>
+                                    </div>
+                                    <i class="fas fa-copy text-gray-400 group-hover:text-burgundy text-xs copy-icon cursor-pointer p-2 ml-2 flex-shrink-0" 
+                                       title="Copiar nombre"></i>
                                 </div>
                                 <span class="copy-feedback absolute -top-2 -right-2 bg-green-500 text-white text-xs px-2 py-1 rounded-full font-semibold opacity-0 transition-opacity duration-300 pointer-events-none">
                                     ¡Copiado!
@@ -120,10 +134,16 @@
                             </div>
                             {% endfor %}
                         </div>
+
+                        <div class="mt-6 text-right">
+                            <button id="generate-excel" 
+                                    class="inline-flex items-center justify-center px-5 py-2.5 border border-transparent text-sm font-semibold rounded-lg shadow-sm text-white bg-gradient-to-r from-burgundy to-burgundy-dark hover:from-burgundy-dark hover:to-burgundy focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-burgundy transition-all duration-200 ease-in-out">
+                                <i class="fas fa-file-download mr-2"></i> Generar Plantilla Excel
+                            </button>
+                        </div>
                     </div>
                 </div>
 
-                <!-- Formulario de Carga -->
                 <div class="mb-8">
                     <div class="flex items-center mb-6">
                         <div class="w-8 h-8 bg-burgundy rounded-full flex items-center justify-center mr-3">
@@ -158,7 +178,6 @@
                     </div>
                 </div>
 
-                <!-- Botones de Acción -->
                 <div class="flex flex-col sm:flex-row justify-between items-center gap-4 pt-6 border-t border-beige-light">
                     <a href="{{ url_for('resguardos.crear_resguardo') }}" 
                        class="inline-flex items-center justify-center px-6 py-3 border-2 border-beige text-base font-semibold rounded-xl text-burgundy bg-white hover:bg-beige-light/30 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-burgundy transition-all duration-200 ease-in-out order-2 sm:order-1">
@@ -185,6 +204,8 @@
     .border-burgundy { border-color: #6A2E4D; }
     .focus\:ring-burgundy\/50:focus { --tw-ring-color: rgb(106 46 77 / 0.5); }
     .focus\:border-burgundy:focus { border-color: #6A2E4D; }
+    .focus\:ring-burgundy:focus { --tw-ring-color: #6A2E4D; }
+    .text-burgundy { color: #6A2E4D; }
     
     .bg-beige { background-color: #BC9B6A; }
     .bg-beige-light { background-color: #D7C3A0; }
@@ -211,14 +232,23 @@
 {% endblock %}
 
 {% block scripts %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-    document.querySelectorAll('.copyable-item').forEach(item => {
-        item.addEventListener('click', () => {
-            // Obtiene el texto del span principal
-            const textToCopy = item.querySelector('span:first-child').textContent.trim();
+    const selectAllCheckbox = document.getElementById('select-all');
+    const allColumnCheckboxes = document.querySelectorAll('.column-checkbox');
+    const generateExcelBtn = document.getElementById('generate-excel');
+
+    // --- Lógica de Copiar (Refactorizada) ---
+    document.querySelectorAll('.copy-icon').forEach(icon => {
+        icon.addEventListener('click', (e) => {
+            e.stopPropagation(); // Previene que se active el checkbox al hacer clic en el ícono
             
-            // Crea un textarea temporal para usar la API del portapapeles
+            // Encuentra el 'item' padre y luego la etiqueta 'label' para obtener el texto
+            const item = icon.closest('.copyable-item');
+            const textToCopy = item.querySelector('label').textContent.trim();
+            
             const textArea = document.createElement('textarea');
             textArea.value = textToCopy;
             textArea.style.position = 'fixed';
@@ -246,7 +276,59 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // Efecto visual adicional para los items copiables
+    // --- Lógica de Selección ---
+    if (selectAllCheckbox) {
+        selectAllCheckbox.addEventListener('change', () => {
+            allColumnCheckboxes.forEach(checkbox => {
+                checkbox.checked = selectAllCheckbox.checked;
+            });
+        });
+    }
+
+    allColumnCheckboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', () => {
+            // Si se desmarca uno, desmarca "Seleccionar Todo"
+            if (!checkbox.checked) {
+                selectAllCheckbox.checked = false;
+            } else {
+                // Comprueba si todos están marcados
+                const allChecked = [...allColumnCheckboxes].every(cb => cb.checked);
+                selectAllCheckbox.checked = allChecked;
+            }
+        });
+    });
+
+    // --- Lógica de Generar Excel ---
+    if (generateExcelBtn) {
+        generateExcelBtn.addEventListener('click', () => {
+            const selectedColumns = [...allColumnCheckboxes]
+                .filter(cb => cb.checked)
+                .map(cb => cb.value); // El 'value' del checkbox tiene el nombre de la columna
+
+            if (selectedColumns.length === 0) {
+                alert('Por favor, selecciona al menos una columna para generar la plantilla.');
+                return;
+            }
+
+            // 1. Crear un nuevo libro de trabajo (workbook)
+            const wb = XLSX.utils.book_new();
+
+            // 2. Crear los datos (solo la fila de encabezados)
+            const wsData = [ selectedColumns ];
+
+            // 3. Crear una hoja de cálculo (worksheet) a partir de los datos
+            const ws = XLSX.utils.aoa_to_sheet(wsData);
+
+            // 4. Añadir la hoja al libro
+            XLSX.utils.book_append_sheet(wb, ws, 'Plantilla');
+
+            // 5. Escribir y descargar el archivo Excel
+            XLSX.writeFile(wb, 'Plantilla_Columnas_Seleccionadas.xlsx');
+        });
+    }
+
+
+    // Efecto visual adicional para los items (el mismo que tenías)
     document.querySelectorAll('.copyable-item').forEach(item => {
         item.addEventListener('mouseenter', () => {
             item.style.borderColor = '#6A2E4D';

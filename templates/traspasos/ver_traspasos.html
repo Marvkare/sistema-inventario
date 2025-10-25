@@ -3,81 +3,211 @@
 {% block title %}Historial de Traspasos{% endblock %}
 
 {% block content %}
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-
-    <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-4 mb-8">
-        <div>
-            <h1 class="text-3xl font-bold text-gray-800">Historial de Traspasos</h1>
-            <p class="mt-1 text-sm text-gray-500">Consulta todos los traspasos de bienes registrados.</p>
-        </div>
-        <form method="GET" action="{{ url_for('traspaso.ver_traspasos') }}" class="w-full sm:w-72">
-            <div class="relative">
-                <input type="search" name="q" value="{{ search_query or '' }}"
-                       placeholder="Buscar por No. Inventario o Resguardante..."
-                       class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
-                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <i class="fas fa-search text-gray-400"></i>
+<div class="min-h-screen bg-gradient-to-br from-gray-50 to-beige-light/20 py-8 px-4">
+    <div class="max-w-7xl mx-auto">
+        
+        <!-- ENCABEZADO MEJORADO -->
+        <div class="bg-white rounded-2xl shadow-xl border border-beige-light overflow-hidden mb-8">
+            <div class="bg-gradient-to-r from-[#6A2E4D] to-[#551E3A] p-6 text-white">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                    <div>
+                        <h1 class="text-2xl md:text-3xl font-bold">
+                            Historial de Traspasos
+                        </h1>
+                        <p class="text-[#D7C3A0] mt-2">
+                            Consulta todos los traspasos de bienes registrados en el sistema
+                        </p>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <div class="w-10 h-10 bg-[#BC9B6A] rounded-full flex items-center justify-center">
+                            <i class="fas fa-exchange-alt text-[#6A2E4D] text-lg"></i>
+                        </div>
+                    </div>
                 </div>
             </div>
-        </form>
-    </div>
-
-    <div class="bg-white shadow-lg rounded-lg overflow-hidden">
-        <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50">
-                    <tr>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">No. Inventario</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Fecha Traspaso</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Movimiento</th>
-                        <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">No. de Oficios</th>
-                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Acciones</th>
-                    </tr>
-                </thead>
-                <tbody class="bg-white divide-y divide-gray-200">
-                    {% for traspaso in traspasos %}
-                    <tr>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <span class="font-mono text-sm font-medium text-gray-900">{{ traspaso.No_Inventario }}</span>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <span class="text-sm text-gray-700">{{ traspaso.fecha_traspaso.strftime('%d/%m/%Y %H:%M') }}</span>
-                        </td>
-                        <td class="px-6 py-4">
-                            <div class="text-sm text-gray-500">
-                                <i class="fas fa-user-slash text-red-500 mr-1"></i> De: <span class="font-medium text-gray-800">{{ traspaso.Resguardante_Anterior }}</span> ({{ traspaso.Area_Anterior }})
-                            </div>
-                            <div class="text-sm text-gray-500 mt-1">
-                                <i class="fas fa-user-plus text-green-500 mr-1"></i> A: <span class="font-medium text-green-700">{{ traspaso.Resguardante_Actual }}</span> ({{ traspaso.Area_Actual }})
-                            </div>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-center">
-                            <span class="px-3 py-1 inline-flex text-sm leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
-                                {{ traspaso.numero_oficios }}
-                            </span>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                        <a href="{{ url_for('traspaso.ver_detalles_traspaso', traspaso_id=traspaso.traspaso_id) }}" class="text-indigo-600 hover:text-indigo-900">
-                            Ver Detalles
-                        </a>
-                </td>
-                    </tr>
-                    {% else %}
-                    <tr>
-                        <td colspan="4" class="text-center py-10 text-gray-500">
-                            {% if search_query %}
-                                <i class="fas fa-search text-3xl mb-2"></i>
-                                <p>No se encontraron traspasos que coincidan con "<span class="font-semibold">{{ search_query }}</span>".</p>
-                            {% else %}
-                                <i class="fas fa-folder-open text-3xl mb-2"></i>
-                                <p>No hay traspasos registrados.</p>
-                            {% endif %}
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
         </div>
+
+        <!-- BARRA DE BÚSQUEDA Y FILTROS -->
+        <div class="bg-white rounded-2xl shadow-lg border border-beige-light p-6 mb-6">
+            <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
+                <div class="flex-1 w-full lg:max-w-md">
+                    <form method="GET" action="{{ url_for('traspaso.ver_traspasos') }}">
+                        <div class="relative">
+                            <input type="search" name="q" value="{{ search_query or '' }}"
+                                   placeholder="Buscar por No. Inventario, Resguardante..."
+                                   class="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#6A2E4D]/50 focus:border-[#6A2E4D] transition-all duration-200">
+                            <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                <i class="fas fa-search text-gray-400"></i>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="flex items-center space-x-2 text-sm text-gray-600">
+                    <i class="fas fa-info-circle text-[#6A2E4D]"></i>
+                    <span>{{ traspasos|length }} traspaso(s) encontrado(s)</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- TABLA DE TRASPASOS -->
+        <div class="bg-white rounded-2xl shadow-lg border border-beige-light overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                                No. Inventario
+                            </th>
+                            <th class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                                Fecha Traspaso
+                            </th>
+                            <th class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                                Movimiento
+                            </th>
+                            <th class="px-6 py-4 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                                No. de Oficios
+                            </th>
+                            <th class="px-6 py-4 text-right text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                                Acciones
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        {% for traspaso in traspasos %}
+                        <tr class="hover:bg-gray-50 transition-colors duration-150">
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="flex items-center">
+                                    <div class="w-8 h-8 bg-[#6A2E4D] rounded-full flex items-center justify-center mr-3">
+                                        <i class="fas fa-barcode text-white text-xs"></i>
+                                    </div>
+                                    <span class="font-mono text-sm font-semibold text-gray-900">{{ traspaso.No_Inventario }}</span>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm text-gray-700">
+                                    <i class="fas fa-calendar-alt text-[#6A2E4D] mr-2"></i>
+                                    {{ traspaso.fecha_traspaso.strftime('%d/%m/%Y') }}
+                                </div>
+                                <div class="text-xs text-gray-500">
+                                    {{ traspaso.fecha_traspaso.strftime('%H:%M') }}
+                                </div>
+                            </td>
+                            <td class="px-6 py-4">
+                                <div class="space-y-2">
+                                    <div class="flex items-center text-sm">
+                                        <div class="w-6 h-6 bg-red-100 rounded-full flex items-center justify-center mr-2">
+                                            <i class="fas fa-arrow-left text-red-500 text-xs"></i>
+                                        </div>
+                                        <div>
+                                            <span class="font-medium text-gray-800">{{ traspaso.Resguardante_Anterior }}</span>
+                                            <span class="text-gray-500 text-xs block">{{ traspaso.Area_Anterior }}</span>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center text-sm">
+                                        <div class="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center mr-2">
+                                            <i class="fas fa-arrow-right text-green-500 text-xs"></i>
+                                        </div>
+                                        <div>
+                                            <span class="font-medium text-green-700">{{ traspaso.Resguardante_Actual }}</span>
+                                            <span class="text-gray-500 text-xs block">{{ traspaso.Area_Actual }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-center">
+                                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-blue-100 text-blue-800">
+                                    <i class="fas fa-file-contract mr-1"></i>
+                                    {{ traspaso.numero_oficios }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-right">
+                                <a href="{{ url_for('traspaso.ver_detalles_traspaso', traspaso_id=traspaso.traspaso_id) }}" 
+                                   class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-semibold rounded-xl text-white bg-gradient-to-r from-[#6A2E4D] to-[#551E3A] hover:from-[#551E3A] hover:to-[#6A2E4D] transition-all duration-200 ease-in-out">
+                                    <i class="fas fa-eye mr-2"></i>
+                                    Ver Detalles
+                                </a>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="5" class="px-6 py-16 text-center">
+                                <div class="flex flex-col items-center justify-center text-gray-400">
+                                    {% if search_query %}
+                                    <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                                        <i class="fas fa-search text-2xl"></i>
+                                    </div>
+                                    <p class="text-lg font-semibold text-gray-500 mb-2">No se encontraron resultados</p>
+                                    <p class="text-sm">No hay traspasos que coincidan con "<span class="font-medium text-gray-600">"{{ search_query }}"</span>"</p>
+                                    {% else %}
+                                    <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                                        <i class="fas fa-exchange-alt text-2xl"></i>
+                                    </div>
+                                    <p class="text-lg font-semibold text-gray-500 mb-2">No hay traspasos registrados</p>
+                                    <p class="text-sm">Los traspasos aparecerán aquí una vez que se realicen</p>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- PAGINACIÓN (si la tienes) -->
+            {% if traspasos and traspasos|length > 0 %}
+            <div class="bg-gray-50 px-6 py-4 border-t border-gray-200">
+                <div class="flex items-center justify-between">
+                    <div class="text-sm text-gray-700">
+                        Mostrando <span class="font-semibold">{{ traspasos|length }}</span> traspaso(s)
+                    </div>
+                    <!-- Aquí puedes agregar paginación si es necesario -->
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- INFORMACIÓN ADICIONAL -->
+        {% if traspasos and traspasos|length > 0 %}
+        <div class="mt-6 grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="bg-white rounded-2xl shadow-lg border border-beige-light p-6">
+                <div class="flex items-center">
+                    <div class="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center mr-4">
+                        <i class="fas fa-user-slash text-red-500 text-xl"></i>
+                    </div>
+                    <div>
+                        <p class="text-sm font-semibold text-gray-500">Traspasos Realizados</p>
+                        <p class="text-2xl font-bold text-gray-800">{{ traspasos|length }}</p>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-white rounded-2xl shadow-lg border border-beige-light p-6">
+                <div class="flex items-center">
+                    <div class="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center mr-4">
+                        <i class="fas fa-users text-green-500 text-xl"></i>
+                    </div>
+                    <div>
+                        <p class="text-sm font-semibold text-gray-500">Resguardantes Involucrados</p>
+                        <p class="text-2xl font-bold text-gray-800">
+                            {{ (traspasos|map(attribute='Resguardante_Anterior')|list + traspasos|map(attribute='Resguardante_Actual')|list)|unique|list|length }}
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-white rounded-2xl shadow-lg border border-beige-light p-6">
+                <div class="flex items-center">
+                    <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center mr-4">
+                        <i class="fas fa-file-contract text-blue-500 text-xl"></i>
+                    </div>
+                    <div>
+                        <p class="text-sm font-semibold text-gray-500">Total de Oficios</p>
+                        <p class="text-2xl font-bold text-gray-800">
+                            {{ traspasos|sum(attribute='numero_oficios') }}
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
     </div>
 </div>
 {% endblock %}

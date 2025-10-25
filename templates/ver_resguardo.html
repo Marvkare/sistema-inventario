@@ -378,11 +378,35 @@
     .bg-burgundy-dark { background-color: #551E3A; }
     .text-burgundy { color: #6A2E4D; }
     .border-burgundy { border-color: #6A2E4D; }
+    .focus\:ring-burgundy\/50:focus { --tw-ring-color: rgb(106 46 77 / 0.5); }
+    .focus\:border-burgundy:focus { border-color: #6A2E4D; }
     
     .bg-beige { background-color: #BC9B6A; }
     .bg-beige-light { background-color: #D7C3A0; }
     .text-beige-light { color: #D7C3A0; }
     .border-beige { border-color: #BC9B6A; }
     .border-beige-light { border-color: #D7C3A0; }
+    
+    .from-burgundy { --tw-gradient-from: #6A2E4D; --tw-gradient-to: rgb(106 46 77 / 0); --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to); }
+    .to-burgundy-dark { --tw-gradient-to: #551E3A; }
+
+    /* Scroll personalizado para el historial de resguardos */
+    .overflow-y-auto::-webkit-scrollbar {
+        width: 6px;
+    }
+    
+    .overflow-y-auto::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 10px;
+    }
+    
+    .overflow-y-auto::-webkit-scrollbar-thumb {
+        background: #c1c1c1;
+        border-radius: 10px;
+    }
+    
+    .overflow-y-auto::-webkit-scrollbar-thumb:hover {
+        background: #a8a8a8;
+    }
 </style>
 {% endblock %}

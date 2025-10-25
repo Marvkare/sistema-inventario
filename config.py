@@ -29,6 +29,45 @@ print(UPLOAD_FOLDER)
 # --- Extensiones Permitidas para Subidas ---
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
 
+SERVICE_ACCOUNT_FILE = 'inventario-379322-8fbb7f3f5f7e.json'
+SCOPES = ['https://www.googleapis.com/auth/drive']
+
+def upload_to_google_drive(file_path, file_name):
+    """
+    Sube un archivo a una carpeta específica en Google Drive.
+    """
+    try:
+        # Autenticación
+        creds = Credentials.from_service_account_file(
+            SERVICE_ACCOUNT_FILE, scopes=SCOPES)
+        
+        # Construye el servicio de la API
+        service = build('drive', 'v3', credentials=creds)
+
+        # Define los metadatos del archivo (nombre y carpeta padre)
+        file_metadata = {
+            'name': file_name,
+            'parents': [DRIVE_FOLDER_ID]
+        }
+        
+        # Define el contenido multimedia que se va a subir
+        media = MediaFileUpload(file_path, mimetype='image/jpeg') # Ajusta el mimetype si es necesario
+
+        # Ejecuta la subida del archivo
+        file = service.files().create(
+            body=file_metadata,
+            media_body=media,
+            fields='id' # Pide que te devuelva el ID del archivo creado
+        ).execute()
+        
+        print(f"Archivo subido con éxito. ID del archivo: {file.get('id')}")
+        return file.get('id')
+
+    except Exception as e:
+        print(f"Error al subir el archivo: {e}")
+        return None
+
+DRIVE_FOLDER_ID = '1-2070R0Gq6z_g48RB6faOsyGE9-_eXs2'
 # Mapeo de columnas del Excel a la base de datos
 COLUMN_MAPPING = {
     "NO. DE INVENTARIO": "No_Inventario",
@@ -159,20 +198,30 @@ EXCEL_AREA_COL_NAME = 'Area'
 
 # Define which columns belong to each table for a cleaner insertion process
 BIENES_COLUMNS = [
-    'No_Inventario', 'No_Factura', 'No_Cuenta',  'Proveedor',
+    'No_Inventario', 'No_Factura', 'No_Cuenta', 'Proveedor',
     'Descripcion_Del_Bien', 'Descripcion_Corta_Del_Bien', 'Rubro', 'Poliza',
     'Fecha_Poliza', 'Sub_Cuenta_Armonizadora', 'Fecha_Factura', 'Costo_Inicial',
     'Depreciacion_Acumulada', 'Costo_Final', 'Cantidad', 'Estado_Del_Bien',
-    'Marca', 'Modelo', 'Numero_De_Serie', 'Tipo_De_Alta'
+    'Marca', 'Modelo', 'Numero_De_Serie', 'Tipo_De_Alta',
+    # --- Columnas que faltaban ---
+    'Clasificacion_Legal',
+    'Area_Presupuestal',
+    'Documento_Propiedad',
+    'Fecha_Documento_Propiedad',
+    'Valor_En_Libros',
+    'Fecha_Adquisicion_Alta'
 ]
 
 RESGUARDOS_COLUMNS = [
     'No_Resguardo', 'Ubicacion', 'Tipo_De_Resguardo', 'Fecha_Resguardo',
     'No_Trabajador', 'Puesto_Trabajador', 'Nombre_Del_Resguardante',
-    'Nombre_Director_Jefe_De_Area'
+    'Nombre_Director_Jefe_De_Area',
+    # --- Columnas que faltaban ---
+    'RFC_Trabajador',
+    'No_Nomina_Trabajador'
 ]
-
 # Unir todas las columnas para el manejo de errores
+
 FULL_DB_COLUMNS = BIENES_COLUMNS + RESGUARDOS_COLUMNS + ['error_message', 'upload_id']
 
 def map_operator_to_sql(operator):

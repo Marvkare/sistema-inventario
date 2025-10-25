@@ -4,16 +4,7 @@
 
 {% block styles %}
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-    
-    :root {
-        --color-burgundy: #6A2E4D;
-        --color-burgundy-dark: #551E3A;
-        --color-beige: #BC9B6A;
-        --color-beige-light: #D7C3A0;
-        --color-background-light: #f8f9fa;
-    }
-
+    /* ESTILOS ESPECÍFICOS PARA LA PÁGINA DE IMPRIMIR ETIQUETAS */
     .preview-container {
         width: 215.9mm;
         min-height: 279.4mm;
@@ -86,7 +77,7 @@
         box-shadow: 0 4px 8px rgba(106, 46, 77, 0.1);
     }
 
-    /* Scrollbar personalizado */
+    /* Scrollbar personalizado solo para esta página */
     .search-results-container::-webkit-scrollbar,
     .print-list-container::-webkit-scrollbar {
         width: 6px;
@@ -109,7 +100,7 @@
         background: #6A2E4D;
     }
 
-    /* Estilos para inputs y selects */
+    /* Estilos específicos para inputs de esta página */
     input[type="text"], 
     input[type="number"], 
     select {
@@ -125,7 +116,7 @@
         box-shadow: 0 0 0 3px rgba(106, 46, 77, 0.1);
     }
 
-    /* Estilos para sliders */
+    /* Estilos específicos para sliders de esta página */
     input[type="range"] {
         -webkit-appearance: none;
         height: 6px;
@@ -152,6 +143,99 @@
     .hidden {
         display: none !important;
     }
+
+    /* Animaciones específicas para esta página */
+    @keyframes slide-in-right {
+        from {
+            opacity: 0;
+            transform: translateX(100%);
+        }
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+    
+    .animate-slide-in-right {
+        animation: slide-in-right 0.5s ease-out;
+    }
+
+    /* Estilos para la previsualización de impresión */
+    @media print {
+        .preview-container {
+            box-shadow: none;
+            border-radius: 0;
+            margin: 0;
+            padding: 0;
+        }
+        
+        .no-print {
+            display: none !important;
+        }
+    }
+
+    /* Responsive específico para esta página */
+    @media (max-width: 768px) {
+        .preview-container {
+            width: 100%;
+            min-height: auto;
+            padding: 5mm;
+        }
+        
+        .config-panel {
+            padding: 1rem;
+        }
+        
+        .margin-controls-grid {
+            grid-template-columns: 1fr;
+            gap: 0.5rem;
+        }
+    }
+
+    /* Estados hover específicos para botones de esta página */
+    #preview_button:hover,
+    #print_button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(106, 46, 77, 0.3);
+    }
+
+    #back_button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Transiciones suaves para elementos interactivos */
+    .print-item,
+    .nav-link,
+    button {
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* Estilos para el contenedor de resultados de búsqueda */
+    .search-results-container div:hover {
+        background-color: #f8f5f0;
+        border-left: 3px solid #6A2E4D;
+    }
+
+    /* Efectos de focus mejorados para accesibilidad */
+    button:focus-visible,
+    input:focus-visible,
+    select:focus-visible {
+        outline: 2px solid #6A2E4D;
+        outline-offset: 2px;
+    }
+    /* CLASES PERSONALIZADAS PARA LOS COLORES */
+    .bg-burgundy { background-color: #6A2E4D; }
+    .bg-burgundy-dark { background-color: #551E3A; }
+    .text-burgundy { color: #6A2E4D; }
+    .text-beige-light { color: #D7C3A0; }
+    .bg-beige { background-color: #BC9B6A; }
+    .border-beige-light { border-color: #D7C3A0; }
+    
+    /* Gradientes personalizados */
+    .from-burgundy { --tw-gradient-from: #6A2E4D; --tw-gradient-to: rgb(106 46 77 / 0); --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to); }
+    .to-burgundy-dark { --tw-gradient-to: #551E3A; }
+</style>
 </style>
 {% endblock %}
 
@@ -712,3 +796,4 @@
     });
 </script>
 {% endblock %}
+

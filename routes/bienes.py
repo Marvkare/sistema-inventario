@@ -7,6 +7,7 @@ import traceback
 import math
 import mysql.connector
 
+
 # Se importan las funciones y variables de tus otros archivos
 from database import get_db_connection
 from config import UPLOAD_FOLDER, ALLOWED_EXTENSIONS

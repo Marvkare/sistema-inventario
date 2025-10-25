@@ -6,7 +6,7 @@ import traceback
 from datetime import datetime
 from io import BytesIO
 import re
-
+from decimal import Decimal, InvalidOperation
 # Se importan las funciones y variables de tus otros archivos
 from database import get_db_connection
 from config import COLUMN_MAPPING, BIENES_COLUMNS, RESGUARDOS_COLUMNS, EXCEL_AREA_COL_NAME, FULL_DB_COLUMNS
@@ -17,52 +17,110 @@ from flask_login import login_required, current_user
 
 excel_import_bp = Blueprint('excel_import', __name__)
 
+# Columnas que se convertirán a FECHA (formato YYYY-MM-DD)
+# Columnas que se convertirán a FECHA (formato YYYY-MM-DD)
+# --- Definición de Tipos de Columna ---
+# IMPORTANTE: Estos son los nombres de las columnas de la BASE DE DATOS
+# (los 'values' de tu COLUMN_MAPPING)
+
+# Columnas que se convertirán a FECHA (formato YYYY-MM-DD)
+DATE_COLS = [
+    "Fecha_Poliza",
+    "Fecha_Factura",
+    "Fecha_Documento_Propiedad",
+    "Fecha_Adquisicion_Alta",
+    "Fecha_Resguardo"
+]
+
+# Columnas que se convertirán a NÚMERO DECIMAL (para dinero)
+DECIMAL_COLS = [
+    "Costo_Inicial",
+    "Depreciacion_Acumulada",
+    "Costo_Final",
+    "Valor_En_Libros"
+]
+
+# Columnas que se convertirán a NÚMERO ENTERO
+INT_COLS = [
+    "Cantidad",
+    "Tipo_De_Resguardo",
+    "No_Nomina_Trabajador"
+]
+
+
 def convert_to_db_type(db_col, value):
+    """
+    Limpia y convierte un valor de Excel al tipo de dato correcto 
+    para la base de datos (como string, Decimal, int, o None).
+    
+    :param db_col: El nombre de la columna (del encabezado de Excel).
+    :param value: El valor de la celda.
+    :return: El valor limpio y tipado.
+    """
+    
+    # 1. FILTRO UNIVERSAL DE NULOS
     if pd.isna(value) or value is None or str(value).strip() == '':
         return None
 
-    if db_col in ["Fecha_Resguardo", "Fecha_Poliza", "Fecha_Factura"]:
-        try:
-            # Intenta convertir el valor a fecha, Pandas es muy flexible con los formatos.
-            # dayfirst=True ayuda a interpretar formatos como DD/MM/YYYY correctamente.
-            return pd.to_datetime(value, dayfirst=True).strftime('%Y-%m-%d')
-        except (ValueError, TypeError):
-            raise ValueError(f"Formato de fecha no válido: '{value}'")
+    str_value = str(value).strip()
 
-    if db_col in ["Costo_Inicial", "Depreciacion_Acumulada", "Costo_Final"]:
+    # 2. FILTRO DE FECHAS
+    if db_col in DATE_COLS:
+        
+        # Corrección para el error '1970-01-01'
+        if str_value == '0' or value == 0:
+            return None
+        
+        # --- ¡ESTA ES LA PARTE QUE SOLUCIONA TU ERROR! ---
+        # Primero: Intenta ver si es un número (serial de Excel como 45789)
+        if isinstance(value, (int, float)):
+            try:
+                # Convertir número de serie de Excel
+                return pd.to_datetime(value, unit='D', origin='1899-12-30').strftime('%Y-%m-%d')
+            except (ValueError, TypeError):
+                raise ValueError(f"Número de serie de fecha no válido: '{value}' en '{db_col}'")
+        
+        # Segundo: Si no es un número, intenta parsearlo como texto (ej. "24/10/2025")
         try:
-            cleaned_value = re.sub(r'[^\d.]', '', str(value))
-            if cleaned_value == '': return None
-            return float(cleaned_value)
+            return pd.to_datetime(str_value, dayfirst=True).strftime('%Y-%m-%d')
         except (ValueError, TypeError):
-             raise ValueError(f"Formato de número decimal no válido: '{value}'")
-
-    if db_col == "No_Nomina_Trabajador":
-        print(f"Procesando No. Nómina: {value}")
-        try:
-            # Si el valor es nulo o una cadena vacía, regresa None.
-            if value is None or str(value).strip() == '':
-                return None
+            raise ValueError(f"Formato de fecha no válido: '{value}' en columna '{db_col}'")
+        # --- FIN DE LA CORRECCIÓN ---
             
-            # Convierte a float primero y luego a entero.
-            return int(float(value))
-
-        except (ValueError, TypeError):
-            raise ValueError(f"Formato de número para Nómina no válido: '{value}'")
-    
-    if db_col == "Cantidad":
-        print(f"Procesando Cantidad: {value}")
-        try:
-            # Si el valor es nulo o una cadena vacía, regresa None.
-            if value is None or str(value).strip() == '':
-                return None
+    # 3. FILTRO DE NÚMEROS DECIMALES (Costos, Valores)
+    elif db_col in DECIMAL_COLS:
+        
+        cleaned_value = str_value.replace('$', '').replace(',', '').strip()
+        
+        if cleaned_value == '':
+            return None
             
-            # Convierte a float primero y luego a entero para manejar correctamente "1.0".
-            return int(float(value))
+        try:
+            return Decimal(cleaned_value)
+        except InvalidOperation:
+            raise ValueError(f"Formato de número decimal no válido: '{value}' en columna '{db_col}'")
 
+    # 4. FILTRO DE NÚMEROS ENTEROS (Cantidad, etc.)
+    elif db_col in INT_COLS:
+        
+        cleaned_value = str_value.replace(',', '').strip()
+        
+        if cleaned_value.endswith('.0'):
+            cleaned_value = cleaned_value[:-2]
+
+        if cleaned_value == '':
+            return None
+
+        try:
+            return int(cleaned_value)
         except (ValueError, TypeError):
-            raise ValueError(f"Formato de número para Cantidad no válido: '{value}'")
-    return str(value)
+            raise ValueError(f"Formato de número entero no válido: '{value}' en columna '{db_col}'")
+
+    # 5. FILTRO PARA TODO LO DEMÁS (Texto)
+    else:
+        # Devuelve el string limpio
+        return str_value
+
 
 def get_or_create_bien(cursor, bien_data):
     no_inventario = bien_data.get('No_Inventario')
