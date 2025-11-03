@@ -236,16 +236,16 @@
                                             <i class="fas fa-images text-burgundy mr-2"></i>Evidencia Fotográfica del Inventario:
                                         </p>
                                         <div class="grid grid-cols-3 sm:grid-cols-4 gap-3">
-                                            {% for foto_filename in fotos %}
-                                            <a href="{{ url_for('bienes.serve_uploaded_file', filename=foto_filename) }}" target="_blank" class="group">
-                                                <div class="aspect-square overflow-hidden rounded-lg border-2 border-beige-light bg-gray-100 group-hover:border-burgundy transition-all duration-200">
-                                                    <img src="{{ url_for('bienes.serve_uploaded_file', filename=foto_filename) }}" 
-                                                         alt="Foto de inventario" 
-                                                         class="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105">
-                                                </div>
-                                            </a>
-                                            {% endfor %}
-                                        </div>
+                                        {% for foto_id in fotos %}
+                                        <a href="{{ url_for('serve_drive_image', file_id=foto_id) }}" target="_blank" class="group">
+                                            <div class="aspect-square overflow-hidden rounded-lg border-2 border-beige-light bg-gray-100 group-hover:border-burgundy transition-all duration-200">
+                                                <img src="{{ url_for('serve_drive_image', file_id=foto_id) }}" 
+                                                     alt="Foto de inventario" 
+                                                     class="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105">
+                                            </div>
+                                        </a>
+                                        {% endfor %}
+                                    </div>
                                     </div>
                                     {% endif %}
                                 </div>
@@ -375,17 +375,15 @@
                         </h2>
                         <div class="space-y-4">
                             {% if imagenes %}
-                                <div class="grid grid-cols-2 gap-3">
-                                    {% for imagen_filename in imagenes %}
-                                    <a href="{{ url_for('bienes.serve_uploaded_file', filename=imagen_filename) }}" target="_blank" class="group">
-                                        <div class="aspect-square overflow-hidden rounded-xl border-2 border-beige-light bg-gray-100 group-hover:border-burgundy transition-all duration-300">
-                                            <img src="{{ url_for('bienes.serve_uploaded_file', filename=imagen_filename) }}" 
-                                                 alt="Imagen del Bien" 
-                                                 class="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105">
-                                        </div>
-                                    </a>
-                                    {% endfor %}
-                                </div>
+                                {% for imagen_id in imagenes %}
+            <a href="{{ url_for('serve_drive_image', file_id=imagen_id) }}" target="_blank" class="group">
+                <div class="aspect-square overflow-hidden rounded-xl border-2 border-beige-light bg-gray-100 group-hover:border-burgundy transition-all duration-300">
+                    <img src="{{ url_for('serve_drive_image', file_id=imagen_id) }}" 
+                        alt="Imagen del Bien" 
+                        class="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105">
+                </div>
+            </a>
+        {% endfor %} 
                             {% else %}
                                 <div class="flex flex-col items-center justify-center bg-beige-light/20 rounded-xl text-gray-500 h-32 p-4 border-2 border-dashed border-beige-light">
                                     <i class="fas fa-image text-3xl mb-2 opacity-50"></i>

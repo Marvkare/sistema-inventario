@@ -713,7 +713,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     wrapper.className = 'preview-image-wrapper';
                     wrapper.id = `foto-existente-${foto.id}`;
                     wrapper.innerHTML = `
-                        <img src="/uploads/${foto.ruta_archivo}" class="preview-image" alt="Foto existente">
+                       <img src="/images/${foto.ruta_archivo}" class="preview-image" alt="Foto existente"> 
                         <button type="button" class="remove-image-btn" title="Marcar para eliminar" data-foto-id="${foto.id}">×</button>
                     `;
                     existingFotosContainer.appendChild(wrapper);

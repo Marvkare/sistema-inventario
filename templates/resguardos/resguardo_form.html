@@ -660,12 +660,12 @@
                                    multiple 
                                    class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-burgundy/50 focus:border-burgundy transition-all duration-200 bg-white/80 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-burgundy file:text-white hover:file:bg-burgundy-dark"
                                    accept="image/*"
-                                   {% if not is_new_bien_mode %}disabled{% endif %}>
+                                   {% if not is_new_bien_mode %}disabled hidden {% endif %}>
                             <div id="preview_imagenes_bien" class="mt-4 flex flex-wrap gap-2 min-h-[6rem] bg-gray-50 p-2 rounded border">
                                 {% if imagenes_bien_db %}
                                     {% for img in imagenes_bien_db %}
                                     <div class="relative inline-block" id="imagen-bien-{{ img.id }}">
-                                        <img src="{{ url_for('bienes.serve_uploaded_file', filename=img.ruta_imagen) }}" class="h-24 w-24 object-cover rounded-md border">
+                                       <img src="{{ url_for('serve_drive_image', file_id=img.ruta_imagen) }}" class="h-24 w-24 object-cover rounded-md border">
                                         {% if is_edit %}
                                         <button type="button" class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center shadow-lg hover:bg-red-700 transition-colors duration-200" title="Marcar para eliminar" onclick="marcarParaEliminar(this, 'eliminar_imagen_bien[]', '{{ img.id }}')">
                                             <i class="fas fa-times text-xs"></i>
@@ -693,7 +693,7 @@
                                 {% if imagenes_resguardo_db %}
                                     {% for img in imagenes_resguardo_db %}
                                     <div class="relative inline-block" id="imagen-resguardo-{{ img.id }}">
-                                        <img src="{{ url_for('bienes.serve_uploaded_file', filename=img.ruta_imagen) }}" class="h-24 w-24 object-cover rounded-md border">
+                                        <img src="{{ url_for('serve_drive_image', file_id=img.ruta_imagen) }}" class="h-24 w-24 object-cover rounded-md border">    
                                         {% if is_edit %}
                                         <button type="button" class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center shadow-lg hover:bg-red-700 transition-colors duration-200" title="Marcar para eliminar" onclick="marcarParaEliminar(this, 'eliminar_imagen_resguardo[]', '{{ img.id }}')">
                                             <i class="fas fa-times text-xs"></i>
@@ -757,16 +757,20 @@
 {% block scripts %}
 <script>
 document.addEventListener('DOMContentLoaded', () => {
+    // --- Variables para el formulario ---
     const form = document.getElementById('resguardoForm');
-    
-    // JS para actualizar áreas
+    const submitButton = form.querySelector('button[type="submit"]');
+    const submitButtonOriginalText = submitButton.innerHTML;
+    const spinnerIcon = '<i class="fas fa-spinner fa-spin mr-2"></i>';
+
+    // --- SCRIPT PARA ACTUALIZAR ÁREAS (Tu código original) ---
     const refreshAreasBtn = document.getElementById('refresh-areas-btn');
     const areaSelect = document.getElementById('Area');
     const originalIcon = refreshAreasBtn.innerHTML;
-    const spinnerIcon = '<i class="fas fa-spinner fa-spin"></i>';
+    const spinnerIconRefresh = '<i class="fas fa-spinner fa-spin"></i>';
 
     refreshAreasBtn.addEventListener('click', async () => {
-        refreshAreasBtn.innerHTML = spinnerIcon;
+        refreshAreasBtn.innerHTML = spinnerIconRefresh;
         refreshAreasBtn.disabled = true;
         try {
             const response = await fetch("{{ url_for('resguardos.get_areas_api') }}");
@@ -790,7 +794,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // JS para manejo de imágenes
+    // --- SCRIPT PARA MANEJO DE IMÁGENES (Tu código original) ---
     window.marcarParaEliminar = function(btn, inputName, imageId) {
         if (confirm('¿Estás seguro de que quieres marcar esta imagen para eliminar? La eliminación será permanente al guardar.')) {
             const hiddenInput = document.createElement('input');
@@ -856,6 +860,71 @@ document.addEventListener('DOMContentLoaded', () => {
 
     setupImageManager('imagenes_bien', 'preview_imagenes_bien');
     setupImageManager('imagenes_resguardo', 'preview_imagenes_resguardo');
+
+    
+    // --- SCRIPT DE ENVÍO DE FORMULARIO (FETCH) CON CORRECCIÓN ---
+    form.addEventListener('submit', async (event) => {
+        // 1. Previene el envío HTML tradicional
+        event.preventDefault();
+
+        // 2. Muestra estado de "cargando"
+        submitButton.disabled = true;
+        submitButton.innerHTML = `${spinnerIcon} Guardando...`;
+
+        // 3. Prepara los datos del formulario (incluyendo archivos)
+        const formData = new FormData(form);
+
+        // Habilitar campos deshabilitados temporalmente para que se incluyan en el POST
+        const disabledFields = form.querySelectorAll(':disabled');
+        
+        disabledFields.forEach(field => {
+            // --- AQUÍ ESTÁ LA LÍNEA CORREGIDA ---
+            // Comprueba si 'field.name' existe PRIMERO
+            if (!field.name || field.name.startsWith('imagenes_')) return; 
+            
+            field.disabled = false;
+            formData.set(field.name, field.value); // Asegurarse de que el valor esté en formData
+        });
+
+
+        try {
+            // 4. Envía los datos con fetch
+            const response = await fetch(form.action, {
+                method: 'POST',
+                body: formData
+            });
+
+            // 5. Lee la respuesta (incluso si es un error 409 o 500)
+            const data = await response.json();
+
+            if (response.ok) {
+                // 6. ÉXITO (código 200)
+                // 7. LEE LA REDIRECCIÓN DEL JSON Y LA EJECUTA
+                window.location.href = data.redirect_url;
+                
+            } else {
+                // 8. ERROR (código 409, 500, etc.)
+                alert(`Error: ${data.message}`);
+                submitButton.disabled = false;
+                submitButton.innerHTML = submitButtonOriginalText;
+            }
+
+        } catch (error) {
+            // 9. Error de red (el servidor no respondió) o error de JSON
+            console.error('Error de red o al procesar JSON:', error);
+            alert('Error de conexión. No se pudo contactar al servidor.');
+            submitButton.disabled = false;
+            submitButton.innerHTML = submitButtonOriginalText;
+        } finally {
+            // Vuelve a deshabilitar los campos para mantener el estado visual
+            disabledFields.forEach(field => {
+                // Solo deshabilita los que SÍ tienen nombre
+                if (field.name && !field.name.startsWith('imagenes_')) {
+                    field.disabled = true;
+                }
+            });
+        }
+    });
 });
 </script>
 {% endblock %}

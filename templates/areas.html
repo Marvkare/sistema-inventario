@@ -166,7 +166,7 @@
                                                 <i class="fas fa-map-marker-alt text-burgundy text-xs"></i>
                                             </div>
                                             <span class="text-sm font-medium text-gray-900" data-name="{{ area.name }}">
-                                                {{ area.name }}
+                                                {{ area.nombre }}
                                             </span>
                                         </div>
                                     </td>
@@ -178,7 +178,7 @@
                                     <td class="px-6 py-4 whitespace-nowrap text-center">
                                         <div class="flex justify-center space-x-2">
                                             <button type="button" 
-                                                    onclick="editArea({{ area.id }}, '{{ area.name }}', '{{ area.numero | default('') }}')"
+                                                    onclick="editArea({{ area.id }}, '{{ area.nombre }}', '{{ area.numero | default('') }}')"
                                                     class="inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg text-white bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200 shadow-sm"
                                                     title="Editar área">
                                                 <i class="fas fa-edit mr-2 text-xs"></i>
@@ -258,10 +258,10 @@
         const cancelButton = document.getElementById('cancel-edit-btn');
 
         // Función para editar área
-        window.editArea = function(id, name, numero) {
+        window.editArea = function(id, nombre, numero) {
             formTitle.textContent = 'Editar Área';
             areaIdInput.value = id;
-            areaNameInput.value = name;
+            areaNameInput.value = nombre;
             areaNumeroInput.value = numero;
             submitText.textContent = 'Actualizar Área';
             cancelButton.classList.remove('hidden');

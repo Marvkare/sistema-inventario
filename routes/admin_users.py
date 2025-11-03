@@ -2,11 +2,11 @@ from functools import wraps
 from flask import Blueprint, render_template, redirect, url_for, flash, request, current_app
 from flask_login import login_required, current_user
 from werkzeug.security import generate_password_hash
-import mysql.connector
 import traceback
 import uuid
 from datetime import datetime, timedelta
 from werkzeug.exceptions import abort
+import pymysql
 
 # Se importan las funciones y variables de tus otros archivos
 from database import get_db_connection
@@ -70,8 +70,8 @@ def list_roles():
         flash(f"Error al listar roles: {e}", 'danger')
         return redirect(url_for('admin.admin_dashboard')) # Redirige al dashboard en caso de error
     finally:
-        if conn and conn.is_connected():
-            conn.close()
+       if conn:
+        conn.close() 
 
 @admin_users_bp.route('/roles/create', methods=['GET', 'POST'])
 @login_required
@@ -99,11 +99,12 @@ def create_role():
             if conn: conn.rollback()
             flash(f"Error de base de datos al crear rol: {err}", 'danger')
         finally:
-            if conn and conn.is_connected():
+            if conn:
                 conn.close()
     
     # ✅ CAMBIO: Renderiza la plantilla unificada para mostrar el formulario de creación
     return render_template('admin/admin_roles.html')
+
 @admin_users_bp.route('/roles/edit/<int:role_id>', methods=['GET', 'POST'])
 @login_required
 @admin_required
@@ -155,7 +156,8 @@ def list_users():
     conn = None
     try:
         conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor(pymysql.cursors.DictCursor)
+
         cursor.execute("""
             SELECT 
                 u.id, u.username, u.nombres, u.telefono,
@@ -174,7 +176,7 @@ def list_users():
         traceback.print_exc()
         return redirect(url_for('admin.admin_dashboard'))
     finally:
-        if conn and conn.is_connected(): conn.close()
+        if conn : conn.close()
 
 # --- RUTA PARA CREAR USUARIOS ---
 @admin_users_bp.route('/create', methods=['GET', 'POST'])
@@ -184,7 +186,8 @@ def create_user():
     conn = None
     try:
         conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor(pymysql.cursors.DictCursor)
+
         cursor.execute("SELECT id, name FROM role ORDER BY name")
         all_roles = cursor.fetchall()
         
@@ -220,7 +223,7 @@ def create_user():
         if conn: conn.rollback()
         flash(f"Error al crear usuario: {e}", 'danger')
     finally:
-        if conn and conn.is_connected(): conn.close()
+        if conn : conn.close()
     
     # ✅ CAMBIO: Renderiza la nueva plantilla unificada
     return render_template('admin/admin_users.html', all_roles=all_roles)
@@ -233,7 +236,8 @@ def edit_user(user_id):
     conn = None
     try:
         conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor(pymysql.cursors.DictCursor)
+
 
         if request.method == 'POST':
             # ... (tu lógica POST se queda exactamente igual) ...
@@ -284,7 +288,7 @@ def edit_user(user_id):
         flash(f"Error al editar usuario: {e}", 'danger')
         return redirect(url_for('admin_users.list_users'))
     finally:
-        if conn and conn.is_connected(): conn.close()
+        if conn : conn.close()
 
 @admin_users_bp.route('/delete/<int:user_id>')
 @login_required
@@ -297,7 +301,7 @@ def delete_user(user_id):
     conn = None
     try:
         conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor(pymysql.cursors.DictCursor)
         
         # Guardar el nombre de usuario antes de borrarlo para el log
         cursor.execute("SELECT username FROM user WHERE id = %s", (user_id,))
@@ -319,7 +323,7 @@ def delete_user(user_id):
         if conn: conn.rollback()
         flash(f"Error al eliminar usuario: {e}", 'danger')
     finally:
-        if conn and conn.is_connected(): conn.close()
+        if conn : conn.close()
 
     return redirect(url_for('admin_users.list_users'))
 
@@ -331,7 +335,7 @@ def manage_permissions():
     conn = None
     try:
         conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor(pymysql.cursors.DictCursor)
 
         # 1. Descubrimiento de permisos (sin cambios)
         endpoints = [str(rule.endpoint) for rule in current_app.url_map.iter_rules()]
@@ -398,7 +402,7 @@ def manage_permissions():
         flash(f"Error al gestionar permisos: {e}", 'danger')
         return redirect(url_for('admin_users.list_roles'))
     finally:
-        if conn and conn.is_connected():
+        if conn:
             conn.close()
             
 @admin_users_bp.route('/reset-password-request/<int:user_id>', methods=['POST'])
@@ -446,7 +450,8 @@ def reset_password(token):
     conn = None
     try:
         conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor(pymysql.cursors.DictCursor)
+
 
         # Verificar si el token es válido y no ha expirado
         cursor.execute(
@@ -489,7 +494,7 @@ def reset_password(token):
         traceback.print_exc()
         return redirect(url_for('login'))
     finally:
-        if conn and conn.is_connected(): conn.close()
+        if conn : conn.close()
 
     return render_template('admin/reset_password.html', token=token)
 

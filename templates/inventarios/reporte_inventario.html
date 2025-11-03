@@ -7,11 +7,11 @@
     <div class="max-w-7xl mx-auto">
         
         <!-- Encabezado Principal -->
-        <div class="bg-white rounded-2xl shadow-xl border border-beige-light overflow-hidden mb-8 print:hidden">
-            <div class="bg-gradient-to-r from-burgundy to-burgundy-dark p-6 text-white">
+        <div class="bg-white rounded-2xl shadow-xl border border-beige overflow-hidden mb-8 print:hidden">
+            <div class="bg-gradient-to-r  from-burgundy to-burgundy-dark p-6 text-white">
                 <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
                     <div class="flex-1">
-                        <h1 class="text-2xl md:text-3xl font-bold">Reporte de Conciliación</h1>
+                        <h1 class="text-2xl md:text-3xl font-bold">Reporte de Inventario</h1>
                         <p class="text-beige-light mt-2">{{ inventario.nombre }}</p>
                     </div>
                     <div class="flex flex-wrap gap-3">
@@ -144,23 +144,49 @@
                     </div>
                     <div class="overflow-x-auto">
                         <table class="w-full text-sm text-left text-gray-600">
-                            <thead class="text-xs text-gray-700 uppercase bg-gray-50 border-b border-beige-light">
-                                <tr>
-                                    <th class="px-6 py-4 font-semibold">No. Inventario</th>
-                                    <th class="px-6 py-4 font-semibold">Descripción</th>
-                                    <th class="px-6 py-4 font-semibold">Verificado por</th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-beige-light">
-                                {% for bien in bienes_en_area %}
-                                <tr class="bg-white hover:bg-red-50/20 transition-colors duration-200">
-                                    <td class="px-6 py-4 font-mono text-gray-800 font-semibold">{{ bien.No_Inventario }}</td>
-                                    <td class="px-6 py-4 text-gray-700">{{ bien.Descripcion_Del_Bien }}</td>
-                                    <td class="px-6 py-4 text-gray-600">{{ bien.nombre_verificador or 'No aplica' }}</td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
+    <thead class="text-xs text-gray-700 uppercase bg-gray-50 border-b border-beige-light">
+        <tr>
+            <th class="px-6 py-4 font-semibold">Descripción Capturada</th>
+            <th class="px-6 py-4 font-semibold">Marca/Modelo/Serie</th>
+            <th class="px-6 py-4 font-semibold">Capturado por</th>
+            <th class="px-6 py-4 font-semibold">Imágenes</th>
+        </tr>
+    </thead>
+    <tbody class="divide-y divide-beige-light">
+        {% for bien in bienes_sobrantes %}
+        <tr class="bg-white hover:bg-blue-50/20 transition-colors duration-200">
+            <td class="px-6 py-4 text-gray-700 align-top">{{ bien.descripcion_bien }}</td>
+            <td class="px-6 py-4 text-gray-600 align-top">
+                {{ bien.marca or 'N/A' }} / {{ bien.modelo or 'N/A' }} / {{ bien.numero_serie or 'N/A' }}
+            </td>
+            <td class="px-6 py-4 text-gray-600 align-top">{{ bien.nombre_capturador or 'N/A' }}</td>
+
+            <td class="px-6 py-4 align-top">
+                <div class="flex flex-wrap gap-2">
+                    {% for foto_url in fotos_por_sobrante.get(bien.id, []) %}
+                        <a href="{{ foto_url }}" target="_blank" class="group">
+                            <img src="{{ foto_url }}" 
+                                 alt="Foto de bien sobrante"
+                                 class="h-16 w-16 object-cover rounded-lg border-2 border-beige-light group-hover:border-burgundy transition-all duration-200">
+                        </a>
+                    {% else %}
+                        <span class="text-gray-400 text-xs flex items-center">
+                            <i class="fas fa-image mr-1"></i> Sin imágenes
+                        </span>
+                    {% endfor %}
+                </div>
+            </td>
+        </tr>
+        {% else %}
+        <tr>
+            <td colspan="4" class="text-center p-8">
+                <i class="fas fa-check-circle text-3xl text-green-500 mb-3"></i>
+                <p class="text-gray-500">No se registraron bienes sobrantes.</p>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
                     </div>
                     {% else %}
                     <div class="p-8 text-center">
@@ -347,19 +373,20 @@
                                     </div>
                                 </td>
                                 <td class="px-6 py-4 align-top">
-                                    <div class="flex flex-wrap gap-2">
-                                        {% for foto_path in fotos_por_detalle.get(bien.id, []) %}
-                                            <a href="{{ url_for('bienes.serve_uploaded_file', filename=foto_path) }}" target="_blank" class="group">
-                                                <img src="{{ url_for('bienes.serve_uploaded_file', filename=foto_path) }}" 
-                                                     class="h-16 w-16 object-cover rounded-lg border-2 border-beige-light group-hover:border-burgundy transition-all duration-200">
-                                            </a>
-                                        {% else %}
-                                            <span class="text-gray-400 text-xs flex items-center">
-                                                <i class="fas fa-image mr-1"></i> Sin imágenes
-                                            </span>
-                                        {% endfor %}
-                                    </div>
-                                </td>
+    <div class="flex flex-wrap gap-2">
+        {% for foto_url in fotos_por_detalle.get(bien.id, []) %}
+            <a href="{{ foto_url }}" target="_blank" class="group">
+                <img src="{{ foto_url }}" 
+                     alt="Foto de inventario"
+                     class="h-16 w-16 object-cover rounded-lg border-2 border-beige-light group-hover:border-burgundy transition-all duration-200">
+            </a>
+        {% else %}
+            <span class="text-gray-400 text-xs flex items-center">
+                <i class="fas fa-image mr-1"></i> Sin imágenes
+            </span>
+        {% endfor %}
+    </div>
+</td>
                             </tr>
                             {% else %}
                             <tr>
@@ -396,5 +423,7 @@
     .text-beige-light { color: #D7C3A0; }
     .border-beige { border-color: #BC9B6A; }
     .border-beige-light { border-color: #D7C3A0; }
+    .from-burgundy { --tw-gradient-from: #6A2E4D; --tw-gradient-to: rgb(106 46 77 / 0); --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to); }
+    .to-burgundy-dark { --tw-gradient-to: #551E3A; }
 </style>
 {% endblock %}

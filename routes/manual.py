@@ -18,7 +18,7 @@ def index():
     except TemplateNotFound:
         abort(404)
 
-@manual_bp.route('/manual/bienes/')
+#@manual_bp.route('/manual/bienes/') comentado por la rudta duplicada
 @manual_bp.route('/manual/bienes/<path:pagina>')
 @login_required
 def manual_bienes_pagina(pagina='index'):

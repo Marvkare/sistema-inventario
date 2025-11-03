@@ -1,6 +1,5 @@
 from flask import Blueprint, request, redirect, url_for, flash, session, render_template, jsonify, send_file
 import pandas as pd
-import mysql.connector
 import uuid
 import traceback
 from datetime import datetime

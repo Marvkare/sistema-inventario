@@ -14,9 +14,11 @@ from decorators import login_required, permission_required
 from werkzeug.utils import secure_filename
 from sqlalchemy import or_, and_
 from log_activity import log_activity
-from flask import send_from_directory, abort
+from flask import send_from_directory, abort, send_file
 import json
 from .workflows import WORKFLOWS, DEFAULT_WORKFLOW
+from drive_service import drive_service, BAJAS_FOLDER_ID, get_cached_image, save_to_cache
+import io
 
 
 
@@ -24,6 +26,11 @@ from .workflows import WORKFLOWS, DEFAULT_WORKFLOW
 # El 'template_folder' le dice a Flask que busque las plantillas en una carpeta llamada 'templates'.
 bajas_bp = Blueprint('bajas', __name__)
 
+def allowed_file(filename):
+    """Verifica si la extensión del archivo es permitida (imágenes y PDF)."""
+    ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'pdf'}
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 @bajas_bp.route('/bajas', methods=['GET'])
 @login_required
@@ -153,12 +160,13 @@ def buscar_bienes_para_baja():
         current_app.logger.error(f"Error en la búsqueda de bienes: {e}")
         return jsonify({"error": "Ocurrió un error en el servidor al buscar."}), 500
 
+
 @bajas_bp.route('/api/procesos-baja', methods=['POST'])
 @login_required
 @permission_required('bajas.crear_proceso_baja')
 def crear_proceso_baja():
     """
-    API endpoint para crear un ProcesoBaja y su documento de solicitud inicial.
+    API endpoint para crear un ProcesoBaja y su documento de solicitud inicial en Google Drive.
     Recibe datos como multipart/form-data.
     """
     # --- Se obtienen datos de request.form y request.files ---
@@ -174,6 +182,15 @@ def crear_proceso_baja():
     if not solicitud_file or solicitud_file.filename == '':
         return jsonify({"error": "El documento de solicitud es obligatorio."}), 400
 
+    # --- ✅ 1. Validación de tipo de archivo ---
+    if not allowed_file(solicitud_file.filename):
+        return jsonify({"error": "Tipo de archivo no permitido. Solo se aceptan imágenes (PNG, JPG, PDF, etc.)."}), 400
+
+    # --- ✅ 2. Validación del servicio de Drive ---
+    if not drive_service or not BAJAS_FOLDER_ID:
+        current_app.logger.error("API crear_proceso_baja: drive_service o BAJAS_FOLDER_ID no están configurados.")
+        return jsonify({"error": "Error interno: El servicio de almacenamiento no está configurado."}), 500
+
     try:
         # --- Lógica de transacción atómica para crear todo junto ---
         bien = db.session.query(Bienes).filter_by(id=id_bien).first()
@@ -184,7 +201,7 @@ def crear_proceso_baja():
         if not resguardo_activo:
             return jsonify({"error": "El bien no tiene un resguardo activo."}), 409
         
-        # 1. Crear el Proceso de Baja
+        # 1. Crear el Proceso de Baja (sin cambios)
         nuevo_proceso = ProcesoBaja(
             id_bien=id_bien, motivo=motivo, justificacion_solicitud=justificacion,
             nombre_solicitante=resguardo_activo.Nombre_Del_Resguardante,
@@ -193,49 +210,58 @@ def crear_proceso_baja():
             fecha_inicio=datetime.datetime.utcnow()
         )
         db.session.add(nuevo_proceso)
-        db.session.flush()  # Obtenemos el ID del nuevo proceso para usarlo a continuación
+        db.session.flush()  # Obtenemos el ID del nuevo proceso
 
-        # 2. Crear el DocumentoBaja (expediente de la solicitud)
+        # 2. Crear el DocumentoBaja (sin cambios)
         doc_solicitud = DocumentoBaja(
             id_proceso_baja=nuevo_proceso.id,
-            tipo_documento='Solicitud de Baja', # Asignamos el tipo de documento
+            tipo_documento='Solicitud de Baja',
             metadatos=json.dumps({"descripcion": "Documento inicial de la solicitud."}),
             id_usuario_carga=current_user.id
         )
         db.session.add(doc_solicitud)
         db.session.flush() # Obtenemos el ID del nuevo documento
 
-        # 3. Guardar el archivo físico y crear el ArchivoAdjunto
+        # --- ✅ 3. Subir el archivo físico a Google Drive ---
         filename = secure_filename(solicitud_file.filename)
-        unique_filename = f"doc_{doc_solicitud.id}_{datetime.datetime.now().strftime('%Y%m%d%H%M%S')}_{filename}"
-        upload_path = os.path.join(current_app.config['UPLOAD_FOLDER'], unique_filename)
-        solicitud_file.save(upload_path)
+        
+        drive_id = drive_service.upload(
+            file_storage=solicitud_file,
+            model_type=f"baja-solicitud-{nuevo_proceso.id}", # Nombre descriptivo
+            target_folder_id=BAJAS_FOLDER_ID
+        )
 
+        if not drive_id:
+            # Si la subida falla, la transacción debe fallar
+            raise Exception("Fallo al subir el archivo a Google Drive. El servicio no devolvió un ID.")
+
+        # --- ✅ 4. Guardar el Drive ID en ArchivoAdjunto ---
         adjunto_solicitud = ArchivoAdjunto(
             id_documento_baja=doc_solicitud.id,
             nombre_archivo=filename,
-            ruta_archivo=unique_filename,
+            ruta_archivo=drive_id, # <-- Guardamos el ID de Drive
             tipo_mime=solicitud_file.mimetype
         )
         db.session.add(adjunto_solicitud)
         
-        # 4. Actualizar el estado del bien
+        # 5. Actualizar el estado del bien (sin cambios)
         bien.Estado_Del_Bien = 'En Proceso de Baja'
         
-        # 5. Confirmar toda la transacción
+        # 6. Confirmar toda la transacción (sin cambios)
         db.session.commit()
 
         log_activity(
-            action="Inicio de Proceso de Baja con Documento", category="Bajas",
+            action="Inicio de Proceso de Baja (Drive)", category="Bajas",
             resource_id=nuevo_proceso.id,
-            details=f"Usuario '{current_user.username}' inició proceso para el bien '{bien.No_Inventario}' adjuntando solicitud '{filename}'."
+            details=f"Usuario '{current_user.username}' inició proceso para el bien '{bien.No_Inventario}' adjuntando solicitud '{filename}' (ID: {drive_id})."
         ) 
 
         return jsonify({"message": "Proceso de baja iniciado exitosamente.", "proceso_id": nuevo_proceso.id}), 201
     
     except Exception as e:
         db.session.rollback()
-        current_app.logger.error(f"Error inesperado al crear proceso de baja: {e}")
+        # Usar exc_info=True para un log más detallado del error
+        current_app.logger.error(f"Error inesperado al crear proceso de baja: {e}", exc_info=True)
         error_msg = f"Error inesperado: {str(e)}" if current_app.config.get('DEBUG') else "Ocurrió un error inesperado."
         return jsonify({"error": error_msg}), 500
 
@@ -244,7 +270,8 @@ def crear_proceso_baja():
 @permission_required('bajas.cargar_documento')
 def cargar_documento(proceso_id):
     """
-    Ruta para manejar la subida de archivos de un proceso de baja.
+    Ruta para manejar la subida de archivos (imágenes y PDF) 
+    de un proceso de baja a GOOGLE DRIVE.
     """
     proceso = db.session.get(ProcesoBaja, proceso_id)
     if not proceso:
@@ -254,6 +281,7 @@ def cargar_documento(proceso_id):
     tipo_documento = request.form.get('tipo_documento')
     file = request.files.get('documento_file')
 
+    # Validaciones iniciales
     if not file or file.filename == '':
         flash("No se seleccionó ningún archivo para subir.", "warning")
         return redirect(url_for('bajas.ver_proceso', proceso_id=proceso.id))
@@ -262,69 +290,111 @@ def cargar_documento(proceso_id):
         flash("Debe seleccionar un tipo de documento.", "warning")
         return redirect(url_for('bajas.ver_proceso', proceso_id=proceso.id))
 
+    # --- ✅ 1. VALIDAR TIPO DE ARCHIVO ---
+    if not allowed_file(file.filename):
+        flash("Tipo de archivo no permitido. Solo se aceptan imágenes (PNG, JPG, PDF, etc.).", "warning")
+        return redirect(url_for('bajas.ver_proceso', proceso_id=proceso.id))
+
+    # --- ✅ 2. VALIDAR SERVICIO DE DRIVE ---
+    if not drive_service or not BAJAS_FOLDER_ID:
+        flash("Error crítico: El servicio de almacenamiento (Google Drive) no está configurado.", "danger")
+        current_app.logger.error("drive_service o BAJAS_FOLDER_ID no están disponibles.")
+        return redirect(url_for('bajas.ver_proceso', proceso_id=proceso.id))
+
     try:
         filename = secure_filename(file.filename)
-        unique_filename = f"{proceso.id}_{datetime.datetime.now().strftime('%Y%m%d%H%M%S')}_{filename}"
         
-        upload_path = os.path.join(current_app.config['UPLOAD_FOLDER'], unique_filename)
-        file.save(upload_path)
+        # --- ✅ 3. SUBIR A GOOGLE DRIVE ---
+        # (Ya no se guarda localmente)
+        drive_id = drive_service.upload(
+            file_storage=file,
+            model_type=f"baja-doc-{proceso.id}", # Nombre descriptivo para Drive
+            target_folder_id=BAJAS_FOLDER_ID
+        )
 
+        if not drive_id:
+            raise Exception("No se pudo subir el archivo a Google Drive. El servicio no devolvió un ID.")
+
+        # --- ✅ 4. GUARDAR EL ID DE DRIVE EN LA BD ---
         nuevo_documento = DocumentoBaja(
             id_proceso_baja=proceso.id,
             tipo_documento=tipo_documento,
-            nombre_archivo=filename,
-            ruta_archivo=unique_filename,
+            nombre_archivo=filename,    # Guarda el nombre original (ej. "dictamen.pdf")
+            ruta_archivo=drive_id,       # <-- Guarda el ID de Google Drive (ej. "1aB2c...")
             id_usuario_carga=current_user.id
         )
         db.session.add(nuevo_documento)
         db.session.commit()
 
         log_activity(
-            action="Carga de Documento",
+            action="Carga de Documento (Drive)",
             category="Bajas",
             resource_id=proceso.id,
-            details=f"Usuario '{current_user.username}' cargó el documento '{tipo_documento}' para el proceso de baja ID {proceso.id}"
+            details=f"Usuario '{current_user.username}' cargó '{tipo_documento}' (ID: {drive_id}) para el proceso de baja ID {proceso.id}"
         )
-        flash(f"Documento '{tipo_documento}' cargado exitosamente.", "success")
+        flash(f"Documento '{tipo_documento}' cargado exitosamente a Drive.", "success")
 
     except Exception as e:
         db.session.rollback()
-        current_app.logger.error(f"Error al cargar documento para proceso {proceso.id}: {e}")
-        flash("Ocurrió un error al guardar el documento.", "danger")
+        current_app.logger.error(f"Error al cargar documento (Drive) para proceso {proceso.id}: {e}")
+        flash(f"Ocurrió un error al guardar el documento: {e}", "danger")
 
     return redirect(url_for('bajas.ver_proceso', proceso_id=proceso.id))
-
 # En routes/bajas.py, dentro de la sección de "RUTAS DE ACCIONES"
 
-@bajas_bp.route('/documento/<int:adjunto_id>/descargar') # <-- CAMBIO AQUÍ
+@bajas_bp.route('/documento/<int:adjunto_id>/descargar')
 @login_required
 @permission_required('bajas.ver_proceso')
-def descargar_documento(adjunto_id): # <-- Y CAMBIO AQUÍ
+def descargar_documento(adjunto_id):
     """
-    Envía un archivo adjunto para que el usuario pueda verlo o descargarlo.
+    Descarga un archivo adjunto (PDF o imagen) desde Google Drive,
+    utilizando un sistema de caché.
     """
-    try:
-        # Busca el registro del ARCHIVO ADJUNTO por su ID
-        adjunto = db.session.get(ArchivoAdjunto, adjunto_id) # Usa la variable correcta
-        if not adjunto:
-            flash("El archivo solicitado no fue encontrado.", "danger")
-            return redirect(request.referrer or url_for('bajas.gestionar_bajas'))
+    
+    # 1. Buscar el registro del archivo en la BD
+    adjunto = db.session.get(ArchivoAdjunto, adjunto_id)
+    if not adjunto:
+        flash("El archivo solicitado no fue encontrado.", "danger")
+        return redirect(request.referrer or url_for('bajas.gestionar_bajas'))
 
-        # Envía el archivo de forma segura
-        return send_from_directory(
-            directory=current_app.config['UPLOAD_FOLDER'],
-            path=adjunto.ruta_archivo,
-            as_attachment=False
+    # 2. Validar que el servicio de Drive esté disponible
+    if not drive_service or not get_cached_image or not save_to_cache:
+        flash("Error: El servicio de almacenamiento (Google Drive) no está configurado.", "danger")
+        current_app.logger.error(f"Intento de descarga fallido: drive_service o helpers de caché no disponibles.")
+        return redirect(request.referrer or url_for('bajas.gestionar_bajas'))
+
+    try:
+        file_id = adjunto.ruta_archivo
+        
+        # 3. Intentar obtener de caché
+        file_content_bytes = get_cached_image(file_id)
+        
+        if not file_content_bytes:
+            # 4. Si no está en caché, descargar de Drive
+            current_app.logger.info(f"Descargando adjunto {file_id} desde Drive...")
+            file_content_bytes = drive_service.get_file_content(file_id)
+            
+            # 5. Guardar en caché para futuras peticiones
+            save_to_cache(file_id, file_content_bytes)
+        
+        else:
+            current_app.logger.info(f"Sirviendo adjunto {file_id} desde caché.")
+
+        # 6. Crear un buffer de bytes en memoria
+        buffer = io.BytesIO(file_content_bytes)
+
+        # 7. Servir el archivo al usuario para su descarga
+        return send_file(
+            buffer,
+            mimetype=adjunto.tipo_mime,
+            as_attachment=True, # <-- Forza la descarga
+            download_name=adjunto.nombre_archivo # <-- Usa el nombre original
         )
     
-    except FileNotFoundError:
-        current_app.logger.error(f"Archivo no encontrado para ArchivoAdjunto ID: {adjunto_id}")
-        flash("Error: El archivo físico no fue encontrado en el servidor.", "danger")
-        return redirect(request.referrer or url_for('bajas.gestionar_bajas'))
-    
     except Exception as e:
-        current_app.logger.error(f"Error al descargar adjunto {adjunto_id}: {e}")
-        flash("Ocurrió un error inesperado al obtener el documento.", "danger")
+        # Esto capturará errores de 'get_file_content' (ej. archivo no encontrado en Drive)
+        current_app.logger.error(f"Error al descargar adjunto {adjunto_id} (Drive ID: {adjunto.ruta_archivo}): {e}", exc_info=True)
+        flash("Ocurrió un error inesperado al obtener el documento desde Drive.", "danger")
         return redirect(request.referrer or url_for('bajas.gestionar_bajas'))
 
 @bajas_bp.route('/proceso/<int:proceso_id>/nuevo-documento', methods=['GET', 'POST'])
@@ -337,19 +407,30 @@ def crear_documento_expediente(proceso_id):
             return jsonify({'error': 'Proceso no encontrado'}), 404
         abort(404)
 
+    # --- Lógica POST (API) ---
     if request.method == 'POST':
         tipo_documento = request.form.get('tipo_documento')
         metadatos_str = request.form.get('metadatos', '{}')
         archivos = request.files.getlist('archivos_adjuntos')
         
-        # Validación básica
+        # --- ✅ 1. Validación de servicio de Drive ---
+        if not drive_service or not BAJAS_FOLDER_ID:
+            current_app.logger.error("crear_documento_expediente: El servicio de Drive no está configurado.")
+            return jsonify({'error': 'Error interno: El servicio de almacenamiento no está disponible.'}), 500
+        
+        # --- ✅ 2. Validación de datos de entrada ---
         if not tipo_documento:
             return jsonify({'error': 'El tipo de documento es requerido'}), 400
         
         if not archivos or archivos[0].filename == '':
             return jsonify({'error': 'Se requiere al menos un archivo adjunto'}), 400
 
-        # Verificación de duplicados
+        # --- ✅ 3. Validación de tipos de archivo ---
+        for file in archivos:
+            if not file.filename or not allowed_file(file.filename):
+                return jsonify({'error': f"Archivo no permitido: '{file.filename}'. Solo se aceptan imágenes y PDF."}), 400
+
+        # --- ✅ 4. Verificación de duplicados (sin cambios) ---
         documento_existente = DocumentoBaja.query.filter_by(
             id_proceso_baja=proceso_id, 
             tipo_documento=tipo_documento
@@ -361,7 +442,9 @@ def crear_documento_expediente(proceso_id):
             }), 400
 
         try:
-            # 1. Crear el registro principal del DocumentoBaja
+            # --- ✅ 5. Iniciar Transacción Atómica ---
+            
+            # 5.1. Crear el registro principal del DocumentoBaja (sin cambios)
             nuevo_documento = DocumentoBaja(
                 id_proceso_baja=proceso_id,
                 tipo_documento=tipo_documento,
@@ -369,44 +452,55 @@ def crear_documento_expediente(proceso_id):
                 id_usuario_carga=current_user.id
             )
             db.session.add(nuevo_documento)
-            db.session.flush()
+            db.session.flush() # Obtener el ID para los nombres de archivo
 
-            # 2. Iterar y guardar cada archivo adjunto
+            # 5.2. Iterar, subir a Drive y guardar cada archivo adjunto
+            archivos_subidos_info = [] # Para el log
             for file in archivos:
-                if file.filename:  # Solo procesar archivos con nombre
-                    filename = secure_filename(file.filename)
-                    unique_filename = f"doc_{nuevo_documento.id}_{datetime.datetime.now().strftime('%Y%m%d%H%M%S')}_{filename}"
-                    upload_path = os.path.join(current_app.config['UPLOAD_FOLDER'], unique_filename)
-                    file.save(upload_path)
+                filename = secure_filename(file.filename)
+                
+                # --- Subir a Google Drive ---
+                drive_id = drive_service.upload(
+                    file_storage=file,
+                    model_type=f"baja-expediente-{nuevo_documento.id}",
+                    target_folder_id=BAJAS_FOLDER_ID
+                )
+                
+                if not drive_id:
+                    # Forzar rollback si la subida falla
+                    raise Exception(f"Fallo al subir el archivo '{filename}' a Google Drive.")
 
-                    nuevo_adjunto = ArchivoAdjunto(
-                        id_documento_baja=nuevo_documento.id,
-                        nombre_archivo=filename,
-                        ruta_archivo=unique_filename,
-                        tipo_mime=file.mimetype
-                    )
-                    db.session.add(nuevo_adjunto)
+                # --- Guardar registro en BD ---
+                nuevo_adjunto = ArchivoAdjunto(
+                    id_documento_baja=nuevo_documento.id,
+                    nombre_archivo=filename,
+                    ruta_archivo=drive_id, # <-- Guardar el ID de Drive
+                    tipo_mime=file.mimetype
+                )
+                db.session.add(nuevo_adjunto)
+                archivos_subidos_info.append(f"'{filename}' (ID: {drive_id})")
             
+            # 5.3. Confirmar la transacción
             db.session.commit()
             
             log_activity(
-                action="Creación de Expediente de Baja", 
+                action="Creación de Expediente de Baja (Drive)", 
                 category="Bajas", 
                 resource_id=proceso.id,
-                details=f"Usuario '{current_user.username}' creó el expediente '{tipo_documento}' para el proceso #{proceso.id}."
+                details=f"Usuario '{current_user.username}' creó '{tipo_documento}'. Adjuntos: {', '.join(archivos_subidos_info)}."
             )
             
             return jsonify({
-                'message': f"Documento '{tipo_documento}' creado y archivos adjuntados exitosamente."
+                'message': f"Documento '{tipo_documento}' creado y archivos adjuntados a Drive exitosamente."
             }), 201
 
         except Exception as e:
             db.session.rollback()
-            current_app.logger.error(f"Error al crear documento para proceso {proceso.id}: {e}")
-            return jsonify({'error': 'Error interno del servidor al guardar el documento'}), 500
+            current_app.logger.error(f"Error al crear documento (Drive) para proceso {proceso.id}: {e}", exc_info=True)
+            return jsonify({'error': f'Error interno del servidor: {e}'}), 500
 
+    # --- Lógica GET (sin cambios) ---
     return render_template('bajas/crear_documento.html', proceso=proceso)
-# ... (otros imports) ...
 
 @bajas_bp.route('/proceso/<int:proceso_id>/actualizar-estatus', methods=['POST'])
 @login_required
@@ -486,6 +580,7 @@ def actualizar_estatus(proceso_id):
         flash("Ocurrió un error al actualizar el estatus.", "danger")
     
     return redirect(url_for('bajas.ver_proceso', proceso_id=proceso.id))
+
 
 @bajas_bp.route('/proceso/<int:proceso_id>/registrar-disposicion', methods=['POST'])
 @login_required

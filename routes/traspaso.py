@@ -1,7 +1,6 @@
 # your_flask_app/routes/traspaso.py
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, current_app
 from flask_login import login_required, current_user
-import mysql.connector
 from database import get_db_connection
 from decorators import permission_required
 from log_activity import log_activity
@@ -11,6 +10,9 @@ import uuid
 import os
 from config import UPLOAD_FOLDER
 import traceback 
+import pymysql
+from drive_service import (drive_service, BIENES_FOLDER_ID, TRASPASOS_FOLDER_ID, RESGUARDOS_FOLDER_ID)
+from pymysql.err import MySQLError
 
 traspaso_bp = Blueprint('traspaso', __name__)
 
@@ -28,15 +30,15 @@ def get_areas_data():
     cursor = None
     try:
         conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor(pymysql.cursors.DictCursor) 
         cursor.execute("SELECT id, nombre FROM areas ORDER BY nombre")
         areas = cursor.fetchall()
         return {area['nombre']: area['id'] for area in areas}
-    except mysql.connector.Error as err:
-        print(f"Error al obtener áreas: {err}")
+    except pymysql.MySQLError as e:
+        print(f"Error al obtener áreas: {e}")
         return {}
     finally:
-        if conn and conn.is_connected():
+        if conn:
             cursor.close()
             conn.close()
 
@@ -46,14 +48,14 @@ def get_areas_for_form():
     try:
         conn = get_db_connection()
         if not conn: return []
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor(pymysql.cursors.DictCursor)
         cursor.execute("SELECT id, nombre FROM areas ORDER BY nombre")
         return cursor.fetchall()
-    except mysql.connector.Error as err:
+    except MySQLError as err:
         print(f"Error al obtener áreas: {err}")
         return []
     finally:
-        if conn and conn.is_connected():
+        if conn:
             conn.close()
 
 @traspaso_bp.route('/traspasar_resguardo/<int:id_resguardo_anterior>', methods=['GET', 'POST'])
@@ -62,17 +64,17 @@ def get_areas_for_form():
 def traspasar_resguardo(id_resguardo_anterior):
     """
     Gestiona el proceso de traspaso de un bien de un resguardo a otro,
-    incluyendo la creación de oficios y la subida de evidencia fotográfica.
+    incluyendo la creación de oficios y la subida de evidencia a GOOGLE DRIVE.
     """
     conn = None
     try:
         conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor(pymysql.cursors.DictCursor)
 
         # --- LÓGICA GET (sin cambios) ---
         cursor.execute("""
             SELECT 
-                r.*, b.No_Inventario, b.Descripcion_Corta_Del_Bien, b.Proveedor, 
+                r.*, b.No_InventARIO, b.Descripcion_Corta_Del_Bien, b.Proveedor, 
                 b.Numero_De_Serie, a.nombre as Area_Anterior_Nombre
             FROM resguardos r
             JOIN bienes b ON r.id_bien = b.id
@@ -90,12 +92,23 @@ def traspasar_resguardo(id_resguardo_anterior):
 
         # --- LÓGICA POST ---
         if request.method == 'POST':
+            
+            # --- Verificación del servicio de Drive (sin cambios) ---
+            if not drive_service or not drive_service.service or not TRASPASOS_FOLDER_ID:
+                return jsonify({
+                    "message": "Error: El servicio de Google Drive o 'TRASPASOS_FOLDER_ID' " \
+                               "no están inicializados. Revise la configuración.", 
+                    "category": "danger"
+                }), 500
+
             form_data = request.form
             
             area_nueva_id = form_data.get('Area_Nueva')
             if not area_nueva_id:
                 return jsonify({"message": "Error: Debe seleccionar una nueva área para el resguardo.", "category": "danger"}), 400
 
+            # --- Lógica de Base de Datos (sin cambios) ---
+            
             # Desactivar resguardo anterior
             cursor.execute("UPDATE resguardos SET Activo = 0, Fecha_Ultima_Modificacion = NOW() WHERE id = %s", (id_resguardo_anterior,))
             
@@ -120,9 +133,7 @@ def traspasar_resguardo(id_resguardo_anterior):
             cursor.execute(sql_nuevo_resguardo, valores_nuevo_resguardo)
             id_resguardo_nuevo = cursor.lastrowid
 
-            # =====================================================================
-            # ✅ BLOQUE DE CÓDIGO AÑADIDO: Guardar el registro del traspaso
-            # =====================================================================
+            # Guardar el registro del traspaso
             sql_traspaso = """
                 INSERT INTO traspaso (
                     id_resguardo, fecha_traspaso, area_origen_id, area_destino_id,
@@ -130,36 +141,49 @@ def traspasar_resguardo(id_resguardo_anterior):
                 ) VALUES (%s, %s, %s, %s, %s, %s, %s)
             """
             valores_traspaso = (
-                id_resguardo_nuevo,
-                datetime.now(),
-                resguardo_anterior['id_area'],
-                area_nueva_id,
+                id_resguardo_nuevo, datetime.now(),
+                resguardo_anterior['id_area'], area_nueva_id,
                 resguardo_anterior['Nombre_Del_Resguardante'],
                 form_data.get('Nombre_Del_Resguardante_Nuevo'),
-                form_data.get('Asunto_Oficio_1') # Usamos el asunto del primer oficio como motivo
+                form_data.get('Asunto_Oficio_1') 
             )
             cursor.execute(sql_traspaso, valores_traspaso)
 
-            # --- El resto del código sigue igual ---
-
-            # Guardar imágenes del nuevo resguardo
+            # =====================================================================
+            # ✅ BLOQUE ACTUALIZADO: Añadido NOW() para fecha_subida
+            # =====================================================================
             imagenes_nuevo_resguardo = request.files.getlist('imagen_nuevo_resguardo')
             for imagen in imagenes_nuevo_resguardo:
                 if imagen and allowed_file(imagen.filename):
-                    filename = secure_filename(f"{uuid.uuid4()}-{imagen.filename}")
-                    imagen.save(os.path.join(current_app.config['UPLOAD_FOLDER'], filename))
-                    cursor.execute(
-                        "INSERT INTO imagenes_resguardo (id_resguardo, ruta_imagen) VALUES (%s, %s)",
-                        (id_resguardo_nuevo, filename)
+                    
+                    drive_id = drive_service.upload(
+                        file_storage=imagen,
+                        model_type="resguardo-traspaso",
+                        target_folder_id=RESGUARDOS_FOLDER_ID
                     )
-
-            # Procesar dinámicamente todos los oficios enviados
+                    
+                    if drive_id:
+                        cursor.execute(
+                            """
+                            INSERT INTO imagenes_resguardo 
+                                (id_resguardo, ruta_imagen, fecha_subida) 
+                            VALUES (%s, %s, NOW())
+                            """,
+                            (id_resguardo_nuevo, drive_id) 
+                        )
+                    else:
+                        raise Exception(f"No se pudo subir la imagen '{imagen.filename}' a Google Drive.")
+            
+            # =====================================================================
+            # ✅ BLOQUE ACTUALIZADO: Añadido NOW() para fecha_subida (asumido)
+            # =====================================================================
             oficio_index = 1
             while True:
                 oficio_clave = form_data.get(f'Oficio_clave_{oficio_index}')
                 if oficio_clave is None:
-                    break
+                    break 
 
+                # Insertar datos del oficio (Lógica de DB sin cambios)
                 sql_oficio = """
                     INSERT INTO oficios_traspaso (id_resguardo_anterior, id_resguardo_actual, Dependencia, Oficio_clave, Asunto, 
                                                   Lugar_Fecha, Nombre_Solicitante, id_area_solicitante, Jefe_Area_Solicitante) 
@@ -177,15 +201,29 @@ def traspasar_resguardo(id_resguardo_anterior):
                 cursor.execute(sql_oficio, valores_oficio)
                 id_oficio_nuevo = cursor.lastrowid
 
+                # Subir fotos del oficio a Google Drive
                 fotos_oficio = request.files.getlist(f'fotos_oficio_{oficio_index}')
                 for foto in fotos_oficio:
                     if foto and allowed_file(foto.filename):
-                        filename = secure_filename(f"{uuid.uuid4()}-{foto.filename}")
-                        foto.save(os.path.join(current_app.config['UPLOAD_FOLDER'], filename))
-                        cursor.execute(
-                            "INSERT INTO imagenes_oficios_traspaso (id_oficio, ruta_imagen) VALUES (%s, %s)",
-                            (id_oficio_nuevo, filename)
+                        
+                        drive_id_oficio = drive_service.upload(
+                            file_storage=foto,
+                            model_type=f"oficio-traspaso-{id_oficio_nuevo}",
+                            target_folder_id=TRASPASOS_FOLDER_ID 
                         )
+
+                        if drive_id_oficio:
+                            # Asumiendo que 'imagenes_oficios_traspaso' también tiene 'fecha_subida'
+                            cursor.execute(
+                                """
+                                INSERT INTO imagenes_oficios_traspaso 
+                                    (id_oficio, ruta_imagen, fecha_subida) 
+                                VALUES (%s, %s, NOW())
+                                """,
+                                (id_oficio_nuevo, drive_id_oficio)
+                            )
+                        else:
+                            raise Exception(f"No se pudo subir la foto de oficio '{foto.filename}' a Google Drive.")
                 
                 oficio_index += 1
 
@@ -205,15 +243,19 @@ def traspasar_resguardo(id_resguardo_anterior):
         if conn: conn.rollback()
         traceback.print_exc()
         if request.method == 'POST':
-            return jsonify({"message": f"Error interno al realizar el traspaso: {e}", "category": "danger"}), 500
+            return jsonify({"message": f"Error interno al realizar el traspaso: {str(e)}", "category": "danger"}), 500
         else:
-            flash(f"Error al cargar la página de traspaso: {e}", "danger")
+            flash(f"Error al cargar la página de traspaso: {str(e)}", "danger")
             return redirect(url_for('resguardos.ver_resguardos'))
     finally:
-        if conn and conn.is_connected():
+        if conn :
             conn.close()
 
-    return render_template('traspasos/traspasar_resguardo.html', resguardo_anterior=resguardo_anterior, areas=areas)
+    return render_template(
+        'traspasos/traspasar_resguardo.html', 
+        resguardo_anterior=resguardo_anterior, 
+        areas=areas
+    )
 # --- NUEVA RUTA PARA VER OFICIOS DE TRASPASO ---
 @traspaso_bp.route('/ver_oficios_traspaso')
 @login_required
@@ -227,8 +269,7 @@ def ver_oficios_traspaso():
 
     try:
         conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
-
+        cursor = conn.cursor(pymysql.cursors.DictCursor)
         # Consulta principal para obtener los datos de los oficios y los resguardos
         sql_select_oficios = """
             SELECT
@@ -262,7 +303,7 @@ def ver_oficios_traspaso():
 
         return render_template('ver_oficios_traspaso.html', oficios=oficios_con_datos)
 
-    except mysql.connector.Error as err:
+    except MySQLError as err:
         print(f"Error de base de datos al ver oficios: {err}")
         flash(f"Error de base de datos: {err}", 'danger')
         return redirect(url_for('resguardos.ver_resguardos'))
@@ -271,7 +312,7 @@ def ver_oficios_traspaso():
         flash(f"Ocurrió un error inesperado: {e}", 'danger')
         return redirect(url_for('resguardos.ver_resguardos'))
     finally:
-        if conn and conn.is_connected():
+        if conn:
             cursor.close()
             conn.close()
 
@@ -304,7 +345,7 @@ def ver_traspasos():
     conn = None
     try:
         conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor(pymysql.cursors.DictCursor)
         
         search_query = request.args.get('q', '').strip()
 
@@ -360,7 +401,7 @@ def ver_traspasos():
         traceback.print_exc()
         return redirect(url_for('main.dashboard'))
     finally:
-        if conn and conn.is_connected():
+        if conn :
             conn.close()
 
 
@@ -375,7 +416,7 @@ def ver_detalles_traspaso(traspaso_id):
     conn = None
     try:
         conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor(pymysql.cursors.DictCursor)
 
         # 1. Obtener la información principal del traspaso y los resguardos
         sql_traspaso_details = """
@@ -385,16 +426,25 @@ def ver_detalles_traspaso(traspaso_id):
                 b.id AS bien_id,
                 b.No_Inventario,
                 b.Descripcion_Corta_Del_Bien,
-                u.nombres AS registrado_por_nombres,
+                
+                -- CAMBIO: Se usa u_bien.nombres
+                u_bien.nombres AS usuario_que_registro_el_bien,
+                
                 r_actual.id AS resguardo_actual_id,
                 r_actual.Nombre_Del_Resguardante AS resguardante_actual,
                 r_actual.No_Trabajador AS trabajador_actual_no,
                 a_actual.nombre AS area_actual,
-                (SELECT id_resguardo_anterior FROM oficios_traspaso WHERE id_resguardo_actual = r_actual.id LIMIT 1) AS resguardo_anterior_id
+                (SELECT id_resguardo_anterior 
+                 FROM oficios_traspaso 
+                 WHERE id_resguardo_actual = r_actual.id LIMIT 1) AS resguardo_anterior_id
+                 
             FROM traspaso t
             JOIN resguardos r_actual ON t.id_resguardo = r_actual.id
             JOIN bienes b ON r_actual.id_bien = b.id
-            LEFT JOIN user u ON b.usuario_id_registro = u.id
+            
+            -- CAMBIO: Se hace LEFT JOIN con la tabla 'user' (no 'usuarios')
+            LEFT JOIN user u_bien ON b.usuario_id_registro = u_bien.id
+            
             JOIN areas a_actual ON r_actual.id_area = a_actual.id
             WHERE t.id = %s
         """
@@ -452,5 +502,5 @@ def ver_detalles_traspaso(traspaso_id):
         traceback.print_exc()
         return redirect(url_for('traspaso.ver_traspasos'))
     finally:
-        if conn and conn.is_connected():
+        if conn :
             conn.close()

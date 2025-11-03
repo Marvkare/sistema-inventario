@@ -1,20 +1,18 @@
 # your_flask_app/routes/resguardos.py
-from flask import Blueprint, render_template, request, redirect, url_for, flash, current_app, send_file, jsonify
+from flask import Blueprint, render_template, request, redirect, url_for, flash, current_app, send_file, jsonify, abort
 from flask_login import login_required, current_user
-import mysql.connector
 import os
 import traceback
-from pypdf import PdfReader, PdfWriter
-import pypdf.generic
-from werkzeug.utils import secure_filename
-from datetime import date,datetime
-import uuid
-from database import get_db, get_db_connection, AVAILABLE_COLUMNS
-from config import UPLOAD_FOLDER;
+from database import get_db_connection, get_db_connection, AVAILABLE_COLUMNS
 from decorators import permission_required
 from log_activity import log_activity
-from models import Resguardo, Bienes, Area
 import math
+from pymysql.err import MySQLError
+import pymysql
+import pymysql.cursors
+from drive_service import drive_service, BIENES_FOLDER_ID, RESGUARDOS_FOLDER_ID
+import traceback
+
 
 resguardos_bp = Blueprint('resguardos', __name__)
 
@@ -26,14 +24,14 @@ def get_areas_for_form():
     try:
         conn = get_db_connection()
         if not conn: return []
-        cursor = conn.cursor(dictionary=True)
+        cursor = cursor = conn.cursor(pymysql.cursors.DictCursor)
         cursor.execute("SELECT id, nombre FROM areas ORDER BY nombre")
         return cursor.fetchall()
-    except mysql.connector.Error as err:
+    except MySQLError as err:
         print(f"Error al obtener áreas: {err}")
         return []
     finally:
-        if conn and conn.is_connected():
+        if conn :
             conn.close()
 
 
@@ -48,19 +46,22 @@ def get_areas_api():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-# Reemplaza tu función crear_resguardo con esta versión corregida
 @resguardos_bp.route('/crear_resguardo', methods=['GET', 'POST'])
 @login_required
 @permission_required('resguardos.crear_resguardo')
 def crear_resguardo():
     conn = None
-    areas = get_areas_for_form()
+    # Asumo que esta función existe y obtiene las áreas
+    areas = get_areas_for_form() 
     
+    # --- LÓGICA PARA EL MÉTODO POST (ENVIAR FORMULARIO) ---
     if request.method == 'POST':
         try:
             conn = get_db_connection()
-            if not conn: raise Exception("No se pudo conectar a la base de datos.")
-            cursor = conn.cursor()
+            if not conn: 
+                raise Exception("No se pudo conectar a la base de datos.")
+            
+            cursor = conn.cursor(pymysql.cursors.DictCursor)
             
             form_data = request.form
             id_bien_existente = form_data.get('id_bien_existente')
@@ -69,19 +70,31 @@ def crear_resguardo():
             if id_bien_existente:
                 id_bien = id_bien_existente
             else:
-                # Lógica para crear un nuevo bien
-                sql_bien = """INSERT INTO bienes (No_Inventario, No_Factura, No_Cuenta, Proveedor, Descripcion_Del_Bien, Descripcion_Corta_Del_Bien, Rubro, Poliza, Fecha_Poliza, Sub_Cuenta_Armonizadora, Fecha_Factura, Costo_Inicial, Depreciacion_Acumulada, Costo_Final, Cantidad, Estado_Del_Bien, Marca, Modelo, Numero_De_Serie, Clasificacion_Legal, usuario_id_registro, Area_Presupuestal, Documento_Propiedad, Fecha_Documento_Propiedad, Valor_En_Libros, Fecha_Adquisicion_Alta, Activo) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"""
-                bien_values = (form_data.get('No_Inventario'), form_data.get('No_Factura'), form_data.get('No_Cuenta'), form_data.get('Proveedor'), form_data.get('Descripcion_Del_Bien'), form_data.get('Descripcion_Corta_Del_Bien'), form_data.get('Rubro'), form_data.get('Poliza'), form_data.get('Fecha_Poliza'), form_data.get('Sub_Cuenta_Armonizadora'), form_data.get('Fecha_Factura'), form_data.get('Costo_Inicial'), form_data.get('Depreciacion_Acumulada'), form_data.get('Costo_Final'), form_data.get('Cantidad'), form_data.get('Estado_Del_Bien'), form_data.get('Marca'), form_data.get('Modelo'), form_data.get('Numero_De_Serie'), form_data.get('Clasificacion_Legal'), current_user.id, form_data.get('Area_Presupuestal'), form_data.get('Documento_Propiedad'), form_data.get('Fecha_Documento_Propiedad'), form_data.get('Valor_En_Libros'), form_data.get('Fecha_Adquisicion_Alta'), 1)
+                # --- 1. Crear nuevo bien ---
+                sql_bien = """INSERT INTO bienes (No_Inventario, Tipo_De_Alta, No_Factura, No_Cuenta, Proveedor, Descripcion_Del_Bien, Descripcion_Corta_Del_Bien, Rubro, Poliza, Fecha_Poliza, Sub_Cuenta_Armonizadora, Fecha_Factura, Costo_Inicial, Depreciacion_Acumulada, Costo_Final, Cantidad, Estado_Del_Bien, Marca, Modelo, Numero_De_Serie, Clasificacion_Legal, usuario_id_registro, Area_Presupuestal, Documento_Propiedad, Fecha_Documento_Propiedad, Valor_En_Libros, Fecha_Adquisicion_Alta, Activo) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"""
+                bien_values = (form_data.get('No_Inventario'), form_data.get('Tipo_De_Alta'), form_data.get('No_Factura'), form_data.get('No_Cuenta'), form_data.get('Proveedor'), form_data.get('Descripcion_Del_Bien'), form_data.get('Descripcion_Corta_Del_Bien'), form_data.get('Rubro'), form_data.get('Poliza'), form_data.get('Fecha_Poliza'), form_data.get('Sub_Cuenta_Armonizadora'), form_data.get('Fecha_Factura'), form_data.get('Costo_Inicial'), form_data.get('Depreciacion_Acumulada'), form_data.get('Costo_Final'), form_data.get('Cantidad'), form_data.get('Estado_Del_Bien'), form_data.get('Marca'), form_data.get('Modelo'), form_data.get('Numero_De_Serie'), form_data.get('Clasificacion_Legal'), current_user.id, form_data.get('Area_Presupuestal'), form_data.get('Documento_Propiedad'), form_data.get('Fecha_Documento_Propiedad'), form_data.get('Valor_En_Libros'), form_data.get('Fecha_Adquisicion_Alta'), 1)
+                
+                # Esta es la línea que puede fallar por duplicado
                 cursor.execute(sql_bien, bien_values)
                 id_bien = cursor.lastrowid
                 
-                for file in request.files.getlist('imagenes_bien'):
-                    if file and file.filename:
-                        filename = secure_filename(file.filename)
-                        unique_filename = f"{uuid.uuid4()}-{filename}"
-                        file.save(os.path.join(UPLOAD_FOLDER, unique_filename))
-                        cursor.execute("INSERT INTO imagenes_bien (id_bien, ruta_imagen) VALUES (%s, %s)", (id_bien, unique_filename))
+                # --- 2. Subir imágenes del bien a Google Drive ---
+                if drive_service and BIENES_FOLDER_ID:
+                    for file in request.files.getlist('imagenes_bien'):
+                        if file and file.filename:
+                            drive_id = drive_service.upload(
+                                file_storage=file,
+                                model_type='bien', 
+                                target_folder_id=BIENES_FOLDER_ID
+                            )
+                            if drive_id:
+                                cursor.execute("INSERT INTO imagenes_bien (id_bien, ruta_imagen) VALUES (%s, %s)", (id_bien, drive_id))
+                            else:
+                                raise Exception(f"Falló la subida de {file.filename} a Drive.")
+                elif not drive_service:
+                    print("ADVERTENCIA: Drive service no disponible, omitiendo imágenes de bien.")
 
+            # --- 3. Crear el resguardo ---
             area_id = form_data.get('Area')
             sql_resguardo = """
                 INSERT INTO resguardos (
@@ -101,13 +114,24 @@ def crear_resguardo():
             cursor.execute(sql_resguardo, resguardo_values)
             id_resguardo = cursor.lastrowid
 
-            for file in request.files.getlist('imagenes_resguardo'):
-                if file and file.filename:
-                    filename = secure_filename(file.filename)
-                    unique_filename = f"{uuid.uuid4()}-{filename}"
-                    file.save(os.path.join(UPLOAD_FOLDER, unique_filename))
-                    cursor.execute("INSERT INTO imagenes_resguardo (id_resguardo, ruta_imagen) VALUES (%s, %s)", (id_resguardo, unique_filename))
+            # --- 4. Subir imágenes del resguardo a Google Drive ---
+            if drive_service and RESGUARDOS_FOLDER_ID:
+                for file in request.files.getlist('imagenes_resguardo'):
+                    if file and file.filename:
+                        drive_id = drive_service.upload(
+                            file_storage=file,
+                            model_type='resguardo', 
+                            target_folder_id=RESGUARDOS_FOLDER_ID
+                        )
+                        if drive_id:
+                            # Asumiendo que tu tabla tiene 'fecha_subida'
+                            cursor.execute("INSERT INTO imagenes_resguardo (id_resguardo, ruta_imagen, fecha_subida) VALUES (%s, %s, NOW())", (id_resguardo, drive_id))
+                        else:
+                            raise Exception(f"Falló la subida de {file.filename} a Drive.")
+            elif not drive_service:
+                print("ADVERTENCIA: Drive service no disponible, omitiendo imágenes de resguardo.")
             
+            # --- 5. Si todo salió bien, confirmar cambios ---
             conn.commit()
             log_activity(
                 action='Creación de Resguardo', 
@@ -115,20 +139,55 @@ def crear_resguardo():
                 resource_id=id_resguardo, 
                 details=f"Usuario '{current_user.username}' creó el resguardo No. Resguardo: {form_data.get('No_Resguardo')}"
             )
-            # --- CORRECCIÓN: Se retorna solo el JSON, que es lo esperado para un envío de formulario con JS ---
-            jsonify({"message": "Resguardo creado exitosamente.", "category": "success", "redirect_url": url_for('resguardos.ver_resguardos')}), 200
-            return redirect(url_for('resguardos.ver_resguardos'))
-
-        except mysql.connector.Error as e:
-            if conn: conn.rollback()
-            if e.errno == 1062:
-                 return jsonify({"message": f"Error: Ya existe un bien con el mismo 'No. de Inventario'.", "category": "danger"}), 409
-            traceback.print_exc()
-            return jsonify({"message": f"Ocurrió un error de base de datos: {e}", "category": "danger"}), 500
-        finally:
-            if conn and conn.is_connected(): conn.close()
             
+            # --- 6. Enviar respuesta JSON de ÉXITO ---
+            return jsonify({
+                "message": "Resguardo creado exitosamente.", 
+                "category": "success", 
+                "redirect_url": url_for('resguardos.ver_resguardos') # O a 'ver_resguardo'
+            }), 200
+
+        # --- INICIO DEL MANEJO DE ERRORES CORREGIDO ---
+
+        # 7. Captura TODOS los errores de Base de Datos (PyMySQL)
+        except MySQLError as e:
+            if conn: conn.rollback()
+            
+            # --- ESTA ES LA CORRECCIÓN ---
+            # Revisa si 'e' tiene 'args' y si el primer argumento es 1062
+            if e.args and e.args[0] == 1062:
+                # Error 1062: Entrada Duplicada
+                error_message = str(e)
+                field = "un campo" 
+
+                if "No_Inventario" in error_message:
+                    field = f"El Número de Inventario '{form_data.get('No_Inventario')}'"
+                elif "Numero_De_Serie" in error_message:
+                     field = f"El Número de Serie '{form_data.get('Numero_De_Serie')}'"
+                
+                return jsonify({
+                    "message": f"Error al guardar: {field} ya existe en la base de datos."
+                }), 409 # 409 Conflict
+            
+            else:
+                # Otro error de base de datos
+                traceback.print_exc() 
+                return jsonify({"message": f"Ocurrió un error de base de datos: {e}", "category": "danger"}), 500
+        
+        # 8. Captura CUALQUIER OTRO error (Google Drive, Lógica, etc.)
+        except Exception as e:
+            if conn: conn.rollback()
+            traceback.print_exc() 
+            return jsonify({"message": f"Ocurrió un error inesperado: {e}", "category": "danger"}), 500
+
+        finally:
+            # 9. Cerrar la conexión siempre
+            if conn : conn.close()
+            
+    # --- LÓGICA PARA EL MÉTODO GET (MOSTRAR FORMULARIO) ---
+    # Esto solo se ejecuta si no es un POST
     return render_template('/resguardos/resguardo_form.html', areas=areas, form_data={}, bien_precargado=False)
+
 
 @resguardos_bp.route('/crear_resguardo_de_bien/<int:id_bien>', methods=['GET'])
 @login_required
@@ -139,7 +198,7 @@ def crear_resguardo_de_bien(id_bien):
     try:
         conn = get_db_connection()
         if not conn: raise Exception("No se pudo conectar a la base de datos.")
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor(pymysql.cursors.DictCursor)
         
         # Se obtienen los datos del bien
         cursor.execute("SELECT * FROM bienes WHERE id = %s", (id_bien,))
@@ -167,11 +226,12 @@ def crear_resguardo_de_bien(id_bien):
                                is_edit=False, 
                                bien_precargado=True,
                                imagenes_bien_db=imagenes_bien_db)
+    
     except Exception as e:
         flash(f"Ocurrió un error: {e}", "danger")
         return redirect(url_for('bienes.listar_bienes'))
     finally:
-        if conn and conn.is_connected(): conn.close()
+        if conn : conn.close()
 
 
 @resguardos_bp.route('/editar_resguardo/<int:id_resguardo>', methods=['GET', 'POST'])
@@ -182,39 +242,42 @@ def editar_resguardo(id_resguardo):
     areas = get_areas_for_form()
     try:
         conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor(pymysql.cursors.DictCursor) 
 
-        # --- VALIDACIÓN INICIAL (LA PARTE MÁS IMPORTANTE) ---
-        # 1. Obtenemos los datos del resguardo ANTES de cualquier otra lógica.
-        sql_select = """
+        # --- VALIDACIÓN INICIAL ---
+        sql_select_val = """
             SELECT r.*, b.*, r.id AS resguardo_id, b.id AS bien_id, a.id as Area_id 
             FROM resguardos r 
             JOIN bienes b ON r.id_bien = b.id 
             JOIN areas a ON r.id_area = a.id 
             WHERE r.id = %s AND r.Activo = 1
         """
-        cursor.execute(sql_select, (id_resguardo,))
-        resguardo_data = cursor.fetchone()
+        cursor.execute(sql_select_val, (id_resguardo,))
+        resguardo_data_val = cursor.fetchone()
 
-        # La validación ahora es más simple.
-        # Si no se encuentra un resguardo (porque no existe O porque está inactivo), se redirige.
-        if not resguardo_data:
+        if not resguardo_data_val:
             flash("El resguardo no existe o está inactivo y no puede ser editado.", "warning")
             return redirect(url_for('resguardos.ver_resguardos'))
 
-        # --- Si la validación pasa, el código continúa ---
-        
-        areas = get_areas_for_form()
+        id_bien_val = resguardo_data_val['bien_id'] # Obtenemos el id_bien validado
 
         if request.method == 'POST':
             form_data = request.form
             
-            id_bien = form_data.get('id_bien')
+            # --- VALIDACIÓN IMPORTANTE ---
+            # Asegúrate de que el id_bien del formulario coincida con el de la URL
+            # para evitar que se edite un bien que no corresponde a este resguardo.
+            id_bien_form = form_data.get('id_bien')
+            if not id_bien_form or int(id_bien_form) != id_bien_val:
+                flash("Error de inconsistencia de datos. No se pudo actualizar.", "danger")
+                return redirect(url_for('resguardos.ver_resguardos'))
+
             area_id = form_data.get('Area')
 
             def to_null(value):
                 return None if value == '' else value
 
+            # --- Actualización del Bien ---
             sql_update_bien = "UPDATE bienes SET No_Inventario=%s, No_Factura=%s, No_Cuenta=%s, Proveedor=%s, Descripcion_Del_Bien=%s, Descripcion_Corta_Del_Bien=%s, Rubro=%s, Poliza=%s, Fecha_Poliza=%s, Sub_Cuenta_Armonizadora=%s, Fecha_Factura=%s, Costo_Inicial=%s, Depreciacion_Acumulada=%s, Costo_Final=%s, Cantidad=%s, Estado_Del_Bien=%s, Marca=%s, Modelo=%s, Numero_De_Serie=%s WHERE id=%s"
             bien_values = (
                 form_data.get('No_Inventario'), form_data.get('No_Factura'), form_data.get('No_Cuenta'), 
@@ -225,10 +288,11 @@ def editar_resguardo(id_resguardo):
                 to_null(form_data.get('Costo_Inicial')), to_null(form_data.get('Depreciacion_Acumulada')), 
                 to_null(form_data.get('Costo_Final')), to_null(form_data.get('Cantidad')), 
                 form_data.get('Estado_Del_Bien'), form_data.get('Marca'), 
-                form_data.get('Modelo'), form_data.get('Numero_De_Serie'), id_bien
+                form_data.get('Modelo'), form_data.get('Numero_De_Serie'), id_bien_val
             )
             cursor.execute(sql_update_bien, bien_values)
             
+            # --- Actualización del Resguardo ---
             sql_update_resguardo = "UPDATE resguardos SET id_area=%s, No_Resguardo=%s, Tipo_De_Resguardo=%s, Fecha_Resguardo=%s, No_Trabajador=%s, No_Nomina_Trabajador=%s, Puesto_trabajador=%s, Nombre_Director_Jefe_De_Area=%s, Nombre_Del_Resguardante=%s WHERE id=%s"
             resguardo_values = (
                 area_id, form_data.get('No_Resguardo'), 
@@ -239,37 +303,58 @@ def editar_resguardo(id_resguardo):
             )
             cursor.execute(sql_update_resguardo, resguardo_values)
             
-            # --- CORRECCIÓN CLAVE: Lógica para AÑADIR y ELIMINAR imágenes ---
+            # --- INICIO DE ADAPTACIÓN A GOOGLE DRIVE ---
 
-            # 1. Eliminar imágenes marcadas
-            for img_id in request.form.getlist('eliminar_imagen_bien[]'):
-                cursor.execute("SELECT ruta_imagen FROM imagenes_bien WHERE id = %s", (img_id,))
-                imagen = cursor.fetchone()
-                if imagen:
-                    os.remove(os.path.join(UPLOAD_FOLDER, imagen['ruta_imagen']))
-                    cursor.execute("DELETE FROM imagenes_bien WHERE id = %s", (img_id,))
+            # 1. Verificar si el servicio está disponible antes de procesar imágenes
+            if not drive_service:
+                # Si no hay servicio, pero se intentó modificar imágenes, lanzar un error.
+                if (request.form.getlist('eliminar_imagen_bien[]') or
+                    request.form.getlist('eliminar_imagen_resguardo[]') or
+                    any(f.filename for f in request.files.getlist('imagenes_bien')) or
+                    any(f.filename for f in request.files.getlist('imagenes_resguardo'))):
+                    raise Exception("El servicio de Google Drive no está inicializado. No se pudieron modificar las imágenes.")
 
-            for img_id in request.form.getlist('eliminar_imagen_resguardo[]'):
-                cursor.execute("SELECT ruta_imagen FROM imagenes_resguardo WHERE id = %s", (img_id,))
-                imagen = cursor.fetchone()
-                if imagen:
-                    os.remove(os.path.join(UPLOAD_FOLDER, imagen['ruta_imagen']))
-                    cursor.execute("DELETE FROM imagenes_resguardo WHERE id = %s", (img_id,))
-            
-            # 2. Añadir nuevas imágenes
-            for file in request.files.getlist('imagenes_bien'):
-                if file and file.filename:
-                    filename = secure_filename(file.filename)
-                    unique_filename = f"{uuid.uuid4()}-{filename}"
-                    file.save(os.path.join(UPLOAD_FOLDER, unique_filename))
-                    cursor.execute("INSERT INTO imagenes_bien (id_bien, ruta_imagen) VALUES (%s, %s)", (id_bien, unique_filename))
+            if drive_service:
+                # 2. Eliminar imágenes marcadas
+                for img_id in request.form.getlist('eliminar_imagen_bien[]'):
+                    # Obtenemos el Drive File ID (asumiendo que está en 'ruta_imagen')
+                    cursor.execute("SELECT ruta_imagen FROM imagenes_bien WHERE id = %s", (img_id,))
+                    imagen = cursor.fetchone()
+                    if imagen and imagen['ruta_imagen']:
+                        # Borrar de Google Drive
+                        if not drive_service.delete(imagen['ruta_imagen']):
+                            raise Exception(f"Error al eliminar la imagen {img_id} de Google Drive. La transacción ha sido revertida.")
+                        # Borrar de la DB (solo si se borró de Drive)
+                        cursor.execute("DELETE FROM imagenes_bien WHERE id = %s", (img_id,))
 
-            for file in request.files.getlist('imagenes_resguardo'):
-                if file and file.filename:
-                    filename = secure_filename(file.filename)
-                    unique_filename = f"{uuid.uuid4()}-{filename}"
-                    file.save(os.path.join(UPLOAD_FOLDER, unique_filename))
-                    cursor.execute("INSERT INTO imagenes_resguardo (id_resguardo, ruta_imagen) VALUES (%s, %s)", (id_resguardo, unique_filename))
+                for img_id in request.form.getlist('eliminar_imagen_resguardo[]'):
+                    cursor.execute("SELECT ruta_imagen FROM imagenes_resguardo WHERE id = %s", (img_id,))
+                    imagen = cursor.fetchone()
+                    if imagen and imagen['ruta_imagen']:
+                        if not drive_service.delete(imagen['ruta_imagen']):
+                            raise Exception(f"Error al eliminar la imagen de resguardo {img_id} de Google Drive. La transacción ha sido revertida.")
+                        cursor.execute("DELETE FROM imagenes_resguardo WHERE id = %s", (img_id,))
+                
+                # 3. Añadir nuevas imágenes
+                for file in request.files.getlist('imagenes_bien'):
+                    if file and file.filename:
+                        # Subir a la carpeta de Bienes
+                        drive_id = drive_service.upload(file, 'bien', BIENES_FOLDER_ID)
+                        if not drive_id:
+                            raise Exception(f"Error al subir el archivo '{file.filename}' a Google Drive. La transacción ha sido revertida.")
+                        # Guardamos el Drive ID en la columna 'ruta_imagen'
+                        cursor.execute("INSERT INTO imagenes_bien (id_bien, ruta_imagen) VALUES (%s, %s)", (id_bien_val, drive_id))
+
+                for file in request.files.getlist('imagenes_resguardo'):
+                    if file and file.filename:
+                        # Subir a la carpeta de Resguardos
+                        drive_id = drive_service.upload(file, 'resguardo', RESGUARDOS_FOLDER_ID)
+                        if not drive_id:
+                            raise Exception(f"Error al subir el archivo '{file.filename}' a Google Drive. La transacción ha sido revertida.")
+                        # Guardamos el Drive ID en la columna 'ruta_imagen'
+                        cursor.execute("INSERT INTO imagenes_resguardo (id_resguardo, ruta_imagen) VALUES (%s, %s)", (id_resguardo, drive_id))
+
+            # --- FIN DE ADAPTACIÓN A GOOGLE DRIVE ---
 
             conn.commit()
             log_activity(
@@ -280,37 +365,42 @@ def editar_resguardo(id_resguardo):
             )
             flash('Resguardo actualizado exitosamente.', 'success')
 
-            return redirect(url_for('resguardos.ver_resguardos'))
+            # Esta es la respuesta JSON que tu script SÍ entiende
+            return jsonify({
+                'success': True,
+                'redirect_url': url_for('resguardos.ver_resguardos')
+            })
 
-        # Lógica GET
-        sql_select = "SELECT r.*, b.*, r.id AS resguardo_id, b.id AS bien_id, a.id as Area_id FROM resguardos r JOIN bienes b ON r.id_bien = b.id JOIN areas a ON r.id_area = a.id WHERE r.id = %s"
-        cursor.execute(sql_select, (id_resguardo,))
-        resguardo_data = cursor.fetchone()
-        if not resguardo_data: abort(404)
+        # --- Lógica GET (sin cambios) ---
+        # El resguardo_data_val ya fue obtenido al inicio
+        if not resguardo_data_val: abort(404) # Doble chequeo por si acaso
 
-        cursor.execute("SELECT id, ruta_imagen FROM imagenes_bien WHERE id_bien = %s", (resguardo_data['bien_id'],))
+        # La columna 'ruta_imagen' ahora contiene el Drive ID, pero la lógica de consulta es la misma.
+        cursor.execute("SELECT id, ruta_imagen FROM imagenes_bien WHERE id_bien = %s", (resguardo_data_val['bien_id'],))
         imagenes_bien_db = cursor.fetchall()
-        cursor.execute("SELECT id, ruta_imagen FROM imagenes_resguardo WHERE id_resguardo = %s", (resguardo_data['resguardo_id'],))
+        cursor.execute("SELECT id, ruta_imagen FROM imagenes_resguardo WHERE id_resguardo = %s", (resguardo_data_val['resguardo_id'],))
         imagenes_resguardo_db = cursor.fetchall()
-        #print(resguardo_data)
-        return render_template('resguardos/resguardo_form.html', is_edit=True, form_data=resguardo_data, areas=areas, imagenes_bien_db=imagenes_bien_db, imagenes_resguardo_db=imagenes_resguardo_db)
+        
+        return render_template('resguardos/resguardo_form.html', is_edit=True, form_data=resguardo_data_val, areas=areas, imagenes_bien_db=imagenes_bien_db, imagenes_resguardo_db=imagenes_resguardo_db)
 
     except Exception as e:
         if conn: conn.rollback()
         flash(f"Error al editar el resguardo: {e}", 'danger')
         traceback.print_exc()
         
+        # --- Lógica de recarga de datos en error (sin cambios) ---
         form_data_on_error = request.form.to_dict()
         form_data_on_error['resguardo_id'] = id_resguardo
-        form_data_on_error['bien_id'] = request.form.get('id_bien')
+        form_data_on_error['bien_id'] = request.form.get('id_bien', id_bien_val) # Usar id_bien_val como fallback
         
         imagenes_bien_db, imagenes_resguardo_db = [], []
-        id_bien_from_form = request.form.get('id_bien')
+        id_bien_from_form = form_data_on_error['bien_id']
+        
         if id_bien_from_form:
             try:
                 if not conn or not conn.is_connected():
                     conn = get_db_connection()
-                    cursor = conn.cursor(dictionary=True)
+                cursor = conn.cursor(pymysql.cursors.DictCursor)
                 cursor.execute("SELECT id, ruta_imagen FROM imagenes_bien WHERE id_bien = %s", (id_bien_from_form,))
                 imagenes_bien_db = cursor.fetchall()
                 cursor.execute("SELECT id, ruta_imagen FROM imagenes_resguardo WHERE id_resguardo = %s", (id_resguardo,))
@@ -325,8 +415,7 @@ def editar_resguardo(id_resguardo):
                                imagenes_bien_db=imagenes_bien_db,
                                imagenes_resguardo_db=imagenes_resguardo_db)
     finally:
-        if conn and conn.is_connected(): conn.close()
-
+        if conn : conn.close()
 
 
 @resguardos_bp.route('/ver_resguardo/<int:id_resguardo>', methods=['GET'])
@@ -340,8 +429,7 @@ def ver_resguardo(id_resguardo):
     cursor = None
     try:
         conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
-
+        cursor = conn.cursor(pymysql.cursors.DictCursor) 
         # --- CAMBIO: La consulta ahora trae TODOS los campos de bien y resguardo (b.*, r.*) ---
         # --- y se une con 'user' para obtener el nombre de quien registró el resguardo. ---
         sql_select_resguardo = """
@@ -379,7 +467,7 @@ def ver_resguardo(id_resguardo):
             imagenes_bien=imagenes_bien,
             imagenes_resguardo=imagenes_resguardo
         )
-    except mysql.connector.Error as err:
+    except pymysql.MySQLError as err:
         flash(f"Error de base de datos: {err}", "danger")
         return redirect(url_for('resguardos.ver_resguardos'))
     except Exception as e:
@@ -387,7 +475,7 @@ def ver_resguardo(id_resguardo):
         traceback.print_exc()
         return redirect(url_for('resguardos.ver_resguardos'))
     finally:
-        if conn and conn.is_connected():
+        if conn:
             cursor.close()
             conn.close()
 
@@ -397,7 +485,7 @@ def get_areas_list_from_db():
     conn = None
     try:
         conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor(pymysql.cursors.DictCursor)
         cursor.execute("SELECT DISTINCT nombre FROM areas ORDER BY nombre")
         areas = [row['nombre'] for row in cursor.fetchall()]
         return areas
@@ -405,7 +493,7 @@ def get_areas_list_from_db():
         print(f"Error fetching areas from DB: {e}")
         return []
     finally:
-        if conn and conn.is_connected():
+        if conn:
             cursor.close()
             conn.close()
 
@@ -432,7 +520,7 @@ def delete_resguardo(id):
             details=f"Usuario '{current_user.username}' eliminó el resguardo y bien asociado, ID resguardo: {id}"
         )
         flash("Resguardo eliminado correctamente.", 'success')
-    except mysql.connector.Error as err:
+    except MySQLError as err:
         flash(f"Error al eliminar resguardo: {err}", 'error')
         conn.rollback()
     finally:
@@ -485,7 +573,7 @@ def _get_resguardos_list(control_only=False):
         
         # --- 2. Conexión a la Base de Datos ---
         conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor(pymysql.cursors.DictCursor)
 
         # --- 3. Construcción de la Consulta SQL (Count y Select) ---
         select_cols = """
@@ -573,8 +661,7 @@ def imprimir_resguardo(id_resguardo):
     try:
         # --- 1. Conexión a la Base de Datos ---
         conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
-
+        cursor = conn.cursor(pymysql.cursors.DictCursor)
         # --- 2. Construcción de la Consulta SQL ---
         # Esta consulta es similar a la de tu lista, pero para un solo ID.
         # Une las tres tablas (resguardos, bienes, areas) para obtener toda la info.

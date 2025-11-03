@@ -1,6 +1,5 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, send_file, jsonify
 from flask_login import login_required, current_user # Asume que tienes Flask-Login configurado
-import mysql.connector
 import os
 import traceback
 import json
@@ -13,7 +12,9 @@ from database import get_db_connection # Asegúrate de que este archivo exista
 from helpers import map_operator_to_sql
 from log_activity import log_activity # Asegúrate de que este archivo exista
 from decorators import permission_required # Asume que este decorador existe
-
+import pymysql
+import io
+from drive_service import drive_service, get_cached_image, save_to_cache
 plantillas_bp = Blueprint('plantillas', __name__)
 
 # =================================================================
@@ -40,7 +41,8 @@ def get_filtered_resguardo_data(selected_columns, filters, limit=None):
     conn = None
     try:
         conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor(pymysql.cursors.DictCursor)
+ 
 
         column_map = {
             'id': 'r', 'No_Resguardo': 'r', 'Tipo_De_Resguardo': 'r', 'Fecha_Resguardo': 'r',
@@ -125,7 +127,7 @@ def get_filtered_resguardo_data(selected_columns, filters, limit=None):
                 bien_images = {row['id_bien']: row['imagenes'].split(',') for row in cursor.fetchall() if row['imagenes']}
                 for row in results:
                     filenames = bien_images.get(row.get('bien_id'), [])
-                    row['imagenPath_bien'] = [url_for('serve_uploaded_file', filename=f) for f in filenames]
+                    row['imagenPath_bien'] = [url_for('serve_drive_image', file_id=f) for f in filenames]
 
         if 'imagenPath_resguardo' in image_columns:
             resguardo_ids = [str(row['resguardo_id']) for row in results if row.get('resguardo_id')]
@@ -135,7 +137,7 @@ def get_filtered_resguardo_data(selected_columns, filters, limit=None):
                 resguardo_images = {row['id_resguardo']: row['imagenes'].split(',') for row in cursor.fetchall() if row['imagenes']}
                 for row in results:
                     filenames = resguardo_images.get(row.get('resguardo_id'), [])
-                    row['imagenPath_resguardo'] = [url_for('serve_uploaded_file', filename=f) for f in filenames]
+                    row['imagenPath_resguardo'] = [url_for('serve_drive_image', file_id=f) for f in filenames]
 
         return results, len(results), len(results)
         
@@ -143,9 +145,10 @@ def get_filtered_resguardo_data(selected_columns, filters, limit=None):
         traceback.print_exc()
         return [], 0, 0
     finally:
-        if conn and conn.is_connected():
+        if conn :
             cursor.close()
             conn.close()
+
 
 @plantillas_bp.route('/crear_plantilla', methods=['GET', 'POST'])
 @login_required
@@ -208,7 +211,7 @@ def editar_plantilla(template_id):
     conn = None
     try:
         conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor(pymysql.cursors.DictCursor)
 
         cursor.execute("SELECT * FROM query_templates WHERE id = %s", (template_id,))
         template = cursor.fetchone()
@@ -267,7 +270,7 @@ def editar_plantilla(template_id):
         flash(f"Error al cargar/editar la plantilla: {e}", 'danger')
         return redirect(url_for('plantillas.ver_plantillas'))
     finally:
-        if conn and conn.is_connected():
+        if conn :
             conn.close()
 
 @plantillas_bp.route('/ver_plantillas')
@@ -278,7 +281,8 @@ def ver_plantillas():
     conn = None
     try:
         conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor(pymysql.cursors.DictCursor)
+
         cursor.execute("SELECT id, name, description FROM query_templates ORDER BY name")
         templates = cursor.fetchall()
         return render_template('ver_plantillas.html', templates=templates)
@@ -300,7 +304,7 @@ def eliminar_plantilla(template_id):
     template_name = f"ID {template_id}" # Valor por defecto por si falla la consulta
     try:
         conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True) # Usar dictionary=True para leer el nombre
+        cursor = conn.cursor(pymysql.cursors.DictCursor)
 
         # --- AÑADIDO: Obtener el nombre ANTES de borrar ---
         cursor.execute("SELECT name FROM query_templates WHERE id = %s", (template_id,))
@@ -335,61 +339,69 @@ def eliminar_plantilla(template_id):
 @login_required
 @permission_required('resguardos.crear_resguardo')
 def exportar_excel(template_id):
-    """Ruta para exportar los datos de una plantilla a Excel, incluyendo imágenes."""
+    """
+    Ruta para exportar los datos de una plantilla a Excel, 
+    incluyendo imágenes desde GOOGLE DRIVE con caché.
+    """
     conn = None
     try:
         conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor(pymysql.cursors.DictCursor)
+
         cursor.execute("SELECT * FROM query_templates WHERE id = %s", (template_id,))
         template = cursor.fetchone()
         
         if not template:
-            flash("Plantilla no encontrada para exportar a Excel.", 'danger')
+            flash("Plantilla no encontrada.", 'danger')
+            return redirect(url_for('plantillas.ver_plantillas'))
+
+        # Verificar que el servicio de Drive esté disponible
+        if not drive_service or not get_cached_image or not save_to_cache:
+            flash("Error: El servicio de imágenes (Drive/Cache) no está configurado.", 'danger')
             return redirect(url_for('plantillas.ver_plantillas'))
 
         selected_columns = json.loads(template['columns']) if template['columns'] else []
         filters = json.loads(template['filters']) if template['filters'] else []
 
+        # get_filtered_resguardo_data AHORA DEVUELVE URLs, ej: /images/<file_id>
         filtered_data, max_bien_images, max_resguardo_images = get_filtered_resguardo_data(selected_columns, filters)
 
         if not filtered_data:
             flash("No se encontraron datos para los filtros seleccionados.", 'warning')
             return redirect(url_for('plantillas.ver_plantillas'))
 
-        # --- BLOQUE DE CORRECCIÓN: TRANSFORMA LAS LISTAS DE IMÁGENES ---
+        # Transforma listas de URLs en columnas (Ej. imagen_bien_1 = '/images/id123')
         for row in filtered_data:
             if 'imagenPath_bien' in row and row['imagenPath_bien']:
                 for i, path in enumerate(row['imagenPath_bien']):
-                    row[f'imagen_bien_{i+1}'] = path
+                    if i < max_bien_images: # Asegurar que no exceda el límite
+                        row[f'imagen_bien_{i+1}'] = path
             if 'imagenPath_resguardo' in row and row['imagenPath_resguardo']:
                 for i, path in enumerate(row['imagenPath_resguardo']):
-                    row[f'imagen_resguardo_{i+1}'] = path
-        # --- FIN DEL BLOQUE DE CORRECCIÓN ---
-
-        df = pd.DataFrame(filtered_data)
+                    if i < max_resguardo_images: # Asegurar que no exceda el límite
+                        row[f'imagen_resguardo_{i+1}'] = path
         
+        df = pd.DataFrame(filtered_data)
         excel_file_buffer = BytesIO()
 
         with pd.ExcelWriter(excel_file_buffer, engine='xlsxwriter') as writer:
-            # ... (el resto de tu código para generar el Excel no necesita cambios)
-            # Ahora funcionará porque encontrará las columnas 'imagen_resguardo_1', etc.
             sheet_name = template['name'][:31] if template['name'] else 'Reporte'
             workbook = writer.book
             worksheet = workbook.add_worksheet(sheet_name) 
 
-            # Formatos
+            # Formatos (sin cambios)
             header_format = workbook.add_format({'bg_color': '#4A90E2', 'font_color': 'white', 'bold': True, 'align': 'center', 'valign': 'vcenter', 'border': 1})
             data_format = workbook.add_format({'align': 'center', 'valign': 'vcenter', 'border': 1})
             image_cell_format = workbook.add_format({'align': 'center', 'valign': 'top', 'border': 1})
 
-            # Crear lista de todas las columnas para el Excel
+            # Crear lista de todas las columnas (sin cambios)
             all_columns_in_order = [col for col in selected_columns if col not in ['imagenPath_bien', 'imagenPath_resguardo']]
             for i in range(max_bien_images):
                 all_columns_in_order.append(f'imagen_bien_{i+1}')
             for i in range(max_resguardo_images):
                 all_columns_in_order.append(f'imagen_resguardo_{i+1}')
             
-            # Escribir headers
+            # Escribir headers (sin cambios)
             for col_num, column_name in enumerate(all_columns_in_order):
                 display_name = column_name.replace('_', ' ').title()
                 if column_name.startswith('imagen_bien_'):
@@ -412,48 +424,73 @@ def exportar_excel(template_id):
                 for col_num, col_name in enumerate(all_columns_in_order):
                     value = row_data.get(col_name, '')
                     
+                    # ==========================================================
+                    # --- ✅ INICIO BLOQUE DE IMÁGENES ACTUALIZADO (Google Drive) ---
+                    # ==========================================================
                     if col_name.startswith('imagen_'):
-                        if value:
+                        if value: # 'value' es ahora una URL, ej: /images/<file_id>
                             try:
-                                # Corrección para construir la ruta de la imagen de forma segura
-                                filename = os.path.basename(str(value))
-                                # La ruta en la BD puede tener '/uploads/', lo quitamos si UPLOAD_FOLDER ya lo tiene.
-                                relative_path = str(value).lstrip('/uploads').lstrip('/')
-                                image_path = os.path.join(UPLOAD_FOLDER, relative_path)
+                                # 1. Extraer el file_id de la URL
+                                file_id = str(value).split('/')[-1]
+                                if not file_id:
+                                    raise Exception(f"URL de imagen no válida: {value}")
                                 
-                                if os.path.exists(image_path):
-                                    img = Image.open(image_path)
-                                    img_width, img_height = img.size
-                                    cell_width_excel_units = 25
-                                    cell_width_pixels = cell_width_excel_units * 7.5
-                                    cell_height_pixels = 120 * 96/72
-                                    x_scale = cell_width_pixels / img_width
-                                    y_scale = cell_height_pixels / img_height
-                                    scale_factor = min(x_scale, y_scale)
+                                # 2. Intentar obtener de caché
+                                image_bytes = get_cached_image(file_id)
+                                
+                                if not image_bytes:
+                                    # 3. Si no está en caché, descargar de Drive
+                                    print(f"EXCEL: Descargando {file_id} de Drive...")
+                                    image_bytes = drive_service.get_file_content(file_id)
+                                    # 4. Guardar en caché
+                                    save_to_cache(file_id, image_bytes)
+                                
+                                # 5. Preparar buffer de bytes para PIL y XlsxWriter
+                                image_data_buffer = io.BytesIO(image_bytes)
+                                
+                                # 6. Obtener dimensiones para escalar
+                                img = Image.open(image_data_buffer)
+                                img_width, img_height = img.size
+                                
+                                # 7. Lógica de escalado (sin cambios)
+                                cell_width_excel_units = 25
+                                cell_width_pixels = cell_width_excel_units * 7.5
+                                cell_height_pixels = 120 * 96/72 # 120pt a pixels
+                                x_scale = cell_width_pixels / img_width
+                                y_scale = cell_height_pixels / img_height
+                                scale_factor = min(x_scale, y_scale, 1.0) # No escalar más de 1.0
 
-                                    worksheet.insert_image(
-                                        excel_row, col_num, image_path,
-                                        {'x_scale': scale_factor, 'y_scale': scale_factor, 'x_offset': 5, 'y_offset': 5}
-                                    )
-                                    worksheet.write(excel_row, col_num, '', image_cell_format)
-                                else:
-                                    worksheet.write(excel_row, col_num, f'No encontrada: {filename}', data_format)
+                                # 8. Insertar imagen desde el buffer de bytes
+                                worksheet.insert_image(
+                                    excel_row, col_num, 
+                                    file_id, # Usamos file_id como nombre
+                                    {
+                                        'image_data': image_data_buffer, # <-- Dato clave
+                                        'x_scale': scale_factor, 
+                                        'y_scale': scale_factor, 
+                                        'x_offset': 5, 'y_offset': 5
+                                    }
+                                )
+                                worksheet.write(excel_row, col_num, '', image_cell_format)
+
                             except Exception as e:
-                                print(f"Error inserting image {value}: {e}")
+                                print(f"Error inserting image {value} into Excel: {e}")
                                 worksheet.write(excel_row, col_num, f'Error: {os.path.basename(str(value))}', data_format)
                         else:
                             worksheet.write(excel_row, col_num, 'Sin imagen', data_format)
+                    # ==========================================================
+                    # --- FIN BLOQUE DE IMÁGENES ACTUALIZADO ---
+                    # ==========================================================
                     else:
                         worksheet.write(excel_row, col_num, value, data_format)
 
-            # ... resto del código para ajustar ancho de columnas
+            # Ajustar ancho de columnas (sin cambios)
             for col_num, col_name in enumerate(all_columns_in_order):
                 if col_name.startswith('imagen_'):
                     worksheet.set_column(col_num, col_num, 25)
                 else:
                     max_len = 0
                     if col_name in df.columns:
-                        # Asegurar que no haya valores nulos que causen error en .map(len)
                         max_len = max(len(str(col_name)), df[col_name].dropna().astype(str).map(len).max()) if not df[col_name].dropna().empty else len(str(col_name))
                     else:
                         max_len = len(str(col_name))
@@ -470,8 +507,7 @@ def exportar_excel(template_id):
         return redirect(url_for('plantillas.ver_plantillas'))
     finally:
         if conn:
-            conn.close()
-            
+            conn.close()          
 
 @plantillas_bp.route('/preview_query', methods=['POST'])
 @login_required

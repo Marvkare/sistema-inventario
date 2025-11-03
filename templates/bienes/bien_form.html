@@ -384,7 +384,7 @@
             <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4" id="imagenes_existentes">
                 {% for imagen in bien.imagenes %}
                 <div class="relative group" id="imagen_container_{{ imagen.id }}">
-                    <img src="{{ url_for('bienes.serve_uploaded_file', filename=imagen.ruta_imagen) }}" 
+                    <img src="{{ url_for('serve_drive_image', file_id=imagen.ruta_imagen) }}" 
                          class="w-full h-24 object-cover rounded-lg border-2 border-beige-light shadow-sm">
                     <button type="button" 
                             class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center shadow-lg hover:bg-red-700 transition-colors duration-200"

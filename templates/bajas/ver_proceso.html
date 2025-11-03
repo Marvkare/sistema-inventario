@@ -206,20 +206,42 @@
                                             </div>
                                         </div>
                                         <div class="space-y-2">
-                                            {% for adjunto in doc.archivos_adjuntos %}
-                                                <div class="flex items-center justify-between bg-white p-3 rounded-lg border">
-                                                    <div class="flex items-center">
-                                                        <i class="fas fa-file text-burgundy mr-3"></i>
-                                                        <span class="text-sm text-gray-700">{{ adjunto.nombre_archivo }}</span>
-                                                    </div>
-                                                    <a href="{{ url_for('bajas.descargar_documento', adjunto_id=adjunto.id) }}" 
-                                                       class="text-burgundy hover:text-burgundy-dark transition-colors duration-200">
-                                                        <i class="fas fa-download"></i>
-                                                    </a>
+                                           {% for adjunto in doc.archivos_adjuntos %}
+                                            <div class="flex items-center justify-between bg-white p-3 rounded-lg border">
+                                                <div class="flex items-center min-w-0"> {% if adjunto.tipo_mime and adjunto.tipo_mime.startswith('image/') %}
+                                                        <a href="{{ url_for('bajas.descargar_documento', adjunto_id=adjunto.id) }}" 
+                                                        title="Descargar {{ adjunto.nombre_archivo }}"
+                                                        class="flex-shrink-0">
+                                                            <img src="{{ url_for('serve_drive_image', file_id=adjunto.ruta_archivo) }}" 
+                                                                alt="Previsualización de {{ adjunto.nombre_archivo }}" 
+                                                                class="w-10 h-10 object-cover rounded-md border shadow-sm mr-3">
+                                                        </a>
+                                                    {% else %}
+                                                        <div class="flex-shrink-0 w-10 h-10 flex items-center justify-center bg-gray-100 rounded-md border mr-3">
+                                                            <i class="fas 
+                                                                    {% if adjunto.tipo_mime == 'application/pdf' %} 
+                                                                        fa-file-pdf text-red-600
+                                                                    {% else %} 
+                                                                        fa-file-alt text-gray-500
+                                                                    {% endif %} 
+                                                                    text-xl"></i>
+                                                        </div>
+                                                    {% endif %}
+                                                    
+                                                    <span class="text-sm text-gray-700 truncate" title="{{ adjunto.nombre_archivo }}">
+                                                        {{ adjunto.nombre_archivo }}
+                                                    </span>
                                                 </div>
+                                                
+                                                <a href="{{ url_for('bajas.descargar_documento', adjunto_id=adjunto.id) }}" 
+                                                class="text-burgundy hover:text-burgundy-dark transition-colors duration-200 ml-4 flex-shrink-0"
+                                                title="Descargar {{ adjunto.nombre_archivo }}">
+                                                    <i class="fas fa-download"></i>
+                                                </a>
+                                            </div>
                                             {% else %}
-                                                <p class="text-xs text-gray-400 text-center py-2">Este expediente no tiene archivos adjuntos.</p>
-                                            {% endfor %}
+                                            <p class="text-xs text-gray-400 text-center py-2">Este expediente no tiene archivos adjuntos.</p>
+                                            {% endfor %} 
                                         </div>
                                     </div>
                                     {% endfor %}

@@ -5,14 +5,18 @@ import uuid
 import os
 import traceback
 import math
-import mysql.connector
-
+import pymysql
+import pymysql.cursors
 
 # Se importan las funciones y variables de tus otros archivos
 from database import get_db_connection
 from config import UPLOAD_FOLDER, ALLOWED_EXTENSIONS
 from decorators import permission_required
 from log_activity import log_activity
+from drive_service import (
+    drive_service, 
+    BIENES_FOLDER_ID, 
+)
 
 bienes_bp = Blueprint('bienes', __name__)
 
@@ -20,14 +24,18 @@ def allowed_file(filename):
     """Función para verificar si la extensión del archivo es permitida."""
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+
 @bienes_bp.route('/bienes')
 @login_required
 @permission_required('bienes.listar_bienes')
 def listar_bienes():
     conn = None
+    cursor = None
     try:
         conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
+        # CORRECCIÓN: PyMySQL usa DictCursor, no dictionary=True
+        cursor = conn.cursor(pymysql.cursors.DictCursor)
 
         page = request.args.get('page', 1, type=int)
         items_per_page = 100
@@ -94,7 +102,10 @@ def listar_bienes():
             search_query=""
         )
     finally:
-        if conn and conn.is_connected():
+        # CORRECCIÓN: PyMySQL no tiene is_connected, solo verifica si existe
+        if cursor:
+            cursor.close()
+        if conn:
             conn.close()
 
 @bienes_bp.route('/bienes/agregar', methods=['GET', 'POST'])
@@ -105,7 +116,7 @@ def agregar_bien():
         conn = None
         try:
             conn = get_db_connection()
-            cursor = conn.cursor()
+            cursor = conn.cursor(pymysql.cursors.DictCursor) 
             form_data = request.form
 
             # --- CAMBIO: Se añade 'Activo' a la lista de columnas ---
@@ -147,10 +158,20 @@ def agregar_bien():
             # Esta parte del código no se modificó y sigue funcionando.
             for file in request.files.getlist('imagenes_bien'):
                 if file and file.filename and allowed_file(file.filename):
-                    filename = secure_filename(file.filename)
-                    unique_filename = f"{uuid.uuid4()}-{filename}"
-                    file.save(os.path.join(UPLOAD_FOLDER, unique_filename))
-                    cursor.execute("INSERT INTO imagenes_bien (id_bien, ruta_imagen) VALUES (%s, %s)", (id_bien, unique_filename))
+                    
+                    # 1. Llamamos al servicio para subir el archivo a Drive
+                    drive_file_id = drive_service.upload(
+                        file_storage=file,
+                        model_type='bien',
+                        target_folder_id=BIENES_FOLDER_ID # <-- Usas el ID de carpeta importado
+                    )
+                    
+                    if drive_file_id:
+                        # 2. Guardamos el ID de Drive en la DB
+                        cursor.execute("INSERT INTO imagenes_bien (id_bien, ruta_imagen) VALUES (%s, %s)", 
+                                       (id_bien, drive_file_id))
+                    else:
+                        flash(f"No se pudo subir la imagen {file.filename} a Google Drive.", "danger")    
 
             conn.commit()
             log_activity(
@@ -168,23 +189,31 @@ def agregar_bien():
             traceback.print_exc()
             return render_template('bienes/bien_form.html', is_edit=False, form_data=request.form)
         finally:
-            if conn and conn.is_connected(): conn.close()
+            if conn : conn.close()
             
     return render_template('bienes/bien_form.html', is_edit=False, form_data={})
+
 
 @bienes_bp.route('/bienes/editar/<int:bien_id>', methods=['GET', 'POST'])
 @login_required
 @permission_required('bienes.editar_bien')
 def editar_bien(bien_id):
+    # --- 1. INICIALIZAR AMBOS A NONE ---
     conn = None
+    cursor = None  
+    
     try:
+        # --- 2. ABRIR CONEXIÓN Y CURSOR ---
         conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor(pymysql.cursors.DictCursor)
 
+        # ==================================
+        # LÓGICA POST (CUANDO SE ENVÍA EL FORMULARIO)
+        # ==================================
         if request.method == 'POST':
             form_data = request.form
-            print(form_data)
-            # --- CAMBIO: Se añaden los nuevos campos a la consulta UPDATE ---
+            
+            # --- Lógica de UPDATE del bien ---
             sql = """
                 UPDATE bienes SET 
                     No_Inventario=%s, No_Factura=%s, No_Cuenta=%s, Proveedor=%s, Descripcion_Del_Bien=%s, 
@@ -196,8 +225,6 @@ def editar_bien(bien_id):
                     Fecha_Adquisicion_Alta=%s 
                 WHERE id=%s
             """
-            
-            # --- CAMBIO: Se añaden los valores de los nuevos campos al tuple ---
             values = (
                 form_data.get('No_Inventario'), form_data.get('No_Factura'), form_data.get('No_Cuenta'), 
                 form_data.get('Proveedor'), form_data.get('Descripcion_Del_Bien'), form_data.get('Descripcion_Corta_Del_Bien'), 
@@ -206,35 +233,48 @@ def editar_bien(bien_id):
                 form_data.get('Depreciacion_Acumulada'), form_data.get('Costo_Final'), form_data.get('Cantidad'), 
                 form_data.get('Estado_Del_Bien'), form_data.get('Marca'), form_data.get('Modelo'), 
                 form_data.get('Numero_De_Serie'), form_data.get('Tipo_De_Alta'),
-                # Nuevos campos
                 form_data.get('Clasificacion_Legal'),
                 form_data.get('Area_Presupuestal'),
                 form_data.get('Documento_Propiedad'),
                 form_data.get('Fecha_Documento_Propiedad') or None,
                 form_data.get('Valor_En_Libros'),
                 form_data.get('Fecha_Adquisicion_Alta') or None,
-                # ID del bien al final para el WHERE
                 bien_id
             )
             cursor.execute(sql, values)
-            print(request.form.getlist('imagenes_bien'))
+            
+            # --- Lógica para ELIMINAR imágenes de Drive ---
             for img_id in request.form.getlist('eliminar_imagen_bien[]'):
                 cursor.execute("SELECT ruta_imagen FROM imagenes_bien WHERE id = %s AND id_bien = %s", (img_id, bien_id))
                 imagen = cursor.fetchone()
-                if imagen:
-                    try:
-                        os.remove(os.path.join(UPLOAD_FOLDER, imagen['ruta_imagen']))
-                    except OSError:
-                        pass
-                    cursor.execute("DELETE FROM imagenes_bien WHERE id = %s", (img_id,))
+                
+                if imagen and imagen['ruta_imagen']:
+                    drive_file_id = imagen['ruta_imagen']
+                    success = drive_service.delete(drive_file_id)
+                    
+                    if success:
+                        cursor.execute("DELETE FROM imagenes_bien WHERE id = %s", (img_id,))
+                    else:
+                        flash(f"Error al borrar la imagen {drive_file_id} de Drive.", "warning")
+                else:
+                    flash(f"No se encontró el registro de imagen {img_id} para eliminar.", "warning")
 
+            # --- Lógica para AÑADIR nuevas imágenes a Drive ---
             for file in request.files.getlist('imagenes_bien'):
                 if file and file.filename and allowed_file(file.filename):
-                    filename = secure_filename(file.filename)
-                    unique_filename = f"{uuid.uuid4()}-{filename}"
-                    file.save(os.path.join(UPLOAD_FOLDER, unique_filename))
-                    cursor.execute("INSERT INTO imagenes_bien (id_bien, ruta_imagen) VALUES (%s, %s)", (bien_id, unique_filename))
+                    drive_file_id = drive_service.upload(
+                        file_storage=file,
+                        model_type='bien',
+                        target_folder_id=BIENES_FOLDER_ID
+                    )
+                    
+                    if drive_file_id:
+                        cursor.execute("INSERT INTO imagenes_bien (id_bien, ruta_imagen) VALUES (%s, %s)", 
+                                       (bien_id, drive_file_id))
+                    else:
+                        flash(f"No se pudo subir la imagen {file.filename} a Google Drive.", "danger")
 
+            # --- Commit y Redirección ---
             conn.commit()
             log_activity(
                 action="Edición de Bien", 
@@ -245,27 +285,41 @@ def editar_bien(bien_id):
             flash('Bien actualizado exitosamente.', 'success')
             return redirect(url_for('bienes.listar_bienes'))
 
-        # Lógica GET (sin cambios necesarios aquí, SELECT * ya trae los nuevos campos)
+        # ==================================
+        # LÓGICA GET (CUANDO SE CARGA LA PÁGINA)
+        # ==================================
+        
+        # Esta era tu línea 286, la que fallaba primero
         cursor.execute("SELECT * FROM bienes WHERE id = %s", (bien_id,))
         bien = cursor.fetchone()
+        
         if not bien:
             abort(404)
         
+        # Cargar imágenes y resguardos
         cursor.execute("SELECT id, ruta_imagen FROM imagenes_bien WHERE id_bien = %s", (bien_id,))
         bien['imagenes'] = cursor.fetchall()
-        print(bien['imagenes'])
+        
         cursor.execute("SELECT * FROM resguardos WHERE id_bien = %s ORDER BY Fecha_Registro DESC", (bien_id,))
         bien['resguardos'] = cursor.fetchall()
-        print(bien)
+        
         return render_template('bienes/bien_form.html', is_edit=True, bien=bien)
         
     except Exception as e:
-        if conn: conn.rollback()
-        flash(f'Error al actualizar el bien: {e}', 'danger')
-        traceback.print_exc()
+        # --- 3. MANEJO DE ERRORES (CON VERIFICACIÓN) ---
+        if conn: 
+            conn.rollback() # Esta era tu línea 303
+            
+        flash(f'Error al procesar la solicitud: {e}', 'danger')
+        traceback.print_exc() # Imprime el error real en tu consola
         return redirect(url_for('bienes.listar_bienes'))
+    
     finally:
-        if conn and conn.is_connected(): conn.close()
+        # --- 4. CIERRE SEGURO (EN ORDEN CORRECTO) ---
+        if cursor:
+            cursor.close()
+        if conn: 
+            conn.close() # Esta era tu línea 313
 
 @bienes_bp.route('/bienes/eliminar/<int:bien_id>', methods=['POST'])
 @login_required
@@ -274,7 +328,7 @@ def eliminar_bien(bien_id):
     conn = None
     try:
         conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor(pymysql.cursors.DictCursor) 
 
         # 1. Obtener el nombre del bien para los mensajes y verificar que existe
         cursor.execute("SELECT No_Inventario FROM bienes WHERE id = %s", (bien_id,))
@@ -295,7 +349,20 @@ def eliminar_bien(bien_id):
             return redirect(url_for('bienes.listar_bienes'))
         # --- FIN DE LA VALIDACIÓN ---
 
-        # 4. Si el conteo es 0, proceder con la eliminación
+        cursor.execute("SELECT id, ruta_imagen FROM imagenes_bien WHERE id_bien = %s", (bien_id,))
+        imagenes = cursor.fetchall()
+        
+        if imagenes:
+            print(f"Eliminando {len(imagenes)} imágenes de Drive para el bien {bien_id}...")
+            for img in imagenes:
+                if img['ruta_imagen']:
+                    # 4a. Borrar de Google Drive
+                    drive_service.delete(img['ruta_imagen'])
+                
+                # 4b. Borrar de la tabla 'imagenes_bien'
+                cursor.execute("DELETE FROM imagenes_bien WHERE id = %s", (img['id'],))
+
+        # 5. Ahora sí, proceder con la eliminación del 'bien'
         cursor.execute("DELETE FROM bienes WHERE id = %s", (bien_id,))
         conn.commit()
         
@@ -316,7 +383,7 @@ def eliminar_bien(bien_id):
         else:
             flash(f'Error al eliminar el bien: {e}', 'danger')
     finally:
-        if conn and conn.is_connected(): conn.close()
+        if conn: conn.close()
         
     return redirect(url_for('bienes.listar_bienes'))
 
@@ -327,7 +394,8 @@ def ver_detalles_bien(bien_id):
     conn = None
     try:
         conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor(pymysql.cursors.DictCursor)
+
         
         # --- CAMBIO: Se une con la tabla 'user' para obtener el nombre del usuario ---
         sql_bien = """
@@ -420,10 +488,6 @@ def ver_detalles_bien(bien_id):
         flash(f'Error al ver los detalles del bien: {e}', 'danger')
         return redirect(url_for('bienes.listar_bienes'))
     finally:
-        if conn and conn.is_connected():
+        if conn:
             conn.close()
-# Ruta para servir imágenes (necesaria para mostrarlas en las plantillas)
-@bienes_bp.route('/uploads/<path:filename>')
-def serve_uploaded_file(filename):
-    return send_from_directory(UPLOAD_FOLDER, filename)
 

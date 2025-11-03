@@ -2,14 +2,13 @@
 # app.py
 from flask import Blueprint, render_template, request, redirect, url_for, flash, current_app, send_file,jsonify
 from flask_login import login_required, current_user 
-import mysql.connector
 import os
 import traceback
 from pypdf import PdfReader, PdfWriter
 import pypdf.generic
 from werkzeug.utils import secure_filename
 
-from database import get_db, get_db_connection, get_table_columns
+from database import get_db_connection, get_db_connection, get_table_columns
 
 handle_errors_bp = Blueprint('errors', __name__)
 

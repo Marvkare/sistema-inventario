@@ -276,7 +276,7 @@
 
     <div class="container">
       <div class="header">
-    <img src="{{ url_for('static', filename='./images/atitalaquia_logo.jpg') }}" 
+    <img src="{{ url_for('static', filename='images/atitalaquia_logo.jpg') }}" 
          alt="Logo Atitalaquia" 
          style="height: 60px;" 
          class="logo-izquierdo">
@@ -286,7 +286,7 @@
         <h2>SISTEMA DE INVENTARIOS</h2>
     </div>
     
-    <img src="{{ url_for('static', filename='./images/image_e8b1f6.png') }}" 
+    <img src="{{ url_for('static', filename='images/image_e8b1f6.png') }}" 
          alt="Logo Hidalgo" 
          style="height: 100px;" 
          class="logo-derecho">
@@ -463,8 +463,8 @@
                     </td>
                     <td>
                         <div class="image-grid">
-                            {% for foto_path in fotos_por_detalle.get(bien.id, []) %}
-                                <img src="{{ url_for('bienes.serve_uploaded_file', filename=foto_path, _external=True) }}" class="thumbnail">
+                            {% for foto_data_uri in fotos_por_detalle.get(bien.id, []) %}
+                                <img src="{{ foto_data_uri }}" class="thumbnail">
                             {% else %}
                                 <span style="font-style: italic; font-size: 0.8em;">Sin imágenes</span>
                             {% endfor %}
@@ -526,8 +526,8 @@
                     </td>
                     <td>
                         <div class="image-grid">
-                            {% for foto_path in fotos_por_detalle.get(bien.id, []) %}
-                                <img src="{{ url_for('bienes.serve_uploaded_file', filename=foto_path, _external=True) }}" class="thumbnail">
+                            {% for foto_data_uri in fotos_por_detalle.get(bien.id, []) %}
+                                <img src="{{ foto_data_uri }}" class="thumbnail">
                             {% else %}
                                 <span style="font-style: italic; font-size: 0.8em;">Sin imágenes</span>
                             {% endfor %}

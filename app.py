@@ -4,19 +4,20 @@ from sqlalchemy.exc import OperationalError, ProgrammingError
 from sqlalchemy import inspect
 import os
 from flask_migrate import Migrate  # <--- 1. Importa la clase
-
-
+from flask import Response, abort  # <-- Asegúrate de importar esto
+from drive_service import drive_service, get_cached_image, save_to_cache, serve_default_image # <-- Importa el servicio
 # --- INICIALIZACIÓN Y CONFIGURACIÓN ---
 app = Flask(__name__)
 # Importar la configuración de la base de datos y otras configuraciones
-from config import DB_CONFIG, UPLOAD_FOLDER
+from config import DB_CONFIG,    UPLOAD_FOLDER
 from extensions import db
 from log_activity import log_activity
-
+import httplib2
+import time
 # Configuración de la aplicación
 app.config['SECRET_KEY'] = 'tu_clave_secreta_aqui'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-app.config['SQLALCHEMY_DATABASE_URI'] = f"mysql+mysqlconnector://{DB_CONFIG['user']}:{DB_CONFIG['password']}@{DB_CONFIG['host']}/{DB_CONFIG['database']}"
+app.config['SQLALCHEMY_DATABASE_URI'] = f"mysql+pymysql://{DB_CONFIG['user']}:{DB_CONFIG['password']}@{DB_CONFIG['host']}/{DB_CONFIG['database']}"
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 # Inicializar la base de datos con la app
@@ -47,7 +48,6 @@ def init_tables():
 
 # --- IMPORTACIÓN DE MODELOS Y BLUEPRINTS ---
 from models import User, Role
-from routes.main import main_bp
 from routes.resguardos import resguardos_bp
 from routes.areas import areas_bp
 from routes.excel_import import excel_import_bp
@@ -74,7 +74,6 @@ def load_user(user_id):
     return User.query.get(int(user_id))
 
 # --- REGISTRO DE BLUEPRINTS ---
-app.register_blueprint(main_bp)
 app.register_blueprint(resguardos_bp)
 app.register_blueprint(areas_bp)
 app.register_blueprint(excel_import_bp)
@@ -171,14 +170,58 @@ def index():
         return redirect(url_for('login'))
     return redirect(url_for('resguardos.ver_resguardos'))
 
-@app.route('/uploads/<path:filename>')
-def serve_uploaded_file(filename):
-    return send_from_directory(UPLOAD_FOLDER, filename)
+# Cache local para imágenes
+
+@app.route('/images/<string:file_id>')
+@login_required 
+def serve_drive_image(file_id):
+    """
+    Ruta GLOBAL para servir TODAS las imágenes desde Google Drive con cache.
+    """
+    # Verificar que el servicio Drive esté disponible
+    if not drive_service:
+        print("Servicio Drive no disponible")
+        return serve_default_image()
+    
+    try:
+        # 1. Intentar desde cache local primero
+        cached_content = get_cached_image(file_id)
+        if cached_content:
+            print(f"Sirviendo imagen {file_id} desde cache local")
+            return Response(cached_content, mimetype='image/jpeg')
+        
+        # 2. Si no está en cache, obtener de Drive
+        print(f"Descargando imagen {file_id} desde Drive...")
+        
+        # Usar el método download_file mejorado
+        file_content = drive_service.download_file(file_id)
+        
+        if not file_content:
+            return serve_default_image()
+            
+        # 3. Intentar obtener el mimetype
+        try:
+            metadata = drive_service.get_file_metadata(file_id)
+            mimetype = metadata.get('mimeType', 'image/jpeg')
+        except:
+            mimetype = 'image/jpeg'
+        
+        # 4. Guardar en cache para futuras peticiones
+        save_to_cache(file_id, file_content)
+        
+        # 5. Servir la imagen
+        print(f"Imagen {file_id} servida exitosamente")
+        return Response(file_content, mimetype=mimetype)
+        
+    except Exception as e:
+        print(f"Error al servir archivo {file_id} desde Drive: {e}")
+        return serve_default_image()
 
 
-
-# --- Bloque para ejecutar la aplicación en modo de desarrollo ---
 if __name__ == '__main__':
     os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
-    app.run(debug=True)
+    # Usar la variable de entorno o por defecto False
+    debug_mode = os.environ.get('FLASK_DEBUG', 'True').lower() == 'true'
+    app.run(debug=debug_mode)
+
 

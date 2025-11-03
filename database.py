@@ -1,5 +1,6 @@
 # your_flask_app/database.py
-import mysql.connector
+
+import pymysql.cursors  # 1. ¡Importa pymysql.cursors!
 from flask import flash, current_app # current_app para acceder a la config de Flask
 from config import AVAILABLE_COLUMNS
 import pandas as pd
@@ -8,27 +9,28 @@ from config import DB_CONFIG  # Importa la configuración directamente
 
 def get_db_connection():
     """
-    Establece una conexión a la base de datos.
-    Ahora importa la configuración directamente para evitar el KeyError.
+    Establece una conexión a la base de datos usando PyMySQL.
     """
     try:
-        # Usa el diccionario DB_CONFIG importado en lugar de current_app.config
-        conn = mysql.connector.connect(**DB_CONFIG)
+        config = DB_CONFIG.copy()
+        config['cursorclass'] = pymysql.cursors.DictCursor
+        
+        conn = pymysql.connect(**config)
         return conn
-    except mysql.connector.Error as err:
+        
+    except pymysql.MySQLError as err: 
         print(f"Error de conexión a la base de datos: {err}")
         return None
-    
-def get_db():
-    """Establece conexión con la base de datos y devuelve la conexión y el cursor de diccionario."""
-    try:
-        # Corregido para usar la importación directa
-        conn = mysql.connector.connect(**DB_CONFIG)
-        cursor = conn.cursor(dictionary=True)
+
+def get_db_connection_cursor():
+    """
+    Retorna conexión y cursor (para compatibilidad con código existente)
+    """
+    conn = get_db_connection()
+    if conn:
+        cursor = conn.cursor()
         return conn, cursor
-    except mysql.connector.Error as err:
-        flash(f"Error de Conexión a la Base de Datos: {err}. Verifica las credenciales y que MySQL esté corriendo.", 'error')
-        return None, None
+    return None, None
 
 def get_table_columns(table_name="resguardo"):
     """
@@ -100,14 +102,14 @@ def get_image_paths(table_name, foreign_key_col, record_id):
         results = cursor.fetchall()
         paths = [row['ruta_imagen'] for row in results]
         print(f"Found {len(paths)} images in {table_name} for {foreign_key_col}={record_id}")
-    except mysql.connector.Error as err:
+    except pymysql.MySQLError as err:
         print(f"Database error in get_image_paths: {err}")
     except Exception as e:
         print(f"An unexpected error occurred in get_image_paths: {e}")
         import traceback
         traceback.print_exc()
     finally:
-        if conn and conn.is_connected():
+        if conn: # <-- Bien
             conn.close()
     return paths
 

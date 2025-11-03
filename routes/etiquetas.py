@@ -1,9 +1,10 @@
 # your_flask_app/routes/etiquetas.py
 from flask import Blueprint, render_template, request, jsonify
 from flask_login import login_required
-import mysql.connector
 from database import get_db_connection
 from decorators import permission_required
+from pymysql.err import MySQLError
+import pymysql
 
 etiquetas_bp = Blueprint('etiquetas', __name__)
 
@@ -26,7 +27,7 @@ def buscar_bienes():
     cursor = None
     try:
         conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor(pymysql.cursors.DictCursor) 
         query_text = request.json.get('query', '')
         
         if not query_text:
@@ -64,10 +65,10 @@ def buscar_bienes():
         
         return jsonify(results)
 
-    except mysql.connector.Error as err:
+    except MySQLError as err:
         print(f"Error de base de datos: {err}")
         return jsonify({"error": "Error de base de datos"}), 500
     finally:
-        if conn and conn.is_connected():
+        if conn :
             cursor.close()
             conn.close()

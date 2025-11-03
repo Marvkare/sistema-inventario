@@ -2,15 +2,15 @@
 # app.py
 from flask import Blueprint, render_template, request, redirect, url_for, flash, current_app, send_file,jsonify
 from flask_login import login_required, current_user
-import mysql.connector
 import os
 import traceback
 from pypdf import PdfReader, PdfWriter
 import pypdf.generic
 from werkzeug.utils import secure_filename
 from decorators import permission_required
-from database import get_db, get_db_connection, get_table_columns
+from database import get_db_connection, get_db_connection, get_table_columns
 from log_activity import log_activity
+import pymysql
 
 areas_bp = Blueprint('areas', __name__)
 
@@ -31,8 +31,7 @@ def get_areas():
         if not conn:
             return jsonify({"error": "Failed to connect to the database"}), 500
         
-        cursor = conn.cursor(dictionary=True)
-        
+        cursor = conn.cursor(pymysql.cursors.DictCursor)
         # Select both id and name from the areas table
         cursor.execute("SELECT id, nombre FROM areas ORDER BY nombre ASC")
         areas = cursor.fetchall()
@@ -48,7 +47,7 @@ def get_areas():
         print(f"Unexpected error: {e}")
         return jsonify({"error": "An unexpected error occurred"}), 500
     finally:
-        if conn and conn.is_connected():
+        if conn:
             cursor.close()
             conn.close()
 
@@ -61,7 +60,7 @@ def add_area():
     API route to add a new area to the 'areas' table.
     Expects JSON data with 'area_name'.
     """
-    conn, cursor = get_db()
+    conn, cursor = get_db_connection()
     if not conn:
         # Flash message for user feedback if DB connection fails
         flash("Error: No se pudo conectar a la base de datos para agregar el área.", 'error')
@@ -107,49 +106,51 @@ def add_area():
             conn.close()
 
 
-# ... your get_db() function and app configuration ...
-
 @areas_bp.route('/manage_areas', methods=['GET', 'POST'])
 @login_required
 @permission_required('resguardos.crear_resguardo')
 def manage_areas():
-    conn, cursor = get_db()
-    if not conn:
-        flash("Error: No se pudo conectar a la base de datos.", 'error')
-        return render_template('error.html', message="Error de conexión a la base de datos."), 500
+    conn = None
+    cursor = None
+    
+    try:
+        # --- CORRECCIÓN 1: Obtener conn y LUEGO cursor ---
+        conn = get_db_connection()
+        if not conn:
+            flash("Error: No se pudo conectar a la base de datos.", 'error')
+            return render_template('error.html', message="Error de conexión a la base de datos."), 500
+        
+        # --- CORRECCIÓN 2: Usar el cursor de PyMySQL (DictCursor) ---
+        cursor = conn.cursor(pymysql.cursors.DictCursor)
 
-    if request.method == 'POST':
-        area_id = request.form.get('area_id')
-        area_name = request.form.get('area_name', '').strip()
-        area_numero = request.form.get('area_numero', '').strip() # Get the 'numero' value as string
+        if request.method == 'POST':
+            area_id = request.form.get('area_id')
+            area_name = request.form.get('area_name', '').strip()
+            area_numero = request.form.get('area_numero', '').strip()
 
-        if not area_name:
-            flash("El nombre del área no puede estar vacío.", 'warning')
-            return redirect(url_for('areas.manage_areas'))
+            if not area_name:
+                flash("El nombre del área no puede estar vacío.", 'warning')
+                return redirect(url_for('areas.manage_areas'))
 
-        # Convert area_numero to an integer, or None if empty
-        # This handles the INT NULL type in your database
-        try:
-            area_numero = int(area_numero) if area_numero else None
-        except ValueError:
-            flash("El número de área debe ser un número entero válido o estar vacío.", 'warning')
-            return redirect(url_for('areas.manage_areas'))
+            try:
+                area_numero = int(area_numero) if area_numero else None
+            except ValueError:
+                flash("El número de área debe ser un número entero válido o estar vacío.", 'warning')
+                return redirect(url_for('areas.manage_areas'))
 
-        try:
-            # Check for name uniqueness, excluding the current area if editing
-            if area_id: # Editing an existing area
-                # Check for existing name, excluding the current ID being edited
-                cursor.execute("SELECT COUNT(*) FROM areas WHERE LOWER(nombre) = LOWER(%s) AND id != %s", (area_name, area_id))
-            else: # Adding a new area
-                # Check for existing name
-                cursor.execute("SELECT COUNT(*) FROM areas WHERE LOWER(nombre) = LOWER(%s)", (area_name,))
+            # --- CORRECCIÓN 3: Mejorar la consulta COUNT ---
+            # Usar 'AS count' es más limpio que .get('COUNT(*)')
+            if area_id: # Editando
+                cursor.execute("SELECT COUNT(*) AS count FROM areas WHERE LOWER(nombre) = LOWER(%s) AND id != %s", (area_name, area_id))
+            else: # Agregando
+                cursor.execute("SELECT COUNT(*) AS count FROM areas WHERE LOWER(nombre) = LOWER(%s)", (area_name,))
+            
             result = cursor.fetchone()
-            if result and result.get('COUNT(*)', result.get('count', 0)) > 0:
+            if result and result['count'] > 0:
                 flash(f"El área '{area_name}' ya existe.", 'warning')
                 return redirect(url_for('areas.manage_areas'))
 
-            if area_id: # Update existing area
-                # Ensure correct parameter order for UPDATE
+            if area_id: # Update
                 cursor.execute("UPDATE areas SET nombre = %s, numero = %s WHERE id = %s", (area_name, area_numero, area_id))
                 log_activity(
                         action="Actualización de Área", 
@@ -158,12 +159,9 @@ def manage_areas():
                         details=f"Se actualizó el área: {area_name}"
                     )
                 flash(f"Área '{area_name}' actualizada correctamente.", 'success')
-            else: # Add new area
-                # Ensure correct parameter order for INSERT
-                
+            else: # Insert
                 cursor.execute("INSERT INTO areas (nombre, numero) VALUES (%s, %s)", (area_name, area_numero))
                 new_area_id = cursor.lastrowid 
-
                 log_activity(
                     action="Creación de Área", 
                     category="Areas", 
@@ -173,47 +171,43 @@ def manage_areas():
                 flash(f"Área '{area_name}' agregada correctamente.", 'success')
             
             conn.commit()
+            return redirect(url_for('areas.manage_areas'))
 
-        except mysql.connector.Error as e:
-            conn.rollback()
-            # **IMPROVED ERROR LOGGING**
-            print(f"Database error in manage_areas POST: {type(e).__name__}: {e}")
-            flash(f"Error en la base de datos al guardar el área: {e}", 'error')
-        except Exception as e:
-            # **IMPROVED ERROR LOGGING**
-            print(f"Unexpected error in manage_areas POST: {type(e).__name__}: {e}")
-            flash(f"Ocurrió un error inesperado al guardar el área: {e}", 'error')
-        finally:
-            if conn.is_connected():
-                cursor.close()
-                conn.close()
-        
-        return redirect(url_for('areas.manage_areas'))
+        else: # GET request
+            cursor.execute("SELECT id, nombre, numero FROM areas ORDER BY nombre ASC")
+            # El DictCursor hace que 'row' sea un diccionario
+            areas_data = cursor.fetchall() 
+            print(areas_data)
+            return render_template('areas.html', areas=areas_data)
 
-    else: # GET request
-        try:
-            cursor.execute("SELECT id, nombre, numero FROM areas ORDER BY nombre")
-            # Using dictionary cursor, so access by key
-            areas_data = [{'id': row['id'], 'name': row['nombre'], 'numero': row['numero']} for row in cursor.fetchall()]
+    # --- CORRECCIÓN 4: Manejo de errores de PyMySQL ---
+    except pymysql.MySQLError as e:
+        if conn: conn.rollback()
+        print(f"Database error in manage_areas: {type(e).__name__}: {e}")
+        traceback.print_exc()
+        flash(f"Error en la base de datos al guardar el área: {e}", 'error')
+    
+    except Exception as e:
+        if conn: conn.rollback()
+        print(f"Unexpected error in manage_areas: {type(e).__name__}: {e}")
+        traceback.print_exc()
+        flash(f"Ocurrió un error inesperado: {e}", 'error')
+    
+    finally:
+        # --- CORRECCIÓN 5: Cierre de conexión de PyMySQL ---
+        if cursor:
+            cursor.close()
+        if conn:
+            conn.close()
             
-        except Exception as e:
-            # **IMPROVED ERROR LOGGING**
-            print(f"Database error fetching areas for display: {type(e).__name__}: {e}")
-            flash("Error al cargar las áreas existentes.", 'error')
-            areas_data = []
-        finally:
-            if conn.is_connected():
-                cursor.close()
-                conn.close()
-
-        return render_template('areas.html', areas=areas_data)
-
+    # Si hubo un error, redirige de vuelta
+    return redirect(url_for('areas.manage_areas'))
 
 @areas_bp.route('/delete_area/<int:area_id>', methods=['POST'])
 @login_required
 @permission_required('resguardos.crear_resguardo')
 def delete_area(area_id):
-    conn, cursor = get_db()
+    conn, cursor = get_db_connection()
     if not conn:
         return jsonify({"success": False, "message": "Error interno del servidor: No se pudo conectar a la base de datos."}), 500
 

@@ -11,13 +11,18 @@ from werkzeug.utils import secure_filename
 from werkzeug.datastructures import FileStorage
 from flask import Response
 from weasyprint import HTML
-
+from PIL import Image # Para detectar el tipo de imagen
+import base64
+import io
 from config import ALLOWED_EXTENSIONS
 # Se importan las funciones y variables de tus otros archivos
 from database import get_db_connection
 from decorators import permission_required
 from log_activity import log_activity
 from flask import jsonify
+import pymysql
+from drive_service import drive_service, INVENTARIOS_FOLDER_ID, get_cached_image, save_to_cache
+
 
 inventarios_bp = Blueprint('inventarios', __name__, url_prefix='/inventarios')
 
@@ -34,7 +39,7 @@ def listar_inventarios():
     conn = None
     try:
         conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor(pymysql.cursors.DictCursor) 
         
         # --- CONSULTA ACTUALIZADA ---
         # Ahora usamos subconsultas para contar las áreas y los bienes de cada inventario.
@@ -59,7 +64,7 @@ def listar_inventarios():
         traceback.print_exc()
         return render_template('inventarios/lista_inventarios.html', inventarios=[])
     finally:
-        if conn and conn.is_connected():
+        if conn :
             conn.close()
 
 # inventarios_routes.py
@@ -78,7 +83,7 @@ def crear_inventario():
     conn = None
     try:
         conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor(pymysql.cursors.DictCursor) 
 
         # --- LÓGICA POST: PROCESAR EL FORMULARIO ---
         if request.method == 'POST':
@@ -202,7 +207,7 @@ def crear_inventario():
 
     except Exception as e:
         # Si ocurre cualquier error, deshacer todos los cambios de la transacción
-        if conn and conn.is_connected():
+        if conn :
             conn.rollback()
         
         flash(f"Error crítico al procesar la solicitud de inventario: {e}", 'danger')
@@ -213,7 +218,7 @@ def crear_inventario():
     
     finally:
         # Asegurarse de que la conexión a la base de datos siempre se cierre
-        if conn and conn.is_connected():
+        if conn:
             conn.close()
 
 @inventarios_bp.route('/gestionar/<int:inventario_id>')
@@ -223,7 +228,7 @@ def gestionar_inventario(inventario_id):
     conn = None
     try:
         conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor(pymysql.cursors.DictCursor) 
         
         cursor.execute("SELECT id, nombre FROM areas ORDER BY nombre ASC")
         todas_las_areas = cursor.fetchall()
@@ -300,7 +305,7 @@ def gestionar_inventario(inventario_id):
         traceback.print_exc()
         return redirect(url_for('inventarios.listar_inventarios'))
     finally:
-        if conn and conn.is_connected():
+        if conn :
             conn.close()
 
 # inventarios_routes.py
@@ -316,7 +321,7 @@ def obtener_detalle(detalle_id):
     conn = None
     try:
         conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor(pymysql.cursors.DictCursor) 
 
         # 1. Obtener datos principales del detalle
         cursor.execute("""
@@ -344,7 +349,7 @@ def obtener_detalle(detalle_id):
         traceback.print_exc()
         return jsonify({'error': f'Error de servidor: {e}'}), 500
     finally:
-        if conn and conn.is_connected():
+        if conn :
             conn.close()
 
 @inventarios_bp.route('/detalle/actualizar/<int:detalle_id>', methods=['POST'])
@@ -362,17 +367,21 @@ def actualizar_detalle(detalle_id):
     conn = None
     try:
         conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
 
-        # --- VALIDACIÓN DE PERTENENCIA A LA BRIGADA ---
+        # --- ✅ NUEVO: VALIDAR SERVICIO DE DRIVE ---
+        if not drive_service or not INVENTARIOS_FOLDER_ID:
+            flash("Error crítico: El servicio de almacenamiento (Google Drive) no está configurado.", "danger")
+            return redirect(url_for('inventarios.gestionar_inventario', inventario_id=inventario_id))
+
+        cursor = conn.cursor(pymysql.cursors.DictCursor) 
+
+        # --- VALIDACIÓN DE PERTENENCIA A LA BRIGADA (sin cambios) ---
         cursor.execute("""
             SELECT 1 FROM inventario_brigadas 
             WHERE inventario_id = %s AND user_id = %s
         """, (inventario_id, current_user.id))
         
         is_member = cursor.fetchone()
-
-        # 3. Si no es miembro, le negamos el acceso y redirigimos.
         if not is_member:
             flash('Acceso prohibido. No eres parte de la brigada asignada a este inventario.', 'danger')
             return redirect(url_for('inventarios.gestionar_inventario', inventario_id=inventario_id))
@@ -386,30 +395,38 @@ def actualizar_detalle(detalle_id):
 
         # --- LÓGICA DE ACTUALIZACIÓN ---
         form_data = request.form
-        cursor = conn.cursor()
+        cursor = conn.cursor() # Cambiamos a cursor estándar para DML
 
-        # ✅ 1. (NUEVO) PROCESAR FOTOS MARCADAS PARA ELIMINAR
+        # --- ✅ 1. (MODIFICADO) PROCESAR FOTOS MARCADAS PARA ELIMINAR ---
         fotos_a_eliminar_ids = request.form.getlist('fotos_a_eliminar')
         if fotos_a_eliminar_ids:
-            # Creamos placeholders (%s) de forma segura
             placeholders = ','.join(['%s'] * len(fotos_a_eliminar_ids))
             
-            # Obtenemos las rutas de los archivos para borrarlos del disco
-            cursor_dict = conn.cursor(dictionary=True)
-            sql_get_filenames = f"SELECT ruta_archivo FROM inventario_fotos WHERE id IN ({placeholders}) AND id_inventario_detalle = %s"
+            # Obtenemos los Drive IDs (ruta_archivo) para borrarlos de Drive
+            cursor_dict = conn.cursor(pymysql.cursors.DictCursor)
+            sql_get_filenames = f"SELECT id, ruta_archivo FROM inventario_fotos WHERE id IN ({placeholders}) AND id_inventario_detalle = %s"
             cursor_dict.execute(sql_get_filenames, (*fotos_a_eliminar_ids, detalle_id))
             
-            for row in cursor_dict.fetchall():
+            archivos_a_borrar = cursor_dict.fetchall()
+            
+            for row in archivos_a_borrar:
                 try:
-                    os.remove(os.path.join(current_app.config['UPLOAD_FOLDER'], row['ruta_archivo']))
-                except OSError as e:
-                    print(f"Error al eliminar archivo físico: {e}") # Idealmente, usar logging
+                    # --- REEMPLAZO DE os.remove CON drive_service.delete ---
+                    drive_file_id = row['ruta_archivo']
+                    if drive_file_id:
+                        print(f"Eliminando de Drive: {drive_file_id}")
+                        drive_service.delete(drive_file_id)
+                    else:
+                        print(f"No hay Drive ID para el registro de foto {row['id']}")
+                except Exception as e:
+                    # No detenemos la transacción, solo registramos el error
+                    current_app.logger.error(f"Error al eliminar archivo físico de Drive: {e}") 
 
-            # Eliminamos los registros de la base de datos
+            # Eliminamos los registros de la base de datos (sin cambios)
             sql_delete_fotos = f"DELETE FROM inventario_fotos WHERE id IN ({placeholders})"
             cursor.execute(sql_delete_fotos, fotos_a_eliminar_ids)
 
-        # 2. Actualizar la tabla 'inventario_detalle' (sin cambios, ya funciona para editar)
+        # 2. Actualizar la tabla 'inventario_detalle' (sin cambios)
         sql_update = """
             UPDATE inventario_detalle SET
                 estatus_hallazgo = %s, condicion_fisica_reportada = %s, observaciones = %s,
@@ -422,22 +439,30 @@ def actualizar_detalle(detalle_id):
         )
         cursor.execute(sql_update, values)
 
-        # 3. Procesar y guardar las nuevas fotos (sin cambios)
+        # --- ✅ 3. (MODIFICADO) PROCESAR Y GUARDAR LAS NUEVAS FOTOS ---
         fotos = request.files.getlist('fotos')
         for foto in fotos:
             if foto and foto.filename and allowed_file(foto.filename):
-                filename = secure_filename(foto.filename)
-                unique_filename = f"{uuid.uuid4()}-{filename}"
-                foto.save(os.path.join(current_app.config['UPLOAD_FOLDER'], unique_filename))
                 
-                sql_foto = "INSERT INTO inventario_fotos (id_inventario_detalle, ruta_archivo) VALUES (%s, %s)"
-                cursor.execute(sql_foto, (detalle_id, unique_filename))
+                # --- REEMPLAZO DE foto.save CON drive_service.upload ---
+                drive_id = drive_service.upload(
+                    file_storage=foto,
+                    model_type="inventario-detalle", # Nombre descriptivo
+                    target_folder_id=INVENTARIOS_FOLDER_ID
+                )
+                
+                if drive_id:
+                    # Guardamos el Drive ID en la base de datos
+                    sql_foto = "INSERT INTO inventario_fotos (id_inventario_detalle, ruta_archivo) VALUES (%s, %s)"
+                    cursor.execute(sql_foto, (detalle_id, drive_id))
+                else:
+                    # Si la subida falla, forzamos un rollback de toda la transacción
+                    raise Exception(f"Fallo al subir la imagen '{foto.filename}' a Google Drive.")
 
         conn.commit()
-        # Mensaje más genérico que aplica para revisión y edición
         flash("El detalle del bien ha sido actualizado correctamente.", "success")
         log_activity(
-            action="Actualización de Bien", 
+            action="Actualización de Bien (Drive)", 
             category="Inventarios", 
             resource_id=detalle_id, 
             details=f"Usuario '{current_user.username}' actualizó el detalle del bien en el inventario ID: {inventario_id}"
@@ -448,11 +473,10 @@ def actualizar_detalle(detalle_id):
         flash(f"Error al actualizar el bien: {e}", "danger")
         traceback.print_exc()
     finally:
-        if conn and conn.is_connected():
+        if conn:
             conn.close()
             
     return redirect(url_for('inventarios.gestionar_inventario', inventario_id=inventario_id))
-# ... (tus otras importaciones y rutas) ...
 
 @inventarios_bp.route('/<int:inventario_id>/finalizar', methods=['POST'])
 @login_required
@@ -504,7 +528,7 @@ def finalizar_inventario(inventario_id):
         flash(f'Error al finalizar el inventario: {e}', 'danger')
         traceback.print_exc()
     finally:
-        if conn and conn.is_connected():
+        if conn :
             conn.close()
             
     return redirect(url_for('inventarios.listar_inventarios'))
@@ -520,7 +544,7 @@ def cambiar_estatus_inventario(inventario_id, accion):
     conn = None
     try:
         conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor(pymysql.cursors.DictCursor) 
 
         # 1. Obtenemos el estado actual ANTES de hacer nada.
         cursor.execute("SELECT estatus, id_usuario_creador FROM inventarios WHERE id = %s", (inventario_id,))
@@ -582,7 +606,7 @@ def cambiar_estatus_inventario(inventario_id, accion):
         flash(f'Error al cambiar el estatus del inventario: {e}', 'danger')
         traceback.print_exc()
     finally:
-        if conn and conn.is_connected():
+        if conn :
             conn.close()
 
     if accion == 'finalizar':
@@ -600,9 +624,15 @@ def agregar_sobrante(inventario_id):
     conn = None
     try:
         conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
 
-        # Verificación de pertenencia a la brigada (Correcto)
+        # --- ✅ NUEVO: VALIDAR SERVICIO DE DRIVE ---
+        if not drive_service or not INVENTARIOS_FOLDER_ID:
+            flash("Error crítico: El servicio de almacenamiento (Google Drive) no está configurado.", "danger")
+            return redirect(url_for('inventarios.gestionar_inventario', inventario_id=inventario_id))
+            
+        cursor = conn.cursor(pymysql.cursors.DictCursor) 
+
+        # Verificación de pertenencia a la brigada (Sin cambios)
         cursor.execute("""
             SELECT 1 FROM inventario_brigadas 
             WHERE inventario_id = %s AND user_id = %s
@@ -613,8 +643,7 @@ def agregar_sobrante(inventario_id):
             flash('Acceso prohibido. No eres parte de la brigada asignada a este inventario.', 'danger')
             return redirect(url_for('inventarios.gestionar_inventario', inventario_id=inventario_id))
 
-        # --- AQUÍ ESTÁ LA CORRECCIÓN ---
-        # Validación de estatus: solo se necesita el 'estatus' de la tabla 'inventarios'.
+        # Validación de estatus (Sin cambios)
         cursor.execute("SELECT estatus FROM inventarios WHERE id = %s", (inventario_id,))
         inventario = cursor.fetchone()
         
@@ -624,14 +653,13 @@ def agregar_sobrante(inventario_id):
 
         form_data = request.form
         
-        # Asumimos que el usuario debe seleccionar el área donde encontró el bien.
-        # Es más seguro que obtener la primera área del inventario.
-        area_encontrado_id = form_data.get('id_area_encontrado') # Asegúrate de tener este campo en tu formulario
+        # Validación de área (Sin cambios)
+        area_encontrado_id = form_data.get('id_area_encontrado') 
         if not area_encontrado_id:
              flash('Debe seleccionar el área donde se encontró el bien sobrante.', 'warning')
              return redirect(url_for('inventarios.gestionar_inventario', inventario_id=inventario_id))
 
-        # Insertar en la tabla 'inventario_sobrantes'
+        # Insertar en la tabla 'inventario_sobrantes' (Sin cambios)
         sql_sobrante = """
             INSERT INTO inventario_sobrantes (
                 id_inventario, id_area_encontrado, descripcion_bien, marca, modelo, 
@@ -644,25 +672,33 @@ def agregar_sobrante(inventario_id):
             form_data.get('condicion_fisica'), current_user.id, datetime.now()
         )
         
-        # Usar un cursor sin diccionario para operaciones de escritura
         write_cursor = conn.cursor()
         write_cursor.execute(sql_sobrante, values)
         sobrante_id = write_cursor.lastrowid
         
-        # Procesar y guardar fotos (si las hay)
+        # --- ✅ (MODIFICADO) PROCESAR Y GUARDAR FOTOS ---
         fotos = request.files.getlist('fotos_sobrante')
         for foto in fotos:
             if foto and foto.filename and allowed_file(foto.filename):
-                filename = secure_filename(foto.filename)
-                unique_filename = f"{uuid.uuid4()}-{filename}"
-                foto.save(os.path.join(current_app.config['UPLOAD_FOLDER'], unique_filename))
                 
-                sql_foto = "INSERT INTO inventario_sobrante_fotos (id_inventario_sobrante, ruta_archivo) VALUES (%s, %s)"
-                write_cursor.execute(sql_foto, (sobrante_id, unique_filename))
+                # --- Subir a Google Drive ---
+                drive_id = drive_service.upload(
+                    file_storage=foto,
+                    model_type="inventario-sobrante", # Nombre descriptivo
+                    target_folder_id=INVENTARIOS_FOLDER_ID
+                )
+                
+                if drive_id:
+                    # --- Guardar el Drive ID en la BD ---
+                    sql_foto = "INSERT INTO inventario_sobrante_fotos (id_inventario_sobrante, ruta_archivo) VALUES (%s, %s)"
+                    write_cursor.execute(sql_foto, (sobrante_id, drive_id))
+                else:
+                    # Si la subida falla, forzar rollback de toda la transacción
+                    raise Exception(f"Fallo al subir la imagen '{foto.filename}' a Google Drive.")
 
         conn.commit()
         log_activity(
-            action="Registro de Sobrante", 
+            action="Registro de Sobrante (Drive)", 
             category="Inventarios", 
             resource_id=sobrante_id, 
             details=f"Usuario '{current_user.username}' registró un bien sobrante en el inventario ID: {inventario_id}"
@@ -674,10 +710,11 @@ def agregar_sobrante(inventario_id):
         flash(f'Error al registrar el bien sobrante: {e}', 'danger')
         traceback.print_exc()
     finally:
-        if conn and conn.is_connected():
+        if conn:
             conn.close()
 
     return redirect(url_for('inventarios.gestionar_inventario', inventario_id=inventario_id))
+
 
 @inventarios_bp.route('/<int:inventario_id>/reporte')
 @login_required
@@ -686,16 +723,15 @@ def generar_reporte(inventario_id):
     conn = None
     try:
         conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor(pymysql.cursors.DictCursor) 
 
-        # 1. Obtener datos principales (inventario, brigada)
+        # 1. Obtener datos principales (inventario, brigada) - (Sin cambios)
         cursor.execute("SELECT * FROM inventarios WHERE id = %s", (inventario_id,))
         inventario = cursor.fetchone()
         if not inventario:
             flash("Inventario no encontrado.", "danger")
             return redirect(url_for('inventarios.listar_inventarios'))
         
-        # Consulta la brigada con 'username' y 'nombres' (alias 'full_name')
         sql_brigada = """
             SELECT u.username, u.nombres AS full_name, u.id
             FROM user u 
@@ -704,26 +740,24 @@ def generar_reporte(inventario_id):
             ORDER BY u.nombres
         """
         cursor.execute(sql_brigada, (inventario_id,))
-        
-        # Guarda la lista completa de diccionarios
         brigada = cursor.fetchall()
 
-        # 2. Obtener todos los detalles de bienes
+        # 2. Obtener todos los detalles de bienes (Sin cambios)
         sql_detalles = """
             SELECT d.*, b.No_Inventario, b.Descripcion_Del_Bien, b.Valor_En_Libros,
                 r.Nombre_Director_Jefe_De_Area, a.nombre as nombre_area,
-                u.username as nombre_verificador -- <--- LÍNEA AÑADIDA
+                u.username as nombre_verificador
             FROM inventario_detalle d
             JOIN bienes b ON d.id_bien = b.id
             LEFT JOIN resguardos r ON d.id_resguardo_esperado = r.id
             LEFT JOIN areas a ON d.id_area_esperada = a.id
-            LEFT JOIN user u ON d.id_usuario_verificador = u.id -- <--- JOIN AÑADIDO
+            LEFT JOIN user u ON d.id_usuario_verificador = u.id
             WHERE d.id_inventario = %s
         """
         cursor.execute(sql_detalles, (inventario_id,))
         todos_los_detalles = cursor.fetchall()
         
-        # 3. Obtener todas las fotos
+        # --- ✅ 3. (MODIFICADO) Obtener todas las fotos y CONVERTIR a URLs ---
         detalle_ids = [d['id'] for d in todos_los_detalles]
         fotos_por_detalle = {}
         if detalle_ids:
@@ -732,10 +766,17 @@ def generar_reporte(inventario_id):
             fotos = cursor.fetchall()
             for foto in fotos:
                 detalle_id = foto['id_inventario_detalle']
-                if detalle_id not in fotos_por_detalle: fotos_por_detalle[detalle_id] = []
-                fotos_por_detalle[detalle_id].append(foto['ruta_archivo'])
+                if detalle_id not in fotos_por_detalle: 
+                    fotos_por_detalle[detalle_id] = []
+                
+                # Convertimos el ID de Drive (ruta_archivo) en una URL servible
+                file_id = foto['ruta_archivo']
+                if file_id:
+                    # Usamos la ruta global 'serve_drive_image' (sin prefijo de blueprint)
+                    url_imagen = url_for('serve_drive_image', file_id=file_id)
+                    fotos_por_detalle[detalle_id].append(url_imagen)
 
-        # 4. Procesar y clasificar los datos en TODAS las categorías
+        # 4. Procesar y clasificar los datos (Sin cambios)
         faltantes_por_area, discrepancias_por_area, correctos_por_area = {}, {}, {}
         bienes_revisados = []
         area_jefe_map = {}
@@ -761,7 +802,7 @@ def generar_reporte(inventario_id):
                 if area not in correctos_por_area: correctos_por_area[area] = []
                 correctos_por_area[area].append(detalle)
         
-        # 5. Obtener los bienes sobrantes
+        # 5. Obtener los bienes sobrantes (Sin cambios)
         cursor.execute("""
             SELECT s.*, u.username as nombre_capturador
             FROM inventario_sobrantes s
@@ -770,7 +811,24 @@ def generar_reporte(inventario_id):
         """, (inventario_id,))
         bienes_sobrantes = cursor.fetchall()
 
-        # 6. Renderizar la plantilla con todos los datos
+        # --- ✅ 5b. (NUEVO) Obtener fotos de los bienes sobrantes ---
+        sobrante_ids = [s['id'] for s in bienes_sobrantes]
+        fotos_por_sobrante = {}
+        if sobrante_ids:
+            format_strings_sobrantes = ','.join(['%s'] * len(sobrante_ids))
+            cursor.execute(f"SELECT id_inventario_sobrante, ruta_archivo FROM inventario_sobrante_fotos WHERE id_inventario_sobrante IN ({format_strings_sobrantes})", tuple(sobrante_ids))
+            fotos_s = cursor.fetchall()
+            for foto in fotos_s:
+                sobrante_id = foto['id_inventario_sobrante']
+                if sobrante_id not in fotos_por_sobrante: 
+                    fotos_por_sobrante[sobrante_id] = []
+                
+                file_id = foto['ruta_archivo']
+                if file_id:
+                    url_imagen = url_for('serve_drive_image', file_id=file_id)
+                    fotos_por_sobrante[sobrante_id].append(url_imagen)
+
+        # --- ✅ 6. (MODIFICADO) Renderizar la plantilla con todos los datos ---
         return render_template(
             'inventarios/reporte_inventario.html',
             inventario=inventario,
@@ -782,7 +840,8 @@ def generar_reporte(inventario_id):
             correctos_por_area=correctos_por_area,
             bienes_sobrantes=bienes_sobrantes,
             bienes_revisados=bienes_revisados,
-            fotos_por_detalle=fotos_por_detalle
+            fotos_por_detalle=fotos_por_detalle,
+            fotos_por_sobrante=fotos_por_sobrante # <-- Variable añadida
         )
 
     except Exception as e:
@@ -793,34 +852,61 @@ def generar_reporte(inventario_id):
         else:
             return redirect(url_for('inventarios.listar_inventarios'))
     finally:
-        if conn and conn.is_connected():
+        if conn :
             conn.close()
-
 
 @inventarios_bp.route('/<int:inventario_id>/reporte/pdf')
 @login_required
-@permission_required('inventarios.descargar_reporte_pdf') # o el permiso que corresponda
+@permission_required('inventarios.descargar_reporte_pdf')
 def descargar_reporte_pdf(inventario_id):
     """
-    Genera un reporte en PDF de un inventario y lo muestra en el navegador para previsualización.
+    Genera un reporte en PDF de un inventario, incrustando las imágenes
+    de Google Drive como Data URIs.
     """
+    
+    # --- ✅ Función helper interna para convertir IDs de Drive a Data URI ---
+    def _get_image_data_uri(file_id):
+        if not file_id or not drive_service or not get_cached_image or not save_to_cache:
+            return None
+        try:
+            # 1. Usar caché primero
+            image_bytes = get_cached_image(file_id)
+            
+            if not image_bytes:
+                # 2. Si no, descargar de Drive
+                image_bytes = drive_service.get_file_content(file_id)
+                save_to_cache(file_id, image_bytes) # Guardar en caché
+            
+            # 3. Detectar MimeType y codificar en Base64
+            # Usamos PIL para detectar el formato (jpeg, png, etc.)
+            img = Image.open(io.BytesIO(image_bytes))
+            mime_type = Image.MIME.get(img.format, 'image/jpeg') # Default a jpeg
+            
+            encoded_string = base64.b64encode(image_bytes).decode('utf-8')
+            return f"data:{mime_type};base64,{encoded_string}"
+        
+        except Exception as e:
+            current_app.logger.error(f"Error al convertir imagen de Drive {file_id} a Data URI: {e}")
+            return None # Retorna None si la imagen falla
+
+    # --- INICIO DE LA LÓGICA DE LA RUTA ---
     conn = None
     try:
         conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
+        # Usamos DictCursor para que coincida con tus otras rutas
+        cursor = conn.cursor(pymysql.cursors.DictCursor) 
 
         fecha_generacion_reporte = datetime.now()
 
         # --- SECCIÓN 1: RECOPILACIÓN DE DATOS ---
 
-        # 1a. Obtener datos del inventario principal y brigada
+        # 1a. Obtener datos del inventario principal y brigada (Sin cambios)
         cursor.execute("SELECT * FROM inventarios WHERE id = %s", (inventario_id,))
         inventario = cursor.fetchone()
         if not inventario:
             flash("Inventario no encontrado.", "danger")
             return redirect(url_for('inventarios.listar_inventarios'))
 
-        # Consulta la brigada con 'username' y 'nombres' (alias 'full_name')
         sql_brigada_pdf = """
             SELECT u.username, u.nombres AS full_name, u.id
             FROM user u 
@@ -829,14 +915,11 @@ def descargar_reporte_pdf(inventario_id):
             ORDER BY u.nombres
         """
         cursor.execute(sql_brigada_pdf, (inventario_id,))
-        
-        # Guarda la lista completa de diccionarios
         brigada = cursor.fetchall()
         
-        # 1b. Obtener todos los detalles de bienes y nombre del verificador
+        # 1b. Obtener todos los detalles de bienes (Sin cambios)
         sql_detalles = """
-            SELECT
-                d.*, b.No_Inventario, b.Descripcion_Del_Bien, b.Valor_En_Libros,
+            SELECT d.*, b.No_Inventario, b.Descripcion_Del_Bien, b.Valor_En_Libros,
                 r.Nombre_Director_Jefe_De_Area, a.nombre as nombre_area,
                 u.username as nombre_verificador
             FROM inventario_detalle d
@@ -849,7 +932,7 @@ def descargar_reporte_pdf(inventario_id):
         cursor.execute(sql_detalles, (inventario_id,))
         todos_los_detalles = cursor.fetchall()
 
-        # 1c. Obtener todas las fotos de los detalles
+        # --- ✅ 1c. (MODIFICADO) Obtener fotos de detalles y convertir a Data URI ---
         detalle_ids = [d['id'] for d in todos_los_detalles]
         fotos_por_detalle = {}
         if detalle_ids:
@@ -860,20 +943,23 @@ def descargar_reporte_pdf(inventario_id):
                 detalle_id = foto['id_inventario_detalle']
                 if detalle_id not in fotos_por_detalle:
                     fotos_por_detalle[detalle_id] = []
-                fotos_por_detalle[detalle_id].append(foto['ruta_archivo'])
+                
+                # Convertimos el ID de Drive a Data URI
+                data_uri = _get_image_data_uri(foto['ruta_archivo'])
+                if data_uri:
+                    fotos_por_detalle[detalle_id].append(data_uri)
 
-        # 1d. Procesar y clasificar los datos
+        # 1d. Procesar y clasificar los datos (Sin cambios)
         faltantes_por_area, discrepancias_por_area, correctos_por_area = {}, {}, {}
         bienes_revisados = []
         area_jefe_map = {}
+        # (Tu lógica de clasificación for detalle in todos_los_detalles... va aquí, sin cambios)
         for detalle in todos_los_detalles:
             area = detalle['nombre_area'] or 'Sin Área Asignada'
             jefe = detalle.get('Nombre_Director_Jefe_De_Area') or 'No Asignado'
             if area not in area_jefe_map: area_jefe_map[area] = jefe
-
             if detalle['estatus_hallazgo'] != 'Pendiente':
                 bienes_revisados.append(detalle)
-
             es_faltante = (detalle['estatus_hallazgo'] == 'No Localizado') or \
                           (inventario['estatus'] == 'Finalizado' and detalle['estatus_hallazgo'] == 'Pendiente')
             if es_faltante:
@@ -886,7 +972,8 @@ def descargar_reporte_pdf(inventario_id):
                 if area not in correctos_por_area: correctos_por_area[area] = []
                 correctos_por_area[area].append(detalle)
 
-        # 1e. Obtener los bienes sobrantes
+
+        # 1e. Obtener los bienes sobrantes (Sin cambios)
         cursor.execute("""
             SELECT s.*, u.username as nombre_capturador FROM inventario_sobrantes s
             LEFT JOIN user u ON s.id_usuario_captura = u.id
@@ -894,10 +981,27 @@ def descargar_reporte_pdf(inventario_id):
         """, (inventario_id,))
         bienes_sobrantes = cursor.fetchall()
 
+        # --- ✅ 1f. (NUEVO) Obtener fotos de sobrantes y convertir a Data URI ---
+        sobrante_ids = [s['id'] for s in bienes_sobrantes]
+        fotos_por_sobrante = {}
+        if sobrante_ids:
+            format_strings_sobrantes = ','.join(['%s'] * len(sobrante_ids))
+            cursor.execute(f"SELECT id_inventario_sobrante, ruta_archivo FROM inventario_sobrante_fotos WHERE id_inventario_sobrante IN ({format_strings_sobrantes})", tuple(sobrante_ids))
+            fotos_s = cursor.fetchall()
+            for foto in fotos_s:
+                sobrante_id = foto['id_inventario_sobrante']
+                if sobrante_id not in fotos_por_sobrante: 
+                    fotos_por_sobrante[sobrante_id] = []
+                
+                data_uri = _get_image_data_uri(foto['ruta_archivo'])
+                if data_uri:
+                    fotos_por_sobrante[sobrante_id].append(data_uri)
+
 
         # --- SECCIÓN 2: GENERACIÓN DEL PDF ---
 
-        # 2a. Renderizar la plantilla HTML a una cadena de texto
+        # --- ✅ 2a. (MODIFICADO) Renderizar la plantilla HTML ---
+        # (Ahora pasamos las fotos de sobrantes)
         html_string = render_template(
             'inventarios/reporte_inventario_pdf.html',
             fecha_generacion=fecha_generacion_reporte,
@@ -910,13 +1014,17 @@ def descargar_reporte_pdf(inventario_id):
             correctos_por_area=correctos_por_area,
             bienes_sobrantes=bienes_sobrantes,
             bienes_revisados=bienes_revisados,
-            fotos_por_detalle=fotos_por_detalle
+            fotos_por_detalle=fotos_por_detalle,
+            fotos_por_sobrante=fotos_por_sobrante # <-- Variable añadida
         )
 
+        # --- ✅ 2b. (MODIFICADO) Convertir la cadena HTML a PDF ---
+        # (Quitamos el 'base_url' ya que las imágenes están incrustadas)
         # 2b. Convertir la cadena HTML a PDF en memoria
+        # (Añadimos 'base_url' para que pueda encontrar /static/images/...)
         pdf_file = HTML(string=html_string, base_url=request.base_url).write_pdf()
 
-        # 2c. Crear la respuesta y configurarla para VISTA PREVIA
+        # 2c. Crear la respuesta (Sin cambios)
         response = make_response(pdf_file)
         response.headers['Content-Type'] = 'application/pdf'
         response.headers['Content-Disposition'] = f'inline; filename=reporte_{inventario.get("nombre", "inventario")}.pdf'
@@ -928,9 +1036,8 @@ def descargar_reporte_pdf(inventario_id):
         traceback.print_exc()
         return redirect(url_for('inventarios.gestionar_inventario', inventario_id=inventario_id))
     finally:
-        if conn and conn.is_connected():
+        if conn:
             conn.close()
-
 
 @inventarios_bp.route('/<int:inventario_id>/brigada/agregar', methods=['POST'])
 @login_required
@@ -1010,7 +1117,7 @@ def remover_miembros_brigada(inventario_id):
     conn = None
     try:
         conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor(pymysql.cursors.DictCursor) 
 
         # 1. Validar el inventario y los permisos del usuario
         cursor.execute("SELECT estatus, id_usuario_creador FROM inventarios WHERE id = %s", (inventario_id,))
@@ -1078,7 +1185,7 @@ def remover_miembros_brigada(inventario_id):
         flash(f'Error al remover miembros de la brigada: {e}', 'danger')
         traceback.print_exc()
     finally:
-        if conn and conn.is_connected():
+        if conn :
             conn.close()
 
     return redirect(url_for('inventarios.gestionar_inventario', inventario_id=inventario_id))
