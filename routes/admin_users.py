@@ -58,7 +58,8 @@ def list_roles():
     conn = None
     try:
         conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor(pymysql.cursors.DictCursor)
+
         # La consulta no cambia
         cursor.execute("SELECT id, name, description FROM role ORDER BY name")
         roles = cursor.fetchall()
@@ -112,7 +113,7 @@ def edit_role(role_id):
     conn = None
     try:
         conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor(pymysql.cursors.DictCursor) 
 
         if request.method == 'POST':
             name = request.form.get('name')
@@ -144,7 +145,7 @@ def edit_role(role_id):
         flash(f"Error al editar el rol: {e}", 'danger')
         return redirect(url_for('admin_users.list_roles'))
     finally:
-        if conn and conn.is_connected():
+        if conn :
             conn.close()
 # --- Rutas de Administración de Usuarios ---
 

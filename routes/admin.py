@@ -13,7 +13,7 @@ from flask_login import login_required
 from models import ActivityLog, User # Asegúrate de importar tus modelos
 
 from sqlalchemy import or_
-
+import traceback
 
 # Define the blueprint for your custom admin routes.
 admin_bp = Blueprint('admin', __name__, url_prefix='/admin')

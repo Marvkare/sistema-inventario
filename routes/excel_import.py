@@ -13,6 +13,7 @@ from decorators import permission_required
 from log_activity import log_activity
 # CORRECCIÓN: Se añaden las importaciones que faltaban
 from flask_login import login_required, current_user
+import pymysql
 
 excel_import_bp = Blueprint('excel_import', __name__)
 
@@ -219,7 +220,7 @@ def upload_excel():
         df = pd.read_excel(file)
         excel_headers_map = {str(col).upper().strip(): str(col) for col in df.columns}
         conn = get_db_connection()  # ← MANTIENES tu conexión actual
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor(pymysql.cursors.DictCursor) 
         
         # Registrar lectura exitosa del archivo
         try:
@@ -374,7 +375,7 @@ def upload_excel():
         traceback.print_exc()
         
     finally:
-        if conn and conn.is_connected(): 
+        if conn: 
             conn.close()
     
     return redirect(url_for('resguardos.crear_resguardo'))
@@ -396,7 +397,7 @@ def handle_errors():
             flash("No se pudo conectar a la base de datos.", 'danger')
             return redirect(url_for('resguardos.crear_resguardo'))
         
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor(pymysql.cursors.DictCursor)
 
         cursor.execute("SELECT * FROM resguardo_errores WHERE upload_id = %s", (upload_id,))
         errors = cursor.fetchall()
@@ -407,7 +408,7 @@ def handle_errors():
         traceback.print_exc()
         return redirect(url_for('resguardos.crear_resguardo'))
     finally:
-        if conn and conn.is_connected():
+        if conn :
             conn.close()
 
 
@@ -427,7 +428,7 @@ def delete_error_row(row_id):
         if conn: conn.rollback()
         return jsonify({'success': False, 'message': f"Error al eliminar: {e}"}), 500
     finally:
-        if conn and conn.is_connected(): conn.close()
+        if conn : conn.close()
 
 @excel_import_bp.route('/exportar_resguardos_excel', methods=['POST'])
 @login_required
@@ -440,7 +441,7 @@ def exportar_resguardos_excel():
             return jsonify({'error': 'No se seleccionaron columnas'}), 400
             
         conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor(pymysql.cursors.DictCursor)
         
         columns_str = ', '.join(f"`{col}`" for col in selected_columns)
         query = f"SELECT {columns_str} FROM resguardos ORDER BY id"
@@ -461,7 +462,7 @@ def exportar_resguardos_excel():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
     finally:
-        if conn and conn.is_connected():
+        if conn :
             conn.close()
 
 @excel_import_bp.route('/edit_error/<int:error_id>', methods=['GET', 'POST'])
@@ -471,7 +472,7 @@ def edit_error_row(error_id):
     conn = None
     try:
         conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor(pymysql.cursors.DictCursor)
 
         if request.method == 'POST':
             form_data = request.form.to_dict()
@@ -542,5 +543,5 @@ def edit_error_row(error_id):
         traceback.print_exc()
         return redirect(url_for('excel_import.handle_errors'))
     finally:
-        if conn and conn.is_connected():
+        if conn :
             conn.close()
