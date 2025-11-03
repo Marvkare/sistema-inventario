@@ -52,3 +52,5 @@ logs/
 # Tailwind CSS build files (si usas build process)
 tailwindcss.js  # Si es el archivo build, no subirlo
 inventariostorage-519d580c7ff9.json
+token.json
+client_secret_*.json
