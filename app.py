@@ -217,11 +217,36 @@ def serve_drive_image(file_id):
         print(f"Error al servir archivo {file_id} desde Drive: {e}")
         return serve_default_image()
 
+@app.route('/uploads/<path:filename>')
+@login_required
+def serve_uploaded_file(filename):
+    """
+    Sirve archivos desde cualquier subcarpeta dentro de UPLOAD_FOLDER.
+    Ejemplos de filename: 
+      - 'bienes/foto-123.jpg'
+      - 'resguardos/evidencia-456.jpg'
+      - 'usuarios/perfil-789.png'
+    """
+    upload_dir = app.config.get('UPLOAD_FOLDER')
+    
+    if not upload_dir:
+        app.logger.error("UPLOAD_FOLDER no está configurado.")
+        abort(404)
+        
+    try:
+        return send_from_directory(upload_dir, filename)
+    except FileNotFoundError:
+        abort(404)
+    except Exception as e:
+        app.logger.error(f"Error al servir archivo {filename}: {e}")
+        abort(500)
+
 
 if __name__ == '__main__':
     os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
     # Usar la variable de entorno o por defecto False
-    debug_mode = os.environ.get('FLASK_DEBUG', 'True').lower() == 'true'
-    app.run(debug=debug_mode)
+    #debug_mode = os.environ.get('FLASK_DEBUG', 'True').lower() == 'true'
+    #app.run(debug=debug_mode)
+    app.run(host='0.0.0.0', port=5000, debug=True)
 
 

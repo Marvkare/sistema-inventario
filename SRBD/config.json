@@ -1,0 +1,7 @@
+{
+    "host": "localhost",
+    "user": "root",
+    "password": "pescadoroot",
+    "database": "inventario",
+    "port": 3306
+}

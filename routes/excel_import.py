@@ -248,7 +248,17 @@ def upload_excel():
                         elif db_col in RESGUARDOS_COLUMNS: resguardo_data[db_col] = cleaned_value
                 
                 id_bien = get_or_create_bien(cursor, bien_data)
+
+                # --- NUEVA VALIDACIÓN: Verificar si ya tiene resguardo activo ---
+                cursor.execute("SELECT id FROM resguardos WHERE id_bien = %s AND Activo = 1", (id_bien,))
+                existing_resguardo = cursor.fetchone()
                 
+                if existing_resguardo:
+                    # Si ya existe, lanzamos un error para que el bloque 'except' lo capture
+                    # y envíe esta fila a la tabla 'resguardo_errores'
+                    raise ValueError(f"El bien con ID {id_bien} (Inventario: {bien_data.get('No_Inventario')}) ya tiene un resguardo activo.")
+                # ---------------------------------------------------------------
+
                 area_name = row.get(excel_headers_map.get(EXCEL_AREA_COL_NAME.upper().strip()))
                 id_area = get_or_create_area(cursor, area_name)
                 if not id_area: raise ValueError("El campo 'Area' es obligatorio.")

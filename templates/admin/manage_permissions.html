@@ -3,101 +3,223 @@
 {% block title %}Gestionar Permisos de Roles{% endblock %}
 
 {% block content %}
-<div class="container mx-auto p-4">
-    <div class="max-w-4xl mx-auto bg-white p-6 sm:p-8 rounded-lg shadow-md">
-        <div class="flex items-center mb-6">
-            <a href="{{ url_for('admin_users.list_roles') }}" class="text-gray-500 hover:text-gray-700 mr-3 p-2 rounded-full hover:bg-gray-100">
-                <i class="fas fa-arrow-left"></i>
-            </a>
-            <h1 class="text-2xl font-bold text-gray-800">Gestionar Permisos de Roles</h1>
-        </div>
-        <p class="text-gray-600 mb-6 text-center bg-blue-50 border border-blue-200 p-3 rounded-md">
-            Se han detectado y añadido automáticamente nuevos permisos del servidor. Selecciona un rol y asigna sus permisos.
-        </p>
+<div class="page-wrapper">
+    <div class="container-limit">
         
-        <form method="POST" class="space-y-6">
-            <div>
-                <label for="role_id" class="block text-gray-700 font-bold mb-2">Seleccionar Rol:</label>
-                <select id="role_id" name="role_id" required 
-                        class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-150">
-                    <option value="">-- Selecciona un Rol --</option>
-                    {% for role in all_roles %}
-                        <option value="{{ role.id }}" {% if role.id == selected_role_id %}selected{% endif %}>
-                            {{ role.name }}
-                        </option>
-                    {% endfor %}
-                </select>
+        <div class="header-card">
+            <div class="header-text">
+                <h1>Gestionar Permisos</h1>
+                <p>Configura los accesos y restricciones para cada rol del sistema.</p>
             </div>
-            
-            <div>
-                <h3 class="text-xl font-semibold mt-6 mb-4">Lista de Permisos Disponibles</h3>
-                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 border border-gray-200 p-4 rounded-lg max-h-96 overflow-y-auto">
-                    {% for permission in all_permissions %}
-                        <div class="bg-gray-50 p-3 rounded-lg border border-gray-200 hover:shadow-sm transition-shadow">
-                            <label for="perm-{{ permission.id }}" class="flex items-start text-gray-800 cursor-pointer">
-                                <input type="checkbox"
-                                       id="perm-{{ permission.id }}"
-                                       name="permissions"
-                                       value="{{ permission.id }}"
-                                       class="form-checkbox h-5 w-5 text-blue-600 mt-1">
-                                <span class="ml-3">
-                                    <strong class="block font-medium text-sm">{{ permission.endpoint }}</strong>
-                                    <small class="text-gray-500 text-xs">{{ permission.description }}</small>
-                                </span>
-                            </label>
-                        </div>
-                    {% endfor %}
+            <div class="header-actions">
+                <a href="{{ url_for('admin_users.list_roles') }}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Volver a Roles
+                </a>
+                <div class="header-icon-box">
+                    <i class="fas fa-user-shield"></i>
                 </div>
             </div>
-            
-            <div class="mt-8 border-t pt-6">
-                <button type="submit" 
-                        class="w-full bg-blue-600 text-white font-bold py-3 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-150">
-                    <i class="fas fa-save mr-2"></i>
-                    Asignar Permisos
-                </button>
+        </div>
+
+        <div class="card">
+            <div class="card-body">
+                
+                <div class="alert alert-info mb-4">
+                    <i class="fas fa-info-circle"></i>
+                    <div>
+                        <strong>Sincronización Automática:</strong>
+                        <p>Se han detectado y añadido nuevos permisos del servidor. Selecciona un rol para ver sus asignaciones actuales.</p>
+                    </div>
+                </div>
+                
+                <form method="POST">
+                    <div class="form-section">
+                        <div class="form-group">
+                            <label for="role_id"><i class="fas fa-user-tag icon-label"></i> Seleccionar Rol:</label>
+                            <select id="role_id" name="role_id" required>
+                                <option value="">-- Selecciona un Rol --</option>
+                                {% for role in all_roles %}
+                                    <option value="{{ role.id }}" {% if role.id == selected_role_id %}selected{% endif %}>
+                                        {{ role.name }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="permissions-section">
+                        <h3 class="section-title">
+                            <i class="fas fa-lock-open"></i> Lista de Permisos Disponibles
+                        </h3>
+                        
+                        <div class="permissions-container">
+                            <div class="permissions-grid">
+                                {% for permission in all_permissions %}
+                                    <label class="permission-card" for="perm-{{ permission.id }}">
+                                        <div class="checkbox-wrapper">
+                                            <input type="checkbox"
+                                                   id="perm-{{ permission.id }}"
+                                                   name="permissions"
+                                                   value="{{ permission.id }}">
+                                        </div>
+                                        <div class="perm-content">
+                                            <span class="perm-endpoint">{{ permission.endpoint }}</span>
+                                            <span class="perm-desc">{{ permission.description or 'Sin descripción' }}</span>
+                                        </div>
+                                    </label>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Guardar Asignaciones
+                        </button>
+                    </div>
+                </form>
+
             </div>
-        </form>
+        </div>
+
     </div>
 </div>
-
-{# ✅ CORRECCIÓN: Aquí faltaba el cierre del bloque de contenido #}
 {% endblock %}
 
+{% block styles %}
+<style>
+    /* VARIABLES */
+    :root {
+        --col-burgundy: #6A2E4D; --col-burgundy-dark: #551E3A;
+        --col-beige: #BC9B6A; --col-bg: #f9fafb;
+        --col-white: #ffffff;
+        --radius: 12px; --shadow: 0 4px 6px rgba(0,0,0,0.1);
+        --border: #e5e7eb;
+        --bg-info: #eff6ff; --text-info: #1e40af; --border-info: #bfdbfe;
+    }
+
+    /* Layout */
+    .page-wrapper { min-height: 100vh; background: var(--col-bg); padding: 2rem 1rem; }
+    .container-limit { max-width: 1000px; margin: 0 auto; }
+    .mb-4 { margin-bottom: 1.5rem; }
+
+    /* Header */
+    .header-card {
+        background: linear-gradient(to right, var(--col-burgundy), var(--col-burgundy-dark));
+        border-radius: var(--radius); padding: 1.5rem 2rem; color: white;
+        display: flex; justify-content: space-between; align-items: center;
+        margin-bottom: 2rem; box-shadow: var(--shadow);
+    }
+    .header-text h1 { margin: 0; font-size: 1.5rem; }
+    .header-text p { opacity: 0.9; margin: 0.3rem 0 0; font-size: 0.9rem; }
+    .header-actions { display: flex; gap: 1rem; align-items: center; }
+    .header-icon-box {
+        width: 48px; height: 48px; background: var(--col-beige); border-radius: 50%;
+        display: flex; align-items: center; justify-content: center; color: var(--col-burgundy); font-size: 1.2rem;
+    }
+
+    /* Card */
+    .card { background: var(--col-white); border-radius: var(--radius); border: 1px solid var(--border); box-shadow: var(--shadow); overflow: hidden; }
+    .card-body { padding: 2rem; }
+
+    /* Alerta */
+    .alert { padding: 1rem; border-radius: 8px; display: flex; gap: 1rem; align-items: flex-start; font-size: 0.9rem; }
+    .alert-info { background: var(--bg-info); color: var(--text-info); border: 1px solid var(--border-info); }
+    .alert p { margin: 0.2rem 0 0 0; }
+
+    /* Formulario */
+    .form-group { margin-bottom: 1.5rem; }
+    .form-group label { display: block; font-weight: 600; margin-bottom: 0.5rem; color: #374151; }
+    .icon-label { color: var(--col-burgundy); margin-right: 0.4rem; }
+    select { width: 100%; padding: 0.7rem; border: 1px solid #d1d5db; border-radius: 8px; font-size: 0.95rem; outline: none; }
+    select:focus { border-color: var(--col-burgundy); box-shadow: 0 0 0 3px rgba(106, 46, 77, 0.1); }
+
+    /* Sección Permisos */
+    .permissions-section { margin-top: 2rem; }
+    .section-title { font-size: 1.1rem; font-weight: 700; color: var(--col-burgundy); margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem; }
+    
+    .permissions-container {
+        background: #fafafa; border: 1px solid var(--border); border-radius: 8px;
+        padding: 1rem; max-height: 500px; overflow-y: auto;
+    }
+
+    /* Grid de Permisos */
+    .permissions-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 0.8rem;
+    }
+
+    .permission-card {
+        display: flex; align-items: flex-start; gap: 0.8rem;
+        background: white; border: 1px solid var(--border); padding: 0.8rem;
+        border-radius: 8px; cursor: pointer; transition: all 0.2s;
+    }
+    .permission-card:hover { border-color: var(--col-burgundy); background: #fdfbf7; transform: translateY(-1px); }
+    
+    .checkbox-wrapper { margin-top: 2px; }
+    .checkbox-wrapper input { width: 1.1rem; height: 1.1rem; accent-color: var(--col-burgundy); cursor: pointer; }
+
+    .perm-content { display: flex; flex-direction: column; }
+    .perm-endpoint { font-weight: 600; font-family: monospace; font-size: 0.85rem; color: #1f2937; word-break: break-all; }
+    .perm-desc { font-size: 0.8rem; color: #6b7280; margin-top: 0.2rem; }
+
+    /* Botones */
+    .form-actions { margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; }
+    .btn { padding: 0.7rem 1.5rem; border-radius: 8px; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem; transition: all 0.2s; border: none; cursor: pointer; }
+    .btn-primary { background: var(--col-burgundy); color: white; }
+    .btn-primary:hover { background: var(--col-burgundy-dark); }
+    .btn-secondary { background: white; border: 1px solid #d1d5db; color: #374151; }
+    .btn-secondary:hover { background: #f3f4f6; }
+
+    /* Scrollbar Personalizado */
+    .permissions-container::-webkit-scrollbar { width: 6px; }
+    .permissions-container::-webkit-scrollbar-track { background: #f1f1f1; }
+    .permissions-container::-webkit-scrollbar-thumb { background: #ccc; border-radius: 3px; }
+    .permissions-container::-webkit-scrollbar-thumb:hover { background: var(--col-burgundy); }
+
+    @media (max-width: 768px) {
+        .header-card { flex-direction: column; text-align: center; gap: 1rem; }
+        .btn { width: 100%; justify-content: center; }
+    }
+</style>
+{% endblock %}
 
 {% block scripts %}
-{{ super() }}
-<script>
+{{ super() }} <script>
 document.addEventListener('DOMContentLoaded', () => {
-    // 1. Obtiene el mapa de permisos enviado desde Flask.
+    console.log("✅ Script de Permisos Cargado");
+
+    // 1. Obtiene el mapa de permisos enviado desde Flask (JSON)
     const rolePermsMap = {{ role_perms_map | tojson | safe }};
     
-    // 2. Selecciona los elementos del DOM.
+    // 2. Referencias
     const roleSelect = document.getElementById('role_id');
     const allCheckboxes = document.querySelectorAll('input[name="permissions"]');
 
     /**
-     * Función que actualiza los checkboxes según el rol seleccionado.
+     * Actualiza los checkboxes según el rol seleccionado.
      */
     function updateCheckboxes() {
         const selectedRoleId = roleSelect.value;
         
-        // ✅ CORRECCIÓN: Se usa el nombre correcto de la variable "rolePermsMap".
+        // Obtener lista de IDs de permisos para este rol (o array vacío)
+        // IMPORTANTE: Los keys en el JSON de Flask suelen ser strings si vienen de un diccionario Python
+        // Convertimos a string por si acaso.
         const permissionsForRole = rolePermsMap[selectedRoleId] || [];
         
         allCheckboxes.forEach(checkbox => {
             const permissionId = parseInt(checkbox.value, 10);
             
-            // Marca el checkbox si su ID está en la lista de permisos del rol.
+            // Marcar si el ID está en la lista
             checkbox.checked = permissionsForRole.includes(permissionId);
         });
     }
 
-    // 3. Asigna el "escuchador" al menú desplegable.
+    // 3. Listener
     roleSelect.addEventListener('change', updateCheckboxes);
 
-    // 4. Ejecuta la función al cargar la página para marcar los permisos
-    // del rol que venga preseleccionado desde la URL.
+    // 4. Inicialización (por si se recarga la página con un rol seleccionado)
     updateCheckboxes();
 });
 </script>

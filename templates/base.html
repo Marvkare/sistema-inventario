@@ -4,490 +4,351 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Sistema de Resguardos{% endblock %}</title>
-    
-    <script src="https://cdn.tailwindcss.com"></script>
-    
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='fonts/fontawesome/css/all.min.css') }}">
+    <link rel="stylesheet" href="./static/css/fonts.css">
     
     <style>
+        /* --- 1. VARIABLES (Tu esencia de diseño) --- */
         :root {
-            /* Paleta oficial "Atitalaquia Se Transforma 2024-2027" */
-            --color-burgundy: 106, 46, 77;     /* #6A2E4D - Borgoña Institucional */
-            --color-beige: 188, 155, 106;      /* #BC9B6A - Beige Arena */
-            --color-white: 255, 255, 255;      /* #FFFFFF - Blanco */
-            
-            /* Colores adicionales para el diseño */
-            --color-burgundy-dark: 85, 30, 58; /* #551E3A - Borgoña Oscuro */
-            --color-burgundy-light: 125, 60, 95; /* #7D3C5F - Borgoña Claro */
-            --color-beige-dark: 160, 130, 85;  /* #A08255 - Beige Oscuro */
-            --color-beige-light: 215, 195, 160; /* #D7C3A0 - Beige Claro */
-            --color-gray: 245, 245, 245;       /* #F5F5F5 - Gris Claro */
-            
+            /* Paleta Institucional */
+            --color-burgundy: #6A2E4D;
+            --color-burgundy-dark: #551E3A;
+            --color-beige: #BC9B6A;
+            --color-beige-light: #D7C3A0;
+            --color-white: #FFFFFF;
+            --color-gray: #F5F5F5;
+
             /* Gradientes */
-            --gradient-primary: linear-gradient(135deg, #6A2E4D 0%, #551E3A 100%);
-            --gradient-accent: linear-gradient(135deg, #BC9B6A 0%, #A08255 100%);
-            --gradient-content: linear-gradient(135deg, #FFFFFF 0%, #F5F5F5 100%);
-            --gradient-header: linear-gradient(90deg, rgba(106, 46, 77, 0.9) 0%, rgba(85, 30, 58, 0.9) 100%);
-            --gradient-indicator: linear-gradient(180deg, #BC9B6A 0%, #A08255 100%);
-            
-            /* Texto */
-            --text-light: 255, 255, 255;       /* Blanco */
-            --text-muted: 215, 195, 160;       /* Beige Claro */
-            --text-dark: 106, 46, 77;          /* Borgoña */
-            
-            /* Fondos y bordes */
-            --bg-overlay: 255, 255, 255;       /* Blanco */
-            --bg-overlay-opacity: 0.08;
-            --border-overlay: 255, 255, 255;
-            --border-overlay-opacity: 0.15;
-            
-            /* Estados hover/active */
-            --hover-opacity: 0.25;
-            --active-opacity: 0.35;
-            --border-hover-opacity: 0.4;
-            --border-active-opacity: 0.6;
-            
-            /* Sombras */
-            --shadow-color: 106, 46, 77;
-            --shadow-opacity: 0.2;
-            --shadow-active-opacity: 0.3;
-            
-            /* Transiciones */
-            --transition-duration: 0.3s;
-            --transition-timing: ease-out;
+            --grad-sidebar: linear-gradient(135deg, var(--color-burgundy) 0%, var(--color-burgundy-dark) 100%);
+            --grad-header: linear-gradient(90deg, rgba(106, 46, 77, 0.9) 0%, rgba(85, 30, 58, 0.9) 100%);
+            --grad-body: linear-gradient(135deg, #FFFFFF 0%, #F5F5F5 100%);
+
+            /* Dimensiones */
+            --sidebar-width: 280px;
+            --header-height: 80px;
+            --transition: 0.3s ease-in-out;
         }
 
-        * {
-            box-sizing: border-box;
-        }
-
-        body { 
-            font-family: 'Inter', sans-serif; 
-            background: var(--gradient-primary);
-            margin: 0;
-            padding: 0;
-        }
+        /* --- 2. RESET Y BASES --- */
+        * { box-sizing: border-box; margin: 0; padding: 0; }
         
-        .sidebar-gradient {
-            background: var(--gradient-primary);
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--grad-body);
+            color: #333;
+            overflow-x: hidden; 
+        }
+
+        /* --- 3. SIDEBAR (El menú lateral) --- */
+        .sidebar {
             position: fixed;
             top: 0;
             left: 0;
-            z-index: 40;
+            height: 100vh;
+            width: var(--sidebar-width);
+            background: var(--grad-sidebar);
+            border-right: 1px solid var(--color-beige);
+            box-shadow: 4px 0 15px rgba(0,0,0,0.2);
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            
+            /* Estado inicial: Oculto a la izquierda */
+            transform: translateX(-100%);
+            transition: transform var(--transition);
         }
-        
-        .nav-link { 
+
+        /* Header del Sidebar */
+        .sidebar-header {
+            padding: 1.5rem;
+            background: var(--grad-header);
+            border-bottom: 1px solid rgba(188, 155, 106, 0.3);
             display: flex;
             align-items: center;
-            padding: 0.75rem;
-            font-weight: 500;
-            border-radius: 0.75rem;
-            transition: all 0.3s var(--transition-timing);
-            color: rgb(var(--text-muted));
-            background: rgba(var(--bg-overlay), var(--bg-overlay-opacity));
-            border: 1px solid rgba(var(--border-overlay), var(--border-overlay-opacity));
+            gap: 1rem;
         }
-        
-        .nav-link:hover {
-            background: rgba(var(--color-beige), var(--hover-opacity));
-            border-color: rgba(var(--color-beige), var(--border-hover-opacity));
-            transform: translateX(5px);
-            box-shadow: 0 4px 12px rgba(var(--shadow-color), var(--shadow-opacity));
-            color: rgb(var(--text-light));
-        }
-        
-        .nav-link.active {
-            background: rgba(var(--color-beige), var(--active-opacity));
-            border-color: rgba(var(--color-beige), var(--border-active-opacity));
-            box-shadow: 0 4px 12px rgba(var(--color-beige), var(--shadow-active-opacity));
-            color: rgb(var(--text-light));
-        }
-        
-        .nav-link i { 
-            width: 1.5rem;
-            text-align: center;
-            font-size: 1.125rem;
-            transition: transform var(--transition-duration);
-        }
-        
-        .nav-link:hover i {
-            transform: scale(1.1);
-        }
-        
-        .menu-toggle {
-            background: var(--gradient-accent);
-            box-shadow: 0 4px 15px rgba(var(--shadow-color), 0.25);
-            transition: all var(--transition-duration) ease;
-            border: 2px solid rgb(var(--color-burgundy-dark));
-            position: fixed;
-            top: 1.5rem;
-            left: 1.5rem;
-            z-index: 50;
-            padding: 0.75rem;
-            color: rgb(var(--color-burgundy));
-            border-radius: 0.75rem;
-            cursor: pointer;
+
+        .logo-box {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, var(--color-beige), var(--color-beige-light));
+            border-radius: 12px;
             display: flex;
             align-items: center;
             justify-content: center;
+            color: var(--color-burgundy);
+            font-size: 1.2rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .brand-text h1 { font-size: 1.1rem; color: var(--color-beige); margin: 0; }
+        .brand-text p { font-size: 0.75rem; color: white; margin: 0; opacity: 0.9; }
+
+        /* --- NUEVO: SECCIÓN DE USUARIO --- */
+        .user-banner {
+            padding: 1rem 1.5rem;
+            background: rgba(0, 0, 0, 0.2); /* Un poco más oscuro que el fondo */
+            border-bottom: 1px solid rgba(188, 155, 106, 0.2);
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
         }
         
-        .menu-toggle:hover {
-            box-shadow: 0 6px 20px rgba(var(--shadow-color), 0.35);
-            filter: brightness(1.1);
+        .user-avatar {
+            width: 36px;
+            height: 36px;
+            background: var(--color-beige);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--color-burgundy);
+            font-size: 1.2rem;
+            border: 2px solid rgba(255,255,255,0.2);
+        }
+
+        .user-info {
+            flex-grow: 1;
+            overflow: hidden;
         }
         
-        .menu-toggle:active {
-            transform: scale(0.95);
-            transition: transform 0.1s ease;
+        .user-name {
+            display: block;
+            color: white;
+            font-weight: 600;
+            font-size: 0.9rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
         
-        .sidebar-header {
-            background: var(--gradient-header);
-            border-bottom: 2px solid rgba(var(--color-beige), 0.3);
+        .user-status {
+            display: block;
+            font-size: 0.75rem;
+            color: var(--color-beige-light);
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
         }
-        
-        .scrollbar-custom::-webkit-scrollbar {
-            width: 4px;
+        .status-dot { width: 6px; height: 6px; background: #4ade80; border-radius: 50%; }
+
+        .logout-btn {
+            color: rgba(255,255,255,0.6);
+            font-size: 1rem;
+            transition: color 0.2s;
         }
-        
-        .scrollbar-custom::-webkit-scrollbar-track {
-            background: rgba(var(--color-beige), 0.1);
-            border-radius: 10px;
+        .logout-btn:hover { color: #ef4444; } /* Rojo al pasar el mouse */
+
+        /* Links de Navegación */
+        .nav-scroll { flex-grow: 1; overflow-y: auto; padding: 1rem; }
+        .nav-scroll::-webkit-scrollbar { width: 5px; }
+        .nav-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 4px; }
+
+        .nav-group-title {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            color: var(--color-beige-light);
+            margin: 1.5rem 0 0.5rem 0.5rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
         }
-        
-        .scrollbar-custom::-webkit-scrollbar-thumb {
-            background: rgba(var(--color-beige), 0.5);
-            border-radius: 10px;
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            padding: 0.85rem 1rem;
+            margin-bottom: 0.25rem;
+            color: var(--color-beige-light);
+            text-decoration: none;
+            border-radius: 0.75rem;
+            border: 1px solid transparent;
+            background: rgba(255,255,255, 0.05);
+            transition: all 0.2s;
+            position: relative;
         }
-        
-        .scrollbar-custom::-webkit-scrollbar-thumb:hover {
-            background: rgba(var(--color-beige), 0.7);
+
+        .nav-link:hover, .nav-link.active {
+            background: rgba(188, 155, 106, 0.2);
+            border-color: rgba(188, 155, 106, 0.4);
+            color: white;
+            transform: translateX(4px);
         }
-        
-        .menu-indicator {
+
+        .nav-link i.fa-fw { width: 1.5rem; text-align: center; }
+        .nav-link.active::before {
+            content: '';
             position: absolute;
-            right: -10px;
-            top: 50%;
-            transform: translateY(-50%);
-            width: 4px;
-            height: 0;
-            background: var(--gradient-indicator);
-            border-radius: 2px;
-            transition: all var(--transition-duration) ease;
+            right: 0; top: 50%; transform: translateY(-50%);
+            height: 60%; width: 3px;
+            background: var(--color-beige);
+            border-radius: 2px 0 0 2px;
         }
-        
-        .nav-link:hover .menu-indicator {
-            height: 20px;
+
+        .sidebar-footer {
+            padding: 1rem;
+            text-align: center;
+            border-top: 1px solid rgba(188, 155, 106, 0.3);
+            font-size: 0.7rem;
+            color: var(--color-beige-light);
         }
-        
-        .nav-link.active .menu-indicator {
-            height: 30px;
-        }
-        
-        .pulse-dot {
-            animation: pulse 2s infinite;
-        }
-        
-        @keyframes pulse {
-            0% { opacity: 1; }
-            50% { opacity: 0.5; }
-            100% { opacity: 1; }
-        }
-        
-        .main-content-gradient {
-            background: var(--gradient-content);
+
+        /* --- 4. CONTENIDO PRINCIPAL --- */
+        .main-content {
             min-height: 100vh;
+            padding: 2rem;
+            transition: margin-left var(--transition);
+            margin-left: 0;
+            padding-top: 5rem;
         }
 
-        /* Clases de utilidad basadas en variables */
-        .text-burgundy {
-            color: rgb(var(--color-burgundy));
-        }
-        
-        .text-beige {
-            color: rgb(var(--color-beige));
-        }
-        
-        .bg-burgundy {
-            background-color: rgb(var(--color-burgundy));
-        }
-        
-        .bg-beige {
-            background-color: rgb(var(--color-beige));
-        }
-        
-        .border-beige {
-            border-color: rgb(var(--color-beige));
-        }
-        
-        .gold-text {
-            color: rgb(var(--color-beige));
-            text-shadow: 0 1px 2px rgba(var(--color-burgundy), 0.3);
-        }
-
-        /* Overlay para cerrar menú en móvil */
-        .sidebar-overlay {
-            display: none;
+        /* Botón Flotante */
+        .menu-toggle {
             position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.5);
-            z-index: 35;
+            top: 1.2rem; left: 1.2rem; z-index: 1100;
+            background: var(--color-beige); color: var(--color-burgundy);
+            border: none; padding: 0.8rem; border-radius: 8px;
+            cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            transition: left var(--transition);
+        }
+        .menu-toggle:hover { background: var(--color-beige-light); }
+
+        /* Lógica Apertura */
+        body.is-open .sidebar { transform: translateX(0); }
+
+        @media (min-width: 768px) {
+            body.is-open .main-content { margin-left: var(--sidebar-width); }
+            body.is-open .menu-toggle { left: calc(var(--sidebar-width) + 1.2rem); }
         }
 
-        @media (max-width: 767px) {
-            .sidebar-overlay.active {
-                display: block;
-            }
-            
-            .menu-toggle {
-                position: fixed;
-                top: 1.5rem;
-                left: 1.5rem;
-                transform: none !important;
-            }
+        /* Overlay */
+        .overlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.5); z-index: 900;
+            opacity: 0; visibility: hidden; transition: 0.3s;
         }
+        body.is-open .overlay { opacity: 1; visibility: visible; }
 
-        /* Estados específicos para el menú abierto/cerrado */
-        .sidebar-open .menu-toggle {
-            left: calc(288px + 1.5rem); /* 72 * 4 = 288px + 1.5rem */
+        /* Flash Msg */
+        .flash-container { position: fixed; top: 1.5rem; right: 1.5rem; z-index: 2000; width: 350px; }
+        .flash-msg {
+            padding: 1rem; margin-bottom: 0.5rem; border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1); border-left: 4px solid;
+            background: white; display: flex; align-items: center; justify-content: space-between;
+            animation: slideIn 0.5s ease;
         }
-        
-        @media (max-width: 767px) {
-            .sidebar-open .menu-toggle {
-                left: calc(100% - 4.5rem);
-            }
-        }
+        @keyframes slideIn { from { transform: translateX(100%); } to { transform: translateX(0); } }
+        .flash-success { border-color: #10B981; color: #065F46; }
+        .flash-danger { border-color: #EF4444; color: #7F1D1D; }
+        .flash-info { border-color: var(--color-beige); color: var(--color-burgundy); }
+        .btn-close { background: none; border: none; font-size: 1.2rem; cursor: pointer; opacity: 0.5; }
     </style>
     
     {% block styles %}{% endblock %} 
     {% block head %}{% endblock %}
 </head>
-<body class="overflow-hidden">
+<body>
 
-    <!-- Overlay para móvil -->
-    <div id="sidebar-overlay" class="sidebar-overlay"></div>
+    <div id="overlay" class="overlay"></div>
 
-    <!-- Sidebar con Paleta "Atitalaquia Se Transforma" -->
-    <aside id="sidebar" class="fixed top-0 left-0 z-40 w-72 h-screen sidebar-gradient p-0 flex flex-col border-r border-beige shadow-2xl transition-all duration-500 ease-in-out transform -translate-x-full">
-        <!-- Header del Sidebar -->
-        <div class="sidebar-header p-6 flex-shrink-0">
-            <div class="flex items-center space-x-3">
-               <div class="w-12 h-12 rounded-xl flex items-center justify-center shadow-lg" 
-                style="background: linear-gradient(135deg, rgb(var(--color-beige)) 0%, rgb(var(--color-beige-light)) 100%); border: 2px solid rgb(var(--color-beige-light));">
-                <i class="fas fa-shield-alt text-xl font-bold" style="color: rgb(var(--color-burgundy));"></i>
-                </div>
-                <div>
-                    <h1 class="text-xl font-bold gold-text">ATITALAQUIA</h1>
-                    <p class="text-sm text-white mt-1 font-semibold">SE TRANSFORMA</p>
-                    <p class="text-xs text-beige mt-1">2024-2027</p>
-                </div>
+    <button id="menu-toggle" class="menu-toggle">
+        <i id="menu-icon" class="fas fa-bars"></i>
+    </button>
+
+    <aside id="sidebar" class="sidebar">
+        <div class="sidebar-header">
+            <div class="logo-box">
+                <i class="fas fa-shield-alt"></i>
+            </div>
+            <div class="brand-text">
+                <h1>ATITALAQUIA</h1>
+                <p>SE TRANSFORMA 2024-2027</p>
             </div>
         </div>
+
+        {% if current_user.is_authenticated %}
+        <div class="user-banner">
+            <div class="user-avatar">
+                <i class="fas fa-user"></i>
+            </div>
+            <div class="user-info">
+                <span class="user-name">{{ current_user.username }}</span>
+                <span class="user-status"><span class="status-dot"></span> En línea</span>
+            </div>
+            <a href="{{ url_for('logout') }}" class="logout-btn" title="Cerrar Sesión">
+                <i class="fas fa-sign-out-alt"></i>
+            </a>
+        </div>
+        {% endif %}
         
-        <!-- Navegación -->
-        <div class="flex-grow overflow-y-auto py-4 px-4 scrollbar-custom">
-            <ul class="space-y-2">
-                <!-- Grupo: Gestión Principal -->
-                <li class="px-3 py-2">
-                    <p class="text-xs font-semibold text-beige-light uppercase tracking-wider mb-2 flex items-center">
-                        <i class="fas fa-tachometer-alt mr-2 text-beige"></i>
-                        Gestión Principal
-                    </p>
-                </li>
-                
-                <li class="relative">
-                    <a href="{{ url_for('bienes.agregar_bien') }}" class="nav-link group">
-                        <div class="menu-indicator"></div>
-                        <i class="fas fa-plus-circle fa-fw mr-3 text-beige-light"></i>
-                        <span>Formulario de Bienes</span>
-                        <i class="fas fa-chevron-right ml-auto text-xs text-beige-light group-hover:text-white transition-colors"></i>
-                    </a>
-                </li>
-                
-                <li class="relative">
-                    <a href="{{ url_for('resguardos.crear_resguardo') }}" class="nav-link group">
-                        <div class="menu-indicator"></div>
-                        <i class="fas fa-file-signature fa-fw mr-3 text-beige-light"></i>
-                        <span>Formulario de Resguardo</span>
-                        <i class="fas fa-chevron-right ml-auto text-xs text-beige-light group-hover:text-white transition-colors"></i>
-                    </a>
-                </li>
-                
-                <li class="relative">
-                    <a href="{{ url_for('resguardos.carga_masiva') }}" class="nav-link group">
-                        <div class="menu-indicator"></div>
-                        <i class="fas fa-file-upload fa-fw mr-3 text-beige-light"></i>
-                        <span>Carga Masiva</span>
-                        <i class="fas fa-chevron-right ml-auto text-xs text-beige-light group-hover:text-white transition-colors"></i>
-                    </a>
-                </li>
+        <div class="nav-scroll">
+            
+            <div class="nav-group-title"><i class="fas fa-tachometer-alt"></i> Gestión Principal</div>
+            <a href="{{ url_for('bienes.agregar_bien') }}" class="nav-link">
+                <i class="fas fa-plus-circle fa-fw"></i> <span>Formulario de Bienes</span>
+            </a>
+            <a href="{{ url_for('resguardos.crear_resguardo') }}" class="nav-link">
+                <i class="fas fa-file-signature fa-fw"></i> <span>Formulario de Resguardo</span>
+            </a>
+            <a href="{{ url_for('resguardos.carga_masiva') }}" class="nav-link">
+                <i class="fas fa-file-upload fa-fw"></i> <span>Carga Masiva</span>
+            </a>
 
-                <!-- Grupo: Consultas y Reportes -->
-                <li class="px-3 py-2 mt-6">
-                    <p class="text-xs font-semibold text-beige-light uppercase tracking-wider mb-2 flex items-center">
-                        <i class="fas fa-chart-bar mr-2 text-beige"></i>
-                        Consultas y Reportes
-                    </p>
-                </li>
-                
-                <li class="relative">
-                    <a href="{{ url_for('bienes.listar_bienes') }}" class="nav-link group">
-                        <div class="menu-indicator"></div>
-                        <i class="fas fa-boxes fa-fw mr-3 text-beige-light"></i>
-                        <span>Ver Todos los Bienes</span>
-                        <i class="fas fa-chevron-right ml-auto text-xs text-beige-light group-hover:text-white transition-colors"></i>
-                    </a>
-                </li>
-                
-                <li class="relative">
-                    <a href="{{ url_for('resguardos.ver_resguardos') }}" class="nav-link group">
-                        <div class="menu-indicator"></div>
-                        <i class="fas fa-list-ul fa-fw mr-3 text-beige-light"></i>
-                        <span>Ver Todos los Resguardos</span>
-                        <i class="fas fa-chevron-right ml-auto text-xs text-beige-light group-hover:text-white transition-colors"></i>
-                    </a>
-                </li>
-                
-                <li class="relative">
-                    <a href="{{ url_for('resguardos.ver_resguardos_sujeto_control') }}" class="nav-link group">
-                        <div class="menu-indicator"></div>
-                        <i class="fas fa-sort-amount-down-alt fa-fw mr-3 text-beige-light"></i>
-                        <span>Tabla Sujeto Control</span>
-                        <i class="fas fa-chevron-right ml-auto text-xs text-beige-light group-hover:text-white transition-colors"></i>
-                    </a>
-                </li>
-                <li class="relative">
-                    <a href="{{ url_for('traspaso.ver_traspasos') }}" class="nav-link group">
-                        <div class="menu-indicator"></div>
-                        <i class="fas fa-exchange-alt fa-fw mr-3 text-beige-light"></i>
-                        <span>Ver Todos los Traspasos</span>
-                        <i class="fas fa-chevron-right ml-auto text-xs text-beige-light group-hover:text-white transition-colors"></i>
-                    </a>
-                </li>
+            <div class="nav-group-title"><i class="fas fa-chart-bar"></i> Consultas</div>
+            <a href="{{ url_for('bienes.listar_bienes') }}" class="nav-link">
+                <i class="fas fa-boxes fa-fw"></i> <span>Ver Todos los Bienes</span>
+            </a>
+            <a href="{{ url_for('resguardos.ver_resguardos') }}" class="nav-link">
+                <i class="fas fa-list-ul fa-fw"></i> <span>Ver Resguardos</span>
+            </a>
+            <a href="{{ url_for('resguardos.ver_resguardos_sujeto_control') }}" class="nav-link">
+                <i class="fas fa-sort-amount-down-alt fa-fw"></i> <span>Tabla Sujeto Control</span>
+            </a>
+            <a href="{{ url_for('traspaso.ver_traspasos') }}" class="nav-link">
+                <i class="fas fa-exchange-alt fa-fw"></i> <span>Ver Traspasos</span>
+            </a>
 
-                <!-- Grupo: Configuración -->
-                <li class="px-3 py-2 mt-6">
-                    <p class="text-xs font-semibold text-beige-light uppercase tracking-wider mb-2 flex items-center">
-                        <i class="fas fa-cogs mr-2 text-beige"></i>
-                        Configuración
-                    </p>
-                </li>
-                
-                <li class="relative">
-                    <a href="{{ url_for('errors.handle_errors') }}" class="nav-link group">
-                        <div class="menu-indicator"></div>
-                        <i class="fas fa-exclamation-triangle fa-fw mr-3 text-beige-light"></i>
-                        <span>Revisar Errores</span>
-                        <span class="pulse-dot w-2 h-2 bg-red-400 rounded-full ml-auto"></span>
-                    </a>
-                </li>
-                
-                <li class="relative">
-                    <a href="{{ url_for('plantillas.crear_plantilla') }}" class="nav-link group">
-                        <div class="menu-indicator"></div>
-                        <i class="fas fa-magic fa-fw mr-3 text-beige-light"></i>
-                        <span>Crear Plantilla</span>
-                        <i class="fas fa-chevron-right ml-auto text-xs text-beige-light group-hover:text-white transition-colors"></i>
-                    </a>
-                </li>
-                
-                <li class="relative">
-                    <a href="{{ url_for('plantillas.ver_plantillas') }}" class="nav-link group">
-                        <div class="menu-indicator"></div>
-                        <i class="fas fa-file-alt fa-fw mr-3 text-beige-light"></i>
-                        <span>Ver Plantillas</span>
-                        <i class="fas fa-chevron-right ml-auto text-xs text-beige-light group-hover:text-white transition-colors"></i>
-                    </a>
-                </li>
-                
-                <li class="relative">
-                    <a href="{{ url_for('areas.manage_areas') }}" class="nav-link group">
-                        <div class="menu-indicator"></div>
-                        <i class="fas fa-building fa-fw mr-3 text-beige-light"></i>
-                        <span>Gestionar Áreas</span>
-                        <i class="fas fa-chevron-right ml-auto text-xs text-beige-light group-hover:text-white transition-colors"></i>
-                    </a>
-                </li>
-                
-                <li class="relative">
-                    <a href="{{ url_for('etiquetas.imprimir_etiquetas') }}" class="nav-link group">
-                        <div class="menu-indicator"></div>
-                        <i class="fas fa-tags fa-fw mr-3 text-beige-light"></i>
-                        <span>Imprimir Etiquetas</span>
-                        <i class="fas fa-chevron-right ml-auto text-xs text-beige-light group-hover:text-white transition-colors"></i>
-                    </a>
-                </li>
-<li class="px-3 py-2 mt-6">
-    <p class="text-xs font-semibold text-beige-light uppercase tracking-wider mb-2 flex items-center">
-        <i class="fas fa-warehouse mr-2 text-beige"></i>
-        Bajas e Inventarios
-    </p>
-</li>
+            <div class="nav-group-title"><i class="fas fa-cogs"></i> Configuración</div>
+            <a href="{{ url_for('errors.select_error_batch') }}" class="nav-link">
+                <i class="fas fa-folder-open fa-fw"></i> <span>Bandeja de Errores</span>
+            </a>
+            <a href="{{ url_for('plantillas.crear_plantilla') }}" class="nav-link">
+                <i class="fas fa-magic fa-fw"></i> <span>Crear Plantilla</span>
+            </a>
+            <a href="{{ url_for('plantillas.ver_plantillas') }}" class="nav-link">
+                <i class="fas fa-file-alt fa-fw"></i> <span>Ver Plantillas</span>
+            </a>
+            <a href="{{ url_for('areas.manage_areas') }}" class="nav-link">
+                <i class="fas fa-building fa-fw"></i> <span>Gestionar Áreas</span>
+            </a>
+            <a href="{{ url_for('etiquetas.imprimir_etiquetas') }}" class="nav-link">
+                <i class="fas fa-tags fa-fw"></i> <span>Imprimir Etiquetas</span>
+            </a>
 
-<li class="relative">
-    <a href="{{ url_for('bajas.gestionar_bajas') }}" class="nav-link group">
-        <div class="menu-indicator"></div>
-        <i class="fas fa-box-open fa-fw mr-3 text-beige-light"></i>
-        <span>Gestionar bajas</span>
-        <i class="fas fa-chevron-right ml-auto text-xs text-beige-light group-hover:text-white transition-colors"></i>
-    </a>
-</li>
-
-<li class="relative">
-    <a href="{{ url_for('inventarios.listar_inventarios') }}" class="nav-link group">
-        <div class="menu-indicator"></div>
-        <i class="fas fa-list-ul fa-fw mr-3 text-beige-light"></i>
-        <span>Ver inventarios</span>
-        <i class="fas fa-chevron-right ml-auto text-xs text-beige-light group-hover:text-white transition-colors"></i>
-    </a>
-</li>
-            </ul>
+            <div class="nav-group-title"><i class="fas fa-warehouse"></i> Inventarios</div>
+            <a href="{{ url_for('bajas.gestionar_bajas') }}" class="nav-link">
+                <i class="fas fa-box-open fa-fw"></i> <span>Gestionar bajas</span>
+            </a>
+            <a href="{{ url_for('inventarios.listar_inventarios') }}" class="nav-link">
+                <i class="fas fa-list-ul fa-fw"></i> <span>Ver inventarios</span>
+            </a>
         </div>
 
-        <!-- Footer del Sidebar -->
-        <div class="p-4 border-t border-beige flex-shrink-0">
-            <div class="text-center">
-                <p class="text-xs text-beige-light font-semibold">Sistema de Resguardos</p>
-                <p class="text-xs text-beige mt-1">ATITALAQUIA SE TRANSFORMA</p>
-                <p class="text-xs text-beige-dark mt-1">© 2024-2027 Todos los derechos reservados</p>
-            </div>
+        <div class="sidebar-footer">
+            Sistema de Resguardos © 2024-2027
         </div>
     </aside>
 
-    <!-- Botón de Toggle - POSICIÓN FIJA -->
-    <button id="menu-toggle" class="menu-toggle">
-        <i id="menu-icon" class="fas fa-bars text-lg font-bold"></i>
-    </button>
-
-    <!-- Contenido Principal -->
-    <main id="main-content" class="flex-grow h-screen overflow-y-auto transition-all duration-500 ease-in-out main-content-gradient ml-0">
-        
-        <!-- Mensajes Flash Mejorados -->
-        <div id="flash-container" class="fixed top-6 right-6 z-[1050] w-full max-w-md space-y-3">
+    <main class="main-content">
+        <div class="flash-container">
             {% with messages = get_flashed_messages(with_categories=true) %}
                 {% if messages %}
                     {% for category, message in messages %}
-                        <div class="flash-message p-4 rounded-xl shadow-2xl border-l-4 transform transition-all duration-500 ease-out animate-slide-in-right
-                            {% if category == 'success' %} bg-gradient-to-r from-green-50 to-emerald-50 border-green-600 text-green-800 
-                            {% elif category == 'danger' %} bg-gradient-to-r from-red-50 to-pink-50 border-red-600 text-red-800 
-                            {% else %} bg-gradient-to-r from-beige-light to-beige border-beige-dark text-burgundy {% endif %}">
-                            <div class="flex items-center">
-                                <i class="fas {% if category == 'success' %}fa-check-circle{% elif category == 'danger' %}fa-exclamation-circle{% else %}fa-info-circle{% endif %} mr-3 text-lg"></i>
-                                <div class="flex-1">
-                                    <p class="font-semibold">{{ message }}</p>
-                                </div>
-                                <button onclick="this.parentElement.parentElement.remove()" class="ml-4 text-gray-400 hover:text-gray-600">
-                                    <i class="fas fa-times"></i>
-                                </button>
-                            </div>
+                        <div class="flash-msg {% if category == 'success' %}flash-success{% elif category == 'danger' %}flash-danger{% else %}flash-info{% endif %}">
+                            <span><i class="fas fa-info-circle"></i> {{ message }}</span>
+                            <button onclick="this.parentElement.remove()" class="btn-close">&times;</button>
                         </div>
                     {% endfor %}
                 {% endif %}
@@ -495,156 +356,46 @@
         </div>
 
         {% block content %}{% endblock %}
-        
     </main>
     
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            // Sistema de persistencia del estado del menú
-            const MENU_STATE_KEY = 'sidebarState';
-            
-            // Elementos del DOM
-            const menuToggleBtn = document.getElementById('menu-toggle');
-            const sidebar = document.getElementById('sidebar');
-            const mainContent = document.getElementById('main-content');
-            const menuIcon = document.getElementById('menu-icon');
-            const sidebarOverlay = document.getElementById('sidebar-overlay');
             const body = document.body;
+            const toggleBtn = document.getElementById('menu-toggle');
+            const overlay = document.getElementById('overlay');
+            const menuIcon = document.getElementById('menu-icon');
+            const STORAGE_KEY = 'sidebar_state';
 
-            // Estado del menú
-            let isMenuOpen = false;
-
-            // Funciones para manejar el estado
-            const saveMenuState = (isOpen) => {
-                localStorage.setItem(MENU_STATE_KEY, isOpen ? 'open' : 'closed');
-            };
-
-            const getMenuState = () => {
-                return localStorage.getItem(MENU_STATE_KEY) || 'closed';
-            };
-
-            const openMenu = () => {
-                console.log('Abriendo menú...');
-                sidebar.classList.remove('-translate-x-full');
-                sidebar.classList.add('translate-x-0');
-                mainContent.classList.add('md:ml-72');
-                body.classList.add('sidebar-open');
-                menuIcon.classList.remove('fa-bars');
-                menuIcon.classList.add('fa-times');
+            function toggleMenu(forceState = null) {
+                const isOpen = forceState !== null ? forceState : !body.classList.contains('is-open');
                 
-                // Mostrar overlay en móvil
-                if (window.innerWidth < 768) {
-                    sidebarOverlay.classList.add('active');
-                }
-                
-                isMenuOpen = true;
-                saveMenuState(true);
-            };
-
-            const closeMenu = () => {
-                console.log('Cerrando menú...');
-                sidebar.classList.remove('translate-x-0');
-                sidebar.classList.add('-translate-x-full');
-                mainContent.classList.remove('md:ml-72');
-                body.classList.remove('sidebar-open');
-                menuIcon.classList.remove('fa-times');
-                menuIcon.classList.add('fa-bars');
-                
-                // Ocultar overlay en móvil
-                sidebarOverlay.classList.remove('active');
-                
-                isMenuOpen = false;
-                saveMenuState(false);
-            };
-
-            const toggleMenu = () => {
-                console.log('Toggle menu, estado actual:', isMenuOpen);
-                if (isMenuOpen) {
-                    closeMenu();
+                if (isOpen) {
+                    body.classList.add('is-open');
+                    menuIcon.classList.remove('fa-bars');
+                    menuIcon.classList.add('fa-times');
+                    localStorage.setItem(STORAGE_KEY, 'open');
                 } else {
-                    openMenu();
+                    body.classList.remove('is-open');
+                    menuIcon.classList.remove('fa-times');
+                    menuIcon.classList.add('fa-bars');
+                    localStorage.setItem(STORAGE_KEY, 'closed');
                 }
-            };
+            }
 
-            // Inicializar estado del menú
-            const initializeMenuState = () => {
-                const savedState = getMenuState();
-                console.log('Estado guardado:', savedState);
-                
-                if (window.innerWidth >= 768) {
-                    // En desktop
-                    if (savedState === 'open') {
-                        openMenu();
-                    } else {
-                        closeMenu();
-                    }
-                } else {
-                    // En móvil siempre cerrado al inicio
-                    closeMenu();
-                }
-            };
+            toggleBtn.addEventListener('click', () => toggleMenu());
+            overlay.addEventListener('click', () => toggleMenu(false));
 
-            // Manejo de mensajes flash
-            const flashMessages = document.querySelectorAll('.flash-message');
-            flashMessages.forEach(msg => {
-                setTimeout(() => {
-                    msg.style.transition = 'all 0.5s ease-in-out';
-                    msg.style.opacity = '0';
-                    msg.style.transform = 'translateX(100%) scale(0.9)';
-                    setTimeout(() => {
-                        if (msg.parentNode) {
-                            msg.parentNode.removeChild(msg);
-                        }
-                    }, 500);
-                }, 5000);
-            });
+            const savedState = localStorage.getItem(STORAGE_KEY);
+            const isMobile = window.innerWidth < 768;
+            
+            if (savedState === 'open' && !isMobile) {
+                toggleMenu(true);
+            } else if (savedState === 'closed') {
+                toggleMenu(false);
+            } else if (!isMobile) {
+                toggleMenu(true);
+            }
 
-            // Event listeners
-            menuToggleBtn.addEventListener('click', (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                console.log('Click en botón toggle');
-                toggleMenu();
-            });
-
-            // Cerrar menú al hacer clic en el overlay (móvil)
-            sidebarOverlay.addEventListener('click', (e) => {
-                e.preventDefault();
-                console.log('Click en overlay');
-                closeMenu();
-            });
-
-            // Cerrar menú al hacer clic en un enlace del menú (móvil)
-            document.querySelectorAll('.nav-link').forEach(link => {
-                link.addEventListener('click', (e) => {
-                    if (window.innerWidth < 768) {
-                        console.log('Click en enlace móvil');
-                        closeMenu();
-                    }
-                });
-            });
-
-            // Manejar redimensionamiento
-            window.addEventListener('resize', () => {
-                console.log('Resize window');
-                if (window.innerWidth >= 768) {
-                    // En desktop, restaurar estado guardado
-                    const savedState = getMenuState();
-                    if (savedState === 'open') {
-                        openMenu();
-                    }
-                    // Ocultar overlay en desktop
-                    sidebarOverlay.classList.remove('active');
-                } else {
-                    // En móvil, asegurarse de que esté cerrado
-                    closeMenu();
-                }
-            });
-
-            // Inicializar
-            initializeMenuState();
-
-            // Agregar clase active al enlace actual
             const currentPath = window.location.pathname;
             document.querySelectorAll('.nav-link').forEach(link => {
                 if (link.getAttribute('href') === currentPath) {
@@ -652,33 +403,11 @@
                 }
             });
 
-            // Debug
-            console.log('Elementos cargados:');
-            console.log('Menu toggle:', menuToggleBtn);
-            console.log('Sidebar:', sidebar);
-            console.log('Menu icon:', menuIcon);
+            setTimeout(() => {
+                document.querySelectorAll('.flash-msg').forEach(el => el.remove());
+            }, 5000);
         });
-        
     </script>
-    
-    <style>
-        @keyframes slide-in-right {
-            from {
-                opacity: 0;
-                transform: translateX(100%);
-            }
-            to {
-                opacity: 1;
-                transform: translateX(0);
-            }
-        }
-        
-        .animate-slide-in-right {
-            animation: slide-in-right 0.5s ease-out;
-        }
-    
-    
-    </style>
     
     {% block scripts %}{% endblock %}
 </body>

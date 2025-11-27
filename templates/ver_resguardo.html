@@ -1,418 +1,421 @@
 {% extends "base.html" %}
 
-{% block title %}Detalles del Resguardo: {{ resguardo.No_Resguardo }}{% endblock %}
+{% block title %}Detalles: {{ resguardo.No_Resguardo }}{% endblock %}
 
 {% block content %}
-<div class="min-h-screen bg-gradient-to-br from-gray-50 to-beige-light/20 py-8 px-4">
-    <div class="max-w-7xl mx-auto">
-        <!-- Encabezado -->
-        <div class="bg-white rounded-2xl shadow-xl border border-beige-light overflow-hidden mb-8">
-            <div class="bg-gradient-to-r from-burgundy to-burgundy-dark p-6 text-white">
-                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                    <div>
-                        <h1 class="text-2xl md:text-3xl font-bold">Detalles del Resguardo</h1>
-                        <div class="flex flex-wrap items-center gap-3 mt-2">
-                            <span class="bg-beige/30 px-3 py-1 rounded-full text-sm font-medium">{{ resguardo.No_Resguardo or 'N/A' }}</span>
-                            {% if resguardo.Activo %}
-                                <span class="bg-green-500/80 px-3 py-1 rounded-full text-sm font-medium flex items-center">
-                                    <i class="fas fa-circle text-xs mr-1"></i> Activo
-                                </span>
-                            {% else %}
-                                <span class="bg-red-500/80 px-3 py-1 rounded-full text-sm font-medium flex items-center">
-                                    <i class="fas fa-circle text-xs mr-1"></i> Inactivo
-                                </span>
-                            {% endif %}
-                            <span class="bg-burgundy/80 px-3 py-1 rounded-full text-sm font-medium">
-                                {% if resguardo.Tipo_De_Resguardo == 1 %}Sujeto de Control{% else %}Resguardo Normal{% endif %}
-                            </span>
-                        </div>
-                    </div>
-                    <div class="flex flex-wrap gap-2">
-                        <a href="{{ url_for('resguardos.editar_resguardo', id_resguardo=resguardo.id_resguardo) }}" 
-                           class="inline-flex items-center px-4 py-2 bg-beige text-burgundy rounded-xl font-semibold hover:bg-beige-light transition-colors duration-200">
-                            <i class="fas fa-edit mr-2"></i> Editar
-                        </a>
-                        <a href="{{ url_for('resguardos.ver_resguardos') }}" 
-                           class="inline-flex items-center px-4 py-2 border-2 border-beige text-beige rounded-xl font-semibold hover:bg-beige/10 transition-colors duration-200">
-                            <i class="fas fa-arrow-left mr-2"></i> Volver
-                        </a>
-                    </div>
+<div class="page-wrapper">
+    <div class="container-limit">
+        
+        <div class="header-card">
+            <div class="header-content">
+                <div class="title-row">
+                    <h1>Detalles del Resguardo</h1>
+                    <span class="badge badge-lg">{{ resguardo.No_Resguardo or 'N/A' }}</span>
                 </div>
+                
+                <div class="status-row">
+                    {% if resguardo.Activo %}
+                        <span class="status-indicator status-active">
+                            <i class="fas fa-circle"></i> Activo
+                        </span>
+                    {% else %}
+                        <span class="status-indicator status-inactive">
+                            <i class="fas fa-circle"></i> Inactivo
+                        </span>
+                    {% endif %}
+
+                    <span class="type-indicator">
+                        {% if resguardo.Tipo_De_Resguardo == 1 %}Sujeto de Control{% else %}Resguardo Normal{% endif %}
+                    </span>
+                </div>
+            </div>
+
+            <div class="header-actions">
+                <a href="{{ url_for('resguardos.editar_resguardo', id_resguardo=resguardo.id_resguardo) }}" class="btn btn-primary">
+                    <i class="fas fa-edit"></i> Editar
+                </a>
+                <a href="{{ url_for('resguardos.ver_resguardos') }}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Volver
+                </a>
             </div>
         </div>
 
-        <!-- Contenido principal -->
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <!-- Columna izquierda: Información del Bien -->
-            <div class="lg:col-span-2 space-y-6">
-                <!-- Información General del Bien -->
-                <div class="bg-white rounded-2xl shadow-lg border border-beige-light overflow-hidden">
-                    <div class="flex items-center bg-gradient-to-r from-burgundy/10 to-burgundy/5 p-4 border-b border-beige-light">
-                        <div class="w-8 h-8 bg-burgundy rounded-full flex items-center justify-center mr-3">
-                            <i class="fas fa-box text-white text-sm"></i>
-                        </div>
-                        <h2 class="text-xl font-bold text-burgundy">Información General del Bien</h2>
+        <div class="details-layout">
+            
+            <div class="main-column">
+                
+                <div class="card">
+                    <div class="card-header">
+                        <div class="icon-box"><i class="fas fa-box"></i></div>
+                        <h2>Información General del Bien</h2>
                     </div>
-                    <div class="p-6">
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div>
-                                <label class="block text-sm font-semibold text-gray-700 mb-2">No. de Inventario</label>
-                                <p class="text-lg font-bold text-burgundy">{{ resguardo.No_Inventario or 'N/A' }}</p>
+                    <div class="card-body">
+                        <div class="info-grid">
+                            <div class="info-item">
+                                <label>No. de Inventario</label>
+                                <p class="highlight">{{ resguardo.No_Inventario or 'N/A' }}</p>
                             </div>
-                            <div>
-                                <label class="block text-sm font-semibold text-gray-700 mb-2">Cantidad</label>
-                                <p class="text-lg font-bold text-gray-900">{{ resguardo.Cantidad or 'N/A' }}</p>
+                            <div class="info-item">
+                                <label>Cantidad</label>
+                                <p>{{ resguardo.Cantidad or 'N/A' }}</p>
                             </div>
-                            <div>
-                                <label class="block text-sm font-semibold text-gray-700 mb-2">Descripción Corta</label>
-                                <p class="text-base text-gray-900">{{ resguardo.Descripcion_Corta_Del_Bien or 'N/A' }}</p>
+                            <div class="info-item">
+                                <label>Marca</label>
+                                <p>{{ resguardo.Marca or 'N/A' }}</p>
                             </div>
-                            <div>
-                                <label class="block text-sm font-semibold text-gray-700 mb-2">Marca</label>
-                                <p class="text-base text-gray-900">{{ resguardo.Marca or 'N/A' }}</p>
+                            <div class="info-item">
+                                <label>Modelo</label>
+                                <p>{{ resguardo.Modelo or 'N/A' }}</p>
                             </div>
-                            <div>
-                                <label class="block text-sm font-semibold text-gray-700 mb-2">Modelo</label>
-                                <p class="text-base text-gray-900">{{ resguardo.Modelo or 'N/A' }}</p>
+                            <div class="info-item">
+                                <label>Número de Serie</label>
+                                <p>{{ resguardo.Numero_De_Serie or 'N/A' }}</p>
                             </div>
-                            <div>
-                                <label class="block text-sm font-semibold text-gray-700 mb-2">Número de Serie</label>
-                                <p class="text-base text-gray-900">{{ resguardo.Numero_De_Serie or 'N/A' }}</p>
+                            <div class="info-item">
+                                <label>Estado del Bien</label>
+                                <p>{{ resguardo.Estado_Del_Bien or 'N/A' }}</p>
                             </div>
-                            <div>
-                                <label class="block text-sm font-semibold text-gray-700 mb-2">Estado del Bien</label>
-                                <p class="text-base text-gray-900">{{ resguardo.Estado_Del_Bien or 'N/A' }}</p>
+                            <div class="info-item">
+                                <label>Tipo de Alta</label>
+                                <p>{{ resguardo.Tipo_De_Alta or 'N/A' }}</p>
                             </div>
-                            <div>
-                                <label class="block text-sm font-semibold text-gray-700 mb-2">Tipo de Alta</label>
-                                <p class="text-base text-gray-900">{{ resguardo.Tipo_De_Alta or 'N/A' }}</p>
+                            <div class="info-item full-width">
+                                <label>Descripción Corta</label>
+                                <p>{{ resguardo.Descripcion_Corta_Del_Bien or 'N/A' }}</p>
                             </div>
-                            <div class="md:col-span-2">
-                                <label class="block text-sm font-semibold text-gray-700 mb-2">Descripción Completa</label>
-                                <p class="text-base text-gray-900 bg-beige-light/30 p-4 rounded-xl border border-beige-light">{{ resguardo.Descripcion_Del_Bien or 'N/A' }}</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Datos Financieros del Bien -->
-                <div class="bg-white rounded-2xl shadow-lg border border-beige-light overflow-hidden">
-                    <div class="flex items-center bg-gradient-to-r from-burgundy/10 to-burgundy/5 p-4 border-b border-beige-light">
-                        <div class="w-8 h-8 bg-burgundy rounded-full flex items-center justify-center mr-3">
-                            <i class="fas fa-dollar-sign text-white text-sm"></i>
-                        </div>
-                        <h2 class="text-xl font-bold text-burgundy">Datos Financieros del Bien</h2>
-                    </div>
-                    <div class="p-6">
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div>
-                                <label class="block text-sm font-semibold text-gray-700 mb-2">No. de Factura</label>
-                                <p class="text-base text-gray-900">{{ resguardo.No_Factura or 'N/A' }}</p>
-                            </div>
-                            <div>
-                                <label class="block text-sm font-semibold text-gray-700 mb-2">Fecha de Factura</label>
-                                <p class="text-base text-gray-900">{{ resguardo.Fecha_Factura or 'N/A' }}</p>
-                            </div>
-                            <div>
-                                <label class="block text-sm font-semibold text-gray-700 mb-2">Costo Inicial</label>
-                                <p class="text-base text-gray-900">${{ "%.2f"|format(resguardo.Costo_Inicial|float) if resguardo.Costo_Inicial is not none else 'N/A' }}</p>
-                            </div>
-                            <div>
-                                <label class="block text-sm font-semibold text-gray-700 mb-2">Depreciación Acumulada</label>
-                                <p class="text-base text-gray-900">${{ "%.2f"|format(resguardo.Depreciacion_Acumulada|float) if resguardo.Depreciacion_Acumulada is not none else 'N/A' }}</p>
-                            </div>
-                            <div>
-                                <label class="block text-sm font-semibold text-gray-700 mb-2">Costo Final</label>
-                                <p class="text-base text-gray-900">${{ "%.2f"|format(resguardo.Costo_Final|float) if resguardo.Costo_Final is not none else 'N/A' }}</p>
-                            </div>
-                            <div>
-                                <label class="block text-sm font-semibold text-gray-700 mb-2">Valor en Libros</label>
-                                <p class="text-base text-gray-900">${{ "%.2f"|format(resguardo.Valor_En_Libros|float) if resguardo.Valor_En_Libros is not none else 'N/A' }}</p>
-                            </div>
-                            <div>
-                                <label class="block text-sm font-semibold text-gray-700 mb-2">Póliza</label>
-                                <p class="text-base text-gray-900">{{ resguardo.Poliza or 'N/A' }}</p>
-                            </div>
-                            <div>
-                                <label class="block text-sm font-semibold text-gray-700 mb-2">Fecha de Póliza</label>
-                                <p class="text-base text-gray-900">{{ resguardo.Fecha_Poliza or 'N/A' }}</p>
+                            <div class="info-item full-width">
+                                <label>Descripción Completa</label>
+                                <div class="text-box">
+                                    {{ resguardo.Descripcion_Del_Bien or 'N/A' }}
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Información Contable del Bien -->
-                <div class="bg-white rounded-2xl shadow-lg border border-beige-light overflow-hidden">
-                    <div class="flex items-center bg-gradient-to-r from-burgundy/10 to-burgundy/5 p-4 border-b border-beige-light">
-                        <div class="w-8 h-8 bg-burgundy rounded-full flex items-center justify-center mr-3">
-                            <i class="fas fa-calculator text-white text-sm"></i>
-                        </div>
-                        <h2 class="text-xl font-bold text-burgundy">Información Contable del Bien</h2>
+                <div class="card">
+                    <div class="card-header">
+                        <div class="icon-box"><i class="fas fa-dollar-sign"></i></div>
+                        <h2>Datos Financieros</h2>
                     </div>
-                    <div class="p-6">
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div>
-                                <label class="block text-sm font-semibold text-gray-700 mb-2">No. de Cuenta</label>
-                                <p class="text-base text-gray-900">{{ resguardo.No_Cuenta or 'N/A' }}</p>
+                    <div class="card-body">
+                        <div class="info-grid">
+                            <div class="info-item">
+                                <label>No. de Factura</label>
+                                <p>{{ resguardo.No_Factura or 'N/A' }}</p>
                             </div>
-                            <div>
-                                <label class="block text-sm font-semibold text-gray-700 mb-2">Subcuenta Armonizadora</label>
-                                <p class="text-base text-gray-900">{{ resguardo.Sub_Cuenta_Armonizadora or 'N/A' }}</p>
+                            <div class="info-item">
+                                <label>Fecha de Factura</label>
+                                <p>{{ resguardo.Fecha_Factura or 'N/A' }}</p>
                             </div>
-                            <div>
-                                <label class="block text-sm font-semibold text-gray-700 mb-2">Proveedor</label>
-                                <p class="text-base text-gray-900">{{ resguardo.Proveedor or 'N/A' }}</p>
+                            <div class="info-item">
+                                <label>Costo Inicial</label>
+                                <p class="money">${{ "%.2f"|format(resguardo.Costo_Inicial|float) if resguardo.Costo_Inicial is not none else 'N/A' }}</p>
                             </div>
-                            <div>
-                                <label class="block text-sm font-semibold text-gray-700 mb-2">Rubro</label>
-                                <p class="text-base text-gray-900">{{ resguardo.Rubro or 'N/A' }}</p>
+                            <div class="info-item">
+                                <label>Depreciación Acum.</label>
+                                <p class="money">${{ "%.2f"|format(resguardo.Depreciacion_Acumulada|float) if resguardo.Depreciacion_Acumulada is not none else 'N/A' }}</p>
                             </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Columna derecha: Información del Resguardo y Adicional -->
-            <div class="space-y-6">
-                <!-- Información del Resguardo -->
-                <div class="bg-white rounded-2xl shadow-lg border border-beige-light overflow-hidden">
-                    <div class="flex items-center bg-gradient-to-r from-burgundy/10 to-burgundy/5 p-4 border-b border-beige-light">
-                        <div class="w-8 h-8 bg-burgundy rounded-full flex items-center justify-center mr-3">
-                            <i class="fas fa-user-shield text-white text-sm"></i>
-                        </div>
-                        <h2 class="text-xl font-bold text-burgundy">Información del Resguardo</h2>
-                    </div>
-                    <div class="p-6">
-                        <div class="space-y-4">
-                            <div>
-                                <label class="block text-sm font-semibold text-gray-700 mb-2">Área</label>
-                                <p class="text-base font-bold text-burgundy">{{ resguardo.Area_Nombre or 'N/A' }}</p>
+                            <div class="info-item">
+                                <label>Costo Final</label>
+                                <p class="money">${{ "%.2f"|format(resguardo.Costo_Final|float) if resguardo.Costo_Final is not none else 'N/A' }}</p>
                             </div>
-                            <div>
-                                <label class="block text-sm font-semibold text-gray-700 mb-2">Ubicación Física</label>
-                                <p class="text-base text-gray-900">{{ resguardo.Ubicacion or 'N/A' }}</p>
+                            <div class="info-item">
+                                <label>Valor en Libros</label>
+                                <p class="money highlight">${{ "%.2f"|format(resguardo.Valor_En_Libros|float) if resguardo.Valor_En_Libros is not none else 'N/A' }}</p>
                             </div>
-                            <div>
-                                <label class="block text-sm font-semibold text-gray-700 mb-2">Fecha de Resguardo</label>
-                                <p class="text-base text-gray-900">{{ resguardo.Fecha_Resguardo or 'N/A' }}</p>
+                            <div class="info-item">
+                                <label>Póliza</label>
+                                <p>{{ resguardo.Poliza or 'N/A' }}</p>
                             </div>
-                            <div>
-                                <label class="block text-sm font-semibold text-gray-700 mb-2">Tipo de Resguardo</label>
-                                <p class="text-base text-gray-900">
-                                    {% if resguardo.Tipo_De_Resguardo == 1 %}
-                                        Sujeto de Control
-                                    {% else %}
-                                        Resguardo Normal
-                                    {% endif %}
-                                </p>
+                            <div class="info-item">
+                                <label>Fecha de Póliza</label>
+                                <p>{{ resguardo.Fecha_Poliza or 'N/A' }}</p>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Información del Resguardante -->
-                <div class="bg-white rounded-2xl shadow-lg border border-beige-light overflow-hidden">
-                    <div class="flex items-center bg-gradient-to-r from-burgundy/10 to-burgundy/5 p-4 border-b border-beige-light">
-                        <div class="w-8 h-8 bg-burgundy rounded-full flex items-center justify-center mr-3">
-                            <i class="fas fa-user text-white text-sm"></i>
-                        </div>
-                        <h2 class="text-xl font-bold text-burgundy">Información del Resguardante</h2>
+                <div class="card">
+                    <div class="card-header">
+                        <div class="icon-box"><i class="fas fa-calculator"></i></div>
+                        <h2>Información Contable</h2>
                     </div>
-                    <div class="p-6">
-                        <div class="space-y-4">
-                            <div>
-                                <label class="block text-sm font-semibold text-gray-700 mb-2">Nombre del Resguardante</label>
-                                <p class="text-base font-bold text-burgundy">{{ resguardo.Nombre_Del_Resguardante or 'N/A' }}</p>
+                    <div class="card-body">
+                        <div class="info-grid">
+                            <div class="info-item">
+                                <label>No. de Cuenta</label>
+                                <p>{{ resguardo.No_Cuenta or 'N/A' }}</p>
                             </div>
-                            <div>
-                                <label class="block text-sm font-semibold text-gray-700 mb-2">Puesto</label>
-                                <p class="text-base text-gray-900">{{ resguardo.Puesto_Trabajador or 'N/A' }}</p>
+                            <div class="info-item">
+                                <label>Subcuenta Arm.</label>
+                                <p>{{ resguardo.Sub_Cuenta_Armonizadora or 'N/A' }}</p>
                             </div>
-                            <div>
-                                <label class="block text-sm font-semibold text-gray-700 mb-2">RFC</label>
-                                <p class="text-base text-gray-900">{{ resguardo.RFC_Trabajador or 'N/A' }}</p>
+                            <div class="info-item">
+                                <label>Rubro</label>
+                                <p>{{ resguardo.Rubro or 'N/A' }}</p>
                             </div>
-                            <div>
-                                <label class="block text-sm font-semibold text-gray-700 mb-2">No. de Trabajador</label>
-                                <p class="text-base text-gray-900">{{ resguardo.No_Trabajador or 'N/A' }}</p>
-                            </div>
-                            <div>
-                                <label class="block text-sm font-semibold text-gray-700 mb-2">No. de Nómina</label>
-                                <p class="text-base text-gray-900">{{ resguardo.No_Nomina_Trabajador or 'N/A' }}</p>
-                            </div>
-                            <div>
-                                <label class="block text-sm font-semibold text-gray-700 mb-2">Director/Jefe de Área</label>
-                                <p class="text-base text-gray-900">{{ resguardo.Nombre_Director_Jefe_De_Area or 'N/A' }}</p>
+                            <div class="info-item">
+                                <label>Proveedor</label>
+                                <p>{{ resguardo.Proveedor or 'N/A' }}</p>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Información Adicional del Bien -->
-                <div class="bg-white rounded-2xl shadow-lg border border-beige-light overflow-hidden">
-                    <div class="flex items-center bg-gradient-to-r from-burgundy/10 to-burgundy/5 p-4 border-b border-beige-light">
-                        <div class="w-8 h-8 bg-burgundy rounded-full flex items-center justify-center mr-3">
-                            <i class="fas fa-file-alt text-white text-sm"></i>
-                        </div>
-                        <h2 class="text-xl font-bold text-burgundy">Información Adicional del Bien</h2>
+            </div> <div class="sidebar-column">
+                
+                <div class="card">
+                    <div class="card-header">
+                        <div class="icon-box"><i class="fas fa-cogs"></i></div>
+                        <h2>Acciones</h2>
                     </div>
-                    <div class="p-6">
-                        <div class="space-y-4">
-                            <div>
-                                <label class="block text-sm font-semibold text-gray-700 mb-2">Clasificación Legal</label>
-                                <p class="text-base text-gray-900">{{ resguardo.Clasificacion_Legal or 'N/A' }}</p>
-                            </div>
-                            <div>
-                                <label class="block text-sm font-semibold text-gray-700 mb-2">Área Presupuestal</label>
-                                <p class="text-base text-gray-900">{{ resguardo.Area_Presupuestal or 'N/A' }}</p>
-                            </div>
-                            <div>
-                                <label class="block text-sm font-semibold text-gray-700 mb-2">Fecha de Adquisición/Alta</label>
-                                <p class="text-base text-gray-900">{{ resguardo.Fecha_Adquisicion_Alta or 'N/A' }}</p>
-                            </div>
-                            <div>
-                                <label class="block text-sm font-semibold text-gray-700 mb-2">Documento de Propiedad</label>
-                                <p class="text-base text-gray-900">{{ resguardo.Documento_Propiedad or 'N/A' }}</p>
-                            </div>
-                            <div>
-                                <label class="block text-sm font-semibold text-gray-700 mb-2">Fecha del Documento</label>
-                                <p class="text-base text-gray-900">{{ resguardo.Fecha_Documento_Propiedad or 'N/A' }}</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Imágenes -->
-                <div class="bg-white rounded-2xl shadow-lg border border-beige-light overflow-hidden">
-                    <div class="flex items-center bg-gradient-to-r from-burgundy/10 to-burgundy/5 p-4 border-b border-beige-light">
-                        <div class="w-8 h-8 bg-burgundy rounded-full flex items-center justify-center mr-3">
-                            <i class="fas fa-images text-white text-sm"></i>
-                        </div>
-                        <h2 class="text-xl font-bold text-burgundy">Imágenes Adjuntas</h2>
-                    </div>
-                    <div class="p-6">
-                        {% if imagenes_bien or imagenes_resguardo %}
-                            <div class="grid grid-cols-2 gap-4">
-                                
-                                {% if imagenes_bien %}
-                                    <div class="col-span-2">
-                                        <p class="text-sm font-semibold text-gray-700 mb-2">Imágenes del Bien:</p>
-                                        <div class="grid grid-cols-2 gap-2">
-                                            
-                                            {% for img_id in imagenes_bien %}
-                                                <a href="{{ url_for('serve_drive_image', file_id=img_id) }}" target="_blank" class="group">
-                                                    <img src="{{ url_for('serve_drive_image', file_id=img_id) }}" 
-                                                        alt="Imagen del bien" 
-                                                        loading="lazy"
-                                                        class="h-full w-full object-cover ...">
-                                                </a>
-                                            {% endfor %}
-
-                                        </div>
-                                    </div>
-                                {% endif %}
-                                
-                                {% if imagenes_resguardo %}
-                                    <div class="col-span-2">
-                                        <p class="text-sm font-semibold text-gray-700 mb-2 mt-4">Imágenes del Resguardo:</p>
-                                        <div class="grid grid-cols-2 gap-2">
-
-                                            {% for img_id in imagenes_resguardo %}
-                                                <a href="{{ url_for('serve_drive_image', file_id=img_id) }}" target="_blank" class="group">
-                                                    <div class="aspect-square overflow-hidden rounded-xl border-2 border-beige-light bg-beige-light/30">
-                                                        <img src="{{ url_for('serve_drive_image', file_id=img_id) }}" 
-                                                            alt="Imagen del resguardo" 
-                                                            loading="lazy"
-                                                            class="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105">
-                                                    </div>
-                                                </a>
-                                            {% endfor %}
-
-                                        </div>
-                                    </div>
-                                {% endif %}
-
-                            </div>
+                    <div class="card-body actions-stack">
+                        <a href="{{ url_for('resguardos.imprimir_resguardo', id_resguardo=resguardo.id_resguardo) }}" 
+                           target="_blank" class="btn btn-burgundy btn-block">
+                            <i class="fas fa-print"></i> Imprimir Resguardo
+                        </a>
+                        
+                        {% if resguardo.Activo %}
+                            <a href="{{ url_for('traspaso.traspasar_resguardo', id_resguardo_anterior=resguardo.id_resguardo) }}" 
+                               class="btn btn-secondary btn-block">
+                                <i class="fas fa-exchange-alt"></i> Traspasar
+                            </a>
                         {% else %}
-                            <div class="flex flex-col items-center justify-center bg-beige-light/30 rounded-xl text-gray-500 h-32 p-4">
-                                <i class="fas fa-image text-3xl mb-2 opacity-50"></i>
-                                <p class="text-sm">No hay imágenes disponibles</p>
+                            <div class="btn btn-disabled btn-block">
+                                <i class="fas fa-ban"></i> Inactivo
                             </div>
                         {% endif %}
                     </div>
                 </div>
 
-                <!-- Acciones -->
-                <div class="bg-white rounded-2xl shadow-lg border border-beige-light overflow-hidden">
-                    <div class="flex items-center bg-gradient-to-r from-burgundy/10 to-burgundy/5 p-4 border-b border-beige-light">
-                        <div class="w-8 h-8 bg-burgundy rounded-full flex items-center justify-center mr-3">
-                            <i class="fas fa-cogs text-white text-sm"></i>
-                        </div>
-                        <h2 class="text-xl font-bold text-burgundy">Acciones</h2>
+                <div class="card">
+                    <div class="card-header">
+                        <div class="icon-box"><i class="fas fa-user-shield"></i></div>
+                        <h2>Resguardo</h2>
                     </div>
-                    <div class="p-6">
-                        <div class="space-y-3">
-                            <a href="{{ url_for('resguardos.imprimir_resguardo', id_resguardo=resguardo.id_resguardo) }}" 
-                               target="_blank" 
-                               class="w-full flex items-center justify-center px-4 py-3 bg-burgundy hover:bg-burgundy-dark text-white rounded-xl font-semibold transition-colors duration-200">
-                                <i class="fas fa-print mr-2"></i> Imprimir Resguardo
-                            </a>
-                            
-                            {% if resguardo.Activo %}
-                                <a href="{{ url_for('traspaso.traspasar_resguardo', id_resguardo_anterior=resguardo.id_resguardo) }}" 
-                                   class="w-full flex items-center justify-center px-4 py-3 bg-beige hover:bg-beige-light text-burgundy rounded-xl font-semibold transition-colors duration-200">
-                                    <i class="fas fa-exchange-alt mr-2"></i> Traspasar Resguardo
-                                </a>
-                            {% else %}
-                                <div class="w-full flex items-center justify-center px-4 py-3 bg-gray-300 text-gray-500 rounded-xl font-semibold cursor-not-allowed">
-                                    <i class="fas fa-ban mr-2"></i> Resguardo Inactivo
-                                </div>
-                                <p class="text-xs text-center text-gray-500">No se puede traspasar un resguardo inactivo</p>
-                            {% endif %}
+                    <div class="card-body">
+                        <div class="info-stack">
+                            <div class="info-item">
+                                <label>Área</label>
+                                <p class="highlight-burgundy">{{ resguardo.Area_Nombre or 'N/A' }}</p>
+                            </div>
+                            <div class="info-item">
+                                <label>Ubicación Física</label>
+                                <p>{{ resguardo.Ubicacion or 'N/A' }}</p>
+                            </div>
+                            <div class="info-item">
+                                <label>Fecha</label>
+                                <p>{{ resguardo.Fecha_Resguardo or 'N/A' }}</p>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
-        </div>
-    </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <div class="icon-box"><i class="fas fa-user"></i></div>
+                        <h2>Resguardante</h2>
+                    </div>
+                    <div class="card-body">
+                        <div class="info-stack">
+                            <div class="info-item">
+                                <label>Nombre</label>
+                                <p class="highlight-burgundy">{{ resguardo.Nombre_Del_Resguardante or 'N/A' }}</p>
+                            </div>
+                            <div class="info-item">
+                                <label>Puesto</label>
+                                <p>{{ resguardo.Puesto_Trabajador or 'N/A' }}</p>
+                            </div>
+                            <div class="info-item">
+                                <label>RFC</label>
+                                <p>{{ resguardo.RFC_Trabajador or 'N/A' }}</p>
+                            </div>
+                            <div class="info-item">
+                                <label>No. Empleado</label>
+                                <p>{{ resguardo.No_Trabajador or 'N/A' }}</p>
+                            </div>
+                            <div class="info-item">
+                                <label>Director/Jefe</label>
+                                <p>{{ resguardo.Nombre_Director_Jefe_De_Area or 'N/A' }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <div class="icon-box"><i class="fas fa-file-alt"></i></div>
+                        <h2>Adicional</h2>
+                    </div>
+                    <div class="card-body">
+                        <div class="info-stack">
+                            <div class="info-item">
+                                <label>Clasificación</label>
+                                <p>{{ resguardo.Clasificacion_Legal or 'N/A' }}</p>
+                            </div>
+                            <div class="info-item">
+                                <label>Área Presupuestal</label>
+                                <p>{{ resguardo.Area_Presupuestal or 'N/A' }}</p>
+                            </div>
+                            <div class="info-item">
+                                <label>Doc. Propiedad</label>
+                                <p>{{ resguardo.Documento_Propiedad or 'N/A' }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <div class="icon-box"><i class="fas fa-images"></i></div>
+                        <h2>Imágenes</h2>
+                    </div>
+                    <div class="card-body">
+                        {% if imagenes_bien or imagenes_resguardo %}
+                            <div class="gallery-section">
+                                {% if imagenes_bien %}
+                                    <label class="gallery-label">Del Bien</label>
+                                    <div class="gallery-grid">
+                                        {% for img_path in imagenes_bien %}
+                                            <a href="{{ url_for('serve_uploaded_file', filename=img_path) }}" target="_blank" class="gallery-item">
+                                                <img src="{{ url_for('serve_uploaded_file', filename=img_path) }}" loading="lazy">
+                                            </a>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                                
+                                {% if imagenes_resguardo %}
+                                    <label class="gallery-label mt-3">Del Resguardo</label>
+                                    <div class="gallery-grid">
+                                        {% for img_path in imagenes_resguardo %}
+                                            <a href="{{ url_for('serve_uploaded_file', filename=img_path) }}" target="_blank" class="gallery-item">
+                                                <img src="{{ url_for('serve_uploaded_file', filename=img_path) }}" loading="lazy">
+                                            </a>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        {% else %}
+                            <div class="empty-images">
+                                <i class="fas fa-image"></i>
+                                <p>Sin imágenes</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+            </div> </div> </div>
 </div>
 {% endblock %}
 
 {% block styles %}
 <style>
-    .bg-burgundy { background-color: #6A2E4D; }
-    .bg-burgundy-dark { background-color: #551E3A; }
-    .text-burgundy { color: #6A2E4D; }
-    .border-burgundy { border-color: #6A2E4D; }
-    .focus\:ring-burgundy\/50:focus { --tw-ring-color: rgb(106 46 77 / 0.5); }
-    .focus\:border-burgundy:focus { border-color: #6A2E4D; }
-    
-    .bg-beige { background-color: #BC9B6A; }
-    .bg-beige-light { background-color: #D7C3A0; }
-    .text-beige-light { color: #D7C3A0; }
-    .border-beige { border-color: #BC9B6A; }
-    .border-beige-light { border-color: #D7C3A0; }
-    
-    .from-burgundy { --tw-gradient-from: #6A2E4D; --tw-gradient-to: rgb(106 46 77 / 0); --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to); }
-    .to-burgundy-dark { --tw-gradient-to: #551E3A; }
+    /* VARIABLES */
+    :root {
+        --col-burgundy: #6A2E4D;
+        --col-burgundy-dark: #551E3A;
+        --col-beige: #BC9B6A;
+        --col-beige-light: #fdfbf7;
+        --radius: 12px;
+        --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        --text-dark: #1f2937;
+        --text-gray: #6b7280;
+    }
 
-    /* Scroll personalizado para el historial de resguardos */
-    .overflow-y-auto::-webkit-scrollbar {
-        width: 6px;
+    .page-wrapper { min-height: 100vh; background: #f9fafb; padding: 2rem 1rem; }
+    .container-limit { max-width: 1280px; margin: 0 auto; }
+
+    /* HEADER */
+    .header-card {
+        background: linear-gradient(to right, var(--col-burgundy), var(--col-burgundy-dark));
+        border-radius: var(--radius); padding: 1.5rem 2rem; color: white;
+        display: flex; justify-content: space-between; align-items: center;
+        margin-bottom: 2rem; box-shadow: var(--shadow); flex-wrap: wrap; gap: 1rem;
     }
+    .header-content { display: flex; flex-direction: column; gap: 0.5rem; }
+    .title-row { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; }
+    .header-content h1 { margin: 0; font-size: 1.5rem; }
     
-    .overflow-y-auto::-webkit-scrollbar-track {
-        background: #f1f1f1;
-        border-radius: 10px;
+    /* Badges del Header */
+    .badge-lg { background: rgba(255,255,255,0.2); padding: 0.2rem 0.8rem; border-radius: 20px; font-size: 0.9rem; font-family: monospace; }
+    .status-row { display: flex; gap: 0.5rem; align-items: center; }
+    .status-indicator { padding: 0.2rem 0.6rem; border-radius: 20px; font-size: 0.8rem; font-weight: 600; display: flex; align-items: center; gap: 0.3rem; }
+    .status-indicator i { font-size: 0.5rem; }
+    .status-active { background: #dcfce7; color: #166534; }
+    .status-inactive { background: #fee2e2; color: #991b1b; }
+    .type-indicator { background: var(--col-beige); color: var(--col-burgundy); padding: 0.2rem 0.6rem; border-radius: 20px; font-size: 0.8rem; font-weight: 600; }
+
+    /* LAYOUT GRID (2 Columnas) */
+    .details-layout {
+        display: grid;
+        grid-template-columns: 2fr 1fr; /* Izquierda ancha, Derecha estrecha */
+        gap: 1.5rem;
     }
-    
-    .overflow-y-auto::-webkit-scrollbar-thumb {
-        background: #c1c1c1;
-        border-radius: 10px;
+
+    /* TARJETAS */
+    .card { background: white; border-radius: var(--radius); box-shadow: var(--shadow); border: 1px solid #e5e7eb; overflow: hidden; margin-bottom: 1.5rem; }
+    .card-header {
+        padding: 1rem 1.5rem; border-bottom: 1px solid #f3f4f6; background: rgba(106, 46, 77, 0.03);
+        display: flex; align-items: center; gap: 0.8rem;
     }
+    .icon-box { width: 32px; height: 32px; background: var(--col-burgundy); border-radius: 50%; color: white; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; }
+    .card-header h2 { margin: 0; font-size: 1.1rem; color: var(--col-burgundy); }
+    .card-body { padding: 1.5rem; }
+
+    /* ITEMS DE INFORMACIÓN */
+    .info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; }
+    .info-stack { display: flex; flex-direction: column; gap: 1rem; }
     
-    .overflow-y-auto::-webkit-scrollbar-thumb:hover {
-        background: #a8a8a8;
+    .info-item { display: flex; flex-direction: column; gap: 0.2rem; }
+    .info-item label { font-size: 0.8rem; font-weight: 600; color: var(--text-gray); text-transform: uppercase; letter-spacing: 0.03em; }
+    .info-item p { margin: 0; font-size: 1rem; color: var(--text-dark); word-break: break-word; }
+    
+    .info-item.full-width { grid-column: 1 / -1; }
+    
+    .highlight { font-weight: 700; color: var(--col-burgundy); }
+    .highlight-burgundy { font-weight: 700; color: var(--col-burgundy); font-size: 1.05rem; }
+    .money { font-family: monospace; font-size: 1.05rem; }
+    
+    .text-box { background: var(--col-beige-light); padding: 1rem; border-radius: 8px; border: 1px solid #e5e7eb; font-size: 0.95rem; }
+
+    /* IMÁGENES */
+    .gallery-label { font-size: 0.8rem; font-weight: 600; color: var(--text-gray); display: block; margin-bottom: 0.5rem; }
+    .mt-3 { margin-top: 1rem; }
+    .gallery-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.5rem; }
+    .gallery-item { aspect-ratio: 1; overflow: hidden; border-radius: 8px; border: 1px solid #ddd; display: block; }
+    .gallery-item img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s; }
+    .gallery-item:hover img { transform: scale(1.1); }
+    .empty-images { text-align: center; color: #ccc; padding: 2rem 0; }
+    .empty-images i { font-size: 2rem; margin-bottom: 0.5rem; }
+
+    /* BOTONES */
+    .header-actions { display: flex; gap: 0.5rem; }
+    .actions-stack { display: flex; flex-direction: column; gap: 0.8rem; }
+    
+    .btn { padding: 0.6rem 1.2rem; border-radius: 8px; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; border: none; cursor: pointer; transition: all 0.2s; font-size: 0.95rem; }
+    .btn-block { width: 100%; }
+    
+    .btn-primary { background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.4); color: white; }
+    .btn-primary:hover { background: rgba(255,255,255,0.3); }
+    .btn-secondary { background: transparent; border: 1px solid rgba(255,255,255,0.4); color: white; }
+    .btn-secondary:hover { background: rgba(255,255,255,0.1); }
+
+    .btn-burgundy { background: var(--col-burgundy); color: white; }
+    .btn-burgundy:hover { background: var(--col-burgundy-dark); }
+    
+    /* Reutilizando btn-secondary para el sidebar pero con colores oscuros */
+    .sidebar-column .btn-secondary { color: var(--col-burgundy); border-color: var(--col-beige); }
+    .sidebar-column .btn-secondary:hover { background: rgba(188, 155, 106, 0.1); }
+    
+    .btn-disabled { background: #e5e7eb; color: #9ca3af; cursor: not-allowed; }
+
+    /* MÓVIL */
+    @media (max-width: 900px) {
+        .details-layout { grid-template-columns: 1fr; }
+        .header-card { flex-direction: column; text-align: center; }
+        .title-row { justify-content: center; }
+        .header-actions { width: 100%; justify-content: center; }
     }
 </style>
 {% endblock %}

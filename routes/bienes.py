@@ -22,9 +22,14 @@ bienes_bp = Blueprint('bienes', __name__)
 
 def allowed_file(filename):
     """Función para verificar si la extensión del archivo es permitida."""
+    # Se obtiene la extensión desde la configuración de la app
+    allowed_extensions = current_app.config.get('ALLOWED_EXTENSIONS')
+    if not allowed_extensions:
+        # Fallback por si no está en config
+        allowed_extensions = {'png', 'jpg', 'jpeg', 'gif', 'pdf'}
+        
     return '.' in filename and \
-           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
-
+           filename.rsplit('.', 1)[1].lower() in allowed_extensions
 
 @bienes_bp.route('/bienes')
 @login_required
@@ -119,7 +124,6 @@ def agregar_bien():
             cursor = conn.cursor(pymysql.cursors.DictCursor) 
             form_data = request.form
 
-            # --- CAMBIO: Se añade 'Activo' a la lista de columnas ---
             sql = """
                 INSERT INTO bienes (
                     No_Inventario, No_Factura, No_Cuenta, Proveedor, Descripcion_Del_Bien,
@@ -149,29 +153,42 @@ def agregar_bien():
                 form_data.get('Fecha_Documento_Propiedad') or None,
                 form_data.get('Valor_En_Libros'),
                 form_data.get('Fecha_Adquisicion_Alta') or None,
-                1  # Se añade el valor 1 (TRUE) para el campo Activo
+                1 
             )
             cursor.execute(sql, values)
             id_bien = cursor.lastrowid
 
-            # --- 📸 LÓGICA DE IMÁGENES (INTACTA) ---
-            # Esta parte del código no se modificó y sigue funcionando.
+            # --- 📸 LÓGICA DE IMÁGENES (ACTUALIZADA A LOCAL) ---
+            
+            # 1. Definir la carpeta base de subidas desde la config
+            base_upload_folder = current_app.config.get('UPLOAD_FOLDER')
+            if not base_upload_folder:
+                raise Exception("UPLOAD_FOLDER no está configurado en la app.")
+
+            # 2. Crear la subcarpeta específica para 'bienes'
+            bienes_upload_dir = os.path.join(base_upload_folder, 'bienes')
+            os.makedirs(bienes_upload_dir, exist_ok=True)
+
             for file in request.files.getlist('imagenes_bien'):
                 if file and file.filename and allowed_file(file.filename):
                     
-                    # 1. Llamamos al servicio para subir el archivo a Drive
-                    drive_file_id = drive_service.upload(
-                        file_storage=file,
-                        model_type='bien',
-                        target_folder_id=BIENES_FOLDER_ID # <-- Usas el ID de carpeta importado
-                    )
+                    # 3. Crear un nombre de archivo único
+                    filename = secure_filename(file.filename)
+                    unique_filename = f"{uuid.uuid4()}-{filename}"
                     
-                    if drive_file_id:
-                        # 2. Guardamos el ID de Drive en la DB
-                        cursor.execute("INSERT INTO imagenes_bien (id_bien, ruta_imagen) VALUES (%s, %s)", 
-                                       (id_bien, drive_file_id))
-                    else:
-                        flash(f"No se pudo subir la imagen {file.filename} a Google Drive.", "danger")    
+                    # 4. Crear la ruta de guardado absoluta
+                    save_path = os.path.join(bienes_upload_dir, unique_filename)
+                    
+                    # 5. Guardar el archivo en el disco
+                    file.save(save_path)
+                    
+                    # 6. Crear la ruta relativa para la base de datos
+                    # (ej: 'bienes/mi-archivo-uuid.jpg')
+                    db_path = os.path.join('bienes', unique_filename)
+                    
+                    # 7. Guardar la ruta relativa en la DB
+                    cursor.execute("INSERT INTO imagenes_bien (id_bien, ruta_imagen) VALUES (%s, %s)", 
+                                   (id_bien, db_path))
 
             conn.commit()
             log_activity(
@@ -193,27 +210,34 @@ def agregar_bien():
             
     return render_template('bienes/bien_form.html', is_edit=False, form_data={})
 
-
 @bienes_bp.route('/bienes/editar/<int:bien_id>', methods=['GET', 'POST'])
 @login_required
 @permission_required('bienes.editar_bien')
 def editar_bien(bien_id):
-    # --- 1. INICIALIZAR AMBOS A NONE ---
     conn = None
     cursor = None  
     
     try:
-        # --- 2. ABRIR CONEXIÓN Y CURSOR ---
         conn = get_db_connection()
         cursor = conn.cursor(pymysql.cursors.DictCursor)
+        
+        # --- PREPARACIÓN DE CARPETAS LOCALES ---
+        # 1. Obtener la carpeta base de subidas desde la config
+        base_upload_folder = current_app.config.get('UPLOAD_FOLDER')
+        if not base_upload_folder:
+            raise Exception("UPLOAD_FOLDER no está configurado en la app.")
+        
+        # 2. Definir y crear la subcarpeta 'bienes' si no existe
+        bienes_upload_dir = os.path.join(base_upload_folder, 'bienes')
+        os.makedirs(bienes_upload_dir, exist_ok=True)
 
         # ==================================
-        # LÓGICA POST (CUANDO SE ENVÍA EL FORMULARIO)
+        # LÓGICA POST
         # ==================================
         if request.method == 'POST':
             form_data = request.form
             
-            # --- Lógica de UPDATE del bien ---
+            # --- UPDATE DATOS DEL BIEN (Sin cambios) ---
             sql = """
                 UPDATE bienes SET 
                     No_Inventario=%s, No_Factura=%s, No_Cuenta=%s, Proveedor=%s, Descripcion_Del_Bien=%s, 
@@ -243,38 +267,50 @@ def editar_bien(bien_id):
             )
             cursor.execute(sql, values)
             
-            # --- Lógica para ELIMINAR imágenes de Drive ---
+            # --- Lógica para ELIMINAR imágenes (LOCAL) ---
             for img_id in request.form.getlist('eliminar_imagen_bien[]'):
                 cursor.execute("SELECT ruta_imagen FROM imagenes_bien WHERE id = %s AND id_bien = %s", (img_id, bien_id))
                 imagen = cursor.fetchone()
                 
                 if imagen and imagen['ruta_imagen']:
-                    drive_file_id = imagen['ruta_imagen']
-                    success = drive_service.delete(drive_file_id)
+                    # Construir la ruta absoluta del archivo a borrar
+                    # imagen['ruta_imagen'] trae algo como "bienes/foto.jpg"
+                    full_path_to_delete = os.path.join(base_upload_folder, imagen['ruta_imagen'])
                     
-                    if success:
+                    try:
+                        # 1. Borrar el archivo físico si existe
+                        if os.path.exists(full_path_to_delete):
+                            os.remove(full_path_to_delete)
+                        
+                        # 2. Borrar registro de la BD
                         cursor.execute("DELETE FROM imagenes_bien WHERE id = %s", (img_id,))
-                    else:
-                        flash(f"Error al borrar la imagen {drive_file_id} de Drive.", "warning")
+                    
+                    except Exception as e:
+                        flash(f"Error al borrar archivo físico: {e}", "warning")
                 else:
-                    flash(f"No se encontró el registro de imagen {img_id} para eliminar.", "warning")
+                    flash(f"No se encontró el registro de imagen {img_id}.", "warning")
 
-            # --- Lógica para AÑADIR nuevas imágenes a Drive ---
+            # --- Lógica para AÑADIR nuevas imágenes (LOCAL) ---
             for file in request.files.getlist('imagenes_bien'):
                 if file and file.filename and allowed_file(file.filename):
-                    drive_file_id = drive_service.upload(
-                        file_storage=file,
-                        model_type='bien',
-                        target_folder_id=BIENES_FOLDER_ID
-                    )
                     
-                    if drive_file_id:
-                        cursor.execute("INSERT INTO imagenes_bien (id_bien, ruta_imagen) VALUES (%s, %s)", 
-                                       (bien_id, drive_file_id))
-                    else:
-                        flash(f"No se pudo subir la imagen {file.filename} a Google Drive.", "danger")
+                    # 1. Generar nombre único
+                    filename = secure_filename(file.filename)
+                    unique_filename = f"{uuid.uuid4()}-{filename}"
+                    
+                    # 2. Definir ruta absoluta para guardar
+                    save_path = os.path.join(bienes_upload_dir, unique_filename)
+                    
+                    # 3. Guardar archivo
+                    file.save(save_path)
+                    
+                    # 4. Definir ruta relativa para la BD (ej: 'bienes/foto.jpg')
+                    db_path = os.path.join('bienes', unique_filename)
+                    
+                    # 5. Insertar en BD
+                    cursor.execute("INSERT INTO imagenes_bien (id_bien, ruta_imagen) VALUES (%s, %s)", 
+                                   (bien_id, db_path))
 
-            # --- Commit y Redirección ---
             conn.commit()
             log_activity(
                 action="Edición de Bien", 
@@ -286,17 +322,15 @@ def editar_bien(bien_id):
             return redirect(url_for('bienes.listar_bienes'))
 
         # ==================================
-        # LÓGICA GET (CUANDO SE CARGA LA PÁGINA)
+        # LÓGICA GET
         # ==================================
         
-        # Esta era tu línea 286, la que fallaba primero
         cursor.execute("SELECT * FROM bienes WHERE id = %s", (bien_id,))
         bien = cursor.fetchone()
         
         if not bien:
             abort(404)
         
-        # Cargar imágenes y resguardos
         cursor.execute("SELECT id, ruta_imagen FROM imagenes_bien WHERE id_bien = %s", (bien_id,))
         bien['imagenes'] = cursor.fetchall()
         
@@ -306,20 +340,17 @@ def editar_bien(bien_id):
         return render_template('bienes/bien_form.html', is_edit=True, bien=bien)
         
     except Exception as e:
-        # --- 3. MANEJO DE ERRORES (CON VERIFICACIÓN) ---
         if conn: 
-            conn.rollback() # Esta era tu línea 303
-            
+            conn.rollback() 
         flash(f'Error al procesar la solicitud: {e}', 'danger')
-        traceback.print_exc() # Imprime el error real en tu consola
+        traceback.print_exc() 
         return redirect(url_for('bienes.listar_bienes'))
     
     finally:
-        # --- 4. CIERRE SEGURO (EN ORDEN CORRECTO) ---
         if cursor:
             cursor.close()
         if conn: 
-            conn.close() # Esta era tu línea 313
+            conn.close()
 
 @bienes_bp.route('/bienes/eliminar/<int:bien_id>', methods=['POST'])
 @login_required

@@ -3,231 +3,304 @@
 {% block title %}Detalles del Traspaso: {{ traspaso.No_Inventario }}{% endblock %}
 
 {% block content %}
-<div class="min-h-screen bg-gradient-to-br from-gray-50 to-beige-light/20 py-8 px-4">
-    <div class="max-w-6xl mx-auto">
+<div class="page-wrapper">
+    <div class="container-limit">
         
-        <!-- ENCABEZADO MEJORADO -->
-        <div class="bg-white rounded-2xl shadow-xl border border-beige-light overflow-hidden mb-8">
-            <div class="bg-gradient-to-r from-[#6A2E4D] to-[#551E3A] p-6 text-white">
-                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                    <div>
-                        <h1 class="text-2xl md:text-3xl font-bold">
-                            Detalles del Traspaso
-                        </h1>
-                        <p class="text-[#D7C3A0] mt-2">
-                            Información completa del traspaso del bien <span class="font-mono font-semibold">{{ traspaso.No_Inventario }}</span>
-                        </p>
+        <div class="header-card">
+            <div class="header-text">
+                <h1>Detalles del Traspaso</h1>
+                <p>
+                    Información completa del traspaso del bien 
+                    <span class="badge badge-lg">{{ traspaso.No_Inventario }}</span>
+                </p>
+            </div>
+            <div class="header-actions">
+                <a href="{{ url_for('traspaso.ver_traspasos') }}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Volver al Historial
+                </a>
+                <div class="header-icon-box">
+                    <i class="fas fa-exchange-alt"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-header">
+                <div class="icon-box"><i class="fas fa-box"></i></div>
+                <h2>Información del Bien</h2>
+            </div>
+            <div class="card-body">
+                <div class="info-grid">
+                    <div class="info-item">
+                        <label>No. de Inventario</label>
+                        <p class="highlight">{{ traspaso.No_Inventario }}</p>
                     </div>
-                    <div class="flex items-center space-x-4">
-                        <a href="{{ url_for('traspaso.ver_traspasos') }}" 
-                           class="inline-flex items-center px-6 py-3 border-2 border-white text-base font-semibold rounded-xl text-white hover:bg-white hover:text-[#6A2E4D] transition-all duration-200 ease-in-out">
-                            <i class="fas fa-arrow-left mr-2"></i> Volver al Historial
-                        </a>
-                        <div class="w-10 h-10 bg-[#BC9B6A] rounded-full flex items-center justify-center">
-                            <i class="fas fa-exchange-alt text-[#6A2E4D] text-lg"></i>
+                    <div class="info-item">
+                        <label>Descripción</label>
+                        <p>{{ traspaso.Descripcion_Corta_Del_Bien }}</p>
+                    </div>
+                    <div class="info-item">
+                        <label>Fecha del Traspaso</label>
+                        <p>{{ traspaso.fecha_traspaso.strftime('%d/%m/%Y a las %H:%M') }}</p>
+                    </div>
+                    <div class="info-item">
+                        <label>Registrado por</label>
+                        <p>{{ traspaso.usuario_que_registro_el_bien or 'N/A' }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid-2 mb-4">
+            
+            <div class="status-card card-red">
+                <div class="status-header">
+                    <div class="status-icon"><i class="fas fa-user-slash"></i></div>
+                    <h3>Resguardo Anterior</h3>
+                </div>
+                <div class="card-body">
+                    {% if resguardo_anterior %}
+                    <div class="info-stack">
+                        <div class="info-item">
+                            <label>Resguardante</label>
+                            <p class="text-lg">{{ resguardo_anterior.Nombre_Del_Resguardante }}</p>
+                        </div>
+                        <div class="info-item">
+                            <label>Área</label>
+                            <p>{{ resguardo_anterior.nombre_area }}</p>
+                        </div>
+                        <div class="info-item">
+                            <label>No. Trabajador</label>
+                            <p>{{ resguardo_anterior.No_Trabajador or 'N/A' }}</p>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="empty-state-mini text-red">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <p>No se encontró información previa</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="status-card card-green">
+                <div class="status-header">
+                    <div class="status-icon"><i class="fas fa-user-plus"></i></div>
+                    <h3>Nuevo Resguardo</h3>
+                </div>
+                <div class="card-body">
+                    <div class="info-stack">
+                        <div class="info-item">
+                            <label>Resguardante</label>
+                            <p class="text-lg">{{ traspaso.resguardante_actual }}</p>
+                        </div>
+                        <div class="info-item">
+                            <label>Área</label>
+                            <p>{{ traspaso.area_actual }}</p>
+                        </div>
+                        <div class="info-item">
+                            <label>No. Trabajador</label>
+                            <p>{{ traspaso.trabajador_actual_no or 'N/A' }}</p>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div class="space-y-8">
-            <!-- INFORMACIÓN DEL BIEN -->
-            <div class="bg-white rounded-2xl shadow-lg border border-beige-light overflow-hidden">
-                <div class="p-6 md:p-8">
-                    <div class="flex items-center mb-6">
-                        <div class="w-8 h-8 bg-[#6A2E4D] rounded-full flex items-center justify-center mr-3">
-                            <i class="fas fa-box text-white text-sm"></i>
-                        </div>
-                        <h2 class="text-xl font-bold text-gray-800">Información del Bien</h2>
-                    </div>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div class="space-y-4">
-                            <div>
-                                <label class="block text-sm font-semibold text-gray-500 mb-1">No. de Inventario</label>
-                                <p class="font-mono text-lg font-bold text-[#6A2E4D]">{{ traspaso.No_Inventario }}</p>
-                            </div>
-                            <div>
-                                <label class="block text-sm font-semibold text-gray-500 mb-1">Descripción</label>
-                                <p class="text-gray-800">{{ traspaso.Descripcion_Corta_Del_Bien }}</p>
-                            </div>
-                        </div>
-                        <div class="space-y-4">
-                            <div>
-                                <label class="block text-sm font-semibold text-gray-500 mb-1">Fecha del Traspaso</label>
-                                <p class="text-gray-800">{{ traspaso.fecha_traspaso.strftime('%d/%m/%Y a las %H:%M') }}</p>
-                            </div>
-                            <div>
-                                <label class="block text-sm font-semibold text-gray-500 mb-1">Registrado por</label>
-                                <p class="text-gray-800">{{ traspaso.usuario_que_registro_el_bien or 'N/A' }}</p>
-                            </div>
-                        </div>
-                    </div>
+        <div class="card">
+            <div class="card-header header-between">
+                <div class="header-left">
+                    <div class="icon-box"><i class="fas fa-file-contract"></i></div>
+                    <h2>Oficios del Traspaso</h2>
                 </div>
+                <span class="badge badge-blue">{{ oficios|length }} oficio(s)</span>
             </div>
+            
+            <div class="card-body">
+                <div class="oficios-stack">
+                    {% for oficio in oficios %}
+                    <div class="status-card card-blue mb-0">
+                        <div class="oficio-header">
+                            <div class="oficio-title">
+                                <i class="fas fa-file-signature"></i>
+                                <h3>Oficio: {{ oficio.Oficio_clave or 'Sin clave' }}</h3>
+                            </div>
+                            <span class="oficio-date">
+                                <i class="fas fa-calendar-alt"></i>
+                                {{ oficio.Lugar_Fecha.strftime('%d de %B de %Y') if oficio.Lugar_Fecha else 'Fecha no especificada' }}
+                            </span>
+                        </div>
 
-            <!-- MOVIMIENTO DEL TRASPASO -->
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                <!-- RESGUARDO ANTERIOR -->
-                <div class="bg-white rounded-2xl shadow-lg border border-beige-light overflow-hidden">
-                    <div class="bg-red-50 p-6 border-b border-red-200">
-                        <div class="flex items-center">
-                            <div class="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center mr-3">
-                                <i class="fas fa-user-slash text-white text-sm"></i>
+                        <div class="info-grid mt-3">
+                            <div class="info-item">
+                                <label>Solicitante</label>
+                                <p>{{ oficio.Nombre_Solicitante or 'N/A' }}</p>
                             </div>
-                            <h3 class="text-xl font-bold text-red-800">Resguardo Anterior</h3>
-                        </div>
-                    </div>
-                    <div class="p-6">
-                        {% if resguardo_anterior %}
-                        <div class="space-y-4">
-                            <div>
-                                <label class="block text-sm font-semibold text-gray-500 mb-1">Resguardante</label>
-                                <p class="text-lg font-semibold text-red-700">{{ resguardo_anterior.Nombre_Del_Resguardante }}</p>
+                            <div class="info-item">
+                                <label>Área Solicitante</label>
+                                <p>{{ oficio.nombre_area_solicitante or 'N/A' }}</p>
                             </div>
-                            <div>
-                                <label class="block text-sm font-semibold text-gray-500 mb-1">Área</label>
-                                <p class="text-gray-800">{{ resguardo_anterior.nombre_area }}</p>
+                            <div class="info-item">
+                                <label>Jefe de Área</label>
+                                <p>{{ oficio.Jefe_Area_Solicitante or 'N/A' }}</p>
                             </div>
-                            <div>
-                                <label class="block text-sm font-semibold text-gray-500 mb-1">No. Trabajador</label>
-                                <p class="text-gray-800">{{ resguardo_anterior.No_Trabajador or 'N/A' }}</p>
+                            <div class="info-item">
+                                <label>Dependencia</label>
+                                <p>{{ oficio.Dependencia or 'N/A' }}</p>
+                            </div>
+                            <div class="info-item full-width">
+                                <label>Asunto</label>
+                                <p>{{ oficio.Asunto or 'N/A' }}</p>
                             </div>
                         </div>
-                        {% else %}
-                        <div class="text-center py-8">
-                            <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                                <i class="fas fa-exclamation-triangle text-red-500 text-xl"></i>
+
+                        {% set fotos = fotos_por_oficio.get(oficio.id) %}
+                        {% if fotos %}
+                        <div class="gallery-section mt-3">
+                            <label class="gallery-label">Imágenes Adjuntas ({{ fotos|length }})</label>
+                            <div class="gallery-grid-mini">
+                                {% for foto in fotos %}
+                                <a href="{{ url_for('serve_uploaded_file', filename=foto) }}" target="_blank" class="gallery-item">
+                                    <img src="{{ url_for('serve_uploaded_file', filename=foto) }}" loading="lazy">
+                                </a>
+                                {% endfor %}
                             </div>
-                            <p class="text-red-700 font-semibold">No se encontró información del resguardo anterior</p>
                         </div>
                         {% endif %}
                     </div>
-                </div>
-
-                <!-- NUEVO RESGUARDO -->
-                <div class="bg-white rounded-2xl shadow-lg border border-beige-light overflow-hidden">
-                    <div class="bg-green-50 p-6 border-b border-green-200">
-                        <div class="flex items-center">
-                            <div class="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center mr-3">
-                                <i class="fas fa-user-plus text-white text-sm"></i>
-                            </div>
-                            <h3 class="text-xl font-bold text-green-800">Nuevo Resguardo</h3>
-                        </div>
+                    {% else %}
+                    <div class="empty-state">
+                        <div class="icon-placeholder"><i class="fas fa-file-excel"></i></div>
+                        <p>No se registraron oficios para este traspaso</p>
                     </div>
-                    <div class="p-6">
-                        <div class="space-y-4">
-                            <div>
-                                <label class="block text-sm font-semibold text-gray-500 mb-1">Resguardante</label>
-                                <p class="text-lg font-semibold text-green-700">{{ traspaso.resguardante_actual }}</p>
-                            </div>
-                            <div>
-                                <label class="block text-sm font-semibold text-gray-500 mb-1">Área</label>
-                                <p class="text-gray-800">{{ traspaso.area_actual }}</p>
-                            </div>
-                            <div>
-                                <label class="block text-sm font-semibold text-gray-500 mb-1">No. Trabajador</label>
-                                <p class="text-gray-800">{{ traspaso.trabajador_actual_no or 'N/A' }}</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- OFICIOS DEL TRASPASO -->
-            <div class="bg-white rounded-2xl shadow-lg border border-beige-light overflow-hidden">
-                <div class="p-6 md:p-8">
-                    <div class="flex items-center justify-between mb-6">
-                        <div class="flex items-center">
-                            <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center mr-3">
-                                <i class="fas fa-file-contract text-white text-sm"></i>
-                            </div>
-                            <h2 class="text-xl font-bold text-gray-800">Oficios del Traspaso</h2>
-                        </div>
-                        <span class="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-semibold">
-                            {{ oficios|length }} oficio(s)
-                        </span>
-                    </div>
-
-                    <div class="space-y-6">
-                        {% for oficio in oficios %}
-                        <div class="bg-blue-50 rounded-xl border border-blue-200 p-6">
-                            <div class="flex flex-col lg:flex-row lg:justify-between lg:items-start gap-4 mb-4">
-                                <div>
-                                    <h3 class="text-lg font-bold text-blue-800 mb-2">
-                                        <i class="fas fa-file-signature mr-2"></i>
-                                        Oficio: {{ oficio.Oficio_clave or 'Sin clave' }}
-                                    </h3>
-                                    <p class="text-sm text-blue-600">
-                                        <i class="fas fa-calendar-alt mr-1"></i>
-                                        {{ oficio.Lugar_Fecha.strftime('%d de %B de %Y') if oficio.Lugar_Fecha else 'Fecha no especificada' }}
-                                    </p>
-                                </div>
-                            </div>
-
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div class="space-y-3">
-                                    <div>
-                                        <label class="block text-xs font-semibold text-gray-500 mb-1">Solicitante</label>
-                                        <p class="text-gray-800">{{ oficio.Nombre_Solicitante or 'N/A' }}</p>
-                                    </div>
-                                    <div>
-                                        <label class="block text-xs font-semibold text-gray-500 mb-1">Área Solicitante</label>
-                                        <p class="text-gray-800">{{ oficio.nombre_area_solicitante or 'N/A' }}</p>
-                                    </div>
-                                    <div>
-                                        <label class="block text-xs font-semibold text-gray-500 mb-1">Jefe de Área</label>
-                                        <p class="text-gray-800">{{ oficio.Jefe_Area_Solicitante or 'N/A' }}</p>
-                                    </div>
-                                </div>
-                                <div class="space-y-3">
-                                    <div>
-                                        <label class="block text-xs font-semibold text-gray-500 mb-1">Dependencia</label>
-                                        <p class="text-gray-800">{{ oficio.Dependencia or 'N/A' }}</p>
-                                    </div>
-                                    <div>
-                                        <label class="block text-xs font-semibold text-gray-500 mb-1">Asunto</label>
-                                        <p class="text-gray-800">{{ oficio.Asunto or 'N/A' }}</p>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {% set fotos = fotos_por_oficio.get(oficio.id) %}
-                            {% if fotos %}
-                            <div class="mt-6 pt-6 border-t border-blue-200">
-                                <h4 class="text-sm font-semibold text-gray-700 mb-4 flex items-center">
-                                    <i class="fas fa-images mr-2 text-blue-500"></i>
-                                    Imágenes Adjuntas ({{ fotos|length }})
-                                </h4>
-                                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-                                    {% for foto in fotos %}
-                                    <a href="{{ url_for('serve_drive_image', file_id=foto) }}" 
-                                       target="_blank" 
-                                       class="group block rounded-lg overflow-hidden border-2 border-transparent hover:border-blue-500 transition-all duration-200">
-                                        <div class="aspect-w-1 aspect-h-1 bg-gray-100">
-                                            <img src="{{ url_for('serve_drive_image', file_id=foto) }}" 
-                                                 alt="Imagen de oficio" 
-                                                 class="object-cover w-full h-24 group-hover:scale-105 transition-transform duration-200">
-                                        </div>
-                                    </a>
-                                    {% endfor %}
-                                </div>
-                            </div>
-                            {% endif %}
-                        </div>
-                        {% else %}
-                        <div class="text-center py-12 bg-gray-50 rounded-xl">
-                            <div class="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-4">
-                                <i class="fas fa-file-excel text-gray-500 text-xl"></i>
-                            </div>
-                            <p class="text-gray-500 font-semibold">No se registraron oficios para este traspaso</p>
-                            <p class="text-sm text-gray-400 mt-2">Los oficios de traspaso aparecerán aquí si fueron registrados</p>
-                        </div>
-                        {% endfor %}
-                    </div>
+                    {% endfor %}
                 </div>
             </div>
         </div>
+
     </div>
 </div>
+{% endblock %}
+
+{% block styles %}
+<style>
+    /* VARIABLES */
+    :root {
+        --col-burgundy: #6A2E4D;
+        --col-burgundy-dark: #551E3A;
+        --col-beige: #BC9B6A;
+        --col-beige-light: #fdfbf7;
+        --radius: 12px;
+        --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        
+        /* Colores Semánticos */
+        --bg-red: #fef2f2; --border-red: #f87171; --text-red: #991b1b; --icon-red: #ef4444;
+        --bg-green: #f0fdf4; --border-green: #4ade80; --text-green: #166534; --icon-green: #22c55e;
+        --bg-blue: #eff6ff; --border-blue: #60a5fa; --text-blue: #1e40af; --icon-blue: #3b82f6;
+        
+        --text-gray: #6b7280;
+        --text-dark: #1f2937;
+    }
+
+    /* Layout */
+    .page-wrapper { min-height: 100vh; background: #f9fafb; padding: 2rem 1rem; }
+    .container-limit { max-width: 1100px; margin: 0 auto; }
+    .mb-4 { margin-bottom: 2rem; }
+
+    /* Header */
+    .header-card {
+        background: linear-gradient(to right, var(--col-burgundy), var(--col-burgundy-dark));
+        border-radius: var(--radius); padding: 1.5rem 2rem; color: white;
+        display: flex; justify-content: space-between; align-items: center;
+        margin-bottom: 2rem; box-shadow: var(--shadow); flex-wrap: wrap; gap: 1rem;
+    }
+    .header-text h1 { margin: 0; font-size: 1.5rem; }
+    .header-text p { margin: 0.5rem 0 0; color: #e2e8f0; font-size: 0.9rem; }
+    
+    .header-actions { display: flex; align-items: center; gap: 1rem; }
+    .header-icon-box {
+        width: 48px; height: 48px; background: var(--col-beige); border-radius: 50%;
+        display: flex; align-items: center; justify-content: center; color: var(--col-burgundy); font-size: 1.2rem;
+    }
+
+    /* Botones y Badges */
+    .btn { padding: 0.6rem 1.2rem; border-radius: 8px; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem; transition: all 0.2s; font-size: 0.95rem; }
+    .btn-secondary { background: transparent; border: 1px solid rgba(255,255,255,0.4); color: white; }
+    .btn-secondary:hover { background: rgba(255,255,255,0.1); }
+    
+    .badge { padding: 0.2rem 0.6rem; border-radius: 20px; font-size: 0.85rem; font-weight: 600; display: inline-block; }
+    .badge-lg { background: rgba(188, 155, 106, 0.3); font-family: monospace; border: 1px solid rgba(188, 155, 106, 0.5); margin-left: 0.5rem; }
+    .badge-blue { background: var(--bg-blue); color: var(--text-blue); border: 1px solid var(--border-blue); }
+
+    /* Tarjetas Generales */
+    .card { background: white; border-radius: var(--radius); box-shadow: var(--shadow); border: 1px solid #e5e7eb; overflow: hidden; }
+    .card-header { padding: 1rem 1.5rem; border-bottom: 1px solid #f3f4f6; background: rgba(106, 46, 77, 0.03); display: flex; align-items: center; gap: 0.8rem; }
+    .header-between { justify-content: space-between; }
+    .header-left { display: flex; align-items: center; gap: 0.8rem; }
+    
+    .icon-box { width: 32px; height: 32px; background: var(--col-burgundy); border-radius: 50%; color: white; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; }
+    .card-header h2 { margin: 0; font-size: 1.1rem; color: var(--col-burgundy); }
+    .card-body { padding: 1.5rem; }
+
+    /* Grid Layouts */
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+    .info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; }
+    .info-stack { display: flex; flex-direction: column; gap: 1rem; }
+
+    /* Items de Información */
+    .info-item { display: flex; flex-direction: column; gap: 0.2rem; }
+    .info-item label { font-size: 0.8rem; font-weight: 600; color: var(--text-gray); text-transform: uppercase; }
+    .info-item p { margin: 0; font-size: 1rem; color: var(--text-dark); word-break: break-word; }
+    .info-item.full-width { grid-column: 1 / -1; }
+    
+    .highlight { font-weight: 700; color: var(--col-burgundy); font-family: monospace; font-size: 1.1rem; }
+    .text-lg { font-size: 1.1rem; font-weight: 600; }
+
+    /* TARJETAS DE ESTADO (Comparativa) */
+    .status-card { border-radius: var(--radius); padding: 1.5rem; border-left: 5px solid transparent; }
+    .status-header { display: flex; align-items: center; margin-bottom: 1rem; gap: 0.8rem; }
+    .status-icon { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 0.9rem; }
+    .status-header h3 { margin: 0; font-size: 1.1rem; font-weight: 700; }
+
+    /* Variantes */
+    .card-red { background: var(--bg-red); border-color: var(--border-red); }
+    .card-red .status-icon { background: var(--icon-red); } .card-red h3 { color: var(--text-red); }
+    .card-red p { color: var(--text-dark); }
+
+    .card-green { background: var(--bg-green); border-color: var(--border-green); }
+    .card-green .status-icon { background: var(--icon-green); } .card-green h3 { color: var(--text-green); }
+    .card-green p { color: var(--text-dark); }
+
+    /* OFICIOS (Azul) */
+    .oficios-stack { display: flex; flex-direction: column; gap: 1.5rem; }
+    .card-blue { background: var(--bg-blue); border-color: var(--border-blue); margin-bottom: 0; }
+    
+    .oficio-header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 1px solid rgba(0,0,0,0.05); padding-bottom: 0.8rem; flex-wrap: wrap; gap: 0.5rem; }
+    .oficio-title { display: flex; align-items: center; gap: 0.5rem; color: var(--text-blue); }
+    .oficio-title h3 { margin: 0; font-size: 1rem; }
+    .oficio-date { font-size: 0.85rem; color: var(--text-blue); display: flex; align-items: center; gap: 0.4rem; }
+
+    /* Imágenes */
+    .mt-3 { margin-top: 1rem; }
+    .gallery-section { border-top: 1px dashed rgba(0,0,0,0.1); padding-top: 1rem; }
+    .gallery-label { font-size: 0.8rem; font-weight: 600; color: var(--text-gray); display: flex; align-items: center; gap: 0.4rem; margin-bottom: 0.5rem; }
+    .gallery-grid-mini { display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 0.8rem; }
+    .gallery-item { aspect-ratio: 1; overflow: hidden; border-radius: 8px; border: 1px solid rgba(0,0,0,0.1); display: block; background: white; }
+    .gallery-item img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.2s; }
+    .gallery-item:hover img { transform: scale(1.1); }
+
+    /* Empty States */
+    .empty-state, .empty-state-mini { text-align: center; color: #9ca3af; padding: 1rem; }
+    .empty-state-mini i { font-size: 1.5rem; margin-bottom: 0.5rem; opacity: 0.7; }
+    .empty-state .icon-placeholder { width: 48px; height: 48px; background: #f3f4f6; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; margin: 0 auto 1rem auto; }
+    
+    .text-red { color: var(--text-red); }
+
+    /* Móvil */
+    @media (max-width: 768px) {
+        .header-card { flex-direction: column; text-align: center; }
+        .grid-2 { grid-template-columns: 1fr; }
+        .oficio-header { flex-direction: column; align-items: flex-start; }
+    }
+</style>
 {% endblock %}

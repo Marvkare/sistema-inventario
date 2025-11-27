@@ -5,156 +5,323 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tarjeta de Resguardo - {{ resguardo.No_Resguardo }}</title>
     <style>
-    /* --- Configuración General (sin cambios) --- */
-    body { font-family: Arial, sans-serif; margin: 20px; color: #333; background-color: #f4f4f4; }
-    .container { 
-        max-width: 850px; 
-        margin: auto; 
-        border: 1px solid #ccc; 
-        padding: 20px; 
-        background-color: #fff; }
-    .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; text-align: center; }
-    
-    .header-text h1 { margin: 0; color: #000000; font-size: 1.2em; }
-    .title { text-align: center; font-weight: bold; font-size: 1.2em; margin-bottom: 25px; border: 1px solid #888; padding: 8px; }
-    .details-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
-    .details-grid > div, .details-grid-full-width, .description-section { display: flex; border: 1px solid #888; overflow: hidden; }
-    .details-grid-full-width, .description-section { margin-bottom: 20px; flex-direction: column; }
-    .label { background-color: #E9ECEF; font-weight: bold; padding: 8px 12px; border-right: 1px solid #888; flex-basis: 160px; flex-shrink: 0; text-align: center; display: flex; align-items: center; justify-content: center; }
-    .value { background-color: #FFFFFF; padding: 8px 12px; flex-grow: 1; display: flex; align-items: center; flex-wrap: wrap; }
-    .description-section .label { flex-basis: auto; width: 100%; border-right: none; border-bottom: 1px solid #888; }
-    .description-section .value { line-height: 1.5; }
-    .description-section .value strong { margin-left: 15px; }
-    .footer { margin-top: 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 20px; text-align: center; }
-    .signature-box { border: 1px solid #888; display: flex; flex-direction: column; }
-    .signature-title { background-color: #E9ECEF; font-weight: bold; padding: 8px; border-bottom: 1px solid #888; }
-    .signature-name { background-color: #FFFFFF; padding: 8px; min-height: 80px; display: flex; align-items: flex-end; justify-content: center; font-weight: bold; }
-    .section-title { text-align: center; font-weight: bold; margin-top: 40px; background-color: #E9ECEF; padding: 8px; border: 1px solid #888; }
-
-    /* =============================================== */
-    /* === REGLAS ESPECIALES PARA IMPRESIÓN === */
-    /* =============================================== */
-    @media print {
-        /* --- Optimizaciones para caber en una página --- */
-        body { font-size: 11px; }
-        .details-grid { gap: 5px; margin-bottom: 5px; }
-        .footer { margin-top: 15px; gap: 15px; }
-        .signature-name { min-height: 60px; }
-        .section-title { margin-top: 20px; }
-
-        /* --- Reglas generales de impresión --- */
-        body { margin: 0; background-color: #fff; }
-        .container { 
-            border: none; 
-            box-shadow: none; width: 100%; max-width: 100%; padding: 0; }
-        * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-
-        /* --- NUEVO: ESTILOS PARA EXPANDIR A PÁGINA COMPLETA --- */
-        html, body {
-            height: 100%; /* Asegura que el cuerpo ocupe toda la altura de la página */
+        /* --- VARIABLES DE COLOR ORIGINALES --- */
+        :root {
+            --border-color: #888;       /* Gris original */
+            --header-bg: #E9ECEF;       /* Fondo gris claro original */
+            --text-color: #000;
         }
+
+        /* --- CONFIGURACIÓN DE PÁGINA --- */
         body {
-            display: flex; /* Convierte al body en un contenedor flexible */
-            
-        }
-        .container {
+            font-family: Arial, sans-serif;
+            background-color: #555; /* Fondo oscuro solo para pantalla */
+            margin: 0;
+            padding: 20px;
             display: flex;
-            flex-direction: column; /* Alinea los hijos en columna */
-            flex-grow: 1; /* Permite que el contenedor crezca para llenar el espacio disponible */
-            padding: 6mm; /* Ajusta el padding para impresión */
-            box-sizing: border-box; /* Incluye el padding en el tamaño total */
-            
-        }   
-        /* La pieza final: empuja el último bloque de firmas hacia abajo */
-        .section-title + .footer {
-            margin-top: auto;
+            justify-content: center;
         }
-    }
-    
-    @page {
-        size: letter;
-        margin: 6mm ; /* Tu margen personalizado */
-        border: #888 solid 1px;
-    }
-</style>
+
+        .page {
+            background: white;
+            width: 215.9mm; /* Ancho Carta exacto */
+            min-height: 279.4mm; /* Alto Carta exacto */
+            padding: 15mm; /* Márgenes internos seguros */
+            box-sizing: border-box;
+            box-shadow: 0 0 15px rgba(0,0,0,0.5);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        /* --- ENCABEZADO --- */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .header img { height: 60px; object-fit: contain; }
+        
+        .header-text h1 {
+            margin: 0;
+            color: #000;
+            font-size: 12pt;
+            text-transform: uppercase;
+        }
+
+        /* --- TÍTULOS --- */
+        .title-box {
+            text-align: center;
+            font-weight: bold;
+            font-size: 11pt;
+            margin-bottom: 15px;
+            border: 1px solid var(--border-color);
+            padding: 8px;
+            background-color: white;
+        }
+
+        .section-title {
+            text-align: center;
+            font-weight: bold;
+            font-size: 10pt;
+            margin-top: 15px;
+            margin-bottom: 0;
+            background-color: var(--header-bg);
+            padding: 6px;
+            border: 1px solid var(--border-color);
+            border-bottom: none; /* Se une con el grid de abajo */
+            -webkit-print-color-adjust: exact;
+        }
+
+        /* --- TABLAS Y GRIDS (ESTILO ORIGINAL) --- */
+        .grid-row {
+            display: flex;
+            border: 1px solid var(--border-color);
+            margin-bottom: -1px; /* Colapsar bordes dobles */
+            font-size: 9pt;
+        }
+
+        /* Evitar borde doble final */
+        .grid-container {
+            margin-bottom: 15px;
+        }
+
+        .label {
+            background-color: var(--header-bg);
+            font-weight: bold;
+            padding: 6px 10px;
+            border-right: 1px solid var(--border-color);
+            width: 140px; /* Ancho fijo para etiquetas */
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            -webkit-print-color-adjust: exact; /* Forzar impresión de color de fondo */
+        }
+
+        .value {
+            background-color: #FFF;
+            padding: 6px 10px;
+            flex-grow: 1;
+            display: flex;
+            align-items: center;
+        }
+
+        /* Utilidad para dividir una fila en 2 columnas */
+        .half-col {
+            flex: 1;
+            display: flex;
+        }
+        .half-col:first-child {
+            border-right: 1px solid var(--border-color);
+        }
+        .half-col .label {
+            width: 100px; /* Etiquetas más pequeñas en columnas divididas */
+        }
+
+        /* --- DESCRIPCIÓN GRANDE --- */
+        .description-box {
+            border: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 15px;
+            min-height: 80px;
+        }
+        .description-box .label {
+            width: 100%;
+            border-right: none;
+            border-bottom: 1px solid var(--border-color);
+            justify-content: center;
+        }
+        .description-box .value {
+            display: block;
+            line-height: 1.4;
+            padding: 10px;
+        }
+
+        /* --- PIE DE PÁGINA Y FIRMAS --- */
+        .footer-spacer {
+            flex-grow: 1; /* Esto empuja las firmas hacia abajo */
+        }
+
+        .signatures-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 10px;
+            page-break-inside: avoid;
+        }
+
+        .sig-box {
+            border: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sig-title {
+            background-color: var(--header-bg);
+            font-weight: bold;
+            font-size: 8pt;
+            text-align: center;
+            padding: 5px;
+            border-bottom: 1px solid var(--border-color);
+            -webkit-print-color-adjust: exact;
+        }
+
+        .sig-space {
+            height: 50px;
+        }
+
+        .sig-name {
+            text-align: center;
+            font-weight: bold;
+            font-size: 9pt;
+            padding: 5px;
+            border-top: 1px dashed #ccc;
+        }
+
+        /* --- IMPRESIÓN --- */
+        @media print {
+            body { background: none; padding: 0; margin: 0; }
+            .page {
+                width: 100%; height: 100%;
+                box-shadow: none; padding: 0; margin: 0;
+                border: none;
+            }
+            @page {
+                size: letter;
+                margin: 10mm;
+            }
+        }
+    </style>
 </head>
 <body>
 
-    <div class="container">
+    <div class="page">
+        
         <div class="header">
-            <img src="{{ url_for('static', filename='./images/atitalaquia_logo.jpg') }}" alt="Logo Atitalaquia" style="height: 60px;">
+            <img src="{{ url_for('static', filename='images/atitalaquia_logo.jpg') }}" alt="Logo Mun">
             <div class="header-text">
                 <h1>MUNICIPIO DE ATITALAQUIA, HGO.</h1>
+                <span style="font-size: 10px;">2024 - 2027</span>
             </div>
-            <img src="{{ url_for('static', filename='./images/image_e8b1f6.png') }}" alt="Logo Hidalgo" style="height: 100px;">
+            <img src="{{ url_for('static', filename='images/image_e8b1f6.png') }}" alt="Logo Edo">
         </div>
 
-        <div class="title">
+        <div class="title-box">
             TARJETA DE RESGUARDO DE BIENES MUEBLES
         </div>
 
-        <div class="details-grid">
-            <div><div class="label">FOLIO NO.</div><div class="value">{{ resguardo.No_Resguardo or 'N/A' }}</div></div>
-            <div><div class="label">NO. DE INVENTARIO</div><div class="value">{{ resguardo.No_Inventario or 'N/A' }}</div></div>
-            <div><div class="label">PROVEEDOR</div><div class="value">{{ resguardo.Proveedor or 'N/A' }}</div></div>
-            <div><div class="label">NO. DE FACTURA</div><div class="value">{{ resguardo.No_Factura or 'N/A' }}</div></div>
+        <div class="grid-container">
+            <div class="grid-row">
+                <div class="half-col">
+                    <div class="label">FOLIO NO.</div>
+                    <div class="value"><strong>{{ resguardo.No_Resguardo or 'N/A' }}</strong></div>
+                </div>
+                <div class="half-col">
+                    <div class="label">FECHA</div>
+                    <div class="value">{{ resguardo.Fecha_Resguardo or 'N/A' }}</div>
+                </div>
+            </div>
+            <div class="grid-row">
+                <div class="half-col">
+                    <div class="label">INVENTARIO</div>
+                    <div class="value">{{ resguardo.No_Inventario or 'N/A' }}</div>
+                </div>
+                <div class="half-col">
+                    <div class="label">FACTURA</div>
+                    <div class="value">{{ resguardo.No_Factura or 'N/A' }}</div>
+                </div>
+            </div>
+            <div class="grid-row">
+                <div class="label">PROVEEDOR</div>
+                <div class="value">{{ resguardo.Proveedor or 'N/A' }}</div>
+            </div>
         </div>
-        <div class="details-grid-full-width" style="flex-direction: row;">
-            <div class="label">FECHA DE ELABORACIÓN</div>
-            <div class="value">{{ resguardo.Fecha_Resguardo or 'N/A' }}</div>
-            
-        </div>
-        <div class="description-section">
+
+        <div class="description-box">
             <div class="label">DESCRIPCIÓN DEL BIEN</div>
             <div class="value">
-                {{ resguardo.Descripcion_Del_Bien or 'Sin descripción.' }}<br>
-                <strong>Marca:</strong> {{ resguardo.Marca or 'N/A' }}
-                <strong>Modelo:</strong> {{ resguardo.Modelo or 'N/A' }}
-                <strong>No. Serie:</strong> {{ resguardo.Numero_De_Serie or 'N/A' }}
-            </div>
-        </div>
-        <div class="details-grid">
-            <div><div class="label">ÁREA</div><div class="value">{{ resguardo.Area_Nombre or 'N/A' }}</div></div>
-            <div><div class="label">RUBRO</div><div class="value">{{ resguardo.Rubro or 'N/A' }}</div></div>
-        </div>  
-         <div class="section-title">
-            DATOS DE RESGUARDANTE
-        </div>
-        <div class="details-grid">  
-            <div><div class="label">PUESTO</div><div class="value">{{ resguardo.Puesto_Trabajador or 'N/A' }}</div></div>
-            <div><div class="label">NO. DE NÓMINA</div><div class="value">{{ resguardo.No_Nomina_Trabajador or 'N/A' }}</div></div>
-        </div>
-        
-        <div class="footer">
-            <div class="signature-box">
-                <div class="signature-title">RESGUARDANTE Y/O USUARIO DEL ÁREA</div>
-                <div class="signature-name">{{ resguardo.Nombre_Del_Resguardante or '' }}</div>
-            </div>
-            <div class="signature-box">
-                <div class="signature-title">DIRECTOR DEL ÁREA</div>
-                <div class="signature-name">{{ resguardo.Nombre_Director_Jefe_De_Area or '' }}</div>
+                {{ resguardo.Descripcion_Del_Bien or 'Sin descripción.' }}
+                <br><br>
+                <span style="font-size: 0.9em;">
+                    <strong>Marca:</strong> {{ resguardo.Marca or '-' }} &nbsp;&nbsp;
+                    <strong>Modelo:</strong> {{ resguardo.Modelo or '-' }} &nbsp;&nbsp;
+                    <strong>Serie:</strong> {{ resguardo.Numero_De_Serie or '-' }}
+                </span>
             </div>
         </div>
 
-        <div class="section-title">
-            RESPONSABLES ADMINISTRATIVOS
+        <div class="grid-container">
+            <div class="grid-row">
+                <div class="label">ÁREA</div>
+                <div class="value">{{ resguardo.Area_Nombre or 'N/A' }}</div>
+            </div>
+            <div class="grid-row">
+                <div class="label">RUBRO</div>
+                <div class="value">{{ resguardo.Rubro or 'N/A' }}</div>
+            </div>
+            <div class="grid-row">
+                <div class="label">COSTO</div>
+                <div class="value">$ {{ "%.2f"|format(resguardo.Costo_Final|float) if resguardo.Costo_Final else '0.00' }}</div>
+            </div>
         </div>
 
-        <div class="footer">
-             <div class="signature-box">
-                <div class="signature-title">SECRETARIA GENERAL MUNICIPAL</div>
-                <div class="signature-name">{{ responsable1_nombre or '' }}</div>
-             </div>
-             <div class="signature-box">
-                <div class="signature-title">SINDICO MUNICIPAL</div>
-                <div class="signature-name">{{ responsable2_nombre or '' }}</div>
-             </div>
+        <div class="section-title">DATOS DE RESGUARDANTE</div>
+        <div class="grid-container">
+            <div class="grid-row">
+                <div class="label">NOMBRE</div>
+                <div class="value">{{ resguardo.Nombre_Del_Resguardante or 'N/A' }}</div>
+            </div>
+            <div class="grid-row">
+                <div class="half-col">
+                    <div class="label">PUESTO</div>
+                    <div class="value">{{ resguardo.Puesto_Trabajador or 'N/A' }}</div>
+                </div>
+                <div class="half-col">
+                    <div class="label">NO. NÓMINA</div>
+                    <div class="value">{{ resguardo.No_Nomina_Trabajador or 'N/A' }}</div>
+                </div>
+            </div>
         </div>
+
+        <div class="footer-spacer"></div>
+
+        <div class="signatures-grid">
+            <div class="sig-box">
+                <div class="sig-title">RESGUARDANTE / USUARIO</div>
+                <div class="sig-space"></div>
+                <div class="sig-name">{{ resguardo.Nombre_Del_Resguardante or '' }}</div>
+            </div>
+            <div class="sig-box">
+                <div class="sig-title">DIRECTOR DEL ÁREA</div>
+                <div class="sig-space"></div>
+                <div class="sig-name">{{ resguardo.Nombre_Director_Jefe_De_Area or '' }}</div>
+            </div>
+        </div>
+
+        <div class="section-title" style="margin-top: 10px; border: 1px solid #888;">RESPONSABLES ADMINISTRATIVOS</div>
+        <div class="signatures-grid" style="margin-top: 0;">
+            <div class="sig-box">
+                <div class="sig-title">SECRETARÍA GENERAL MUNICIPAL</div>
+                <div class="sig-space"></div>
+                <div class="sig-name">{{ responsable1_nombre or '' }}</div>
+            </div>
+            <div class="sig-box">
+                <div class="sig-title">SÍNDICO MUNICIPAL</div>
+                <div class="sig-space"></div>
+                <div class="sig-name">{{ responsable2_nombre or '' }}</div>
+            </div>
+        </div>
+
     </div>
 
     <script>
         window.onload = function() {
-            window.print();
+            // Pequeño retraso para asegurar carga de imágenes
+            setTimeout(() => { window.print(); }, 500);
         }
     </script>
 

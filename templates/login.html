@@ -5,23 +5,26 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Iniciar Sesión - Sistema de Resguardos</title>
     
-    <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     
     <style>
+        /* --- VARIABLES DE DISEÑO --- */
         :root {
-            --color-burgundy: 106, 46, 77;
-            --color-beige: 188, 155, 106;
-            --color-burgundy-dark: 85, 30, 58;
-            --color-beige-light: 215, 195, 160;
-            --gradient-primary: linear-gradient(135deg, #6A2E4D 0%, #551E3A 100%);
-            --gradient-content: linear-gradient(135deg, #FFFFFF 0%, #F5F5F5 100%);
+            --col-burgundy: #6A2E4D;
+            --col-burgundy-dark: #551E3A;
+            --col-beige: #BC9B6A;
+            --col-beige-light: #D7C3A0;
+            --col-white: #ffffff;
+            --col-gray: #6b7280;
+            --radius: 16px;
+            --shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
         }
 
+        /* --- LAYOUT GENERAL --- */
         body {
             font-family: 'Inter', sans-serif;
-            background: var(--gradient-primary);
+            background: linear-gradient(135deg, var(--col-burgundy) 0%, var(--col-burgundy-dark) 100%);
             margin: 0;
             padding: 0;
             min-height: 100vh;
@@ -30,186 +33,245 @@
             justify-content: center;
         }
 
-        .login-card {
-            background: var(--gradient-content);
-            border: 1px solid rgb(var(--color-beige-light));
-            box-shadow: 0 20px 40px rgba(var(--color-burgundy), 0.15);
+        .login-container {
+            width: 100%;
+            max-width: 420px;
+            padding: 1.5rem;
         }
 
-        .nav-link { 
+        /* --- LOGO Y TÍTULO --- */
+        .brand-header {
+            text-align: center;
+            margin-bottom: 2rem;
+            color: white;
+        }
+        
+        .brand-icon {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, var(--col-beige), var(--col-beige-light));
+            border: 2px solid var(--col-beige-light);
+            border-radius: 20px;
             display: flex;
             align-items: center;
-            padding: 0.75rem;
-            font-weight: 500;
-            border-radius: 0.75rem;
-            transition: all 0.3s ease-out;
-            color: rgb(var(--color-beige-light));
-            background: rgba(255, 255, 255, 0.08);
-            border: 1px solid rgba(255, 255, 255, 0.15);
-        }
-        
-        .nav-link:hover {
-            background: rgba(var(--color-beige), 0.25);
-            border-color: rgba(var(--color-beige), 0.4);
-            transform: translateX(5px);
-            box-shadow: 0 4px 12px rgba(var(--color-burgundy), 0.2);
-            color: rgb(255, 255, 255);
+            justify-content: center;
+            margin: 0 auto 1rem auto;
+            font-size: 2rem;
+            color: var(--col-burgundy);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
         }
 
-        @keyframes slide-in-right {
-            from {
-                opacity: 0;
-                transform: translateX(100%);
-            }
-            to {
-                opacity: 1;
-                transform: translateX(0);
-            }
+        .brand-header h1 { margin: 0; font-size: 2rem; font-weight: 800; letter-spacing: -0.5px; }
+        .brand-header .subtitle { color: var(--col-beige); font-weight: 600; font-size: 1.1rem; margin-top: 0.2rem; }
+        .brand-header .meta { color: rgba(255,255,255,0.7); font-size: 0.85rem; margin-top: 0.5rem; }
+
+        /* --- TARJETA DE LOGIN --- */
+        .login-card {
+            background: white;
+            border-radius: var(--radius);
+            overflow: hidden;
+            box-shadow: var(--shadow);
+            border: 1px solid rgba(255,255,255,0.1);
         }
+
+        .card-header {
+            background: linear-gradient(to right, var(--col-burgundy), var(--col-burgundy-dark));
+            padding: 2rem;
+            text-align: center;
+            color: white;
+        }
+        .card-header h2 { margin: 0; font-size: 1.5rem; }
+        .card-header p { margin: 0.5rem 0 0; color: var(--col-beige-light); font-size: 0.9rem; }
+
+        .card-body { padding: 2rem; }
+
+        /* --- FORMULARIO --- */
+        .form-group { margin-bottom: 1.5rem; }
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #374151;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+        .form-group label i { color: var(--col-burgundy); margin-right: 0.4rem; }
+
+        .input-wrapper { position: relative; }
+        .input-wrapper i {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #9ca3af;
+            pointer-events: none;
+        }
+        .input-wrapper input {
+            width: 100%;
+            padding: 0.85rem 1rem 0.85rem 2.8rem; /* Espacio para el icono */
+            border: 1px solid #d1d5db;
+            border-radius: 12px;
+            font-size: 1rem;
+            box-sizing: border-box;
+            transition: all 0.2s;
+            outline: none;
+        }
+        .input-wrapper input:focus {
+            border-color: var(--col-burgundy);
+            box-shadow: 0 0 0 3px rgba(106, 46, 77, 0.1);
+        }
+
+        /* --- BOTÓN --- */
+        .btn-login {
+            width: 100%;
+            padding: 1rem;
+            border: none;
+            border-radius: 12px;
+            background: linear-gradient(to right, var(--col-burgundy), var(--col-burgundy-dark));
+            color: white;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+        .btn-login:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(106, 46, 77, 0.3);
+        }
+        .btn-login:active { transform: translateY(0); }
+
+        /* --- FOOTER --- */
+        .login-footer {
+            margin-top: 2rem;
+            text-align: center;
+            color: rgba(255,255,255,0.6);
+            font-size: 0.85rem;
+        }
+        .info-box {
+            margin-top: 1.5rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid #f3f4f6;
+            text-align: center;
+            color: var(--col-gray);
+            font-size: 0.85rem;
+        }
+
+        /* --- ALERTAS FLASH --- */
+        .flash-container { margin-bottom: 1.5rem; }
+        .alert {
+            padding: 1rem;
+            border-radius: 12px;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            font-size: 0.9rem;
+            border-left: 4px solid;
+            background: white;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            animation: slideIn 0.4s ease-out;
+        }
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        .alert-success { border-color: #10b981; background: #ecfdf5; color: #065f46; }
+        .alert-danger { border-color: #ef4444; background: #fef2f2; color: #991b1b; }
+        .alert-info { border-color: var(--col-beige); background: #fffbeb; color: #92400e; }
         
-        .animate-slide-in-right {
-            animation: slide-in-right 0.5s ease-out;
+        .btn-close {
+            background: none; border: none; margin-left: auto; 
+            color: inherit; cursor: pointer; opacity: 0.6;
         }
+        .btn-close:hover { opacity: 1; }
+
     </style>
 </head>
-<body class="p-4">
-    <div class="w-full max-w-md">
-        <!-- Logo y Título Principal -->
-        <div class="text-center mb-8">
-            <div class="w-24 h-24 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg" 
-                 style="background: linear-gradient(135deg, rgb(var(--color-beige)) 0%, rgb(var(--color-beige-light)) 100%); border: 2px solid rgb(var(--color-beige-light));">
-                <i class="fas fa-shield-alt text-3xl font-bold" style="color: rgb(var(--color-burgundy));"></i>
+<body>
+
+    <div class="login-container">
+        
+        <div class="brand-header">
+            <div class="brand-icon">
+                <i class="fas fa-shield-alt"></i>
             </div>
-            <h1 class="text-4xl font-bold text-white mb-2">ATITALAQUIA</h1>
-            <p class="text-xl font-semibold" style="color: rgb(var(--color-beige));">SE TRANSFORMA</p>
-            <p class="text-white/80 text-sm mt-1">2024-2027 | Sistema de Resguardos</p>
+            <h1>ATITALAQUIA</h1>
+            <div class="subtitle">SE TRANSFORMA</div>
+            <div class="meta">2024-2027 | Sistema de Resguardos</div>
         </div>
 
-        <!-- Tarjeta de Login -->
-        <div class="login-card rounded-2xl overflow-hidden">
-            <!-- Encabezado de la tarjeta -->
-            <div class="bg-gradient-to-r from-[#6A2E4D] to-[#551E3A] p-6 text-white text-center">
-                <h2 class="text-2xl font-bold">Iniciar Sesión</h2>
-                <p class="text-[#D7C3A0] text-sm mt-1">Accede al sistema de gestión de resguardos</p>
+        <div class="login-card">
+            <div class="card-header">
+                <h2>Iniciar Sesión</h2>
+                <p>Accede al sistema de gestión</p>
             </div>
             
-            <div class="p-8">
-                <!-- Mensajes Flash -->
-                <div id="flash-container" class="mb-6 space-y-3">
+            <div class="card-body">
+                
+                <div class="flash-container">
                     {% with messages = get_flashed_messages(with_categories=true) %}
                         {% if messages %}
                             {% for category, message in messages %}
-                                <div class="flash-message p-4 rounded-xl shadow-2xl border-l-4 transform transition-all duration-500 ease-out animate-slide-in-right
-                                    {% if category == 'success' %} bg-gradient-to-r from-green-50 to-emerald-50 border-green-600 text-green-800 
-                                    {% elif category == 'danger' %} bg-gradient-to-r from-red-50 to-pink-50 border-red-600 text-red-800 
-                                    {% else %} bg-gradient-to-r from-[#F8F5F0] to-[#E8E0D0] border-[#BC9B6A] text-[#6A2E4D] {% endif %}">
-                                    <div class="flex items-center">
-                                        <i class="fas {% if category == 'success' %}fa-check-circle{% elif category == 'danger' %}fa-exclamation-circle{% else %}fa-info-circle{% endif %} mr-3 text-lg"></i>
-                                        <div class="flex-1">
-                                            <p class="font-semibold">{{ message }}</p>
-                                        </div>
-                                        <button onclick="this.parentElement.parentElement.remove()" class="ml-4 text-gray-400 hover:text-gray-600">
-                                            <i class="fas fa-times"></i>
-                                        </button>
-                                    </div>
+                                <div class="alert alert-{{ category }}">
+                                    <i class="fas {% if category == 'success' %}fa-check-circle{% elif category == 'danger' %}fa-exclamation-circle{% else %}fa-info-circle{% endif %}"></i>
+                                    <span>{{ message }}</span>
+                                    <button class="btn-close" onclick="this.parentElement.remove()"><i class="fas fa-times"></i></button>
                                 </div>
                             {% endfor %}
                         {% endif %}
                     {% endwith %}
                 </div>
 
-                <form action="{{ url_for('login') }}" method="post" class="space-y-6">
-                    <!-- Campo Usuario -->
-                    <div>
-                        <label for="username" class="block text-sm font-semibold text-gray-700 mb-2">
-                            <i class="fas fa-user mr-2" style="color: rgb(var(--color-burgundy));"></i>
-                            Nombre de Usuario
-                        </label>
-                        <div class="relative">
-                            <input type="text" id="username" name="username" required 
-                                   class="w-full px-4 py-3 pl-12 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#6A2E4D] focus:border-[#6A2E4D] transition-all duration-200"
-                                   placeholder="Ingresa tu usuario">
-                            <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                                <i class="fas fa-user text-gray-400"></i>
-                            </div>
+                <form action="{{ url_for('login') }}" method="post">
+                    <div class="form-group">
+                        <label for="username"><i class="fas fa-user"></i> Nombre de Usuario</label>
+                        <div class="input-wrapper">
+                            <i class="fas fa-user"></i>
+                            <input type="text" id="username" name="username" required placeholder="Ingresa tu usuario">
                         </div>
                     </div>
 
-                    <!-- Campo Contraseña -->
-                    <div>
-                        <label for="password" class="block text-sm font-semibold text-gray-700 mb-2">
-                            <i class="fas fa-lock mr-2" style="color: rgb(var(--color-burgundy));"></i>
-                            Contraseña
-                        </label>
-                        <div class="relative">
-                            <input type="password" id="password" name="password" required 
-                                   class="w-full px-4 py-3 pl-12 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#6A2E4D] focus:border-[#6A2E4D] transition-all duration-200"
-                                   placeholder="Ingresa tu contraseña">
-                            <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                                <i class="fas fa-lock text-gray-400"></i>
-                            </div>
+                    <div class="form-group">
+                        <label for="password"><i class="fas fa-lock"></i> Contraseña</label>
+                        <div class="input-wrapper">
+                            <i class="fas fa-lock"></i>
+                            <input type="password" id="password" name="password" required placeholder="Ingresa tu contraseña">
                         </div>
                     </div>
 
-                    <!-- Botón de Acceso -->
-                    <button type="submit" 
-                            class="w-full inline-flex items-center justify-center px-6 py-4 border border-transparent text-base font-semibold rounded-xl shadow-sm text-white bg-gradient-to-r from-[#6A2E4D] to-[#551E3A] hover:from-[#551E3A] hover:to-[#6A2E4D] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#6A2E4D] transition-all duration-200 ease-in-out transform hover:scale-105">
-                        <i class="fas fa-sign-in-alt mr-3"></i>
-                        Acceder al Sistema
+                    <button type="submit" class="btn-login">
+                        <i class="fas fa-sign-in-alt"></i> Acceder al Sistema
                     </button>
                 </form>
 
-                <!-- Información adicional -->
-                <div class="mt-8 pt-6 border-t border-gray-200">
-                    <div class="text-center">
-                        <p class="text-sm text-gray-500 flex items-center justify-center">
-                            <i class="fas fa-shield-alt mr-2" style="color: rgb(var(--color-burgundy));"></i>
-                            Sistema seguro de gestión de resguardos institucionales
-                        </p>
-                    </div>
+                <div class="info-box">
+                    <i class="fas fa-shield-alt"></i> Acceso exclusivo para personal autorizado
                 </div>
             </div>
         </div>
 
-        <!-- Footer -->
-        <div class="text-center mt-8">
-            <p class="text-white/70 text-sm">
-                &copy; 2024-2027 Ayuntamiento de Atitalaquia. Todos los derechos reservados.
-            </p>
-            <p class="text-white/50 text-xs mt-1">
-                ATITALAQUIA SE TRANSFORMA 2024-2027
-            </p>
+        <div class="login-footer">
+            &copy; 2024-2027 Ayuntamiento de Atitalaquia.
         </div>
+
     </div>
 
     <script>
+        // Auto-ocultar alertas
         document.addEventListener('DOMContentLoaded', () => {
-            // Manejo de mensajes flash
-            const flashMessages = document.querySelectorAll('.flash-message');
-            flashMessages.forEach(msg => {
-                setTimeout(() => {
-                    msg.style.transition = 'all 0.5s ease-in-out';
-                    msg.style.opacity = '0';
-                    msg.style.transform = 'translateX(100%) scale(0.9)';
-                    setTimeout(() => {
-                        if (msg.parentNode) {
-                            msg.parentNode.removeChild(msg);
-                        }
-                    }, 500);
-                }, 5000);
-            });
-
-            // Efecto de focus en inputs
-            const inputs = document.querySelectorAll('input[type="text"], input[type="password"]');
-            inputs.forEach(input => {
-                input.addEventListener('focus', function() {
-                    this.parentElement.classList.add('ring-2', 'ring-[#6A2E4D]', 'ring-opacity-50');
+            setTimeout(() => {
+                const alerts = document.querySelectorAll('.alert');
+                alerts.forEach(a => {
+                    a.style.opacity = '0';
+                    a.style.transform = 'translateX(20px)';
+                    a.style.transition = 'all 0.5s ease';
+                    setTimeout(() => a.remove(), 500);
                 });
-                
-                input.addEventListener('blur', function() {
-                    this.parentElement.classList.remove('ring-2', 'ring-[#6A2E4D]', 'ring-opacity-50');
-                });
-            });
+            }, 5000);
         });
     </script>
 </body>

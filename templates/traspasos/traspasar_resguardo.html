@@ -3,165 +3,138 @@
 {% block title %}Traspasar Resguardo{% endblock %}
 
 {% block content %}
-<div class="min-h-screen bg-gradient-to-br from-gray-50 to-beige-light/20 py-8 px-4">
-    <div class="max-w-6xl mx-auto">
+<div class="page-wrapper">
+    <div class="container-limit">
         
-        <!-- ENCABEZADO MEJORADO -->
-        <div class="bg-white rounded-2xl shadow-xl border border-beige-light overflow-hidden mb-8">
-            <div class="bg-gradient-to-r from-[#6A2E4D] to-[#551E3A] p-6 text-white">
-                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                    <div>
-                        <h1 class="text-2xl md:text-3xl font-bold">
-                            Traspasar Resguardo
-                        </h1>
-                        <p class="text-[#D7C3A0] mt-2">
-                            Sistema de traspaso de resguardos entre áreas y resguardantes
-                        </p>
-                    </div>
-                    <div class="flex items-center space-x-2">
-                        <div class="w-10 h-10 bg-[#BC9B6A] rounded-full flex items-center justify-center">
-                            <i class="fas fa-exchange-alt text-[#6A2E4D] text-lg"></i>
-                        </div>
-                    </div>
-                </div>
+        <div class="header-card">
+            <div class="header-text">
+                <h1>Traspasar Resguardo</h1>
+                <p>Sistema de traspaso de resguardos entre áreas y resguardantes</p>
+            </div>
+            <div class="header-icon-box">
+                <i class="fas fa-exchange-alt"></i>
             </div>
         </div>
 
-        <div class="bg-white rounded-2xl shadow-lg border border-beige-light overflow-hidden">
-            <div class="p-6 md:p-8">
-                <!-- Información del Resguardo Anterior -->
-                <div class="mb-8 p-6 bg-red-50 rounded-xl border-l-4 border-red-400">
-                    <div class="flex items-center mb-4">
-                        <div class="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center mr-3">
-                            <i class="fas fa-user-slash text-white text-sm"></i>
-                        </div>
-                        <h3 class="text-xl font-bold text-red-800">Información del Resguardo Anterior</h3>
+        <div class="main-container">
+            
+            <div class="status-card card-red">
+                <div class="status-header">
+                    <div class="status-icon"><i class="fas fa-user-slash"></i></div>
+                    <h3>Información del Resguardo Anterior</h3>
+                </div>
+                <div class="info-grid-2">
+                    <div class="info-group">
+                        <strong>No. de Resguardo:</strong> <span>{{ resguardo_anterior.No_Resguardo }}</span>
                     </div>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                        <div class="space-y-2">
-                            <p><strong class="font-semibold text-red-700">No. de Resguardo:</strong> {{ resguardo_anterior.No_Resguardo }}</p>
-                            <p><strong class="font-semibold text-red-700">Resguardante Anterior:</strong> {{ resguardo_anterior.Nombre_Del_Resguardante }}</p>
-                        </div>
-                        <div class="space-y-2">
-                            <p><strong class="font-semibold text-red-700">Área Anterior:</strong> {{ resguardo_anterior.Area_Anterior_Nombre }}</p>
-                            <p><strong class="font-semibold text-red-700">Fecha de Asignación:</strong> {{ resguardo_anterior.Fecha_Resguardo }}</p>
-                        </div>
+                    <div class="info-group">
+                        <strong>Resguardante Anterior:</strong> <span>{{ resguardo_anterior.Nombre_Del_Resguardante }}</span>
+                    </div>
+                    <div class="info-group">
+                        <strong>Área Anterior:</strong> <span>{{ resguardo_anterior.Area_Anterior_Nombre }}</span>
+                    </div>
+                    <div class="info-group">
+                        <strong>Fecha de Asignación:</strong> <span>{{ resguardo_anterior.Fecha_Resguardo }}</span>
                     </div>
                 </div>
+            </div>
 
-                <!-- Datos del Bien -->
-                <div class="mb-8 p-6 bg-gray-50 rounded-xl border-l-4 border-gray-400">
-                    <div class="flex items-center mb-4">
-                        <div class="w-8 h-8 bg-gray-500 rounded-full flex items-center justify-center mr-3">
-                            <i class="fas fa-box-open text-white text-sm"></i>
-                        </div>
-                        <h3 class="text-xl font-bold text-gray-800">Datos del Bien</h3>
+            <div class="status-card card-gray">
+                <div class="status-header">
+                    <div class="status-icon"><i class="fas fa-box-open"></i></div>
+                    <h3>Datos del Bien</h3>
+                </div>
+                <div class="info-grid-2">
+                    <div class="info-group">
+                        <strong>No. de Inventario:</strong> <span>{{ resguardo_anterior.No_Inventario }}</span>
                     </div>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                        <div class="space-y-2">
-                            <p><strong class="font-semibold text-gray-700">No. de Inventario:</strong> {{ resguardo_anterior.No_Inventario }}</p>
-                            <p><strong class="font-semibold text-gray-700">Proveedor:</strong> {{ resguardo_anterior.Proveedor or 'N/A' }}</p>
-                        </div>
-                        <div class="space-y-2">
-                            <p><strong class="font-semibold text-gray-700">Descripción:</strong> {{ resguardo_anterior.Descripcion_Corta_Del_Bien or 'N/A' }}</p>
-                            <p><strong class="font-semibold text-gray-700">Número de Serie:</strong> {{ resguardo_anterior.Numero_De_Serie or 'N/A' }}</p>
-                        </div>
+                    <div class="info-group">
+                        <strong>Proveedor:</strong> <span>{{ resguardo_anterior.Proveedor or 'N/A' }}</span>
+                    </div>
+                    <div class="info-group">
+                        <strong>Descripción:</strong> <span>{{ resguardo_anterior.Descripcion_Corta_Del_Bien or 'N/A' }}</span>
+                    </div>
+                    <div class="info-group">
+                        <strong>Número de Serie:</strong> <span>{{ resguardo_anterior.Numero_De_Serie or 'N/A' }}</span>
                     </div>
                 </div>
+            </div>
 
-                <!-- Información del Nuevo Resguardante -->
-                <div class="mb-8 p-6 bg-green-50 rounded-xl border-l-4 border-green-400">
-                    <div class="flex items-center mb-4">
-                        <div class="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center mr-3">
-                            <i class="fas fa-user-plus text-white text-sm"></i>
-                        </div>
-                        <h3 class="text-xl font-bold text-green-800">Información del Nuevo Resguardante</h3>
-                    </div>
-                    
-                    <form id="traspasoForm" method="post" enctype="multipart/form-data" class="space-y-6">
-                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                            <div>
-                                <label for="No_Resguardo_Nuevo" class="block text-sm font-semibold text-gray-700 mb-2">No. de Resguardo</label>
+            <div class="status-card card-green">
+                <div class="status-header">
+                    <div class="status-icon"><i class="fas fa-user-plus"></i></div>
+                    <h3>Información del Nuevo Resguardante</h3>
+                </div>
+                
+                <div class="card-body">
+                    <form id="traspasoForm" method="post" enctype="multipart/form-data">
+                        
+                        <div class="form-grid-3">
+                            <div class="form-group">
+                                <label for="No_Resguardo_Nuevo">No. de Resguardo</label>
                                 <input type="text" id="No_Resguardo_Nuevo" name="No_Resguardo_Nuevo" 
-                                       class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#6A2E4D]/50 focus:border-[#6A2E4D] transition-all duration-200"
-                                       value="{{resguardo_anterior.No_Resguardo}}" required readonly>
+                                       value="{{resguardo_anterior.No_Resguardo}}" required readonly class="input-readonly">
                             </div>
-                            <div>
-                                <label for="Area_Nueva" class="block text-sm font-semibold text-gray-700 mb-2">Área Nueva</label>
-                                <select name="Area_Nueva" id="Area_Nueva" 
-                                        class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#6A2E4D]/50 focus:border-[#6A2E4D] transition-all duration-200" required>
+                            <div class="form-group">
+                                <label for="Area_Nueva">Área Nueva</label>
+                                <select name="Area_Nueva" id="Area_Nueva" required>
                                     <option value="">Seleccione un área...</option>
                                     {% for area in areas %}
                                         <option value="{{ area.id }}">{{ area.nombre }}</option>
                                     {% endfor %}
                                 </select>
                             </div>
-                            <div>
-                                <label for="Ubicacion_Nueva" class="block text-sm font-semibold text-gray-700 mb-2">Ubicación (Nueva)</label>
-                                <input type="text" id="Ubicacion_Nueva" name="Ubicacion_Nueva" 
-                                       class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#6A2E4D]/50 focus:border-[#6A2E4D] transition-all duration-200">
+                            <div class="form-group">
+                                <label for="Ubicacion_Nueva">Ubicación (Nueva)</label>
+                                <input type="text" id="Ubicacion_Nueva" name="Ubicacion_Nueva">
                             </div>
-                            <div>
-                                <label for="Nombre_Del_Resguardante_Nuevo" class="block text-sm font-semibold text-gray-700 mb-2">Nombre del Resguardante (Nuevo)</label>
-                                <input type="text" id="Nombre_Del_Resguardante_Nuevo" name="Nombre_Del_Resguardante_Nuevo" 
-                                       class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#6A2E4D]/50 focus:border-[#6A2E4D] transition-all duration-200" required>
+                            <div class="form-group">
+                                <label for="Nombre_Del_Resguardante_Nuevo">Nombre del Resguardante (Nuevo)</label>
+                                <input type="text" id="Nombre_Del_Resguardante_Nuevo" name="Nombre_Del_Resguardante_Nuevo" required>
                             </div>
-                            <div>
-                                <label for="No_Trabajador_Nuevo" class="block text-sm font-semibold text-gray-700 mb-2">No. Trabajador (Nuevo)</label>
-                                <input type="text" id="No_Trabajador_Nuevo" name="No_Trabajador_Nuevo" 
-                                       class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#6A2E4D]/50 focus:border-[#6A2E4D] transition-all duration-200">
+                            <div class="form-group">
+                                <label for="No_Trabajador_Nuevo">No. Trabajador (Nuevo)</label>
+                                <input type="text" id="No_Trabajador_Nuevo" name="No_Trabajador_Nuevo">
                             </div>
-                            <div>
-                                <label for="Puesto_Trabajador_Nuevo" class="block text-sm font-semibold text-gray-700 mb-2">Puesto (Nuevo)</label>
-                                <input type="text" id="Puesto_Trabajador_Nuevo" name="Puesto_Trabajador_Nuevo" 
-                                       class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#6A2E4D]/50 focus:border-[#6A2E4D] transition-all duration-200">
+                            <div class="form-group">
+                                <label for="Puesto_Trabajador_Nuevo">Puesto (Nuevo)</label>
+                                <input type="text" id="Puesto_Trabajador_Nuevo" name="Puesto_Trabajador_Nuevo">
                             </div>
-                            <div>
-                                <label for="No_Nomina_Trabajador_Nuevo" class="block text-sm font-semibold text-gray-700 mb-2">No. Nómina (Nuevo)</label>
-                                <input type="number" id="No_Nomina_Trabajador_Nuevo" name="No_Nomina_Trabajador_Nuevo" 
-                                       class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#6A2E4D]/50 focus:border-[#6A2E4D] transition-all duration-200">
+                            <div class="form-group">
+                                <label for="No_Nomina_Trabajador_Nuevo">No. Nómina (Nuevo)</label>
+                                <input type="number" id="No_Nomina_Trabajador_Nuevo" name="No_Nomina_Trabajador_Nuevo">
                             </div>
-                            <div>
-                                <label for="Fecha_Resguardo_Nuevo" class="block text-sm font-semibold text-gray-700 mb-2">Fecha del Resguardo (Nuevo)</label>
-                                <input type="date" id="Fecha_Resguardo_Nuevo" name="Fecha_Resguardo_Nuevo" 
-                                       class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#6A2E4D]/50 focus:border-[#6A2E4D] transition-all duration-200" required>
+                            <div class="form-group">
+                                <label for="Fecha_Resguardo_Nuevo">Fecha del Resguardo (Nuevo)</label>
+                                <input type="date" id="Fecha_Resguardo_Nuevo" name="Fecha_Resguardo_Nuevo" required>
                             </div>
-                            <div>
-                                <label for="Nombre_Director_Jefe_De_Area_Nueva" class="block text-sm font-semibold text-gray-700 mb-2">Nombre Director/Jefe de Área (Nueva)</label>
-                                <input type="text" id="Nombre_Director_Jefe_De_Area_Nueva" name="Nombre_Director_Jefe_De_Area_Nueva" 
-                                       class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#6A2E4D]/50 focus:border-[#6A2E4D] transition-all duration-200">
+                            <div class="form-group">
+                                <label for="Nombre_Director_Jefe_De_Area_Nueva">Nombre Director/Jefe (Nuevo)</label>
+                                <input type="text" id="Nombre_Director_Jefe_De_Area_Nueva" name="Nombre_Director_Jefe_De_Area_Nueva">
                             </div>
-                            <div>
-                                <label for="Tipo_De_Resguardo_Display" class="block text-sm font-semibold text-gray-700 mb-2">Tipo de Resguardo</label>
-                                <input type="text" id="Tipo_De_Resguardo_Display" 
-                                       class="w-full px-4 py-3 bg-gray-100 border border-gray-300 rounded-xl" 
+                            <div class="form-group">
+                                <label>Tipo de Resguardo</label>
+                                <input type="text" class="input-readonly" 
                                        value="{% if resguardo_anterior.Tipo_De_Resguardo == 1 %}Sujeto de Control{% else %}Resguardo Normal{% endif %}" readonly>
                                 <input type="hidden" name="Tipo_De_Resguardo_Nuevo" value="{{ resguardo_anterior.Tipo_De_Resguardo }}">
                             </div>
                         </div>
 
-                        <!-- Imagen del Bien -->
-                        <div class="mt-6">
-                            <label class="block text-sm font-semibold text-gray-700 mb-2">Imagen del Bien en su Nuevo Estado/Ubicación</label>
-                            <input type="file" name="imagen_nuevo_resguardo" id="nuevo-resguardo-fotos-input" 
-                                   class="w-full px-4 py-3 border border-gray-300 rounded-xl file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:bg-gray-50 file:text-gray-700 hover:file:bg-gray-100"/>
-                            <div id="nuevo-resguardo-fotos-preview-container" class="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-4"></div>
+                        <div class="upload-section mt-4">
+                            <label class="upload-label">Imagen del Bien en su Nuevo Estado/Ubicación</label>
+                            <input type="file" name="imagen_nuevo_resguardo" id="nuevo-resguardo-fotos-input" class="file-input-base">
+                            <div id="nuevo-resguardo-fotos-preview-container" class="preview-grid"></div>
                         </div>
 
-                        <!-- SECCIÓN DE OFICIOS -->
-                        <div id="oficios-container" class="space-y-6 mt-8">
-                            <!-- Los oficios se generarán dinámicamente aquí -->
-                        </div>
+                        <div id="oficios-container" class="oficios-wrapper">
+                            </div>
 
-                        <!-- BOTONES DE ACCIÓN -->
-                        <div class="flex flex-col sm:flex-row justify-between items-center gap-4 mt-8 pt-6 border-t border-gray-200">
-                            <button type="button" id="add-oficio-btn" 
-                                    class="inline-flex items-center justify-center px-6 py-3 border-2 border-dashed border-[#6A2E4D] text-base font-semibold rounded-xl text-[#6A2E4D] bg-white hover:bg-[#6A2E4D] hover:text-white transition-all duration-200 ease-in-out">
-                                <i class="fas fa-plus mr-2"></i> Agregar Oficio de Traspaso
+                        <div class="form-actions">
+                            <button type="button" id="add-oficio-btn" class="btn btn-dashed">
+                                <i class="fas fa-plus"></i> Agregar Oficio de Traspaso
                             </button>
-                            <button type="submit" 
-                                    class="inline-flex items-center justify-center px-8 py-3 border border-transparent text-base font-semibold rounded-xl shadow-sm text-white bg-gradient-to-r from-[#6A2E4D] to-[#551E3A] hover:from-[#551E3A] hover:to-[#6A2E4D] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#6A2E4D] transition-all duration-200 ease-in-out">
-                                <i class="fas fa-save mr-2"></i> Confirmar Traspaso
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> Confirmar Traspaso
                             </button>
                         </div>
                     </form>
@@ -172,67 +145,58 @@
 </div>
 
 <template id="oficio-template">
-    <div class="oficio-block mb-8 p-6 bg-blue-50 rounded-xl border-l-4 border-blue-400">
-        <div class="flex justify-between items-center mb-4">
-            <div class="flex items-center">
-                <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center mr-3">
-                    <i class="fas fa-file-invoice text-white text-sm"></i>
-                </div>
-                <h3 class="text-xl font-bold text-blue-800">
-                    Oficio de Traspaso #<span class="oficio-number">1</span>
-                </h3>
+    <div class="status-card card-blue oficio-block">
+        <div class="status-header header-between">
+            <div class="header-left">
+                <div class="status-icon"><i class="fas fa-file-invoice"></i></div>
+                <h3>Oficio de Traspaso #<span class="oficio-number">1</span></h3>
             </div>
-            <button type="button" class="remove-oficio-btn text-red-500 hover:text-red-700 transition-colors duration-200" title="Eliminar este oficio">
-                <i class="fas fa-trash-alt text-lg"></i>
+            <button type="button" class="btn-icon-remove remove-oficio-btn" title="Eliminar oficio">
+                <i class="fas fa-trash-alt"></i>
             </button>
         </div>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            <div>
-                <label class="block text-sm font-semibold text-gray-700 mb-2">Nombre del Solicitante</label>
-                <input type="text" name="Nombre_Solicitante" 
-                       class="nombre-solicitante-input w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#6A2E4D]/50 focus:border-[#6A2E4D] transition-all duration-200" required>
+        
+        <div class="card-body">
+            <div class="form-grid-3">
+                <div class="form-group">
+                    <label>Nombre del Solicitante</label>
+                    <input type="text" name="Nombre_Solicitante" class="nombre-solicitante-input" required>
+                </div>
+                <div class="form-group">
+                    <label>Área Solicitante</label>
+                    <select name="Area_Solicitante" class="area-solicitante-select" required>
+                        <option value="" disabled selected>-- Selecciona un área --</option>
+                        {% for area in areas %}
+                            <option value="{{ area.id }}">{{ area.nombre }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Jefe de Área Solicitante</label>
+                    <input type="text" name="Jefe_Area_Solicitante" class="jefe-area-input" required>
+                </div>
+                <div class="form-group">
+                    <label>Dependencia</label>
+                    <input type="text" name="Dependencia_Oficio" class="dependencia-input">
+                </div>
+                <div class="form-group">
+                    <label>Oficio Clave</label>
+                    <input type="text" name="Oficio_clave" class="oficio-clave-input">
+                </div>
+                <div class="form-group">
+                    <label>Lugar y Fecha</label>
+                    <input type="date" name="Lugar_Fecha_Oficio" class="fecha-oficio-input" required>
+                </div>
+                <div class="form-group full-width">
+                    <label>Asunto</label>
+                    <textarea name="Asunto_Oficio" rows="3" class="asunto-textarea" required></textarea>
+                </div>
+                <div class="form-group full-width">
+                    <label>Archivos Adjuntos del Oficio</label>
+                    <input type="file" name="fotos_oficio" class="file-input-oficio file-input-base" multiple />
+                    <div class="fotos-oficio-preview-container preview-grid mt-2"></div>
+                </div> 
             </div>
-            <div>
-                <label class="block text-sm font-semibold text-gray-700 mb-2">Área Solicitante</label>
-                <select name="Area_Solicitante" 
-                        class="area-solicitante-select w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#6A2E4D]/50 focus:border-[#6A2E4D] transition-all duration-200" required>
-                    <option value="" disabled selected>-- Selecciona un área --</option>
-                    {% for area in areas %}
-                        <option value="{{ area.id }}">{{ area.nombre }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-            <div>
-                <label class="block text-sm font-semibold text-gray-700 mb-2">Jefe de Área Solicitante</label>
-                <input type="text" name="Jefe_Area_Solicitante" 
-                       class="jefe-area-input w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#6A2E4D]/50 focus:border-[#6A2E4D] transition-all duration-200" required>
-            </div>
-            <div>
-                <label class="block text-sm font-semibold text-gray-700 mb-2">Dependencia</label>
-                <input type="text" name="Dependencia_Oficio" 
-                       class="dependencia-input w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#6A2E4D]/50 focus:border-[#6A2E4D] transition-all duration-200">
-            </div>
-            <div>
-                <label class="block text-sm font-semibold text-gray-700 mb-2">Oficio Clave</label>
-                <input type="text" name="Oficio_clave" 
-                       class="oficio-clave-input w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#6A2E4D]/50 focus:border-[#6A2E4D] transition-all duration-200">
-            </div>
-            <div>
-                <label class="block text-sm font-semibold text-gray-700 mb-2">Lugar y Fecha</label>
-                <input type="date" name="Lugar_Fecha_Oficio" 
-                       class="fecha-oficio-input w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#6A2E4D]/50 focus:border-[#6A2E4D] transition-all duration-200" required>
-            </div>
-            <div class="md:col-span-2 lg:col-span-3">
-                <label class="block text-sm font-semibold text-gray-700 mb-2">Asunto</label>
-                <textarea name="Asunto_Oficio" rows="3" 
-                          class="asunto-textarea w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#6A2E4D]/50 focus:border-[#6A2E4D] transition-all duration-200" required></textarea>
-            </div>
-            <div class="md:col-span-2 lg:col-span-3">
-                <label class="block text-sm font-semibold text-gray-700 mb-2">Archivos Adjuntos del Oficio</label>
-                <input type="file" name="fotos_oficio" 
-                       class="file-input-oficio w-full px-4 py-3 border border-gray-300 rounded-xl file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:bg-gray-50 file:text-gray-700 hover:file:bg-gray-100" multiple />
-                <div class="fotos-oficio-preview-container mt-4 grid grid-cols-2 sm:grid-cols-4 gap-4"></div>
-            </div> 
         </div>
     </div>
 </template>
@@ -241,39 +205,114 @@
 
 {% block styles %}
 <style>
-    .preview-image-wrapper {
-        position: relative;
-        border-radius: 8px;
-        overflow: hidden;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    /* --- VARIABLES --- */
+    :root {
+        --col-burgundy: #6A2E4D;
+        --col-burgundy-dark: #551E3A;
+        --col-beige: #BC9B6A;
+        --col-beige-light: #fdfbf7;
+        --radius: 12px;
+        --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        
+        /* Colores de Estado */
+        --bg-red: #fef2f2; --border-red: #f87171; --text-red: #991b1b; --icon-red: #ef4444;
+        --bg-green: #f0fdf4; --border-green: #4ade80; --text-green: #166534; --icon-green: #22c55e;
+        --bg-blue: #eff6ff; --border-blue: #60a5fa; --text-blue: #1e40af; --icon-blue: #3b82f6;
+        --bg-gray: #f9fafb; --border-gray: #9ca3af; --text-gray: #374151; --icon-gray: #6b7280;
     }
+
+    /* Layout */
+    .page-wrapper { min-height: 100vh; background: linear-gradient(to bottom right, #f9fafb, rgba(188, 155, 106, 0.1)); padding: 2rem 1rem; }
+    .container-limit { max-width: 1100px; margin: 0 auto; }
+    .main-container { background: white; border-radius: var(--radius); box-shadow: var(--shadow); padding: 2rem; border: 1px solid #e5e7eb; }
+
+    /* Header */
+    .header-card {
+        background: linear-gradient(to right, var(--col-burgundy), var(--col-burgundy-dark));
+        border-radius: var(--radius); padding: 1.5rem 2rem; color: white;
+        display: flex; justify-content: space-between; align-items: center;
+        margin-bottom: 2rem; box-shadow: var(--shadow);
+    }
+    .header-text h1 { margin: 0; font-size: 1.5rem; }
+    .header-text p { margin: 0.5rem 0 0; color: #e2e8f0; font-size: 0.9rem; }
+    .header-icon-box {
+        width: 48px; height: 48px; background: var(--col-beige); border-radius: 50%;
+        display: flex; align-items: center; justify-content: center; color: var(--col-burgundy); font-size: 1.2rem;
+    }
+
+    /* --- TARJETAS DE ESTADO (Reemplazo de bloques de colores) --- */
+    .status-card { border-radius: var(--radius); padding: 1.5rem; border-left: 5px solid transparent; margin-bottom: 2rem; }
+    .status-header { display: flex; align-items: center; margin-bottom: 1.5rem; gap: 0.8rem; }
+    .header-between { justify-content: space-between; } /* Para el header del oficio */
+    .header-left { display: flex; align-items: center; gap: 0.8rem; }
     
-    .preview-image {
-        width: 100%;
-        height: 120px;
-        object-fit: cover;
-    }
+    .status-icon { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 0.9rem; }
+    .status-header h3 { margin: 0; font-size: 1.1rem; font-weight: 700; }
+
+    /* Variantes de Color */
+    .card-red { background: var(--bg-red); border-color: var(--border-red); }
+    .card-red .status-icon { background: var(--icon-red); } .card-red h3 { color: var(--text-red); }
+    
+    .card-green { background: var(--bg-green); border-color: var(--border-green); }
+    .card-green .status-icon { background: var(--icon-green); } .card-green h3 { color: var(--text-green); }
+    
+    .card-gray { background: var(--bg-gray); border-color: var(--border-gray); }
+    .card-gray .status-icon { background: var(--icon-gray); } .card-gray h3 { color: var(--text-gray); }
+    
+    .card-blue { background: var(--bg-blue); border-color: var(--border-blue); }
+    .card-blue .status-icon { background: var(--icon-blue); } .card-blue h3 { color: var(--text-blue); }
+
+    /* Grids de Información (Read Only) */
+    .info-grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1rem; font-size: 0.95rem; }
+    .info-group strong { color: #4b5563; margin-right: 0.5rem; }
+
+    /* Formularios */
+    .form-grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; }
+    .full-width { grid-column: 1 / -1; }
+    .form-group { display: flex; flex-direction: column; gap: 0.5rem; }
+    .form-group label { font-size: 0.9rem; font-weight: 600; color: #374151; }
+    
+    input, select, textarea { width: 100%; padding: 0.75rem; border: 1px solid #d1d5db; border-radius: 8px; font-size: 0.95rem; background: white; }
+    input:focus, select:focus, textarea:focus { outline: none; border-color: var(--col-burgundy); box-shadow: 0 0 0 3px rgba(106, 46, 77, 0.1); }
+    .input-readonly { background: #f3f4f6; color: #6b7280; pointer-events: none; }
+
+    /* Files & Previews */
+    .mt-4 { margin-top: 1rem; }
+    .upload-label { font-weight: 600; color: #374151; display: block; margin-bottom: 0.5rem; }
+    .file-input-base { border: 1px solid #d1d5db; border-radius: 8px; padding: 0.5rem; width: 100%; background: white; }
+    
+    .preview-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 1rem; margin-top: 1rem; }
+    .preview-image-wrapper { position: relative; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.1); height: 100px; }
+    .preview-image { width: 100%; height: 100%; object-fit: cover; }
     
     .remove-image-btn {
-        position: absolute;
-        top: 4px;
-        right: 4px;
-        background: rgba(239, 68, 68, 0.9);
-        color: white;
-        border: none;
-        border-radius: 50%;
-        width: 24px;
-        height: 24px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        font-size: 14px;
-        font-weight: bold;
+        position: absolute; top: 2px; right: 2px; width: 22px; height: 22px;
+        background: rgba(239, 68, 68, 0.9); color: white; border-radius: 50%;
+        border: none; cursor: pointer; display: flex; align-items: center; justify-content: center;
+        font-weight: bold; font-size: 12px;
     }
+
+    /* Botones */
+    .form-actions { margin-top: 2rem; padding-top: 2rem; border-top: 1px solid #e5e7eb; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 1rem; }
+    .btn { padding: 0.75rem 1.5rem; border-radius: 8px; font-weight: 600; display: inline-flex; align-items: center; gap: 0.5rem; border: none; cursor: pointer; transition: all 0.2s; font-size: 1rem; }
     
-    .remove-image-btn:hover {
-        background: rgba(220, 38, 38, 0.9);
+    .btn-primary { background: linear-gradient(to right, var(--col-burgundy), var(--col-burgundy-dark)); color: white; }
+    .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
+    
+    .btn-dashed { background: white; border: 2px dashed var(--col-burgundy); color: var(--col-burgundy); }
+    .btn-dashed:hover { background: rgba(106, 46, 77, 0.05); }
+    
+    .btn-icon-remove { background: none; border: none; color: #ef4444; cursor: pointer; font-size: 1.2rem; transition: color 0.2s; }
+    .btn-icon-remove:hover { color: #991b1b; }
+
+    /* Botón deshabilitado (JS Logic) */
+    button:disabled { opacity: 0.5; cursor: not-allowed; background: #9ca3af !important; color: white !important; border-color: transparent; }
+
+    /* Móvil */
+    @media (max-width: 768px) {
+        .header-card { flex-direction: column; text-align: center; }
+        .form-actions { flex-direction: column; }
+        .btn { width: 100%; justify-content: center; }
     }
 </style>
 {% endblock %}
@@ -281,45 +320,36 @@
 {% block scripts %}
 <script>
 document.addEventListener('DOMContentLoaded', () => {
+    // Variables DOM
     const traspasoForm = document.getElementById('traspasoForm');
     const oficiosContainer = document.getElementById('oficios-container');
     const addOficioBtn = document.getElementById('add-oficio-btn');
     const oficioTemplate = document.getElementById('oficio-template');
-    let oficioIndex = 0; // Empezamos en 0 para que el primero sea 1
-
-    // Almacén para archivos
+    let oficioIndex = 0;
     const fileStores = {};
 
-    // ===================================================================
-    // FUNCIONES PARA PREVISUALIZACIÓN DE IMÁGENES
-    // ===================================================================
+    // ---------------------------------------------------
+    // 1. GESTIÓN DE IMÁGENES (Preview y borrado lógico)
+    // ---------------------------------------------------
     function initializeFileInput(fileInput) {
         if (!fileInput) return;
-        
-        const inputId = fileInput.id;
-        if (!fileStores[inputId]) {
-            fileStores[inputId] = [];
-        }
+        const inputId = fileInput.id || fileInput.name + '_' + Date.now(); // Asegurar ID
+        fileInput.id = inputId;
+
+        if (!fileStores[inputId]) fileStores[inputId] = [];
 
         fileInput.addEventListener('change', function(event) {
             const files = Array.from(event.target.files);
-            const previewContainer = this.nextElementSibling;
+            const previewContainer = this.nextElementSibling; // Asume que el div preview sigue al input
             
-            if (!previewContainer) {
-                console.error('No se encontró contenedor de preview para:', inputId);
-                return;
-            }
+            if (!previewContainer) return;
 
-            // Agregar nuevos archivos al almacén
             files.forEach(file => {
-                const exists = fileStores[inputId].some(f => 
-                    f.name === file.name && f.size === file.size
-                );
-                if (!exists) {
+                // Evitar duplicados
+                if (!fileStores[inputId].some(f => f.name === file.name && f.size === file.size)) {
                     fileStores[inputId].push(file);
                 }
             });
-
             renderPreviews(inputId, previewContainer);
         });
     }
@@ -335,7 +365,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 wrapper.className = 'preview-image-wrapper';
                 wrapper.innerHTML = `
                     <img src="${e.target.result}" class="preview-image">
-                    <button type="button" class="remove-image-btn" data-input-id="${inputId}" data-index="${index}">×</button>
+                    <button type="button" class="remove-image-btn" data-input-id="${inputId}" data-index="${index}">&times;</button>
                 `;
                 container.appendChild(wrapper);
             };
@@ -343,7 +373,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Eliminar imágenes
+    // Delegación de eventos para borrar imágenes
     document.addEventListener('click', function(e) {
         if (e.target.closest('.remove-image-btn')) {
             const btn = e.target.closest('.remove-image-btn');
@@ -359,149 +389,121 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // ===================================================================
-    // FUNCIONES PARA OFICIOS DINÁMICOS
-    // ===================================================================
+    // ---------------------------------------------------
+    // 2. GESTIÓN DE OFICIOS (Dinámico)
+    // ---------------------------------------------------
     function createOficio() {
         oficioIndex++;
-        const newOficioElement = oficioTemplate.content.cloneNode(true);
+        const clone = oficioTemplate.content.cloneNode(true);
         
-        // Actualizar número del oficio
-        newOficioElement.querySelector('.oficio-number').textContent = oficioIndex;
+        // Actualizar número visual
+        clone.querySelector('.oficio-number').textContent = oficioIndex;
         
-        // Actualizar todos los names e ids con el índice
-        const elementsToUpdate = newOficioElement.querySelectorAll('[name]');
-        elementsToUpdate.forEach(element => {
-            const originalName = element.getAttribute('name');
+        // Actualizar names e ids únicos
+        clone.querySelectorAll('[name]').forEach(el => {
+            const originalName = el.getAttribute('name');
             const newName = `${originalName}_${oficioIndex}`;
-            element.setAttribute('name', newName);
-            element.setAttribute('id', newName);
+            el.setAttribute('name', newName);
+            el.setAttribute('id', newName); // Importante para el fileInput
         });
-        
-        // Agregar al DOM
-        oficiosContainer.appendChild(newOficioElement);
-        
-        // Inicializar el file input
-        const newFileInput = oficiosContainer.querySelector(`.oficio-block:last-child .file-input-oficio`);
-        if (newFileInput) {
-            initializeFileInput(newFileInput);
-        }
-        
-        updateOficioNumbers();
-        updateUI();
-    }
 
-    function removeOficio(oficioBlock) {
-        const fileInput = oficioBlock.querySelector('.file-input-oficio');
-        if (fileInput && fileStores[fileInput.id]) {
-            delete fileStores[fileInput.id];
-        }
-        oficioBlock.remove();
-        updateOficioNumbers();
+        oficiosContainer.appendChild(clone);
+        
+        // Inicializar el input de archivo del nuevo oficio
+        const newFileInput = oficiosContainer.lastElementChild.querySelector('.file-input-oficio');
+        if (newFileInput) initializeFileInput(newFileInput);
+        
         updateUI();
-    }
-
-    function updateOficioNumbers() {
-        const blocks = oficiosContainer.querySelectorAll('.oficio-block');
-        blocks.forEach((block, index) => {
-            const numberSpan = block.querySelector('.oficio-number');
-            if (numberSpan) {
-                numberSpan.textContent = index + 1;
-            }
-        });
     }
 
     function updateUI() {
-        const oficiosCount = oficiosContainer.querySelectorAll('.oficio-block').length;
+        const count = oficiosContainer.querySelectorAll('.oficio-block').length;
         const submitBtn = traspasoForm.querySelector('button[type="submit"]');
-        
-        // Mostrar/ocultar botón de eliminar según la cantidad
         const removeBtns = oficiosContainer.querySelectorAll('.remove-oficio-btn');
-        removeBtns.forEach(btn => {
-            btn.style.display = oficiosCount > 1 ? 'block' : 'none';
-        });
+
+        // Mostrar botón eliminar si hay > 1 oficio (opcional, según lógica de negocio)
+        removeBtns.forEach(btn => btn.style.display = count > 1 ? 'block' : 'none');
         
-        // Deshabilitar/enabled el botón de enviar
-        if (submitBtn) {
-            if (oficiosCount === 0) {
-                submitBtn.disabled = true;
-                submitBtn.classList.add('opacity-50', 'cursor-not-allowed');
-                submitBtn.classList.remove('bg-blue-600', 'hover:bg-blue-700');
-                submitBtn.classList.add('bg-gray-400');
-            } else {
-                submitBtn.disabled = false;
-                submitBtn.classList.remove('opacity-50', 'cursor-not-allowed', 'bg-gray-400');
-                submitBtn.classList.add('bg-blue-600', 'hover:bg-blue-700');
-            }
-        }
+        if (submitBtn) submitBtn.disabled = (count === 0);
     }
 
-    // ===================================================================
-    // EVENT LISTENERS
-    // ===================================================================
+    // Eventos de Oficios
     addOficioBtn.addEventListener('click', createOficio);
 
     oficiosContainer.addEventListener('click', function(e) {
         if (e.target.closest('.remove-oficio-btn')) {
-            const oficioBlock = e.target.closest('.oficio-block');
-            removeOficio(oficioBlock);
+            const block = e.target.closest('.oficio-block');
+            // Limpiar memoria de archivos de este bloque
+            const fileInput = block.querySelector('.file-input-oficio');
+            if(fileInput && fileStores[fileInput.id]) delete fileStores[fileInput.id];
+            
+            block.remove();
+            updateUI();
+            // Renumerar (Opcional visualmente)
+            oficiosContainer.querySelectorAll('.oficio-block').forEach((b, i) => {
+                b.querySelector('.oficio-number').textContent = i + 1;
+            });
         }
     });
 
+    // ---------------------------------------------------
+    // 3. ENVÍO DEL FORMULARIO (AJAX)
+    // ---------------------------------------------------
     traspasoForm.addEventListener('submit', async function(e) {
         e.preventDefault();
         
-        // Validar que haya al menos un oficio
-        const oficiosCount = oficiosContainer.querySelectorAll('.oficio-block').length;
-        if (oficiosCount === 0) {
+        if (oficiosContainer.querySelectorAll('.oficio-block').length === 0) {
             alert('Debe agregar al menos un oficio de traspaso');
             return;
         }
 
         const formData = new FormData(this);
         
-        // Agregar archivos al FormData
+        // Reemplazar los archivos del formulario con los de nuestro almacén en memoria
+        // (porque el input file nativo no permite modificar su lista de archivos programáticamente fácilmente)
         for (const inputId in fileStores) {
             const files = fileStores[inputId];
             const inputName = document.getElementById(inputId)?.name;
             
             if (inputName && files.length > 0) {
+                // Eliminamos lo que haya capturado el navegador por defecto
                 formData.delete(inputName);
-                files.forEach(file => {
-                    formData.append(inputName, file);
-                });
+                // Agregamos nuestra lista depurada
+                files.forEach(file => formData.append(inputName, file));
             }
         }
         
         try {
-            const response = await fetch(this.action, {
-                method: 'POST',
-                body: formData
-            });
-            
+            const btn = this.querySelector('button[type="submit"]');
+            const originalText = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Procesando...';
+
+            const response = await fetch(this.action, { method: 'POST', body: formData });
             const result = await response.json();
+            
             if (response.ok && result.redirect_url) {
                 window.location.href = result.redirect_url;
             } else {
                 alert(result.message || 'Error al procesar la solicitud');
+                btn.disabled = false;
+                btn.innerHTML = originalText;
             }
         } catch (error) {
             console.error('Error:', error);
             alert('Error de conexión');
+            // Restaurar botón en caso de error
+            const btn = this.querySelector('button[type="submit"]');
+            if(btn) {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-save"></i> Confirmar Traspaso';
+            }
         }
     });
 
-    // ===================================================================
-    // INICIALIZACIÓN
-    // ===================================================================
-    // Crear primer oficio automáticamente
-    createOficio();
-    
-    // Inicializar input de resguardo de fotos
+    // Inicialización
+    createOficio(); // Crear el primero por defecto
     initializeFileInput(document.getElementById('nuevo-resguardo-fotos-input'));
-    
-    // Actualizar UI inicial
-    updateUI();
 });
 </script>
 {% endblock %}

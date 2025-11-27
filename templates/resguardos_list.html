@@ -1,64 +1,50 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="min-h-screen bg-gradient-to-br from-gray-50 to-beige-light/20 py-8 px-4">
-    <div class="max-w-7xl mx-auto">
-        <!-- Encabezado -->
-        <div class="bg-white rounded-2xl shadow-xl border border-beige-light overflow-hidden mb-8">
-            <div class="bg-gradient-to-r from-burgundy to-burgundy-dark p-6 text-white">
-                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                    <div>
-                        <h1 class="text-2xl md:text-3xl font-bold">
-                            {% if is_sujeto_control %}
-                                Resguardos Sujeto de Control
-                            {% else %}
-                                Lista de Resguardos
-                            {% endif %}
-                        </h1>
-                        <p class="text-beige-light mt-2">
-                            Gestión y administración de resguardos del sistema
-                        </p>
-                    </div>
-                    <div class="flex items-center space-x-2">
-                        <a href="{{ url_for('resguardos.crear_resguardo') }}" 
-                           class="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-semibold rounded-xl shadow-sm text-white bg-gradient-to-r from-burgundy to-burgundy-dark hover:from-burgundy-dark hover:to-burgundy focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-burgundy transition-all duration-200 ease-in-out">
-                            <i class="fas fa-plus-circle mr-2"></i> Agregar Nuevo Resguardo
-                        </a>
-                    </div>
-                </div>
+<div class="page-wrapper">
+    <div class="container-limit">
+        
+        <div class="header-card">
+            <div class="header-text">
+                <h1>
+                    {% if is_sujeto_control %}
+                        Resguardos Sujeto de Control
+                    {% else %}
+                        Lista de Resguardos
+                    {% endif %}
+                </h1>
+                <p>Gestión y administración de resguardos del sistema</p>
+            </div>
+            <div class="header-actions">
+                <a href="{{ url_for('resguardos.crear_resguardo') }}" class="btn btn-primary">
+                    <i class="fas fa-plus-circle"></i> Agregar Nuevo Resguardo
+                </a>
             </div>
         </div>
 
-        <!-- Mensajes Flash -->
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
+                <div class="flash-wrapper">
                 {% for category, message in messages %}
-                    <div class="mb-6 p-4 rounded-lg border-l-4 {% if category == 'success' %}bg-green-100 border-green-500 text-green-700{% elif category == 'danger' %}bg-red-100 border-red-500 text-red-700{% else %}bg-blue-100 border-blue-500 text-blue-700{% endif %}">
-                        <div class="flex items-center">
-                            <i class="fas {% if category == 'success' %}fa-check-circle{% elif category == 'danger' %}fa-exclamation-triangle{% else %}fa-info-circle{% endif %} mr-3"></i>
-                            <span>{{ message }}</span>
-                        </div>
+                    <div class="alert alert-{{ category }}">
+                        <i class="fas {% if category == 'success' %}fa-check-circle{% elif category == 'danger' %}fa-exclamation-triangle{% else %}fa-info-circle{% endif %}"></i>
+                        <span>{{ message }}</span>
                     </div>
                 {% endfor %}
+                </div>
             {% endif %}
         {% endwith %}
 
-        <!-- Búsqueda y Filtros -->
-        <div class="bg-white rounded-2xl shadow-lg border border-beige-light overflow-hidden mb-6">
-            <div class="flex items-center bg-gradient-to-r from-burgundy/10 to-burgundy/5 p-4 border-b border-beige-light">
-                <div class="w-8 h-8 bg-burgundy rounded-full flex items-center justify-center mr-3">
-                    <i class="fas fa-search text-white text-sm"></i>
-                </div>
-                <h2 class="text-xl font-bold text-burgundy">Buscar Resguardo</h2>
+        <div class="card search-card">
+            <div class="card-header-simple">
+                <div class="icon-box-small"><i class="fas fa-search"></i></div>
+                <h2>Buscar Resguardo</h2>
             </div>
-            <div class="p-6">
-                <form action="{{ request.path }}" method="GET" class="space-y-4 md:space-y-0 md:flex md:items-end md:gap-4">
-                    <div class="flex-1">
-                        <label for="search_column" class="block text-sm font-semibold text-gray-700 mb-2">
-                            Buscar en:
-                        </label>
-                        <select name="search_column" id="search_column" 
-                                class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-burgundy/50 focus:border-burgundy transition-all duration-200 bg-white/80">
+            <div class="card-body">
+                <form action="{{ request.path }}" method="GET" class="search-form-layout">
+                    <div class="form-group">
+                        <label for="search_column">Buscar en:</label>
+                        <select name="search_column" id="search_column">
                             <option value="all" {% if search_column == 'all' %}selected{% endif %}>Todas las Columnas</option>
                             {% for col in available_columns_for_search %}
                                 <option value="{{ col }}" {% if search_column == col %}selected{% endif %}>
@@ -67,108 +53,99 @@
                             {% endfor %}
                         </select>
                     </div>
-                    <div class="flex-1">
-                        <label for="search_query" class="block text-sm font-semibold text-gray-700 mb-2">
-                            Texto a buscar:
-                        </label>
+                    
+                    <div class="form-group flex-grow">
+                        <label for="search_query">Texto a buscar:</label>
                         <input type="text" 
                                name="search_query" 
                                id="search_query" 
                                value="{{ search_query | default('') }}" 
-                               placeholder="Escribe aquí..." 
-                               class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-burgundy/50 focus:border-burgundy transition-all duration-200 bg-white/80">
+                               placeholder="Escribe aquí...">
                     </div>
-                    <div class="flex gap-2 pt-2">
-                        <button type="submit" 
-                                class="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-semibold rounded-xl shadow-sm text-white bg-gradient-to-r from-burgundy to-burgundy-dark hover:from-burgundy-dark hover:to-burgundy focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-burgundy transition-all duration-200 ease-in-out">
-                            <i class="fas fa-filter mr-2"></i> Aplicar Filtro
+                    
+                    <div class="search-actions">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-filter"></i> Aplicar
                         </button>
-                        <a href="{{ request.path }}" 
-                           class="inline-flex items-center justify-center px-6 py-3 border-2 border-beige text-base font-semibold rounded-xl text-burgundy bg-white hover:bg-beige-light/30 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-burgundy transition-all duration-200 ease-in-out">
-                            <i class="fas fa-times mr-2"></i> Limpiar
+                        <a href="{{ request.path }}" class="btn btn-secondary">
+                            <i class="fas fa-times"></i> Limpiar
                         </a>
                     </div>
                 </form>
             </div>
         </div>
 
-        <!-- Tabla de Resguardos -->
-        <div class="bg-white rounded-2xl shadow-lg border border-beige-light overflow-hidden">
-            <div class="overflow-x-auto">
-                <table class="min-w-full">
+        <div class="card table-card">
+            <div class="table-responsive">
+                <table class="data-table">
                     <thead>
-                        <tr class="bg-gradient-to-r from-burgundy to-burgundy-dark text-white">
-                            <th class="py-4 px-6 text-left font-semibold uppercase text-sm">No. Resguardo</th>
-                            <th class="py-4 px-6 text-left font-semibold uppercase text-sm">No. Inventario</th>
-                            <th class="py-4 px-6 text-left font-semibold uppercase text-sm">Descripción Del Bien</th>
-                            <th class="py-4 px-6 text-left font-semibold uppercase text-sm">Nombre Resguardante</th>
-                            <th class="py-4 px-6 text-left font-semibold uppercase text-sm">Área</th>
-                            <th class="py-4 px-6 text-left font-semibold uppercase text-sm">Fecha Resguardo</th>
-                            <th class="py-4 px-6 text-center font-semibold uppercase text-sm">Acciones</th>
+                        <tr>
+                            <th>No. Resguardo</th>
+                            <th>No. Inventario</th>
+                            <th>Descripción Del Bien</th>
+                            <th>Nombre Resguardante</th>
+                            <th>Área</th>
+                            <th>Fecha</th>
+                            <th class="text-center">Acciones</th>
                         </tr>
                     </thead>
-                    <tbody class="text-gray-600">
+                    <tbody>
                         {% for resguardo in resguardos %}
-                            <tr class="border-b border-beige-light hover:bg-beige-light/20 transition-colors duration-200
-                                {% if not resguardo.Activo %}bg-red-50 hover:bg-red-100{% endif %}">
-                                <td class="py-4 px-6">
-                                    <div class="flex items-center">
+                            <tr class="{% if not resguardo.Activo %}row-inactive{% endif %}">
+                                <td>
+                                    <div class="cell-content">
                                         {% if not resguardo.Activo %}
-                                            <i class="fas fa-ban text-red-500 mr-2" title="Resguardo Inactivo"></i>
+                                            <i class="fas fa-ban text-danger" title="Resguardo Inactivo"></i>
                                         {% endif %}
-                                        <span class="font-medium text-gray-900" title="{{ resguardo.No_Resguardo | default('') }}">
+                                        <span class="font-bold" title="{{ resguardo.No_Resguardo | default('') }}">
                                             {{ resguardo.No_Resguardo | default('N/A') }}
                                         </span>
                                     </div>
                                 </td>
-                                <td class="py-4 px-6">
-                                    <span class="font-mono text-sm bg-gray-100 px-2 py-1 rounded" title="{{ resguardo.No_Inventario | default('') }}">
+                                <td>
+                                    <span class="badge badge-mono" title="{{ resguardo.No_Inventario | default('') }}">
                                         {{ resguardo.No_Inventario | default('N/A') }}
                                     </span>
                                 </td>
-                                <td class="py-4 px-6 max-w-xs">
-                                    <div class="truncate" title="{{ resguardo.Descripcion_Del_Bien | default('') }}">
+                                <td>
+                                    <div class="text-truncate" title="{{ resguardo.Descripcion_Del_Bien | default('') }}">
                                         {{ resguardo.Descripcion_Del_Bien | default('N/A') }}
                                     </div>
                                 </td>
-                                <td class="py-4 px-6">
-                                    <div class="truncate max-w-xs" title="{{ resguardo.Nombre_Del_Resguardante | default('') }}">
+                                <td>
+                                    <div class="text-truncate" title="{{ resguardo.Nombre_Del_Resguardante | default('') }}">
                                         {{ resguardo.Nombre_Del_Resguardante | default('N/A') }}
                                     </div>
                                 </td>
-                                <td class="py-4 px-6">
-                                    <span class="bg-burgundy/10 text-burgundy px-3 py-1 rounded-full text-sm font-medium" 
-                                          title="{{ resguardo.Area_Nombre | default('') }}">
+                                <td>
+                                    <span class="badge badge-burgundy" title="{{ resguardo.Area_Nombre | default('') }}">
                                         {{ resguardo.Area_Nombre | default('N/A') }}
                                     </span>
                                 </td>
-                                <td class="py-4 px-6">
-                                    <span class="text-sm text-gray-500" title="{{ resguardo.Fecha_Resguardo | default('') }}">
+                                <td>
+                                    <span class="text-muted" title="{{ resguardo.Fecha_Resguardo | default('') }}">
                                         {{ resguardo.Fecha_Resguardo | default('N/A') }}
                                     </span>
                                 </td>
-                                <td class="py-4 px-6">
-                                    <div class="flex justify-center space-x-2">
+                                <td>
+                                    <div class="action-buttons">
                                         <a href="{{ url_for('resguardos.editar_resguardo', id_resguardo=resguardo.id) }}" 
-                                           class="inline-flex items-center justify-center w-10 h-10 bg-yellow-500 hover:bg-yellow-600 text-white rounded-xl transition-all duration-200 hover:scale-105"
-                                           title="Editar">
-                                            <i class="fas fa-edit text-sm"></i>
+                                           class="btn-icon btn-yellow" title="Editar">
+                                            <i class="fas fa-edit"></i>
                                         </a>
                                         <a href="{{ url_for('resguardos.ver_resguardo', id_resguardo=resguardo.id) }}" 
-                                           class="inline-flex items-center justify-center w-10 h-10 bg-blue-500 hover:bg-blue-600 text-white rounded-xl transition-all duration-200 hover:scale-105"
-                                           title="Ver Detalles">
-                                            <i class="fas fa-eye text-sm"></i>
+                                           class="btn-icon btn-blue" title="Ver Detalles">
+                                            <i class="fas fa-eye"></i>
                                         </a>
+                                        
                                         {% if resguardo.Activo %}
                                             <a href="{{ url_for('traspaso.traspasar_resguardo', id_resguardo_anterior=resguardo.id) }}" 
-                                               class="inline-flex items-center justify-center w-10 h-10 bg-green-500 hover:bg-green-600 text-white rounded-xl transition-all duration-200 hover:scale-105"
-                                               title="Traspasar">
-                                                <i class="fas fa-exchange-alt text-sm"></i>
+                                               class="btn-icon btn-green" title="Traspasar">
+                                                <i class="fas fa-exchange-alt"></i>
                                             </a>
                                         {% else %}
-                                            <span class="inline-flex items-center justify-center w-10 h-10 bg-gray-400 text-white rounded-xl cursor-not-allowed"
-                                                  title="Resguardo Inactivo - No se puede traspasar">
-                                                <i class="fas fa-ban text-sm"></i>
+                                            <span class="btn-icon btn-disabled" title="Resguardo Inactivo - No se puede traspasar">
+                                                <i class="fas fa-ban"></i>
                                             </span>
                                         {% endif %}
                                     </div>
@@ -176,12 +153,10 @@
                             </tr>
                         {% else %}
                             <tr>
-                                <td colspan="7" class="py-8 text-center">
-                                    <div class="flex flex-col items-center justify-center text-gray-500">
-                                        <i class="fas fa-inbox text-4xl mb-4 opacity-50"></i>
-                                        <p class="text-lg font-semibold">No hay resguardos para mostrar</p>
-                                        <p class="text-sm mt-2">No se encontraron resguardos con los filtros aplicados</p>
-                                    </div>
+                                <td colspan="7" class="empty-state">
+                                    <i class="fas fa-inbox"></i>
+                                    <p>No hay resguardos para mostrar</p>
+                                    <small>No se encontraron resguardos con los filtros aplicados</small>
                                 </td>
                             </tr>
                         {% endfor %}
@@ -190,83 +165,56 @@
             </div>
         </div>
 
-        <!-- Paginación -->
         {% if total_pages > 1 %}
-        <div class="flex flex-col sm:flex-row justify-between items-center gap-4 mt-6 pt-6 border-t border-beige-light">
-            <div class="text-sm text-gray-600">
+        <div class="pagination-wrapper">
+            <div class="pagination-info">
                 Mostrando página {{ current_page }} de {{ total_pages }}
             </div>
-            <div class="flex justify-center space-x-2 flex-wrap">
+            <div class="pagination-controls">
+                
                 {% if current_page > 1 %}
-                    <a href="{{ url_for('resguardos.ver_resguardos', page=current_page-1, search_column=search_column, search_query=search_query) }}" 
-                       class="inline-flex items-center justify-center px-4 py-2 border-2 border-beige text-sm font-semibold rounded-xl text-burgundy bg-white hover:bg-beige-light/30 transition-all duration-200">
-                        <i class="fas fa-chevron-left mr-2"></i> Anterior
+                    <a href="{{ url_for('resguardos.ver_resguardos', page=current_page-1, search_column=search_column, search_query=search_query) }}" class="page-link">
+                        <i class="fas fa-chevron-left"></i> Anterior
                     </a>
                 {% else %}
-                    <span class="inline-flex items-center justify-center px-4 py-2 border-2 border-gray-300 text-sm font-semibold rounded-xl text-gray-400 bg-gray-100 cursor-not-allowed">
-                        <i class="fas fa-chevron-left mr-2"></i> Anterior
-                    </span>
+                    <span class="page-link disabled"><i class="fas fa-chevron-left"></i> Anterior</span>
                 {% endif %}
 
                 {% set pages_to_show = 5 %}
                 {% set start_page = (current_page - (pages_to_show // 2))|int %}
                 {% set end_page = (current_page + (pages_to_show // 2))|int %}
 
-                {% if start_page < 1 %}
-                    {% set start_page = 1 %}
-                    {% set end_page = (pages_to_show)|int %}
-                {% endif %}
-
+                {% if start_page < 1 %}{% set start_page = 1 %}{% set end_page = (pages_to_show)|int %}{% endif %}
                 {% if end_page > total_pages %}
                     {% set end_page = total_pages %}
                     {% set start_page = (total_pages - pages_to_show + 1)|int %}
-                    {% if start_page < 1 %}
-                        {% set start_page = 1 %}
-                    {% endif %}
+                    {% if start_page < 1 %}{% set start_page = 1 %}{% endif %}
                 {% endif %}
 
                 {% if start_page > 1 %}
-                    <a href="{{ url_for('resguardos.ver_resguardos', page=1, search_column=search_column, search_query=search_query) }}" 
-                       class="inline-flex items-center justify-center w-10 h-10 border-2 border-beige text-sm font-semibold rounded-xl text-burgundy bg-white hover:bg-beige-light/30 transition-all duration-200">
-                        1
-                    </a>
-                    {% if start_page > 2 %}
-                        <span class="inline-flex items-center justify-center w-10 h-10 text-sm font-semibold text-gray-400">...</span>
-                    {% endif %}
+                    <a href="{{ url_for('resguardos.ver_resguardos', page=1, search_column=search_column, search_query=search_query) }}" class="page-link number">1</a>
+                    {% if start_page > 2 %}<span class="page-dots">...</span>{% endif %}
                 {% endif %}
 
                 {% for p in range(start_page, end_page + 1) %}
                     {% if p == current_page %}
-                        <span class="inline-flex items-center justify-center w-10 h-10 text-sm font-semibold text-white bg-burgundy rounded-xl shadow-md cursor-default">
-                            {{ p }}
-                        </span>
+                        <span class="page-link number active">{{ p }}</span>
                     {% else %}
-                        <a href="{{ url_for('resguardos.ver_resguardos', page=p, search_column=search_column, search_query=search_query) }}" 
-                           class="inline-flex items-center justify-center w-10 h-10 border-2 border-beige text-sm font-semibold rounded-xl text-burgundy bg-white hover:bg-beige-light/30 transition-all duration-200">
-                            {{ p }}
-                        </a>
+                        <a href="{{ url_for('resguardos.ver_resguardos', page=p, search_column=search_column, search_query=search_query) }}" class="page-link number">{{ p }}</a>
                     {% endif %}
                 {% endfor %}
 
                 {% if end_page < total_pages %}
-                    {% if end_page < total_pages - 1 %}
-                        <span class="inline-flex items-center justify-center w-10 h-10 text-sm font-semibold text-gray-400">...</span>
-                    {% endif %}
-                    <a href="{{ url_for('resguardos.ver_resguardos', page=total_pages, search_column=search_column, search_query=search_query) }}" 
-                       class="inline-flex items-center justify-center w-10 h-10 border-2 border-beige text-sm font-semibold rounded-xl text-burgundy bg-white hover:bg-beige-light/30 transition-all duration-200">
-                        {{ total_pages }}
-                    </a>
+                    {% if end_page < total_pages - 1 %}<span class="page-dots">...</span>{% endif %}
+                    <a href="{{ url_for('resguardos.ver_resguardos', page=total_pages, search_column=search_column, search_query=search_query) }}" class="page-link number">{{ total_pages }}</a>
                 {% endif %}
 
                 {% if current_page < total_pages %}
-                    <a href="{{ url_for('resguardos.ver_resguardos', page=current_page+1, search_column=search_column, search_query=search_query) }}" 
-                       class="inline-flex items-center justify-center px-4 py-2 border-2 border-beige text-sm font-semibold rounded-xl text-burgundy bg-white hover:bg-beige-light/30 transition-all duration-200">
-                        Siguiente <i class="fas fa-chevron-right ml-2"></i>
+                    <a href="{{ url_for('resguardos.ver_resguardos', page=current_page+1, search_column=search_column, search_query=search_query) }}" class="page-link">
+                        Siguiente <i class="fas fa-chevron-right"></i>
                     </a>
                 {% else %}
-                    <span class="inline-flex items-center justify-center px-4 py-2 border-2 border-gray-300 text-sm font-semibold rounded-xl text-gray-400 bg-gray-100 cursor-not-allowed">
-                        Siguiente <i class="fas fa-chevron-right ml-2"></i>
-                    </span>
+                    <span class="page-link disabled">Siguiente <i class="fas fa-chevron-right"></i></span>
                 {% endif %}
             </div>
         </div>
@@ -277,31 +225,118 @@
 
 {% block styles %}
 <style>
-    .bg-burgundy { background-color: #6A2E4D; }
-    .bg-burgundy-dark { background-color: #551E3A; }
-    .text-burgundy { color: #6A2E4D; }
-    .border-burgundy { border-color: #6A2E4D; }
-    .focus\:ring-burgundy\/50:focus { --tw-ring-color: rgb(106 46 77 / 0.5); }
-    .focus\:border-burgundy:focus { border-color: #6A2E4D; }
-    
-    .bg-beige { background-color: #BC9B6A; }
-    .bg-beige-light { background-color: #D7C3A0; }
-    .text-beige-light { color: #D7C3A0; }
-    .border-beige { border-color: #BC9B6A; }
-    .border-beige-light { border-color: #D7C3A0; }
-    
-    .from-burgundy { --tw-gradient-from: #6A2E4D; --tw-gradient-to: rgb(106 46 77 / 0); --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to); }
-    .to-burgundy-dark { --tw-gradient-to: #551E3A; }
-    
-    input:focus, select:focus, textarea:focus {
-        outline: none;
-        box-shadow: 0 0 0 2px rgb(106 46 77 / 0.1);
+    /* --- VARIABLES (Base común) --- */
+    :root {
+        --col-burgundy: #6A2E4D;
+        --col-burgundy-dark: #551E3A;
+        --col-beige: #BC9B6A;
+        --col-beige-light: #D7C3A0;
+        --col-bg: #f9fafb;
+        --col-white: #ffffff;
+        --radius: 12px;
+        --shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
     }
+
+    /* Layout */
+    .page-wrapper { min-height: 100vh; background: linear-gradient(to bottom right, #f9fafb, rgba(188, 155, 106, 0.1)); padding: 2rem 1rem; }
+    .container-limit { max-width: 1400px; margin: 0 auto; } /* Más ancho para la tabla */
+
+    /* Header */
+    .header-card {
+        background: linear-gradient(to right, var(--col-burgundy), var(--col-burgundy-dark));
+        border-radius: var(--radius); padding: 1.5rem 2rem; color: white;
+        display: flex; justify-content: space-between; align-items: center;
+        margin-bottom: 2rem; box-shadow: var(--shadow); flex-wrap: wrap; gap: 1rem;
+    }
+    .header-text h1 { margin: 0; font-size: 1.5rem; }
+    .header-text p { margin: 0.5rem 0 0; color: #e2e8f0; font-size: 0.9rem; }
+
+    /* Flash Messages */
+    .flash-wrapper { margin-bottom: 1.5rem; }
+    .alert { padding: 1rem; border-radius: 8px; margin-bottom: 0.5rem; border-left: 4px solid; display: flex; align-items: center; gap: 0.5rem; }
+    .alert-success { background: #ecfdf5; border-color: #10b981; color: #065f46; }
+    .alert-danger { background: #fef2f2; border-color: #ef4444; color: #991b1b; }
+    .alert-info { background: #eff6ff; border-color: #3b82f6; color: #1e40af; }
+
+    /* Tarjetas Generales */
+    .card { background: var(--col-white); border-radius: var(--radius); box-shadow: var(--shadow); border: 1px solid #e5e7eb; overflow: hidden; margin-bottom: 1.5rem; }
+    .card-header-simple { padding: 1rem 1.5rem; background: rgba(106, 46, 77, 0.05); border-bottom: 1px solid var(--col-beige-light); display: flex; align-items: center; gap: 0.75rem; }
+    .card-header-simple h2 { margin: 0; color: var(--col-burgundy); font-size: 1.1rem; }
+    .icon-box-small { width: 32px; height: 32px; background: var(--col-burgundy); border-radius: 50%; color: white; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; }
+    .card-body { padding: 1.5rem; }
+
+    /* Formulario de Búsqueda */
+    .search-form-layout {
+        display: flex; gap: 1rem; align-items: flex-end; flex-wrap: wrap;
+    }
+    .form-group { display: flex; flex-direction: column; gap: 0.4rem; min-width: 200px; }
+    .form-group.flex-grow { flex-grow: 1; }
+    .form-group label { font-size: 0.9rem; font-weight: 600; color: #374151; }
+    input, select {
+        padding: 0.7rem; border: 1px solid #d1d5db; border-radius: 8px; width: 100%;
+    }
+    input:focus, select:focus { outline: none; border-color: var(--col-burgundy); box-shadow: 0 0 0 3px rgba(106,46,77,0.1); }
     
-    .truncate {
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
+    .search-actions { display: flex; gap: 0.5rem; padding-bottom: 2px; }
+
+    /* Tabla */
+    .table-responsive { overflow-x: auto; }
+    .data-table { width: 100%; border-collapse: collapse; min-width: 1000px; }
+    .data-table thead tr { background: linear-gradient(to right, var(--col-burgundy), var(--col-burgundy-dark)); color: white; }
+    .data-table th { text-align: left; padding: 1rem; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; }
+    .data-table td { padding: 1rem; border-bottom: 1px solid #f3f4f6; color: #4b5563; vertical-align: middle; }
+    .data-table tr:hover { background-color: #f9fafb; }
+    
+    /* Estado Inactivo (Fila Roja) */
+    .row-inactive { background-color: #fef2f2 !important; }
+    .row-inactive:hover { background-color: #fee2e2 !important; }
+    .text-danger { color: #ef4444; }
+
+    /* Utilidades Tabla */
+    .text-truncate { max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .font-bold { font-weight: 700; color: #111827; }
+    .text-muted { color: #6b7280; font-size: 0.9rem; }
+    .cell-content { display: flex; align-items: center; gap: 0.5rem; }
+
+    /* Badges */
+    .badge { padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; display: inline-block; }
+    .badge-mono { background: #f3f4f6; color: #374151; font-family: monospace; }
+    .badge-burgundy { background: rgba(106, 46, 77, 0.1); color: var(--col-burgundy); }
+
+    /* Botones y Acciones */
+    .action-buttons { display: flex; justify-content: center; gap: 0.5rem; }
+    .btn { padding: 0.75rem 1.5rem; border-radius: 8px; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem; border: none; cursor: pointer; transition: all 0.2s; font-size: 0.95rem; }
+    .btn-primary { background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); color: white; } /* Header Style */
+    .search-actions .btn-primary { background: linear-gradient(to right, var(--col-burgundy), var(--col-burgundy-dark)); color: white; border: none; }
+    .btn-secondary { background: white; border: 1px solid var(--col-beige); color: var(--col-burgundy); }
+    .btn-secondary:hover { background: #fdfbf7; }
+
+    .btn-icon { width: 36px; height: 36px; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; text-decoration: none; border: none; cursor: pointer; color: white; transition: transform 0.2s; }
+    .btn-icon:hover { transform: scale(1.1); }
+    .btn-yellow { background-color: #eab308; }
+    .btn-blue { background-color: #3b82f6; }
+    .btn-green { background-color: #22c55e; }
+    .btn-disabled { background-color: #9ca3af; cursor: not-allowed; opacity: 0.7; }
+    .btn-disabled:hover { transform: none; }
+
+    /* Paginación */
+    .pagination-wrapper { display: flex; justify-content: space-between; align-items: center; padding-top: 1.5rem; border-top: 1px solid var(--col-beige-light); flex-wrap: wrap; gap: 1rem; }
+    .pagination-info { font-size: 0.9rem; color: #6b7280; }
+    .pagination-controls { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+    .page-link { padding: 0.5rem 1rem; border: 1px solid var(--col-beige); background: white; color: var(--col-burgundy); border-radius: 8px; text-decoration: none; font-size: 0.9rem; display: flex; align-items: center; gap: 0.5rem; transition: all 0.2s; }
+    .page-link:hover:not(.disabled) { background: rgba(188, 155, 106, 0.1); }
+    .page-link.disabled { background: #f3f4f6; border-color: #d1d5db; color: #9ca3af; pointer-events: none; }
+    .page-link.number { width: 36px; height: 36px; padding: 0; justify-content: center; }
+    .page-link.active { background: var(--col-burgundy); color: white; border-color: var(--col-burgundy); }
+    .page-dots { display: flex; align-items: center; color: #9ca3af; }
+    .empty-state { text-align: center; padding: 3rem !important; color: #9ca3af; }
+
+    /* Móvil */
+    @media (max-width: 768px) {
+        .header-card { justify-content: center; text-align: center; }
+        .search-form-layout { flex-direction: column; align-items: stretch; }
+        .search-actions { justify-content: stretch; } .search-actions .btn { flex: 1; justify-content: center; }
+        .pagination-wrapper { justify-content: center; }
     }
 </style>
 {% endblock %}

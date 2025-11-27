@@ -64,7 +64,7 @@ def get_areas_for_form():
 def traspasar_resguardo(id_resguardo_anterior):
     """
     Gestiona el proceso de traspaso de un bien de un resguardo a otro,
-    incluyendo la creación de oficios y la subida de evidencia a GOOGLE DRIVE.
+    incluyendo la creación de oficios y el guardado de evidencia LOCAL.
     """
     conn = None
     try:
@@ -93,13 +93,18 @@ def traspasar_resguardo(id_resguardo_anterior):
         # --- LÓGICA POST ---
         if request.method == 'POST':
             
-            # --- Verificación del servicio de Drive (sin cambios) ---
-            if not drive_service or not drive_service.service or not TRASPASOS_FOLDER_ID:
-                return jsonify({
-                    "message": "Error: El servicio de Google Drive o 'TRASPASOS_FOLDER_ID' " \
-                               "no están inicializados. Revise la configuración.", 
-                    "category": "danger"
-                }), 500
+            # --- 1. PREPARACIÓN DE CARPETAS LOCALES ---
+            base_upload_folder = current_app.config.get('UPLOAD_FOLDER')
+            if not base_upload_folder:
+                raise Exception("UPLOAD_FOLDER no está configurado en la app.")
+            
+            # Definimos las rutas físicas
+            resguardos_dir = os.path.join(base_upload_folder, 'resguardos')
+            traspasos_dir = os.path.join(base_upload_folder, 'traspasos')
+            
+            # Creamos las carpetas si no existen
+            os.makedirs(resguardos_dir, exist_ok=True)
+            os.makedirs(traspasos_dir, exist_ok=True)
 
             form_data = request.form
             
@@ -107,12 +112,10 @@ def traspasar_resguardo(id_resguardo_anterior):
             if not area_nueva_id:
                 return jsonify({"message": "Error: Debe seleccionar una nueva área para el resguardo.", "category": "danger"}), 400
 
-            # --- Lógica de Base de Datos (sin cambios) ---
-            
-            # Desactivar resguardo anterior
+            # --- Lógica de Base de Datos (Update Resguardo Anterior) ---
             cursor.execute("UPDATE resguardos SET Activo = 0, Fecha_Ultima_Modificacion = NOW() WHERE id = %s", (id_resguardo_anterior,))
             
-            # Crear nuevo resguardo
+            # --- Insertar Nuevo Resguardo ---
             no_nomina_str = form_data.get('No_Nomina_Trabajador_Nuevo')
             no_nomina = int(no_nomina_str) if no_nomina_str and no_nomina_str.strip() else None
 
@@ -133,7 +136,7 @@ def traspasar_resguardo(id_resguardo_anterior):
             cursor.execute(sql_nuevo_resguardo, valores_nuevo_resguardo)
             id_resguardo_nuevo = cursor.lastrowid
 
-            # Guardar el registro del traspaso
+            # --- Insertar Registro de Traspaso ---
             sql_traspaso = """
                 INSERT INTO traspaso (
                     id_resguardo, fecha_traspaso, area_origen_id, area_destino_id,
@@ -150,32 +153,34 @@ def traspasar_resguardo(id_resguardo_anterior):
             cursor.execute(sql_traspaso, valores_traspaso)
 
             # =====================================================================
-            # ✅ BLOQUE ACTUALIZADO: Añadido NOW() para fecha_subida
+            # ✅ 2. GUARDADO LOCAL: Imágenes del Nuevo Resguardo
             # =====================================================================
             imagenes_nuevo_resguardo = request.files.getlist('imagen_nuevo_resguardo')
             for imagen in imagenes_nuevo_resguardo:
+                # Asegúrate de importar allowed_file y secure_filename
                 if imagen and allowed_file(imagen.filename):
                     
-                    drive_id = drive_service.upload(
-                        file_storage=imagen,
-                        model_type="resguardo-traspaso",
-                        target_folder_id=RESGUARDOS_FOLDER_ID
-                    )
+                    filename = secure_filename(imagen.filename)
+                    unique_filename = f"{uuid.uuid4()}-{filename}"
                     
-                    if drive_id:
-                        cursor.execute(
-                            """
-                            INSERT INTO imagenes_resguardo 
-                                (id_resguardo, ruta_imagen, fecha_subida) 
-                            VALUES (%s, %s, NOW())
-                            """,
-                            (id_resguardo_nuevo, drive_id) 
-                        )
-                    else:
-                        raise Exception(f"No se pudo subir la imagen '{imagen.filename}' a Google Drive.")
+                    # Guardar físico en carpeta 'resguardos'
+                    save_path = os.path.join(resguardos_dir, unique_filename)
+                    imagen.save(save_path)
+                    
+                    # Ruta relativa para la BD
+                    db_path = os.path.join('resguardos', unique_filename)
+
+                    cursor.execute(
+                        """
+                        INSERT INTO imagenes_resguardo 
+                            (id_resguardo, ruta_imagen, fecha_subida) 
+                        VALUES (%s, %s, NOW())
+                        """,
+                        (id_resguardo_nuevo, db_path) 
+                    )
             
             # =====================================================================
-            # ✅ BLOQUE ACTUALIZADO: Añadido NOW() para fecha_subida (asumido)
+            # ✅ 3. GUARDADO LOCAL: Fotos de los Oficios
             # =====================================================================
             oficio_index = 1
             while True:
@@ -183,7 +188,7 @@ def traspasar_resguardo(id_resguardo_anterior):
                 if oficio_clave is None:
                     break 
 
-                # Insertar datos del oficio (Lógica de DB sin cambios)
+                # Insertar datos del oficio
                 sql_oficio = """
                     INSERT INTO oficios_traspaso (id_resguardo_anterior, id_resguardo_actual, Dependencia, Oficio_clave, Asunto, 
                                                   Lugar_Fecha, Nombre_Solicitante, id_area_solicitante, Jefe_Area_Solicitante) 
@@ -201,33 +206,34 @@ def traspasar_resguardo(id_resguardo_anterior):
                 cursor.execute(sql_oficio, valores_oficio)
                 id_oficio_nuevo = cursor.lastrowid
 
-                # Subir fotos del oficio a Google Drive
+                # Guardar fotos del oficio localmente
                 fotos_oficio = request.files.getlist(f'fotos_oficio_{oficio_index}')
                 for foto in fotos_oficio:
                     if foto and allowed_file(foto.filename):
                         
-                        drive_id_oficio = drive_service.upload(
-                            file_storage=foto,
-                            model_type=f"oficio-traspaso-{id_oficio_nuevo}",
-                            target_folder_id=TRASPASOS_FOLDER_ID 
-                        )
+                        filename = secure_filename(foto.filename)
+                        # Usamos un prefijo para identificar que es de un oficio
+                        unique_filename = f"oficio-{uuid.uuid4()}-{filename}"
+                        
+                        # Guardar físico en carpeta 'traspasos'
+                        save_path = os.path.join(traspasos_dir, unique_filename)
+                        foto.save(save_path)
+                        
+                        # Ruta relativa para la BD
+                        db_path = os.path.join('traspasos', unique_filename)
 
-                        if drive_id_oficio:
-                            # Asumiendo que 'imagenes_oficios_traspaso' también tiene 'fecha_subida'
-                            cursor.execute(
-                                """
-                                INSERT INTO imagenes_oficios_traspaso 
-                                    (id_oficio, ruta_imagen, fecha_subida) 
-                                VALUES (%s, %s, NOW())
-                                """,
-                                (id_oficio_nuevo, drive_id_oficio)
-                            )
-                        else:
-                            raise Exception(f"No se pudo subir la foto de oficio '{foto.filename}' a Google Drive.")
+                        cursor.execute(
+                            """
+                            INSERT INTO imagenes_oficios_traspaso 
+                                (id_oficio, ruta_imagen, fecha_subida) 
+                            VALUES (%s, %s, NOW())
+                            """,
+                            (id_oficio_nuevo, db_path)
+                        )
                 
                 oficio_index += 1
 
-            # Confirmar la transacción y responder al frontend
+            # Confirmar transacción
             conn.commit()
             log_activity(
                 action="Traspaso de Resguardo", 
@@ -256,6 +262,8 @@ def traspasar_resguardo(id_resguardo_anterior):
         resguardo_anterior=resguardo_anterior, 
         areas=areas
     )
+
+
 # --- NUEVA RUTA PARA VER OFICIOS DE TRASPASO ---
 @traspaso_bp.route('/ver_oficios_traspaso')
 @login_required

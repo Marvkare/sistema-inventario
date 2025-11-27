@@ -3,92 +3,77 @@
 {% block title %}Gestión de Procesos de Baja{% endblock %}
 
 {% block content %}
-<div class="min-h-screen bg-gradient-to-br from-gray-50 to-beige-light/20 py-8 px-4">
-    <div class="max-w-7xl mx-auto">
+<div class="page-wrapper">
+    <div class="container-limit">
         
-        <!-- Encabezado -->
-        <div class="bg-white rounded-2xl shadow-xl border border-beige-light overflow-hidden mb-8">
-            <div class="bg-gradient-to-r from-burgundy to-burgundy-dark p-6 text-white">
-                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                    <div>
-                        <h1 class="text-2xl md:text-3xl font-bold">Gestión de Procesos de Baja</h1>
-                        <p class="text-beige-light mt-2">Administre los procesos de baja de bienes institucionales</p>
-                    </div>
-                    <div class="flex items-center space-x-2">
-                        <div class="w-12 h-12 bg-beige rounded-full flex items-center justify-center shadow-lg">
-                            <i class="fas fa-box-open text-burgundy text-xl"></i>
-                        </div>
-                    </div>
-                </div>
+        <div class="header-card">
+            <div class="header-text">
+                <h1>Gestión de Procesos de Baja</h1>
+                <p>Administre los procesos de baja de bienes institucionales.</p>
+            </div>
+            <div class="header-icon-box">
+                <i class="fas fa-box-open"></i>
             </div>
         </div>
 
-        <!-- Botón de acción y contenido -->
-        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
-            <div>
-                <h2 class="text-xl md:text-2xl font-bold text-burgundy">Procesos de Baja Activos</h2>
-                <p class="text-gray-600 mt-1">Seguimiento y gestión de bajas de bienes</p>
+        <div class="action-bar">
+            <div class="title-group">
+                <h2>Procesos Activos</h2>
+                <p>Seguimiento y gestión de bajas.</p>
             </div>
-            <button id="openModalBtn" class="mt-4 sm:mt-0 bg-gradient-to-r from-burgundy to-burgundy-dark hover:from-burgundy-dark hover:to-burgundy text-white font-bold py-3 px-6 rounded-xl shadow-lg transition-all duration-300 ease-in-out flex items-center transform hover:scale-105">
-                <i class="fas fa-plus-circle mr-2"></i>
-                Iniciar Nuevo Proceso
+            <button id="openModalBtn" class="btn btn-primary">
+                <i class="fas fa-plus-circle"></i> Iniciar Nuevo Proceso
             </button>
         </div>
 
-        <!-- Tabla de procesos -->
-        <div class="bg-white rounded-2xl shadow-lg border border-beige-light overflow-hidden">
-            <div class="overflow-x-auto">
-                <table class="w-full text-sm text-left text-gray-600">
-                    <thead class="text-xs text-gray-700 uppercase bg-gray-50 border-b border-beige-light">
+        <div class="card table-card">
+            <div class="table-responsive">
+                <table class="data-table">
+                    <thead>
                         <tr>
-                            <th scope="col" class="px-6 py-4 font-semibold">No. Inventario</th>
-                            <th scope="col" class="px-6 py-4 font-semibold">Descripción</th>
-                            <th scope="col" class="px-6 py-4 font-semibold">Solicitante</th>
-                            <th scope="col" class="px-6 py-4 font-semibold">Motivo</th>
-                            <th scope="col" class="px-6 py-4 font-semibold">Estatus</th>
-                            <th scope="col" class="px-6 py-4 font-semibold">Fecha de Inicio</th>
-                            <th scope="col" class="px-6 py-4 font-semibold text-right">Acciones</th>
+                            <th>No. Inventario</th>
+                            <th>Descripción</th>
+                            <th>Solicitante</th>
+                            <th>Motivo</th>
+                            <th>Estatus</th>
+                            <th>Fecha Inicio</th>
+                            <th class="text-right">Acciones</th>
                         </tr>
                     </thead>
                     <tbody id="tabla-procesos">
                         {% for proceso in procesos %}
-                        <tr class="bg-white border-b border-beige-light hover:bg-beige-light/20 transition-colors duration-200">
-                            <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">
-                                {{ proceso.bien.No_Inventario }}
-                            </th>
-                            <td class="px-6 py-4">{{ proceso.bien.Descripcion_Corta_Del_Bien }}</td>
-                            <td class="px-6 py-4">{{ proceso.nombre_solicitante }}</td>
-                            <td class="px-6 py-4">{{ proceso.motivo }}</td>
-                            <td class="px-6 py-4">
+                        <tr>
+                            <td>
+                                <span class="font-bold">{{ proceso.bien.No_Inventario }}</span>
+                            </td>
+                            <td>
+                                <div class="text-truncate">{{ proceso.bien.Descripcion_Corta_Del_Bien }}</div>
+                            </td>
+                            <td>{{ proceso.nombre_solicitante }}</td>
+                            <td>{{ proceso.motivo }}</td>
+                            <td>
                                 {% if proceso.estatus == 'Solicitado' %}
-                                    <span class="bg-blue-100 text-blue-800 text-xs font-medium px-3 py-1.5 rounded-full border border-blue-200">
-                                        <i class="fas fa-clock mr-1"></i>Solicitado
-                                    </span>
+                                    <span class="badge badge-blue"><i class="fas fa-clock"></i> Solicitado</span>
                                 {% elif proceso.estatus == 'En Dictamen Técnico' %}
-                                    <span class="bg-yellow-100 text-yellow-800 text-xs font-medium px-3 py-1.5 rounded-full border border-yellow-200">
-                                        <i class="fas fa-clipboard-check mr-1"></i>En Dictamen
-                                    </span>
+                                    <span class="badge badge-yellow"><i class="fas fa-clipboard-check"></i> En Dictamen</span>
                                 {% else %}
-                                    <span class="bg-gray-100 text-gray-800 text-xs font-medium px-3 py-1.5 rounded-full border border-gray-200">
-                                        {{ proceso.estatus }}
-                                    </span>
+                                    <span class="badge badge-gray">{{ proceso.estatus }}</span>
                                 {% endif %}
                             </td>
-                            <td class="px-6 py-4">{{ proceso.fecha_inicio.strftime('%Y-%m-%d') }}</td>
-                            <td class="px-6 py-4 text-right">
-                                <a href="{{ url_for('bajas.ver_proceso', proceso_id=proceso.id) }}" 
-                                   class="inline-flex items-center text-burgundy hover:text-burgundy-dark font-medium text-sm transition-colors duration-200">
-                                    <i class="fas fa-eye mr-1"></i> Ver Detalles
+                            <td>{{ proceso.fecha_inicio.strftime('%Y-%m-%d') }}</td>
+                            <td class="text-right">
+                                <a href="{{ url_for('bajas.ver_proceso', proceso_id=proceso.id) }}" class="btn-link">
+                                    <i class="fas fa-eye"></i> Ver Detalles
                                 </a>
                             </td>
                         </tr>
                         {% else %}
                         <tr>
-                            <td colspan="7" class="text-center text-gray-500 py-8">
-                                <div class="flex flex-col items-center justify-center">
-                                    <i class="fas fa-inbox text-4xl text-gray-300 mb-3"></i>
-                                    <p class="text-lg">No hay procesos de baja registrados</p>
-                                    <p class="text-sm text-gray-500 mt-1">Comience creando un nuevo proceso de baja</p>
+                            <td colspan="7" class="empty-state">
+                                <div class="empty-content">
+                                    <i class="fas fa-inbox"></i>
+                                    <p>No hay procesos de baja registrados</p>
+                                    <small>Comience creando un nuevo proceso</small>
                                 </div>
                             </td>
                         </tr>
@@ -100,127 +85,90 @@
     </div>
 </div>
 
-<!-- Modal para nuevo proceso -->
-<div id="newProcessModal" class="fixed inset-0 bg-gray-600/50 backdrop-blur-sm overflow-y-auto h-full w-full z-50 hidden flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col transform transition-all duration-300">
+<div id="newProcessModal" class="modal-overlay hidden">
+    <div class="modal-container">
         
-        <!-- Header del Modal -->
-        <div class="flex justify-between items-center p-6 border-b border-beige-light bg-gradient-to-r from-burgundy to-burgundy-dark text-white rounded-t-2xl">
-            <h3 class="text-xl font-bold">Iniciar Nuevo Proceso de Baja</h3>
-            <button id="closeModalBtn" class="text-beige-light hover:text-white bg-transparent rounded-lg text-lg p-2 transition-colors duration-200">
-                <i class="fas fa-times"></i>
-            </button>
+        <div class="modal-header">
+            <h3>Iniciar Nuevo Proceso de Baja</h3>
+            <button id="closeModalBtn" class="btn-icon-close"><i class="fas fa-times"></i></button>
         </div>
 
-        <!-- Contenido del Modal -->
-        <div class="p-6 overflow-y-auto flex-1">
-            <!-- Paso 1: Búsqueda -->
+        <div class="modal-body">
+            
             <div id="step1-search">
-                <h4 class="text-lg font-semibold text-burgundy mb-4 flex items-center">
-                    <span class="w-8 h-8 bg-burgundy rounded-full flex items-center justify-center text-white text-sm mr-3">1</span>
-                    Buscar y Seleccionar el Bien
-                </h4>
-                <div class="bg-beige-light/20 p-6 rounded-xl border border-beige-light">
-                    <label for="searchValue" class="block mb-3 text-sm font-semibold text-gray-700 flex items-center">
-                        <i class="fas fa-search text-burgundy mr-2"></i>
-                        Buscar Bien:
-                    </label>
-                    <div class="flex space-x-2">
-                        <input type="text" 
-                               id="searchValue" 
-                               class="flex-1 px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-burgundy/50 focus:border-burgundy transition-all duration-200 bg-white"
-                               placeholder="Buscar por No. de Inventario, descripción, marca...">
-                        <button id="searchBtn" class="bg-gradient-to-r from-burgundy to-burgundy-dark hover:from-burgundy-dark hover:to-burgundy text-white font-semibold py-3 px-6 rounded-xl transition-all duration-300 transform hover:scale-105">
-                            <i class="fas fa-search mr-2"></i>Buscar
-                        </button>
+                <div class="step-title">
+                    <span class="step-number">1</span> Buscar y Seleccionar el Bien
+                </div>
+                
+                <div class="search-box-container">
+                    <label class="form-label"><i class="fas fa-search"></i> Buscar Bien:</label>
+                    <div class="search-input-group">
+                        <input type="text" id="searchValue" placeholder="Buscar por No. de Inventario, descripción, marca...">
+                        <button id="searchBtn" class="btn btn-primary"><i class="fas fa-search"></i> Buscar</button>
                     </div>
                 </div>
                 
-                <!-- Resultados de búsqueda -->
-                <div id="searchResults" class="mt-6 hidden">
-                    <p class="text-sm font-semibold text-gray-700 mb-3 flex items-center">
-                        <i class="fas fa-list text-burgundy mr-2"></i>
-                        Resultados de la búsqueda:
-                    </p>
-                    <div id="loader" class="hidden text-center p-6">
-                        <i class="fas fa-spinner fa-spin text-burgundy text-2xl mb-2"></i>
-                        <p class="text-gray-600">Buscando bienes...</p>
+                <div id="searchResults" class="results-area hidden">
+                    <p class="results-label">Resultados de la búsqueda:</p>
+                    
+                    <div id="loader" class="loader-container hidden">
+                        <i class="fas fa-spinner fa-spin"></i>
+                        <p>Buscando bienes...</p>
                     </div>
-                    <div id="resultsTableContainer" class="max-h-60 overflow-y-auto border border-beige-light rounded-xl"></div>
-                    <p id="noResults" class="hidden text-center p-6 text-gray-500">
-                        <i class="fas fa-search text-2xl mb-2"></i><br>
-                        No se encontraron bienes con los criterios de búsqueda.
-                    </p>
+                    
+                    <div id="resultsTableContainer" class="results-table-wrapper">
+                        </div>
+                    
+                    <div id="noResults" class="empty-results hidden">
+                        <i class="fas fa-search"></i>
+                        <p>No se encontraron bienes.</p>
+                    </div>
                 </div>
             </div>
 
-            <!-- Paso 2: Formulario -->
             <div id="step2-form" class="hidden">
-                <h4 class="text-lg font-semibold text-burgundy mb-4 flex items-center">
-                    <span class="w-8 h-8 bg-burgundy rounded-full flex items-center justify-center text-white text-sm mr-3">2</span>
-                    Completar Solicitud de Baja
-                </h4>
+                <div class="step-title">
+                    <span class="step-number">2</span> Completar Solicitud de Baja
+                </div>
                 
-                <!-- Detalles del bien seleccionado -->
-                <div id="bienDetails" class="mb-6 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 p-6 rounded-xl text-sm space-y-3"></div>
+                <div id="bienDetails" class="bien-details-card"></div>
                 
-                <!-- Formulario de baja -->
                 <form id="bajaForm" enctype="multipart/form-data">
                     <input type="hidden" id="id_bien" name="id_bien">
-                    <div class="space-y-6">
-                        <!-- Motivo -->
-                        <div>
-                            <label for="motivo" class="block mb-2 text-sm font-semibold text-gray-700 flex items-center">
-                                <i class="fas fa-exclamation-circle text-burgundy mr-2"></i>
-                                Motivo de la Baja <span class="text-red-600 ml-1">*</span>
-                            </label>
-                            <select id="motivo" name="motivo" required 
-                                    class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-burgundy/50 focus:border-burgundy transition-all duration-200 bg-white">
-                                <option value="" disabled selected>Seleccione un motivo</option>
-                                <option value="Obsolescencia">Obsolescencia</option>
-                                <option value="Inutilidad">Inutilidad por deterioro</option>
-                                <option value="Robo">Robo o Extravío</option>
-                                <option value="Siniestro">Siniestro</option>
-                                <option value="Enajenación">Enajenación (Venta)</option>
-                            </select>
-                        </div>
+                    
+                    <div class="form-group">
+                        <label for="motivo">Motivo de la Baja *</label>
+                        <select id="motivo" name="motivo" required>
+                            <option value="" disabled selected>Seleccione un motivo</option>
+                            <option value="Obsolescencia">Obsolescencia</option>
+                            <option value="Inutilidad">Inutilidad por deterioro</option>
+                            <option value="Robo">Robo o Extravío</option>
+                            <option value="Siniestro">Siniestro</option>
+                            <option value="Enajenación">Enajenación (Venta)</option>
+                        </select>
+                    </div>
 
-                        <!-- Justificación -->
-                        <div>
-                            <label for="justificacion_solicitud" class="block mb-2 text-sm font-semibold text-gray-700 flex items-center">
-                                <i class="fas fa-file-alt text-burgundy mr-2"></i>
-                                Justificación Detallada <span class="text-red-600 ml-1">*</span>
-                            </label>
-                            <textarea id="justificacion_solicitud" name="justificacion_solicitud" rows="4" required 
-                                      class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-burgundy/50 focus:border-burgundy transition-all duration-200 bg-white resize-none"
-                                      placeholder="Explique detalladamente las razones técnicas, operativas o económicas que justifican la baja del bien..."></textarea>
-                        </div>
+                    <div class="form-group">
+                        <label for="justificacion_solicitud">Justificación Detallada *</label>
+                        <textarea id="justificacion_solicitud" name="justificacion_solicitud" rows="4" required 
+                                  placeholder="Explique las razones técnicas..."></textarea>
+                    </div>
 
-                        <!-- Documento -->
-                        <div>
-                            <label for="solicitud_file" class="block mb-2 text-sm font-semibold text-gray-700 flex items-center">
-                                <i class="fas fa-file-upload text-burgundy mr-2"></i>
-                                Documento de Solicitud de Baja <span class="text-red-600 ml-1">*</span>
-                            </label>
-                            <input type="file" id="solicitud_file" name="solicitud_file" required 
-                                   class="block w-full text-sm text-gray-500 file:mr-4 file:py-3 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-burgundy file:text-white hover:file:bg-burgundy-dark transition-all duration-200"/>
-                            <p class="mt-2 text-xs text-gray-500 flex items-center">
-                                <i class="fas fa-info-circle text-burgundy mr-1"></i>
-                                Archivo PDF, JPG o PNG que formaliza la solicitud de baja (máx. 10MB)
-                            </p>
-                        </div>
+                    <div class="form-group">
+                        <label for="solicitud_file">Documento de Solicitud *</label>
+                        <input type="file" id="solicitud_file" name="solicitud_file" required class="file-input">
+                        <p class="help-text"><i class="fas fa-info-circle"></i> PDF, JPG o PNG (máx. 10MB)</p>
                     </div>
                 </form>
             </div>
         </div>
 
-        <!-- Footer del Modal -->
-        <div class="flex items-center justify-between p-6 border-t border-beige-light bg-gray-50 rounded-b-2xl">
-            <button id="cancelBtn" type="button" class="text-gray-600 bg-white hover:bg-gray-100 border border-gray-300 font-medium py-3 px-6 rounded-xl transition-all duration-200 flex items-center">
-                <i class="fas fa-times mr-2"></i> Cancelar
+        <div class="modal-footer">
+            <button id="cancelBtn" type="button" class="btn btn-secondary">
+                <i class="fas fa-times"></i> Cancelar
             </button>
-            <button id="submitBtn" type="submit" form="bajaForm" class="hidden bg-gradient-to-r from-burgundy to-burgundy-dark hover:from-burgundy-dark hover:to-burgundy text-white font-semibold py-3 px-6 rounded-xl transition-all duration-300 transform hover:scale-105 flex items-center">
-                <i class="fas fa-play-circle mr-2"></i> Iniciar Proceso
+            <button id="submitBtn" type="submit" form="bajaForm" class="btn btn-primary hidden">
+                <i class="fas fa-play-circle"></i> Iniciar Proceso
             </button>
         </div>
     </div>
@@ -229,36 +177,140 @@
 
 {% block styles %}
 <style>
-    .bg-burgundy { background-color: #6A2E4D; }
-    .bg-burgundy-dark { background-color: #551E3A; }
-    .text-burgundy { color: #6A2E4D; }
-    .border-burgundy { border-color: #6A2E4D; }
-    .focus\:ring-burgundy\/50:focus { --tw-ring-color: rgb(106 46 77 / 0.5); }
-    .focus\:border-burgundy:focus { border-color: #6A2E4D; }
+    /* --- VARIABLES --- */
+    :root {
+        --col-burgundy: #6A2E4D;
+        --col-burgundy-dark: #551E3A;
+        --col-beige: #BC9B6A;
+        --col-beige-light: #fdfbf7;
+        --col-white: #ffffff;
+        --col-bg: #f9fafb;
+        
+        --radius: 12px;
+        --shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+        
+        /* Colores Estado */
+        --bg-blue: #eff6ff; --text-blue: #1e40af;
+        --bg-yellow: #fefce8; --text-yellow: #854d0e;
+        --bg-gray: #f3f4f6; --text-gray: #374151;
+    }
+
+    /* Layout */
+    .page-wrapper { min-height: 100vh; background: var(--col-bg); padding: 2rem 1rem; }
+    .container-limit { max-width: 1200px; margin: 0 auto; }
+
+    /* Header */
+    .header-card {
+        background: linear-gradient(to right, var(--col-burgundy), var(--col-burgundy-dark));
+        border-radius: var(--radius); padding: 1.5rem 2rem; color: white;
+        display: flex; justify-content: space-between; align-items: center;
+        margin-bottom: 2rem; box-shadow: var(--shadow);
+    }
+    .header-text h1 { margin: 0; font-size: 1.5rem; }
+    .header-text p { margin: 0.5rem 0 0; color: #e2e8f0; font-size: 0.9rem; }
+    .header-icon-box {
+        width: 48px; height: 48px; background: var(--col-beige); border-radius: 50%;
+        display: flex; align-items: center; justify-content: center; color: var(--col-burgundy); font-size: 1.2rem;
+    }
+
+    /* Action Bar */
+    .action-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem; }
+    .title-group h2 { margin: 0; font-size: 1.25rem; color: var(--col-burgundy); }
+    .title-group p { margin: 0; color: #6b7280; font-size: 0.9rem; }
+
+    /* Tabla */
+    .card { background: var(--col-white); border-radius: var(--radius); box-shadow: var(--shadow); border: 1px solid #e5e7eb; overflow: hidden; }
+    .table-responsive { overflow-x: auto; }
+    .data-table { width: 100%; border-collapse: collapse; min-width: 800px; }
+    .data-table th { background: #f9fafb; padding: 1rem; text-align: left; font-size: 0.85rem; font-weight: 600; color: #4b5563; border-bottom: 2px solid #e5e7eb; text-transform: uppercase; }
+    .data-table td { padding: 1rem; border-bottom: 1px solid #f3f4f6; color: #1f2937; vertical-align: middle; font-size: 0.95rem; }
+    .data-table tr:hover { background: #fdfbf7; }
     
-    .bg-beige { background-color: #BC9B6A; }
-    .bg-beige-light { background-color: #D7C3A0; }
-    .text-beige-light { color: #D7C3A0; }
-    .border-beige { border-color: #BC9B6A; }
-    .border-beige-light { border-color: #D7C3A0; }
+    .text-truncate { max-width: 250px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .text-right { text-align: right; }
+    .font-bold { font-weight: 700; }
+
+    /* Badges */
+    .badge { padding: 0.25rem 0.6rem; border-radius: 20px; font-size: 0.75rem; font-weight: 600; display: inline-flex; align-items: center; gap: 0.3rem; }
+    .badge-blue { background: var(--bg-blue); color: var(--text-blue); border: 1px solid #dbeafe; }
+    .badge-yellow { background: var(--bg-yellow); color: var(--text-yellow); border: 1px solid #fef9c3; }
+    .badge-gray { background: var(--bg-gray); color: var(--text-gray); border: 1px solid #e5e7eb; }
+
+    /* Botones */
+    .btn { padding: 0.75rem 1.5rem; border-radius: 8px; font-weight: 600; border: none; cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; gap: 0.5rem; text-decoration: none; font-size: 0.95rem; }
+    .btn-primary { background: linear-gradient(to right, var(--col-burgundy), var(--col-burgundy-dark)); color: white; }
+    .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
+    .btn-secondary { background: white; border: 1px solid #d1d5db; color: #374151; }
+    .btn-secondary:hover { background: #f3f4f6; }
     
-    .from-burgundy { --tw-gradient-from: #6A2E4D; --tw-gradient-to: rgb(106 46 77 / 0); --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to); }
-    .to-burgundy-dark { --tw-gradient-to: #551E3A; }
+    .btn-link { color: var(--col-burgundy); text-decoration: none; font-weight: 600; display: inline-flex; align-items: center; gap: 0.4rem; }
+    .btn-link:hover { color: var(--col-burgundy-dark); text-decoration: underline; }
+
+    /* Empty State */
+    .empty-state { text-align: center; padding: 3rem; color: #9ca3af; }
+    .empty-content i { font-size: 2.5rem; margin-bottom: 0.5rem; opacity: 0.5; }
+    .empty-content p { font-size: 1.1rem; margin: 0; }
+
+    /* --- MODAL --- */
+    .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(2px); }
+    .modal-container { background: white; width: 90%; max-width: 900px; max-height: 90vh; border-radius: var(--radius); display: flex; flex-direction: column; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); overflow: hidden; }
+    
+    .modal-header { padding: 1.5rem; background: linear-gradient(to right, var(--col-burgundy), var(--col-burgundy-dark)); color: white; display: flex; justify-content: space-between; align-items: center; }
+    .modal-header h3 { margin: 0; font-size: 1.25rem; }
+    .btn-icon-close { background: transparent; border: none; color: rgba(255,255,255,0.8); cursor: pointer; font-size: 1.2rem; }
+    .btn-icon-close:hover { color: white; }
+
+    .modal-body { padding: 2rem; overflow-y: auto; flex: 1; }
+    .modal-footer { padding: 1.5rem; background: #f9fafb; border-top: 1px solid #e5e7eb; display: flex; justify-content: space-between; }
+
+    /* Pasos del Modal */
+    .step-title { font-size: 1.1rem; font-weight: 700; color: var(--col-burgundy); margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem; }
+    .step-number { background: var(--col-burgundy); color: white; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; }
+
+    /* Search Box */
+    .search-box-container { background: rgba(188, 155, 106, 0.1); padding: 1.5rem; border-radius: 8px; border: 1px solid var(--col-beige); }
+    .form-label { display: block; margin-bottom: 0.5rem; font-weight: 600; color: #374151; }
+    .search-input-group { display: flex; gap: 0.5rem; }
+    .search-input-group input { flex: 1; padding: 0.75rem; border: 1px solid #d1d5db; border-radius: 8px; }
+    
+    /* Resultados */
+    .results-area { margin-top: 1.5rem; }
+    .results-label { font-size: 0.9rem; font-weight: 600; color: #4b5563; margin-bottom: 0.5rem; }
+    .results-table-wrapper { max-height: 300px; overflow-y: auto; border: 1px solid #e5e7eb; border-radius: 8px; }
+    .btn-select { background: var(--col-burgundy); color: white; padding: 0.3rem 0.8rem; border-radius: 6px; font-size: 0.8rem; border: none; cursor: pointer; }
+    .btn-select:hover { background: var(--col-burgundy-dark); }
+
+    /* Loader & Empty */
+    .loader-container, .empty-results { text-align: center; padding: 2rem; color: #6b7280; }
+    .loader-container i { font-size: 2rem; color: var(--col-burgundy); margin-bottom: 0.5rem; }
+
+    /* Step 2 Form */
+    .bien-details-card { background: #eff6ff; border: 1px solid #bfdbfe; padding: 1.5rem; border-radius: 8px; margin-bottom: 1.5rem; font-size: 0.9rem; }
+    .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    .form-group { margin-bottom: 1.2rem; }
+    .form-group label { display: block; font-weight: 600; color: #374151; margin-bottom: 0.4rem; }
+    .form-group select, .form-group textarea, .form-group input { width: 100%; padding: 0.75rem; border: 1px solid #d1d5db; border-radius: 8px; }
+    .help-text { font-size: 0.8rem; color: #6b7280; margin-top: 0.3rem; }
+    .hidden { display: none !important; }
+
+    /* Móvil */
+    @media (max-width: 768px) {
+        .header-card { flex-direction: column; text-align: center; }
+        .action-bar { flex-direction: column; align-items: flex-start; }
+        .search-input-group { flex-direction: column; }
+        .detail-grid { grid-template-columns: 1fr; }
+        .data-table { display: block; }
+    }
 </style>
 {% endblock %}
 
 {% block scripts %}
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-    // --- Elementos del DOM ---
-    const openModalBtn = document.getElementById('openModalBtn');
-    const newProcessModal = document.getElementById('newProcessModal');
-    const closeModalBtn = document.getElementById('closeModalBtn');
-    const cancelBtn = document.getElementById('cancelBtn');
-    const searchBtn = document.getElementById('searchBtn');
-    const searchValueInput = document.getElementById('searchValue');
-    const searchResultsDiv = document.getElementById('searchResults');
-    const resultsTableContainer = document.getElementById('resultsTableContainer');
+    // --- Variables ---
+    const modal = document.getElementById('newProcessModal');
+    const searchInput = document.getElementById('searchValue');
+    const resultsContainer = document.getElementById('resultsTableContainer');
     const loader = document.getElementById('loader');
     const noResults = document.getElementById('noResults');
     const step1 = document.getElementById('step1-search');
@@ -266,207 +318,134 @@ document.addEventListener('DOMContentLoaded', () => {
     const submitBtn = document.getElementById('submitBtn');
     const bajaForm = document.getElementById('bajaForm');
     const bienDetailsDiv = document.getElementById('bienDetails');
-    const idBienInput = document.getElementById('id_bien');
-
-    // --- Funciones del Modal ---
-    const openModal = () => {
-        newProcessModal.classList.remove('hidden');
+    
+    // --- Modal Controls ---
+    window.openModal = () => {
+        modal.classList.remove('hidden');
         document.body.style.overflow = 'hidden';
-    };
-
+    }
+    
     const closeModal = () => {
-        newProcessModal.classList.add('hidden');
+        modal.classList.add('hidden');
         document.body.style.overflow = 'auto';
-        resetModal();
-    };
-
-    const resetModal = () => {
+        // Reset
         step1.classList.remove('hidden');
         step2.classList.add('hidden');
         submitBtn.classList.add('hidden');
-        searchResultsDiv.classList.add('hidden');
-        resultsTableContainer.innerHTML = '';
+        resultsContainer.innerHTML = '';
         bajaForm.reset();
-        searchValueInput.value = '';
-        bienDetailsDiv.innerHTML = '';
-        idBienInput.value = '';
-    };
+        searchInput.value = '';
+    }
 
-    // Event Listeners
-    openModalBtn.addEventListener('click', openModal);
-    closeModalBtn.addEventListener('click', closeModal);
-    cancelBtn.addEventListener('click', closeModal);
+    document.getElementById('openModalBtn').addEventListener('click', window.openModal);
+    document.getElementById('closeModalBtn').addEventListener('click', closeModal);
+    document.getElementById('cancelBtn').addEventListener('click', closeModal);
 
-    // Cerrar modal al hacer clic fuera del contenido
-    newProcessModal.addEventListener('click', (e) => {
-        if (e.target === newProcessModal) {
-            closeModal();
-        }
-    });
-
-    // --- Lógica de Búsqueda ---
+    // --- Búsqueda ---
     const performSearch = async () => {
-        const query = searchValueInput.value.trim();
-        if (!query) {
-            alert('Por favor, ingrese un término de búsqueda.');
-            return;
-        }
+        const query = searchInput.value.trim();
+        if (!query) return alert('Ingrese término de búsqueda');
 
-        searchResultsDiv.classList.remove('hidden');
+        document.getElementById('searchResults').classList.remove('hidden');
         loader.classList.remove('hidden');
-        resultsTableContainer.innerHTML = '';
+        resultsContainer.innerHTML = '';
         noResults.classList.add('hidden');
-        
+
         try {
-            const response = await fetch(`{{ url_for('bajas.buscar_bienes_para_baja') }}?q=${encodeURIComponent(query)}`);
-            if (!response.ok) {
-                throw new Error(`Error HTTP: ${response.status}`);
-            }
-            const bienes = await response.json();
+            const res = await fetch(`{{ url_for('bajas.buscar_bienes_para_baja') }}?q=${encodeURIComponent(query)}`);
+            if (!res.ok) throw new Error('Error');
+            const bienes = await res.json();
 
-            if (bienes.length > 0) {
-                displayResults(bienes);
-            } else {
-                noResults.classList.remove('hidden');
-            }
-        } catch (error) {
-            console.error('Error en la búsqueda:', error);
-            noResults.textContent = 'Ocurrió un error al realizar la búsqueda.';
-            noResults.classList.remove('hidden');
-        } finally {
             loader.classList.add('hidden');
+            if (bienes.length === 0) {
+                noResults.classList.remove('hidden');
+                return;
+            }
+
+            // Generar Tabla HTML sin clases de Tailwind
+            let html = `
+                <table class="data-table" style="width:100%">
+                    <thead>
+                        <tr>
+                            <th>No. Inventario</th>
+                            <th>Descripción</th>
+                            <th class="text-right">Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody>`;
+            
+            bienes.forEach(bien => {
+                // Escapar comillas para el JSON del atributo data-bien
+                const jsonBien = JSON.stringify(bien).replace(/"/g, '&quot;');
+                html += `
+                    <tr>
+                        <td><strong>${bien.No_Inventario}</strong></td>
+                        <td>${bien.Descripcion_Del_Bien}</td>
+                        <td class="text-right">
+                            <button class="btn-select" onclick='selectBien(${jsonBien})'>
+                                <i class="fas fa-check"></i> Seleccionar
+                            </button>
+                        </td>
+                    </tr>`;
+            });
+            html += `</tbody></table>`;
+            resultsContainer.innerHTML = html;
+
+        } catch (e) {
+            console.error(e);
+            loader.classList.add('hidden');
+            alert('Error en la búsqueda');
         }
     };
-    
-    const displayResults = (bienes) => {
-        const table = document.createElement('table');
-        table.className = 'w-full text-sm text-left bg-white rounded-lg overflow-hidden';
-        table.innerHTML = `
-            <thead class="text-xs text-gray-700 uppercase bg-gray-50 border-b border-beige-light">
-                <tr>
-                    <th class="px-4 py-3 font-semibold">No. Inventario</th>
-                    <th class="px-4 py-3 font-semibold">Descripción</th>
-                    <th class="px-4 py-3 font-semibold text-right">Acción</th>
-                </tr>
-            </thead>
-            <tbody></tbody>
-        `;
-        const tbody = table.querySelector('tbody');
-        bienes.forEach(bien => {
-            const tr = document.createElement('tr');
-            tr.className = 'border-b border-beige-light hover:bg-beige-light/20 transition-colors duration-200';
-            tr.innerHTML = `
-                <td class="px-4 py-3 font-medium text-gray-900">${bien.No_Inventario}</td>
-                <td class="px-4 py-3 text-gray-600">${bien.Descripcion_Del_Bien}</td>
-                <td class="px-4 py-3 text-right">
-                    <button class="select-bien-btn bg-gradient-to-r from-burgundy to-burgundy-dark hover:from-burgundy-dark hover:to-burgundy text-white text-xs font-semibold py-2 px-4 rounded-lg transition-all duration-200 transform hover:scale-105" 
-                            data-bien='${JSON.stringify(bien).replace(/'/g, "&#39;")}'>
-                        <i class="fas fa-check mr-1"></i> Seleccionar
-                    </button>
-                </td>
-            `;
-            tbody.appendChild(tr);
-        });
-        resultsTableContainer.appendChild(table);
-    };
 
-    searchBtn.addEventListener('click', performSearch);
-    searchValueInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') {
-            e.preventDefault();
-            performSearch();
-        }
-    });
+    document.getElementById('searchBtn').addEventListener('click', performSearch);
+    searchInput.addEventListener('keypress', (e) => { if(e.key === 'Enter') performSearch(); });
 
-    // --- Lógica de Selección y Formulario ---
-    resultsTableContainer.addEventListener('click', (e) => {
-        if (e.target.classList.contains('select-bien-btn') || e.target.closest('.select-bien-btn')) {
-            const button = e.target.classList.contains('select-bien-btn') ? e.target : e.target.closest('.select-bien-btn');
-            const bienData = JSON.parse(button.dataset.bien);
-            selectBien(bienData);
-        }
-    });
-
-    const selectBien = (bien) => {
+    // --- Selección ---
+    window.selectBien = (bien) => {
         step1.classList.add('hidden');
         step2.classList.remove('hidden');
         submitBtn.classList.remove('hidden');
+        document.getElementById('id_bien').value = bien.id;
 
-        idBienInput.value = bien.id;
-        
+        // Renderizar detalles con clases limpias
         bienDetailsDiv.innerHTML = `
-            <h5 class="font-bold text-base mb-3 text-gray-900 border-b pb-2 flex items-center">
-                <i class="fas fa-box text-burgundy mr-2"></i>
-                Datos del Bien Seleccionado
-            </h5>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div class="space-y-2">
-                    <p><span class="font-semibold text-gray-700">No. Inventario:</span><br><span class="text-gray-900 font-medium">${bien.No_Inventario}</span></p>
-                    <p><span class="font-semibold text-gray-700">Costo de Adquisición:</span><br><span class="text-gray-900 font-medium">$${parseFloat(bien.Costo_Inicial || 0).toLocaleString('es-MX', {minimumFractionDigits: 2})}</span></p>
-                </div>
-                <div class="space-y-2">
-                    <p><span class="font-semibold text-gray-700">Marca/Modelo:</span><br><span class="text-gray-900">${bien.Marca || 'N/A'} ${bien.Modelo || ''}</span></p>
-                    <p><span class="font-semibold text-gray-700">Estado:</span><br><span class="text-gray-900">${bien.Estado_Del_Bien || 'N/A'}</span></p>
-                </div>
-                <div class="md:col-span-2 space-y-2">
-                    <p><span class="font-semibold text-gray-700">Descripción:</span><br><span class="text-gray-900">${bien.Descripcion_Del_Bien}</span></p>
-                </div>
-                <div class="md:col-span-2 bg-white p-3 rounded-lg border mt-2">
-                    <p class="font-semibold text-gray-700 mb-1">Responsables:</p>
-                    <p><span class="text-gray-600">Solicitante:</span> <span class="font-medium">${bien.nombre_solicitante || 'No especificado'}</span></p>
-                    <p><span class="text-gray-600">Jefe de Área (Vo.Bo.):</span> <span class="font-medium">${bien.nombre_jefe_area || 'No especificado'}</span></p>
-                </div>
+            <div style="margin-bottom:10px; font-weight:bold; border-bottom:1px solid #bfdbfe; padding-bottom:5px;">
+                <i class="fas fa-box"></i> Datos del Bien
             </div>
-        `;
+            <div class="detail-grid">
+                <div><strong>No. Inventario:</strong> ${bien.No_Inventario}</div>
+                <div><strong>Costo:</strong> $${bien.Costo_Inicial || '0.00'}</div>
+                <div><strong>Marca/Modelo:</strong> ${bien.Marca || ''} ${bien.Modelo || ''}</div>
+                <div><strong>Estado:</strong> ${bien.Estado_Del_Bien || 'N/A'}</div>
+                <div style="grid-column:span 2; margin-top:10px;">
+                    <strong>Descripción:</strong> ${bien.Descripcion_Del_Bien}
+                </div>
+            </div>`;
     };
 
-    // --- Lógica de Envío de Formulario ---
+    // --- Submit ---
     bajaForm.addEventListener('submit', async (e) => {
         e.preventDefault();
-        
-        const submitBtn = document.getElementById('submitBtn');
         submitBtn.disabled = true;
-        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Procesando...';
-
-        const formData = new FormData(bajaForm);
-        
-        // Validaciones
-        if (!formData.get('motivo') || !formData.get('justificacion_solicitud').trim()) {
-            alert('Los campos Motivo y Justificación son obligatorios.');
-            submitBtn.disabled = false;
-            submitBtn.innerHTML = '<i class="fas fa-play-circle mr-2"></i> Iniciar Proceso';
-            return;
-        }
-
-        const solicitudFile = formData.get('solicitud_file');
-        if (!solicitudFile || solicitudFile.size === 0) {
-            alert('Debe adjuntar el Documento de Solicitud de Baja para continuar.');
-            submitBtn.disabled = false;
-            submitBtn.innerHTML = '<i class="fas fa-play-circle mr-2"></i> Iniciar Proceso';
-            return;
-        }
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Procesando...';
 
         try {
-            const response = await fetch(`{{ url_for('bajas.crear_proceso_baja') }}`, {
+            const formData = new FormData(bajaForm);
+            const res = await fetch(`{{ url_for('bajas.crear_proceso_baja') }}`, {
                 method: 'POST',
-                body: formData 
+                body: formData
             });
+            const data = await res.json();
             
-            const result = await response.json();
-
-            if (!response.ok) {
-                throw new Error(result.error || 'Error en el servidor');
-            }
+            if (!res.ok) throw new Error(data.error);
             
-            // Mostrar mensaje de éxito
-            alert('Proceso de baja iniciado exitosamente.');
+            alert('Proceso iniciado correctamente');
             window.location.reload();
-
-        } catch(error) {
-            console.error('Error al crear el proceso:', error);
-            alert(`Ocurrió un error al iniciar el proceso: ${error.message}`);
+        } catch (e) {
+            alert(`Error: ${e.message}`);
             submitBtn.disabled = false;
-            submitBtn.innerHTML = '<i class="fas fa-play-circle mr-2"></i> Iniciar Proceso';
+            submitBtn.innerHTML = '<i class="fas fa-play-circle"></i> Iniciar Proceso';
         }
     });
 });

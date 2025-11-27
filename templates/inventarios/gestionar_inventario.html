@@ -3,1004 +3,718 @@
 {% block title %}Gestionando: {{ inventario.nombre }}{% endblock %}
 
 {% block content %}
-<div class="min-h-screen bg-gradient-to-br from-gray-50 to-beige-light/20 py-8 px-4">
-    <div class="max-w-7xl mx-auto">
+<div class="page-wrapper">
+    <div class="container-limit">
         
-        <!-- Encabezado Principal -->
-        <div class="bg-white rounded-2xl shadow-xl border border-beige-light overflow-hidden mb-8">
-            <div class="bg-gradient-to-r from-burgundy to-burgundy-dark p-6 text-white">
-                <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
-                    <div class="flex-1">
-                        <h1 class="text-2xl md:text-3xl font-bold">{{ inventario.nombre }}</h1>
-                        <p class="text-beige-light mt-2">
-                            <i class="fas fa-calendar-alt mr-2"></i>
-                            Iniciado el: {{ inventario.fecha_inicio.strftime('%d de %B de %Y') }}
-                        </p>
-                    </div>
-                    <div class="flex flex-col sm:flex-row items-start sm:items-center gap-3">
-                        <a href="{{ url_for('inventarios.listar_inventarios') }}" 
-                           class="inline-flex items-center px-4 py-2 border-2 border-beige-light text-beige-light hover:bg-beige-light/10 rounded-xl transition-all duration-200">
-                            <i class="fas fa-arrow-left mr-2"></i>
-                            Regresar
-                        </a>
-
-                        {% if inventario.estatus == 'Planificado' %}
-                        <form action="{{ url_for('inventarios.cambiar_estatus_inventario', inventario_id=inventario.id, accion='comenzar') }}" method="POST" onsubmit="return confirm('¿Deseas iniciar el levantamiento físico?');">
-                            <button type="submit" class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-semibold rounded-xl shadow-lg transition-all duration-300 transform hover:scale-105">
-                                <i class="fas fa-play-circle mr-2"></i>
-                                Comenzar Levantamiento
-                            </button>
-                        </form>
-                        {% elif inventario.estatus == 'En Progreso' %}
-                        <form action="{{ url_for('inventarios.cambiar_estatus_inventario', inventario_id=inventario.id, accion='conciliar') }}" method="POST" onsubmit="return confirm('¿Has terminado de capturar todos los hallazgos?');">
-                            <button type="submit" class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white font-semibold rounded-xl shadow-lg transition-all duration-300 transform hover:scale-105">
-                                <i class="fas fa-exchange-alt mr-2"></i>
-                                Mover a Conciliación
-                            </button>
-                        </form>
-                        {% elif inventario.estatus == 'En Conciliación' %}
-                        <form action="{{ url_for('inventarios.cambiar_estatus_inventario', inventario_id=inventario.id, accion='finalizar') }}" method="POST" onsubmit="return confirm('¿Estás seguro de finalizar? Esta acción es irreversible.');">
-                            <button type="submit" class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-semibold rounded-xl shadow-lg transition-all duration-300 transform hover:scale-105">
-                                <i class="fas fa-flag-checkered mr-2"></i>
-                                Finalizar Inventario
-                            </button>
-                        </form>
-                        {% endif %}
-                        
-                        <span class="inline-flex items-center px-3 py-2 bg-white/10 rounded-xl text-beige-light font-semibold">
-                            <i class="fas fa-info-circle mr-2"></i>
-                            Estatus: {{ inventario.estatus }}
-                        </span>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="bg-white rounded-2xl shadow-lg border border-beige-light overflow-hidden mb-6">
-            <div class="p-6">
-                <div class="flex justify-between items-center mb-3">
-                    <h3 class="text-lg font-semibold text-gray-700 flex items-center">
-                        <i class="fas fa-users text-burgundy mr-2"></i>
-                        Personal de la Brigada
-                    </h3>
-                    
-                    {% if inventario.estatus in ['Planificado', 'En Progreso'] %}
-                        <div class="flex items-center gap-2">
-                            <button id="abrir-modal-remover-brigada" class="inline-flex items-center px-3 py-1 bg-red-100 hover:bg-red-200 text-red-700 font-semibold rounded-lg text-sm transition-all duration-200">
-                                <i class="fas fa-user-minus mr-2"></i>
-                                Remover
-                            </button>
-                            <button id="abrir-modal-brigada" class="inline-flex items-center px-3 py-1 bg-burgundy/10 hover:bg-burgundy/20 text-burgundy font-semibold rounded-lg text-sm transition-all duration-200">
-                                <i class="fas fa-plus mr-2"></i>
-                                Añadir
-                            </button>
-                        </div>
-                    {% endif %}
-                </div>
-                
-                <div class="bg-beige-light/20 p-4 rounded-xl border border-beige-light">
-                    <ul class="space-y-2">
-                        {% for miembro in brigada %}
-                        <li class="flex items-center text-gray-700">
-                            <i class="fas fa-user-check text-burgundy mr-3 text-sm"></i>
-                            <span class="font-medium">{{ miembro.full_name }}</span>
-                            <span class="text-gray-500 ml-2">({{ miembro.username }})</span>
-                        </li>
-                        {% else %}
-                        <li class="text-gray-500 text-center">No hay personal asignado.</li>
-                        {% endfor %}
-                    </ul>
-                </div>
-            </div>
-</div>
-        <!-- Pestañas de Navegación -->
-        <div class="bg-white rounded-2xl shadow-lg border border-beige-light overflow-hidden mb-6">
-            <div class="border-b border-beige-light">
-                <nav class="-mb-px flex space-x-8 px-6" aria-label="Tabs">
-                    <button id="tab-verificar" class="tab-button whitespace-nowrap py-4 px-1 border-b-2 font-semibold text-sm border-burgundy text-burgundy flex items-center">
-                        <i class="fas fa-clipboard-check mr-2"></i>
-                        Bienes a Verificar
-                    </button>
-                    <button id="tab-sobrantes" class="tab-button whitespace-nowrap py-4 px-1 border-b-2 font-semibold text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 flex items-center">
-                        <i class="fas fa-boxes mr-2"></i>
-                        Bienes Sobrantes ({{ sobrantes|length }})
-                    </button>
-                </nav>
-            </div>
-        </div>
-
-        <!-- Contenido de Pestaña: Bienes a Verificar -->
-        <div id="tab-verificar-content" class="tab-content space-y-6">
-            <!-- Encabezado de Sección -->
-            <div class="text-center bg-white rounded-2xl shadow-lg border border-beige-light p-6">
-                <h2 class="text-xl font-bold text-burgundy mb-2 flex items-center justify-center">
-                    <i class="fas fa-tasks mr-3"></i>
-                    Cédula de Levantamiento por Área
-                </h2>
-                <p class="text-gray-600">Haz clic en cada área para ver y gestionar sus bienes correspondientes.</p>
-            </div>
-
-            <!-- Barra de Búsqueda -->
-            <div class="bg-white rounded-2xl shadow-lg border border-beige-light p-4">
-                <label for="search-bienes-input" class="sr-only">Buscar Bien</label>
-                <div class="relative">
-                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <i class="fas fa-search text-gray-400"></i>
-                    </div>
-                    <input type="search" id="search-bienes-input" 
-                           placeholder="Buscar por No. Inventario, Descripción, Resguardante..." 
-                           class="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-burgundy/50 focus:border-burgundy transition-all duration-200 bg-white">
+        <div class="header-card">
+            <div class="header-content">
+                <h1>{{ inventario.nombre }}</h1>
+                <div class="meta-row">
+                    <span><i class="fas fa-calendar-alt"></i> Iniciado: {{ inventario.fecha_inicio.strftime('%d/%m/%Y') }}</span>
+                    <span class="status-badge status-{{ inventario.estatus | lower | replace(' ', '-') }}">{{ inventario.estatus }}</span>
                 </div>
             </div>
             
-            <!-- Lista de Áreas y Bienes -->
-            {% for nombre_area, detalles_en_area in detalles_agrupados.items() %}
-            <details class="bg-white shadow-lg rounded-2xl border border-beige-light overflow-hidden transition-all duration-300" open>
-                <summary class="p-6 cursor-pointer flex justify-between items-center font-semibold text-gray-900 hover:bg-beige-light/20 transition-colors duration-200">
-                    <div class="flex-1">
-                        <div class="flex items-center mb-2">
-                            <i class="fas fa-building text-burgundy mr-3 text-lg"></i>
-                            <span class="text-lg font-bold">Área: {{ nombre_area }}</span>
-                        </div>
-                        {% if detalles_en_area and detalles_en_area[0].Nombre_Director_Jefe_De_Area %}
-                        <p class="text-sm text-gray-600 flex items-center">
-                            <i class="fas fa-user-tie text-burgundy mr-2"></i>
-                            Jefe de Área: {{ detalles_en_area[0].Nombre_Director_Jefe_De_Area }}
-                        </p>
-                        {% endif %}
-                    </div>
-                    <span class="inline-flex items-center px-4 py-2 bg-burgundy text-white text-sm font-bold rounded-full">
-                        <i class="fas fa-box mr-2"></i>
-                        {{ detalles_en_area|length }} bienes
-                    </span>
-                </summary>
-                <div class="border-t border-beige-light overflow-x-auto">
-                    <table class="w-full text-sm text-left text-gray-600">
-                        <thead class="text-xs text-gray-700 uppercase bg-gray-50 border-b border-beige-light">
-                            <tr>
-                                <th class="px-6 py-4 font-semibold">No. Inventario</th>
-                                <th class="px-6 py-4 font-semibold">Descripción</th>
-                                <th class="px-6 py-4 font-semibold">Resguardante Esperado</th>
-                                <th class="px-6 py-4 font-semibold">Estatus Hallazgo</th>
-                                <th class="px-6 py-4 font-semibold text-center">Acciones</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-beige-light">
-                            {% for detalle in detalles_en_area %}
-                            <tr class="bien-row bg-white hover:bg-beige-light/10 transition-colors duration-200">
-                                <td class="px-6 py-4 whitespace-nowrap font-mono text-gray-800 font-semibold">
-                                    {{ detalle.No_Inventario }}
-                                </td>
-                                <td class="px-6 py-4 text-gray-700">
-                                    {{ detalle.Descripcion_Del_Bien }}
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-gray-600">
-                                    {{ detalle.nombre_resguardante_esperado }}
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    {% if detalle.estatus_hallazgo == 'Pendiente' %}
-                                        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-gray-100 text-gray-800 border border-gray-300">
-                                            <i class="fas fa-clock mr-1"></i> Pendiente
-                                        </span>
-                                    {% elif detalle.estatus_hallazgo == 'Localizado' %}
-                                        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-green-100 text-green-800 border border-green-300">
-                                            <i class="fas fa-check-circle mr-1"></i> Localizado
-                                        </span>
-                                    {% elif detalle.estatus_hallazgo == 'No Localizado' %}
-                                        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-red-100 text-red-800 border border-red-300">
-                                            <i class="fas fa-times-circle mr-1"></i> No Localizado
-                                        </span>
-                                    {% elif detalle.estatus_hallazgo == 'Localizado con Discrepancia' %}
-                                        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-yellow-100 text-yellow-800 border border-yellow-300">
-                                            <i class="fas fa-exclamation-triangle mr-1"></i> Con Discrepancia
-                                        </span>
-                                    {% endif %}
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-center">
-                                    {% if inventario.estatus == 'En Progreso' %}
-                                        {% if detalle.estatus_hallazgo == 'Pendiente' %}
-                                            <button class="revisar-btn inline-flex items-center text-burgundy hover:text-burgundy-dark font-semibold transition-colors duration-200 group"
-                                                    data-detalle-id="{{ detalle.id }}"
-                                                    data-inventario-id="{{ detalle.id_inventario }}"
-                                                    data-no-inventario="{{ detalle.No_Inventario or '' }}"
-                                                    data-descripcion="{{ detalle.Descripcion_Del_Bien or '' }}"
-                                                    data-action="revisar">
-                                                <i class="fas fa-edit group-hover:scale-110 transition-transform duration-300 mr-2"></i>
-                                                Revisar
-                                            </button>
-                                        {% else %}
-                                            <button class="revisar-btn inline-flex items-center text-green-600 hover:text-green-800 font-semibold transition-colors duration-200 group"
-                                                    data-detalle-id="{{ detalle.id }}"
-                                                    data-inventario-id="{{ detalle.id_inventario }}"
-                                                    data-no-inventario="{{ detalle.No_Inventario or '' }}"
-                                                    data-descripcion="{{ detalle.Descripcion_Del_Bien or '' }}"
-                                                    data-action="editar">
-                                                <i class="fas fa-pencil-alt group-hover:scale-110 transition-transform duration-300 mr-2"></i>
-                                                Editar
-                                            </button>
-                                        {% endif %}
-                                    {% else %}
-                                        <span class="text-gray-400 font-medium">-</span>
-                                    {% endif %}
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            </details>
-            {% else %}
-            <div class="bg-white rounded-2xl shadow-lg border border-beige-light p-12 text-center">
-                <i class="fas fa-inbox text-4xl text-gray-300 mb-4"></i>
-                <h3 class="text-lg font-semibold text-gray-700">No hay bienes asignados</h3>
-                <p class="mt-1 text-sm text-gray-500">No se encontraron bienes en las áreas seleccionadas para este inventario.</p>
+            <div class="header-actions">
+                <a href="{{ url_for('inventarios.listar_inventarios') }}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Volver
+                </a>
+
+                {% if inventario.estatus == 'Planificado' %}
+                    <form action="{{ url_for('inventarios.cambiar_estatus_inventario', inventario_id=inventario.id, accion='comenzar') }}" method="POST" onsubmit="return confirm('¿Iniciar levantamiento físico?');" class="inline-form">
+                        <button type="submit" class="btn btn-blue"><i class="fas fa-play"></i> Comenzar</button>
+                    </form>
+                {% elif inventario.estatus == 'En Progreso' %}
+                    <form action="{{ url_for('inventarios.cambiar_estatus_inventario', inventario_id=inventario.id, accion='conciliar') }}" method="POST" onsubmit="return confirm('¿Pasar a etapa de conciliación?');" class="inline-form">
+                        <button type="submit" class="btn btn-yellow"><i class="fas fa-balance-scale"></i> Conciliar</button>
+                    </form>
+                {% elif inventario.estatus == 'En Conciliación' %}
+                    <form action="{{ url_for('inventarios.cambiar_estatus_inventario', inventario_id=inventario.id, accion='finalizar') }}" method="POST" onsubmit="return confirm('¿FINALIZAR inventario? Esta acción es irreversible.');" class="inline-form">
+                        <button type="submit" class="btn btn-green"><i class="fas fa-flag-checkered"></i> Finalizar</button>
+                    </form>
+                {% endif %}
             </div>
-            {% endfor %}
         </div>
 
-        <!-- Contenido de Pestaña: Bienes Sobrantes -->
-        <div id="tab-sobrantes-content" class="tab-content hidden">
-            <div class="bg-white rounded-2xl shadow-lg border border-beige-light overflow-hidden">
-                <div class="p-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                    <div class="flex-1">
-                        <h2 class="text-xl font-bold text-burgundy mb-2 flex items-center">
-                            <i class="fas fa-boxes mr-3"></i>
-                            Bienes Sobrantes Encontrados
-                        </h2>
-                        <p class="text-gray-600">Bienes encontrados en campo que no estaban en la lista original.</p>
+        <div class="card mb-4">
+            <div class="card-header header-between">
+                <div class="header-left">
+                    <div class="icon-box"><i class="fas fa-users"></i></div>
+                    <h2>Personal de Brigada</h2>
+                </div>
+                {% if inventario.estatus in ['Planificado', 'En Progreso'] %}
+                <div class="header-actions-small">
+                    <button type="button" onclick="App.modals.open('remover-brigada-modal')" class="btn btn-sm btn-red-outline" title="Remover miembros">
+                        <i class="fas fa-user-minus"></i>
+                    </button>
+                    <button type="button" onclick="App.modals.open('brigada-modal')" class="btn btn-sm btn-primary-outline" title="Añadir miembros">
+                        <i class="fas fa-user-plus"></i> Añadir
+                    </button>
+                </div>
+                {% endif %}
+            </div>
+            <div class="card-body">
+                <div class="brigada-grid">
+                    {% for miembro in brigada %}
+                    <div class="brigada-badge">
+                        <i class="fas fa-user-check"></i>
+                        <span class="name">{{ miembro.full_name }}</span>
+                        <small>({{ miembro.username }})</small>
+                    </div>
+                    {% else %}
+                    <p class="text-muted italic">No hay personal asignado a la brigada.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <div class="tabs-container">
+            <div class="tabs-nav">
+                <button class="tab-button active" data-target="tab-verificar">
+                    <i class="fas fa-tasks"></i> Bienes a Verificar
+                </button>
+                <button class="tab-button" data-target="tab-sobrantes">
+                    <i class="fas fa-box-open"></i> Sobrantes ({{ sobrantes|length }})
+                </button>
+            </div>
+        </div>
+
+        <div id="tab-verificar" class="tab-content">
+            <div class="search-wrapper mb-4">
+                <i class="fas fa-search search-icon"></i>
+                <input type="text" id="local-search" class="search-input" placeholder="Buscar por No. Inventario, Descripción o Resguardante...">
+            </div>
+
+            <div class="accordion-list">
+                {% for nombre_area, detalles in detalles_agrupados.items() %}
+                <details class="accordion-item" open>
+                    <summary class="accordion-header">
+                        <div class="acc-title">
+                            <i class="fas fa-building"></i>
+                            <span>{{ nombre_area }}</span>
+                            {% if detalles and detalles[0].Nombre_Director_Jefe_De_Area %}
+                            <span class="manager-tag"><i class="fas fa-user-tie"></i> {{ detalles[0].Nombre_Director_Jefe_De_Area }}</span>
+                            {% endif %}
+                        </div>
+                        <span class="badge badge-mono">{{ detalles|length }}</span>
+                    </summary>
+                    
+                    <div class="accordion-body">
+                        <div class="table-responsive">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th width="15%">Inventario</th>
+                                        <th width="35%">Descripción</th>
+                                        <th width="20%">Resguardante</th>
+                                        <th width="15%">Estatus</th>
+                                        <th width="15%" class="text-center">Acción</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for item in detalles %}
+                                    <tr class="searchable-row">
+                                        <td class="font-mono font-bold search-target">{{ item.No_Inventario }}</td>
+                                        <td class="search-target">{{ item.Descripcion_Del_Bien }}</td>
+                                        <td class="text-muted search-target">{{ item.nombre_resguardante_esperado }}</td>
+                                        <td>
+                                            {% if item.estatus_hallazgo == 'Pendiente' %}
+                                                <span class="badge badge-gray">Pendiente</span>
+                                            {% elif item.estatus_hallazgo == 'Localizado' %}
+                                                <span class="badge badge-green">Localizado</span>
+                                            {% elif item.estatus_hallazgo == 'No Localizado' %}
+                                                <span class="badge badge-red">No Localizado</span>
+                                            {% else %}
+                                                <span class="badge badge-yellow">Discrepancia</span>
+                                            {% endif %}
+                                        </td>
+                                        <td class="text-center">
+                                            {% if inventario.estatus == 'En Progreso' %}
+                                                <button type="button" 
+                                                        class="btn-icon-text"
+                                                        onclick="App.inventory.openReviewModal(this)"
+                                                        data-id="{{ item.id }}"
+                                                        data-inv-id="{{ item.id_inventario }}"
+                                                        data-code="{{ item.No_Inventario }}"
+                                                        data-desc="{{ item.Descripcion_Del_Bien }}"
+                                                        data-action="{{ 'revisar' if item.estatus_hallazgo == 'Pendiente' else 'editar' }}">
+                                                    <i class="fas fa-edit"></i> {{ 'Revisar' if item.estatus_hallazgo == 'Pendiente' else 'Editar' }}
+                                                </button>
+                                            {% else %}
+                                                <span class="text-disabled">-</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </details>
+                {% else %}
+                <div class="empty-state">
+                    <i class="fas fa-inbox"></i>
+                    <p>No hay bienes asignados para este inventario.</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div id="tab-sobrantes" class="tab-content hidden">
+            <div class="card">
+                <div class="card-header header-between">
+                    <div class="header-left">
+                        <div class="icon-box"><i class="fas fa-boxes"></i></div>
+                        <h2>Bienes Sobrantes</h2>
                     </div>
                     {% if inventario.estatus != 'Planificado' %}
-                    <button id="abrir-modal-sobrante" class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-semibold rounded-xl shadow-lg transition-all duration-300 transform hover:scale-105">
-                        <i class="fas fa-plus-circle mr-2"></i>
-                        Registrar Bien Sobrante
+                    <button onclick="App.modals.open('sobrante-modal')" class="btn btn-green">
+                        <i class="fas fa-plus-circle"></i> Registrar Nuevo
                     </button>
                     {% endif %}
                 </div>
-                
-                <div class="border-t border-beige-light overflow-x-auto">
-                    <table class="w-full text-sm text-left text-gray-600">
-                        <thead class="text-xs text-gray-700 uppercase bg-gray-50 border-b border-beige-light">
-                            <tr>
-                                <th class="px-6 py-4 font-semibold">Descripción</th>
-                                <th class="px-6 py-4 font-semibold">Marca / Modelo / Serie</th>
-                                <th class="px-6 py-4 font-semibold">Estado de Resolución</th>
-                                <th class="px-6 py-4 font-semibold text-center">Acciones</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-beige-light">
-                            {% for sobrante in sobrantes %}
-                            <tr class="bg-white hover:bg-beige-light/10 transition-colors duration-200">
-                                <td class="px-6 py-4 text-gray-700">
-                                    {{ sobrante.descripcion_bien }}
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-gray-600">
-                                    {{ sobrante.marca or 'N/A' }} / {{ sobrante.modelo or 'N/A' }} / {{ sobrante.numero_serie or 'N/A' }}
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-blue-100 text-blue-800 border border-blue-300">
-                                        {{ sobrante.estatus_resolucion }}
-                                    </span>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-center">
-                                    <a href="#" class="inline-flex items-center text-burgundy hover:text-burgundy-dark font-semibold transition-colors duration-200">
-                                        <i class="fas fa-cog mr-2"></i>
-                                        Gestionar
-                                    </a>
-                                </td>
-                            </tr>
-                            {% else %}
-                            <tr>
-                                <td colspan="4" class="text-center text-gray-500 py-8">
-                                    <i class="fas fa-inbox text-3xl text-gray-300 mb-3"></i>
-                                    <p>No se han registrado bienes sobrantes.</p>
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Descripción</th>
+                                    <th>Marca / Modelo / Serie</th>
+                                    <th>Ubicación (Área)</th>
+                                    <th class="text-center">Condición</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for sob in sobrantes %}
+                                <tr>
+                                    <td>{{ sob.descripcion_bien }}</td>
+                                    <td class="text-muted">
+                                        {{ sob.marca or '-' }} / {{ sob.modelo or '-' }} / {{ sob.numero_serie or '-' }}
+                                    </td>
+                                    <td>{{ sob.nombre_area_encontrado or 'N/A' }}</td>
+                                    <td class="text-center"><span class="badge badge-mono">{{ sob.condicion_fisica }}</span></td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="4" class="text-center p-4 text-muted">No se han registrado bienes sobrantes.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
+
     </div>
 </div>
 
-<!-- Modal para Bien Sobrante -->
-<div id="sobrante-modal" class="fixed inset-0 z-50 overflow-y-auto hidden">
-    <div class="flex items-end justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
-        <div class="fixed inset-0 bg-gray-500/75 backdrop-blur-sm transition-opacity" id="sobrante-modal-backdrop"></div>
-        <span class="hidden sm:inline-block sm:align-middle sm:h-screen">&#8203;</span>
-        
-        <div class="inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full border border-beige-light">
-            <form action="{{ url_for('inventarios.agregar_sobrante', inventario_id=inventario.id) }}" method="POST" enctype="multipart/form-data">
-                <div class="bg-white px-6 pt-6 pb-4">
-                    <h3 class="text-xl font-bold text-burgundy mb-4 flex items-center">
-                        <i class="fas fa-plus-circle mr-3"></i>
-                        Registrar Bien Sobrante
-                    </h3>
-                    <div class="mt-4 space-y-4">
-                        <!-- Los campos del formulario se mantienen exactamente igual -->
-                        <div>
-                            <label for="sobrante-area" class="block text-sm font-semibold text-gray-700 mb-2">Área donde se encontró</label>
-                            <select id="sobrante-area" name="id_area_encontrado" required class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-burgundy/50 focus:border-burgundy transition-all duration-200 bg-white">
-                                <option value="" disabled selected>-- Selecciona un área --</option>
-                                {% for area in todas_las_areas %}
-                                    <option value="{{ area.id }}">{{ area.nombre }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
+<div id="revisar-modal" class="modal-overlay hidden">
+    <div class="modal-container">
+        <div class="modal-header">
+            <h3>Revisión: <span id="rev-code" class="font-mono"></span></h3>
+            <button class="btn-close" onclick="App.modals.close('revisar-modal')">&times;</button>
+        </div>
+        <div class="modal-body">
+            <p id="rev-desc" class="alert alert-info mb-4"></p>
+            
+            <form id="form-revisar">
+                <input type="hidden" name="detalle_id" id="rev-id">
+                <input type="hidden" name="inventario_id" id="rev-inv-id">
 
-                        <div>
-                            <label for="sobrante-descripcion" class="block text-sm font-semibold text-gray-700 mb-2">Descripción Detallada</label>
-                            <textarea id="sobrante-descripcion" name="descripcion_bien" rows="3" required class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-burgundy/50 focus:border-burgundy transition-all duration-200 bg-white resize-none"></textarea>
-                        </div>
-                        
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <div>
-                                <label for="sobrante-marca" class="block text-sm font-semibold text-gray-700 mb-2">Marca</label>
-                                <input type="text" name="marca" id="sobrante-marca" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-burgundy/50 focus:border-burgundy transition-all duration-200 bg-white">
-                            </div>
-                            <div>
-                                <label for="sobrante-modelo" class="block text-sm font-semibold text-gray-700 mb-2">Modelo</label>
-                                <input type="text" name="modelo" id="sobrante-modelo" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-burgundy/50 focus:border-burgundy transition-all duration-200 bg-white">
-                            </div>
-                        </div>
-                        <div>
-                            <label for="sobrante-serie" class="block text-sm font-semibold text-gray-700 mb-2">Número de Serie</label>
-                            <input type="text" name="numero_serie" id="sobrante-serie" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-burgundy/50 focus:border-burgundy transition-all duration-200 bg-white">
-                        </div>
-                        
-                        <div>
-                            <label for="sobrante-condicion" class="block text-sm font-semibold text-gray-700 mb-2">Condición Física</label>
-                            <select id="sobrante-condicion" name="condicion_fisica" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-burgundy/50 focus:border-burgundy transition-all duration-200 bg-white">
-                                <option>Bueno</option>
-                                <option>Regular</option>
-                                <option>Malo</option>
-                            </select>
-                        </div>
-                        
-                        <div>
-                            <label class="block text-sm font-semibold text-gray-700 mb-2">Fotografías</label>
-                            <input type="file" name="fotos_sobrante" id="sobrante-fotos-input" multiple class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-burgundy file:text-white hover:file:bg-burgundy-dark transition-all duration-200"/>
-                            <div id="sobrante-fotos-preview-container" class="mt-4 grid grid-cols-3 sm:grid-cols-4 gap-4">
-                                <!-- Preview de imágenes -->
-                            </div>
-                        </div>
+                <div id="rev-existing-photos" class="preview-grid mb-3"></div>
+                <div id="rev-photos-delete-container"></div> 
+
+                <div class="form-group">
+                    <label>Estatus del Hallazgo</label>
+                    <div class="radio-group">
+                        <label class="radio-card">
+                            <input type="radio" name="estatus_hallazgo" value="Localizado">
+                            <span><i class="fas fa-check-circle text-green"></i> Localizado</span>
+                        </label>
+                        <label class="radio-card">
+                            <input type="radio" name="estatus_hallazgo" value="No Localizado">
+                            <span><i class="fas fa-times-circle text-red"></i> No Localizado</span>
+                        </label>
+                        <label class="radio-card">
+                            <input type="radio" name="estatus_hallazgo" value="Localizado con Discrepancia">
+                            <span><i class="fas fa-exclamation-triangle text-yellow"></i> Discrepancia</span>
+                        </label>
                     </div>
                 </div>
-                <div class="bg-gray-50 px-6 py-4 sm:flex sm:flex-row-reverse rounded-b-2xl">
-                    <button type="submit" class="w-full inline-flex justify-center items-center px-4 py-3 bg-gradient-to-r from-burgundy to-burgundy-dark hover:from-burgundy-dark hover:to-burgundy text-white font-semibold rounded-xl shadow-lg transition-all duration-300 transform hover:scale-105 sm:ml-3 sm:w-auto sm:text-sm">
-                        <i class="fas fa-save mr-2"></i> Registrar
-                    </button>
-                    <button type="button" id="sobrante-modal-cancelar" class="mt-3 w-full inline-flex justify-center items-center px-4 py-3 border-2 border-gray-300 text-gray-700 font-semibold bg-white hover:bg-gray-50 rounded-xl transition-all duration-200 sm:mt-0 sm:w-auto sm:text-sm">
-                        <i class="fas fa-times mr-2"></i> Cancelar
-                    </button>
+
+                <div class="form-group">
+                    <label>Condición Física</label>
+                    <select id="rev-condicion" name="condicion_fisica">
+                        <option value="Bueno">Bueno</option>
+                        <option value="Regular">Regular</option>
+                        <option value="Malo">Malo</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Observaciones</label>
+                    <textarea id="rev-obs" name="observaciones" rows="2"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>Añadir Fotos</label>
+                    <div class="file-input-wrapper">
+                        <input type="file" id="rev-file-input" multiple accept="image/*">
+                    </div>
+                    <div id="rev-new-photos" class="preview-grid mt-2"></div>
                 </div>
             </form>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" onclick="App.modals.close('revisar-modal')">Cancelar</button>
+            <button type="button" class="btn btn-primary" onclick="App.inventory.submitReview()">Guardar Cambios</button>
         </div>
     </div>
 </div>
 
-<div id="brigada-modal" class="fixed inset-0 z-50 overflow-y-auto hidden">
-    <div class="flex items-end justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
-        <div class="fixed inset-0 bg-gray-500/75 backdrop-blur-sm transition-opacity" id="brigada-modal-backdrop"></div>
-        <span class="hidden sm:inline-block sm:align-middle sm:h-screen">&#8203;</span>
-        
-        <div class="inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full border border-beige-light">
-            <form action="{{ url_for('inventarios.agregar_miembros_brigada', inventario_id=inventario.id) }}" method="POST">
-                <div class="bg-white px-6 pt-6 pb-4">
-                    <h3 class="text-xl font-bold text-burgundy mb-4 flex items-center">
-                        <i class="fas fa-user-plus mr-3"></i>
-                        Añadir Miembros a la Brigada
-                    </h3>
-                    <div class="mt-4 space-y-4">
-                        <div>
-                            <label for="brigada-usuarios" class="block text-sm font-semibold text-gray-700 mb-2">
-                                Seleccionar usuarios para añadir
-                            </label>
-                            <select id="brigada-usuarios" name="user_ids" multiple required 
-                                    class="w-full h-60 px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-burgundy/50 focus:border-burgundy transition-all duration-200 bg-white">
-                                {% for user in usuarios_disponibles %}
-                                    <option value="{{ user.id }}">{{ user.full_name }} ({{ user.username }})</option>
-                                {% else %}
-                                    <option value="" disabled>No hay más usuarios disponibles para añadir.</option>
-                                {% endfor %}
-                            </select>
-                            <p class="text-xs text-gray-500 mt-2">Mantén presionada la tecla Ctrl (o Cmd en Mac) para seleccionar múltiples usuarios.</p>
-                        </div>
-                    </div>
+<div id="sobrante-modal" class="modal-overlay hidden">
+    <div class="modal-container">
+        <div class="modal-header">
+            <h3>Registrar Bien Sobrante</h3>
+            <button class="btn-close" onclick="App.modals.close('sobrante-modal')">&times;</button>
+        </div>
+        <div class="modal-body">
+            <form action="{{ url_for('inventarios.agregar_sobrante', inventario_id=inventario.id) }}" method="POST" enctype="multipart/form-data" id="form-sobrante">
+                <div class="form-group">
+                    <label>Área de Hallazgo *</label>
+                    <select name="id_area_encontrado" required>
+                        <option value="" disabled selected>Seleccione...</option>
+                        {% for area in todas_las_areas %}
+                        <option value="{{ area.id }}">{{ area.nombre }}</option>
+                        {% endfor %}
+                    </select>
                 </div>
-                <div class="bg-gray-50 px-6 py-4 sm:flex sm:flex-row-reverse rounded-b-2xl">
-                    <button type="submit" class="w-full inline-flex justify-center items-center px-4 py-3 bg-gradient-to-r from-burgundy to-burgundy-dark hover:from-burgundy-dark hover:to-burgundy text-white font-semibold rounded-xl shadow-lg transition-all duration-300 transform hover:scale-105 sm:ml-3 sm:w-auto sm:text-sm">
-                        <i class="fas fa-plus-circle mr-2"></i> Añadir Miembros
-                    </button>
-                    <button type="button" id="brigada-modal-cancelar" class="mt-3 w-full inline-flex justify-center items-center px-4 py-3 border-2 border-gray-300 text-gray-700 font-semibold bg-white hover:bg-gray-50 rounded-xl transition-all duration-200 sm:mt-0 sm:w-auto sm:text-sm">
-                        <i class="fas fa-times mr-2"></i> Cancelar
-                    </button>
+                <div class="form-group">
+                    <label>Descripción *</label>
+                    <textarea name="descripcion_bien" rows="2" required></textarea>
+                </div>
+                <div class="form-grid-2">
+                    <div class="form-group"><label>Marca</label><input type="text" name="marca"></div>
+                    <div class="form-group"><label>Modelo</label><input type="text" name="modelo"></div>
+                </div>
+                <div class="form-group"><label>Serie</label><input type="text" name="numero_serie"></div>
+                <div class="form-group">
+                    <label>Condición</label>
+                    <select name="condicion_fisica">
+                        <option>Bueno</option><option>Regular</option><option>Malo</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Fotografías</label>
+                    <input type="file" name="fotos_sobrante" multiple>
                 </div>
             </form>
+        </div>
+        <div class="modal-footer">
+            <button type="submit" form="form-sobrante" class="btn btn-primary">Registrar</button>
         </div>
     </div>
 </div>
 
-<div id="remover-brigada-modal" class="fixed inset-0 z-50 overflow-y-auto hidden">
-    <div class="flex items-end justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
-        <div class="fixed inset-0 bg-gray-500/75 backdrop-blur-sm transition-opacity" id="remover-brigada-modal-backdrop"></div>
-        <span class="hidden sm:inline-block sm:align-middle sm:h-screen">&#8203;</span>
-        
-        <div class="inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full border border-beige-light">
-            <form action="{{ url_for('inventarios.remover_miembros_brigada', inventario_id=inventario.id) }}" method="POST">
-                <div class="bg-white px-6 pt-6 pb-4">
-                    <h3 class="text-xl font-bold text-red-700 mb-4 flex items-center">
-                        <i class="fas fa-user-minus mr-3"></i>
-                        Remover Miembros de la Brigada
-                    </h3>
-                    <div class="mt-4 space-y-4">
-                        <div>
-                            <label for="brigada-usuarios-remover" class="block text-sm font-semibold text-gray-700 mb-2">
-                                Seleccionar usuarios para remover
-                            </label>
-                            <select id="brigada-usuarios-remover" name="user_ids_remover" multiple required 
-                                    class="w-full h-60 px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-red-500/50 focus:border-red-500 transition-all duration-200 bg-white">
-                                
-                                {% for miembro in brigada %}
-                                    {% if miembro.id == inventario.id_usuario_creador %}
-                                        <option value="{{ miembro.id }}" disabled class="text-gray-400">
-                                            {{ miembro.full_name }} (Creador - No se puede remover)
-                                        </option>
-                                    {% else %}
-                                        <option value="{{ miembro.id }}">{{ miembro.full_name }} ({{ miembro.username }})</option>
-                                    {% endif %}
-                                {% endfor %}
-                            </select>
-                            <p class="text-xs text-gray-500 mt-2">Mantén presionada la tecla Ctrl (o Cmd en Mac) para seleccionar múltiples usuarios.</p>
-                        </div>
-                    </div>
-                </div>
-                <div class="bg-gray-50 px-6 py-4 sm:flex sm:flex-row-reverse rounded-b-2xl">
-                    <button type="submit" class="w-full inline-flex justify-center items-center px-4 py-3 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-semibold rounded-xl shadow-lg transition-all duration-300 transform hover:scale-105 sm:ml-3 sm:w-auto sm:text-sm">
-                        <i class="fas fa-trash-alt mr-2"></i> Remover Miembros
-                    </button>
-                    <button type="button" id="remover-brigada-modal-cancelar" class="mt-3 w-full inline-flex justify-center items-center px-4 py-3 border-2 border-gray-300 text-gray-700 font-semibold bg-white hover:bg-gray-50 rounded-xl transition-all duration-200 sm:mt-0 sm:w-auto sm:text-sm">
-                        <i class="fas fa-times mr-2"></i> Cancelar
-                    </button>
+<div id="brigada-modal" class="modal-overlay hidden">
+    <div class="modal-container">
+        <div class="modal-header"><h3>Añadir a Brigada</h3><button class="btn-close" onclick="App.modals.close('brigada-modal')">&times;</button></div>
+        <div class="modal-body">
+            <form action="{{ url_for('inventarios.agregar_miembros_brigada', inventario_id=inventario.id) }}" method="POST" id="form-add-brigada">
+                <div class="form-group">
+                    <label>Usuarios Disponibles (Ctrl+Click para múltiples)</label>
+                    <select name="user_ids" multiple class="multi-select" required>
+                        {% for user in usuarios_disponibles %}
+                        <option value="{{ user.id }}">{{ user.full_name }} ({{ user.username }})</option>
+                        {% endfor %}
+                    </select>
                 </div>
             </form>
         </div>
+        <div class="modal-footer"><button type="submit" form="form-add-brigada" class="btn btn-primary">Añadir</button></div>
     </div>
 </div>
 
-<!-- Modal para Revisar/Editar Bien -->
-<div id="revisar-modal" class="fixed inset-0 z-50 overflow-y-auto hidden">
-    <div class="flex items-end justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
-        <div class="fixed inset-0 bg-gray-500/75 backdrop-blur-sm transition-opacity" id="modal-backdrop"></div>
-        <span class="hidden sm:inline-block sm:align-middle sm:h-screen">&#8203;</span>
-        <div class="inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full border border-beige-light">
-            <form method="POST" enctype="multipart/form-data">
-                <input type="hidden" name="detalle_id" id="modal-detalle-id">
-                <input type="hidden" name="inventario_id" id="modal-inventario-id"> 
-                <div id="existing-fotos-container" class="mt-2 grid grid-cols-3 gap-4">
-                    <!-- Fotos existentes -->
-                </div>
-                <div id="fotos-a-eliminar-container"></div>
-                <div class="bg-white px-6 pt-6 pb-4">
-                    <div class="sm:flex sm:items-start">
-                        <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
-                            <h3 class="text-xl font-bold text-burgundy mb-2 flex items-center" id="modal-title">
-                                <i class="fas fa-edit mr-3"></i>
-                                Revisar Bien: <span class="font-mono ml-2" id="modal-no-inventario"></span>
-                            </h3>
-                            <p class="text-sm text-gray-600 bg-beige-light/20 p-3 rounded-xl" id="modal-descripcion"></p>
-                        </div>
-                    </div>
-                    <div class="mt-6 space-y-6">
-                        <div>
-                            <label class="text-base font-semibold text-gray-900 mb-3 flex items-center">
-                                <i class="fas fa-search mr-2"></i>
-                                Estatus del Hallazgo
-                            </label>
-                            <fieldset class="mt-2">
-                                <div class="space-y-3">
-                                    <div class="flex items-center bg-gray-50 p-3 rounded-xl hover:bg-gray-100 transition-colors duration-200">
-                                        <input id="estatus-localizado" name="estatus_hallazgo" type="radio" value="Localizado" class="h-4 w-4 border-gray-300 text-burgundy focus:ring-burgundy/50">
-                                        <label for="estatus-localizado" class="ml-3 block text-sm font-medium text-gray-700">Localizado</label>
-                                    </div>
-                                    <div class="flex items-center bg-gray-50 p-3 rounded-xl hover:bg-gray-100 transition-colors duration-200">
-                                        <input id="estatus-no-localizado" name="estatus_hallazgo" type="radio" value="No Localizado" class="h-4 w-4 border-gray-300 text-burgundy focus:ring-burgundy/50">
-                                        <label for="estatus-no-localizado" class="ml-3 block text-sm font-medium text-gray-700">No Localizado</label>
-                                    </div>
-                                    <div class="flex items-center bg-gray-50 p-3 rounded-xl hover:bg-gray-100 transition-colors duration-200">
-                                        <input id="estatus-discrepancia" name="estatus_hallazgo" type="radio" value="Localizado con Discrepancia" class="h-4 w-4 border-gray-300 text-burgundy focus:ring-burgundy/50">
-                                        <label for="estatus-discrepancia" class="ml-3 block text-sm font-medium text-gray-700">Localizado con Discrepancia</label>
-                                    </div>
-                                </div>
-                            </fieldset>
-                        </div>
-                        <div>
-                            <label for="condicion" class="block text-sm font-semibold text-gray-700 mb-2">Condición Física Reportada</label>
-                            <select id="condicion" name="condicion_fisica" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-burgundy/50 focus:border-burgundy transition-all duration-200 bg-white">
-                                <option value="Bueno">Bueno</option>
-                                <option value="Regular">Regular</option>
-                                <option value="Malo">Malo</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label for="observaciones" class="block text-sm font-semibold text-gray-700 mb-2">Observaciones</label>
-                            <textarea id="observaciones" name="observaciones" rows="3" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-burgundy/50 focus:border-burgundy transition-all duration-200 bg-white resize-none" placeholder="Ej: Ubicado en la oficina contigua, presenta un golpe en la esquina..."></textarea>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-semibold text-gray-700 mb-2">Añadir Evidencia Fotográfica</label>
-                            <input type="file" name="fotos" id="fotos-input" multiple class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-burgundy file:text-white hover:file:bg-burgundy-dark transition-all duration-200"/>
-                            <div id="fotos-preview-container" class="mt-4 grid grid-cols-3 gap-4">
-                                <!-- Preview de imágenes nuevas -->
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="bg-gray-50 px-6 py-4 sm:flex sm:flex-row-reverse rounded-b-2xl">
-                    <button type="submit" class="w-full inline-flex justify-center items-center px-4 py-3 bg-gradient-to-r from-burgundy to-burgundy-dark hover:from-burgundy-dark hover:to-burgundy text-white font-semibold rounded-xl shadow-lg transition-all duration-300 transform hover:scale-105">
-                        <i class="fas fa-save mr-2"></i> Guardar Cambios
-                    </button>
-                    <button type="button" id="modal-cancelar" class="mt-3 w-full inline-flex justify-center items-center px-4 py-3 border-2 border-gray-300 text-gray-700 font-semibold bg-white hover:bg-gray-50 rounded-xl transition-all duration-200 sm:mt-0 sm:ml-3 sm:w-auto">
-                        <i class="fas fa-times mr-2"></i> Cancelar
-                    </button>
+<div id="remover-brigada-modal" class="modal-overlay hidden">
+    <div class="modal-container">
+        <div class="modal-header bg-red"><h3>Remover de Brigada</h3><button class="btn-close" onclick="App.modals.close('remover-brigada-modal')">&times;</button></div>
+        <div class="modal-body">
+            <form action="{{ url_for('inventarios.remover_miembros_brigada', inventario_id=inventario.id) }}" method="POST" id="form-rem-brigada">
+                <div class="form-group">
+                    <label>Seleccione usuarios a remover</label>
+                    <select name="user_ids_remover" multiple class="multi-select" required>
+                        {% for m in brigada if m.id != inventario.id_usuario_creador %}
+                        <option value="{{ m.id }}">{{ m.full_name }}</option>
+                        {% endfor %}
+                    </select>
                 </div>
             </form>
         </div>
+        <div class="modal-footer"><button type="submit" form="form-rem-brigada" class="btn btn-red">Remover</button></div>
     </div>
 </div>
 
+<input type="hidden" id="base-url-upload" value="{{ url_for('serve_uploaded_file', filename='') }}">
+
+{% endblock %}
+
+{% block styles %}
 <style>
-    .bg-burgundy { background-color: #6A2E4D; }
-    .bg-burgundy-dark { background-color: #551E3A; }
-    .text-burgundy { color: #6A2E4D; }
-    .border-burgundy { border-color: #6A2E4D; }
-    .focus\:ring-burgundy\/50:focus { --tw-ring-color: rgb(106 46 77 / 0.5); }
-    .focus\:border-burgundy:focus { border-color: #6A2E4D; }
-    
-    .bg-beige { background-color: #BC9B6A; }
-    .bg-beige-light { background-color: #D7C3A0; }
-    .text-beige-light { color: #D7C3A0; }
-    .border-beige { border-color: #BC9B6A; }
-    .border-beige-light { border-color: #D7C3A0; }
-    
-    .from-burgundy { --tw-gradient-from: #6A2E4D; --tw-gradient-to: rgb(106 46 77 / 0); --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to); }
-    .to-burgundy-dark { --tw-gradient-to: #551E3A; }
+    /* VARIABLES */
+    :root {
+        --col-burgundy: #6A2E4D;
+        --col-burgundy-dark: #551E3A;
+        --col-beige: #BC9B6A;
+        --col-beige-light: #fdfbf7;
+        --col-bg: #f9fafb;
+        --radius: 12px;
+        --shadow: 0 4px 6px rgba(0,0,0,0.1);
+        --border: #e5e7eb;
+        
+        /* Colores Estado */
+        --bg-blue: #eff6ff; --text-blue: #1e40af;
+        --bg-green: #f0fdf4; --text-green: #166534;
+        --bg-red: #fef2f2; --text-red: #991b1b;
+        --bg-yellow: #fefce8; --text-yellow: #854d0e;
+    }
 
-    .tab-button.active { 
-        border-color: #6A2E4D; 
-        color: #6A2E4D; 
-    }
-    .tab-content.hidden { 
-        display: none; 
-    }
-    .preview-image-wrapper {
-        position: relative;
-    }
-    .preview-image {
-        width: 100%;
-        height: 100px;
-        object-fit: cover;
-        border-radius: 0.75rem;
-        border: 1px solid #D7C3A0;
-    }
-    .remove-image-btn {
-        position: absolute;
-        top: -0.5rem;
-        right: -0.5rem;
-        background-color: #ef4444;
-        color: white;
-        border-radius: 9999px;
-        width: 1.5rem;
-        height: 1.5rem;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 0.875rem;
-        font-weight: bold;
-        cursor: pointer;
-        border: 2px solid white;
-        transition: background-color 0.2s;
-    }
-    .remove-image-btn:hover {
-        background-color: #dc2626;
+    .page-wrapper { min-height: 100vh; background: var(--col-bg); padding: 2rem 1rem; }
+    .container-limit { max-width: 1280px; margin: 0 auto; }
+    .hidden { display: none !important; }
+
+    /* HEADER */
+    .header-card { background: linear-gradient(to right, var(--col-burgundy), #551E3A); padding: 1.5rem; border-radius: var(--radius); color: white; display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; box-shadow: var(--shadow); flex-wrap: wrap; gap: 1rem; }
+    .header-content h1 { margin: 0; font-size: 1.6rem; }
+    .meta-row { font-size: 0.9rem; opacity: 0.9; margin-top: 0.5rem; display: flex; gap: 1rem; align-items: center; }
+    
+    .status-badge { padding: 0.2rem 0.6rem; border-radius: 4px; font-weight: bold; text-transform: uppercase; font-size: 0.75rem; background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); }
+    
+    .header-actions { display: flex; gap: 0.5rem; align-items: center; }
+    .inline-form { display: inline; }
+
+    /* BRIGADA CARD */
+    .card { background: white; border-radius: var(--radius); border: 1px solid var(--border); overflow: hidden; margin-bottom: 1.5rem; }
+    .card-header { padding: 1rem 1.5rem; background: #fcfcfc; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 0.8rem; }
+    .header-between { justify-content: space-between; }
+    .header-left { display: flex; align-items: center; gap: 0.8rem; }
+    .icon-box { width: 32px; height: 32px; background: var(--col-burgundy); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+    .card-header h2 { margin: 0; font-size: 1.1rem; color: var(--col-burgundy); }
+    .card-body { padding: 1.5rem; }
+    
+    .brigada-grid { display: flex; flex-wrap: wrap; gap: 0.8rem; }
+    .brigada-badge { display: flex; align-items: center; gap: 0.5rem; background: #fdfbf7; padding: 0.5rem 1rem; border-radius: 20px; border: 1px solid var(--border); font-size: 0.9rem; color: #333; }
+    .brigada-badge i { color: var(--col-burgundy); }
+    .brigada-badge small { color: #666; }
+
+    /* TABS */
+    .tabs-nav { display: flex; gap: 2rem; border-bottom: 1px solid var(--border); margin-bottom: 1.5rem; }
+    .tab-button { background: none; border: none; padding: 1rem 0; font-weight: 600; color: #666; cursor: pointer; border-bottom: 3px solid transparent; transition: all 0.2s; font-size: 1rem; }
+    .tab-button:hover { color: var(--col-burgundy); }
+    .tab-button.active { color: var(--col-burgundy); border-bottom-color: var(--col-burgundy); }
+
+    /* SEARCH & ACCORDIONS */
+    .search-wrapper { position: relative; }
+    .search-wrapper i { position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: #999; }
+    .search-input { width: 100%; padding: 0.8rem 1rem 0.8rem 2.5rem; border: 1px solid #d1d5db; border-radius: 8px; outline: none; font-size: 0.95rem; }
+    .search-input:focus { border-color: var(--col-burgundy); }
+
+    details.accordion-item { border: 1px solid var(--border); border-radius: 8px; margin-bottom: 1rem; background: white; }
+    summary.accordion-header { padding: 1rem; background: #fcfcfc; cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-weight: 600; list-style: none; }
+    summary.accordion-header:hover { background: #f9fafb; }
+    .acc-title { display: flex; align-items: center; gap: 0.8rem; color: #333; }
+    .acc-title i { color: var(--col-burgundy); }
+    .manager-tag { background: #eff6ff; color: #1e40af; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.75rem; font-weight: normal; margin-left: 0.5rem; border: 1px solid #dbeafe; }
+    .accordion-body { border-top: 1px solid var(--border); }
+
+    /* TABLE */
+    .table-responsive { overflow-x: auto; }
+    .data-table { width: 100%; border-collapse: collapse; min-width: 800px; }
+    .data-table th { text-align: left; padding: 0.8rem 1rem; background: #f9fafb; color: #666; border-bottom: 1px solid var(--border); font-size: 0.8rem; text-transform: uppercase; }
+    .data-table td { padding: 0.8rem 1rem; border-bottom: 1px solid var(--border); vertical-align: middle; font-size: 0.9rem; color: #333; }
+    .data-table tr:hover { background: #fdfbf7; }
+    .text-center { text-align: center; }
+    .font-mono { font-family: monospace; }
+    .text-muted { color: #666; }
+
+    /* BADGES */
+    .badge { padding: 0.2rem 0.6rem; border-radius: 4px; font-size: 0.75rem; font-weight: 600; white-space: nowrap; }
+    .badge-mono { background: var(--col-burgundy); color: white; border-radius: 20px; }
+    .badge-gray { background: #f3f4f6; color: #4b5563; border: 1px solid #e5e7eb; }
+    .badge-green { background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
+    .badge-red { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
+    .badge-yellow { background: #fef9c3; color: #854d0e; border: 1px solid #fef08a; }
+
+    /* BUTTONS */
+    .btn { padding: 0.6rem 1rem; border-radius: 6px; border: none; cursor: pointer; font-weight: 600; display: inline-flex; align-items: center; gap: 0.4rem; text-decoration: none; font-size: 0.9rem; transition: all 0.2s; }
+    .btn-blue { background: #2563eb; color: white; } .btn-blue:hover { background: #1d4ed8; }
+    .btn-yellow { background: #ca8a04; color: white; } .btn-yellow:hover { background: #a16207; }
+    .btn-green { background: #16a34a; color: white; } .btn-green:hover { background: #15803d; }
+    .btn-secondary { background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); color: white; }
+    .btn-secondary:hover { background: rgba(255,255,255,0.3); }
+    .btn-red { background: #dc2626; color: white; }
+    .btn-primary { background: var(--col-burgundy); color: white; }
+    .btn-sm { padding: 0.3rem 0.6rem; font-size: 0.8rem; }
+    
+    .btn-red-outline { background: white; border: 1px solid #dc2626; color: #dc2626; }
+    .btn-primary-outline { background: white; border: 1px solid var(--col-burgundy); color: var(--col-burgundy); }
+    
+    .btn-icon-text { background: none; border: 1px solid #e5e7eb; padding: 0.3rem 0.8rem; border-radius: 4px; cursor: pointer; color: var(--col-burgundy); font-size: 0.85rem; }
+    .btn-icon-text:hover { background: var(--col-burgundy); color: white; }
+
+    /* MODALES */
+    .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 999; display: flex; align-items: center; justify-content: center; }
+    .modal-container { background: white; width: 90%; max-width: 600px; max-height: 90vh; border-radius: 12px; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
+    .modal-header { padding: 1rem 1.5rem; background: var(--col-burgundy); color: white; display: flex; justify-content: space-between; align-items: center; }
+    .modal-header.bg-red { background: #dc2626; }
+    .modal-header h3 { margin: 0; font-size: 1.1rem; }
+    .btn-close { background: none; border: none; color: white; font-size: 1.5rem; cursor: pointer; }
+    .modal-body { padding: 1.5rem; overflow-y: auto; }
+    .modal-footer { padding: 1rem 1.5rem; border-top: 1px solid #e5e7eb; background: #f9fafb; display: flex; justify-content: flex-end; gap: 1rem; }
+
+    /* FORMULARIOS EN MODAL */
+    .form-group { margin-bottom: 1rem; }
+    .form-group label { display: block; margin-bottom: 0.4rem; font-weight: 600; font-size: 0.9rem; color: #333; }
+    input, select, textarea { width: 100%; padding: 0.6rem; border: 1px solid #d1d5db; border-radius: 6px; }
+    .multi-select { height: 150px; }
+    .form-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    
+    /* Radio Cards */
+    .radio-group { display: flex; flex-direction: column; gap: 0.5rem; }
+    .radio-card { display: flex; align-items: center; gap: 0.8rem; padding: 0.8rem; border: 1px solid #e5e7eb; border-radius: 6px; cursor: pointer; margin: 0; }
+    .radio-card:hover { background: #f9fafb; border-color: #ccc; }
+    .radio-card input { width: auto; margin: 0; }
+    .radio-card span i { margin-right: 0.5rem; }
+    .text-green { color: #166534; } .text-red { color: #991b1b; } .text-yellow { color: #854d0e; }
+
+    /* Previews */
+    .preview-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem; }
+    .preview-image-wrapper { position: relative; height: 80px; border: 1px solid #ddd; border-radius: 6px; overflow: hidden; }
+    .preview-image { width: 100%; height: 100%; object-fit: cover; }
+    .remove-image-btn { position: absolute; top: 2px; right: 2px; background: #dc2626; color: white; border: none; border-radius: 50%; width: 20px; height: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 12px; }
+
+    @media (max-width: 768px) {
+        .header-card { flex-direction: column; text-align: center; gap: 1rem; }
+        .header-actions { flex-direction: column; width: 100%; }
+        .btn { width: 100%; justify-content: center; }
     }
 </style>
+{% endblock %}
 
+{% block scripts %}
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    
-    // ===================================================================
-    // 1. SISTEMA DE TABS
-    // ===================================================================
-    const tabButtons = document.querySelectorAll('.tab-button');
-    const tabContents = document.querySelectorAll('.tab-content');
-    tabButtons.forEach(button => {
-        button.addEventListener('click', function() {
-            const targetTab = this.id.replace('tab-', '');
-            tabButtons.forEach(btn => {
-                btn.classList.remove('active', 'border-indigo-500', 'text-indigo-600');
-                btn.classList.add('border-transparent', 'text-gray-500');
-            });
-            this.classList.add('active', 'border-indigo-500', 'text-indigo-600');
-            this.classList.remove('border-transparent', 'text-gray-500');
-            tabContents.forEach(content => content.classList.add('hidden'));
-            document.getElementById(`tab-${targetTab}-content`).classList.remove('hidden');
-        });
-    });
+    const App = {
+        // --- Módulo de Modales ---
+        modals: {
+            open: (id) => {
+                document.getElementById(id).classList.remove('hidden');
+                document.body.style.overflow = 'hidden';
+            },
+            close: (id) => {
+                document.getElementById(id).classList.add('hidden');
+                document.body.style.overflow = 'auto';
+                // Resetear formularios excepto el de revisión que se carga dinámicamente
+                if (id !== 'revisar-modal') {
+                    const form = document.querySelector(`#${id} form`);
+                    if (form) form.reset();
+                }
+            }
+        },
 
-    // ===================================================================
-    // 2. LÓGICA DE LA BARRA DE BÚSQUEDA
-    // ===================================================================
-    const searchInput = document.getElementById('search-bienes-input');
-    if (searchInput) {
-        searchInput.addEventListener('input', function() {
-            const searchTerm = this.value.toLowerCase().trim();
-            const areaDetails = document.querySelectorAll('#tab-verificar-content details');
-
-            areaDetails.forEach(details => {
-                const rows = details.querySelectorAll('tbody tr.bien-row');
-                let visibleRows = 0;
-                rows.forEach(row => {
-                    const cellText = Array.from(row.cells).slice(0, 3).map(cell => cell.textContent.toLowerCase()).join(' ');
-                    if (cellText.includes(searchTerm)) {
-                        row.style.display = '';
-                        visibleRows++;
-                    } else {
-                        row.style.display = 'none';
-                    }
+        // --- Módulo de Tabs ---
+        tabs: {
+            init: () => {
+                document.querySelectorAll('.tab-button').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        // Quitar active
+                        document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
+                        document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
+                        // Activar
+                        btn.classList.add('active');
+                        document.getElementById(btn.dataset.target).classList.remove('hidden');
+                    });
                 });
-                // Ocultar la sección del área si no hay resultados que coincidan
-                if (visibleRows === 0 && searchTerm) {
-                    details.style.display = 'none';
+            }
+        },
+
+        // --- Módulo de Búsqueda ---
+        search: {
+            init: () => {
+                const input = document.getElementById('local-search');
+                if (!input) return;
+                input.addEventListener('input', (e) => {
+                    const term = e.target.value.toLowerCase();
+                    document.querySelectorAll('.accordion-item').forEach(acc => {
+                        const rows = acc.querySelectorAll('.searchable-row');
+                        let hasMatch = false;
+                        rows.forEach(row => {
+                            const text = row.querySelector('.search-target').innerText.toLowerCase();
+                            if (text.includes(term)) {
+                                row.style.display = '';
+                                hasMatch = true;
+                            } else {
+                                row.style.display = 'none';
+                            }
+                        });
+                        acc.style.display = (hasMatch || term === '') ? '' : 'none';
+                    });
+                });
+            }
+        },
+
+        // --- Módulo de Inventario (Review) ---
+        inventory: {
+            fileStore: new DataTransfer(),
+
+            openReviewModal: async (btn) => {
+                const ds = btn.dataset;
+                document.getElementById('rev-code').textContent = ds.code;
+                document.getElementById('rev-desc').textContent = ds.desc;
+                document.getElementById('rev-id').value = ds.id;
+                document.getElementById('rev-inv-id').value = ds.invId;
+
+                // Resetear UI del modal
+                document.getElementById('rev-existing-photos').innerHTML = '';
+                document.getElementById('rev-photos-delete-container').innerHTML = '';
+                document.getElementById('rev-new-photos').innerHTML = '';
+                App.inventory.fileStore = new DataTransfer();
+                document.getElementById('rev-file-input').value = '';
+
+                if (ds.action === 'editar') {
+                    try {
+                        const res = await fetch(`/inventarios/detalle/${ds.id}`);
+                        if (res.ok) {
+                            const data = await res.json();
+                            
+                            // Radio Buttons
+                            const radio = document.querySelector(`input[name="estatus_hallazgo"][value="${data.estatus_hallazgo}"]`);
+                            if (radio) radio.checked = true;
+                            
+                            document.getElementById('rev-condicion').value = data.condicion_fisica_reportada || 'Bueno';
+                            document.getElementById('rev-obs').value = data.observaciones || '';
+
+                            // Fotos Existentes
+                            const container = document.getElementById('rev-existing-photos');
+                            const baseUrl = document.getElementById('base-url-upload').value; // Helper oculto
+                            
+                            data.fotos.forEach(f => {
+                                // Construir URL limpia
+                                let url = baseUrl.replace('filename', '') + f.ruta_archivo.replace(/\\/g, '/');
+                                // Si la ruta base termina en / y la archivo empieza en /, quitar uno
+                                url = url.replace('//', '/'); 
+
+                                const div = document.createElement('div');
+                                div.className = 'preview-image-wrapper';
+                                div.id = `exist-${f.id}`;
+                                div.innerHTML = `
+                                    <img src="${url}" class="preview-image">
+                                    <button type="button" class="remove-image-btn" onclick="App.inventory.markDelete(${f.id})">×</button>
+                                `;
+                                container.appendChild(div);
+                            });
+                        }
+                    } catch (e) { console.error(e); }
                 } else {
-                    details.style.display = '';
+                    // Default Nuevo
+                    document.querySelector('input[name="estatus_hallazgo"][value="Localizado"]').checked = true;
+                    document.getElementById('rev-condicion').value = 'Bueno';
+                    document.getElementById('rev-obs').value = '';
                 }
-            });
-        });
-    }
 
-    // ===================================================================
-    // 3. LÓGICA DE MODALES (REVISAR/EDITAR Y SOBRANTES)
-    // ===================================================================
+                App.modals.open('revisar-modal');
+            },
 
-    // --- Constantes para el Modal "Revisar/Editar Bien" ---
-    const revisarModal = document.getElementById('revisar-modal');
-    const revisarModalBackdrop = document.getElementById('modal-backdrop');
-    const revisarModalCancelar = document.getElementById('modal-cancelar');
-    const revisarButtons = document.querySelectorAll('.revisar-btn');
-    const fotosInput = document.getElementById('fotos-input');
-    const previewContainer = document.getElementById('fotos-preview-container');
-    const existingFotosContainer = document.getElementById('existing-fotos-container');
-    const fotosAEliminarContainer = document.getElementById('fotos-a-eliminar-container');
-    let fileStore = new DataTransfer(); // Almacén para manejar los archivos nuevos
+            markDelete: (id) => {
+                document.getElementById(`exist-${id}`).style.display = 'none';
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'fotos_a_eliminar';
+                input.value = id;
+                document.getElementById('rev-photos-delete-container').appendChild(input);
+            },
 
-    // --- Constantes para el Modal "Bien Sobrante" ---
-    const sobranteModal = document.getElementById('sobrante-modal');
-    const sobranteModalBackdrop = document.getElementById('sobrante-modal-backdrop');
-    const sobranteModalCancelar = document.getElementById('sobrante-modal-cancelar');
-    const abrirSobranteButton = document.getElementById('abrir-modal-sobrante');
+            handleFileSelect: (e) => {
+                const files = e.target.files;
+                for (let file of files) {
+                    App.inventory.fileStore.items.add(file);
+                }
+                e.target.files = App.inventory.fileStore.files;
+                App.inventory.renderNewPreviews();
+            },
 
-    // --- Funciones para el Modal "Revisar/Editar Bien" ---
-    async function openRevisarModal(button) {
-        const detalleId = button.dataset.detalleId;
-        const inventarioId = button.dataset.inventarioId;
-        const noInventario = button.dataset.noInventario;
-        const descripcion = button.dataset.descripcion;
-        const action = button.dataset.action;
-
-        // Configuración básica del formulario
-        const modalForm = document.querySelector('#revisar-modal form');
-        modalForm.action = `/inventarios/detalle/actualizar/${detalleId}`;
-        document.getElementById('modal-detalle-id').value = detalleId;
-        document.getElementById('modal-inventario-id').value = inventarioId;
-        document.getElementById('modal-no-inventario').textContent = noInventario;
-        document.getElementById('modal-descripcion').textContent = descripcion;
-
-        if (action === 'editar') {
-            try {
-                const response = await fetch(`/inventarios/detalle/${detalleId}`);
-                if (!response.ok) throw new Error('No se pudieron cargar los datos.');
-                const data = await response.json();
-
-                // Llenar formulario con datos existentes
-                document.querySelector(`input[name="estatus_hallazgo"][value="${data.estatus_hallazgo}"]`).checked = true;
-                document.querySelector('#condicion').value = data.condicion_fisica_reportada;
-                document.querySelector('#observaciones').value = data.observaciones;
-
-                // Mostrar fotos existentes
-                existingFotosContainer.innerHTML = '';
-                data.fotos.forEach(foto => {
-                    const wrapper = document.createElement('div');
-                    wrapper.className = 'preview-image-wrapper';
-                    wrapper.id = `foto-existente-${foto.id}`;
-                    wrapper.innerHTML = `
-                       <img src="/images/${foto.ruta_archivo}" class="preview-image" alt="Foto existente"> 
-                        <button type="button" class="remove-image-btn" title="Marcar para eliminar" data-foto-id="${foto.id}">×</button>
-                    `;
-                    existingFotosContainer.appendChild(wrapper);
+            renderNewPreviews: () => {
+                const container = document.getElementById('rev-new-photos');
+                container.innerHTML = '';
+                [...App.inventory.fileStore.files].forEach((file, idx) => {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        const div = document.createElement('div');
+                        div.className = 'preview-image-wrapper';
+                        div.innerHTML = `
+                            <img src="${e.target.result}" class="preview-image">
+                            <button type="button" class="remove-image-btn" onclick="App.inventory.removeNewFile(${idx})">×</button>
+                        `;
+                        container.appendChild(div);
+                    };
+                    reader.readAsDataURL(file);
                 });
-            } catch (error) {
-                console.error("Error al cargar detalle:", error);
-                alert("No se pudo cargar la información para editar. Inténtalo de nuevo.");
-                return;
-            }
-        } else {
-            // Acción de REVISAR: Asegurarse de que el estado por defecto sea 'Pendiente'
-            const pendienteRadio = document.querySelector('input[name="estatus_hallazgo"][value="Pendiente"]');
-            if(pendienteRadio) pendienteRadio.checked = true;
-        }
+            },
 
-        revisarModal.classList.remove('hidden');
-        document.body.style.overflow = 'hidden';
-    }
+            removeNewFile: (idx) => {
+                const dt = new DataTransfer();
+                [...App.inventory.fileStore.files].forEach((f, i) => {
+                    if (i !== idx) dt.items.add(f);
+                });
+                App.inventory.fileStore = dt;
+                document.getElementById('rev-file-input').files = dt.files;
+                App.inventory.renderNewPreviews();
+            },
 
-    function closeRevisarModal() {
-        if (!revisarModal) return;
-        revisarModal.classList.add('hidden');
-        document.body.style.overflow = 'auto';
-        // Limpieza completa del modal
-        document.querySelector('#revisar-modal form').reset();
-        previewContainer.innerHTML = '';
-        existingFotosContainer.innerHTML = '';
-        fotosAEliminarContainer.innerHTML = '';
-        fileStore = new DataTransfer();
-        if (fotosInput) fotosInput.files = fileStore.files;
-    }
+            submitReview: async () => {
+                const form = document.getElementById('form-revisar');
+                const detalleId = document.getElementById('rev-id').value;
+                const formData = new FormData(form);
+                
+                // Asegurar archivos del DataTransfer
+                formData.delete('fotos');
+                [...App.inventory.fileStore.files].forEach(f => formData.append('fotos', f));
 
-    // --- Funciones para el Modal "Bien Sobrante" ---
-    function openSobranteModal() {
-        if (!sobranteModal) return;
-        sobranteModal.classList.remove('hidden');
-        document.body.style.overflow = 'hidden';
-    }
-
-    function closeSobranteModal() {
-        if (!sobranteModal) return;
-        sobranteModal.classList.add('hidden');
-        document.body.style.overflow = 'auto';
-
-        // Limpieza del formulario y las previsualizaciones de imágenes
-        document.querySelector('#sobrante-modal form').reset();
-        sobrantePreviewContainer.innerHTML = '';
-        sobranteFileStore = new DataTransfer();
-        if (sobranteFotosInput) sobranteFotosInput.files = sobranteFileStore.files;
-    }
-
-    // --- Asignación de Eventos (Listeners) ---
-    revisarButtons.forEach(button => {
-        button.addEventListener('click', () => openRevisarModal(button));
-    });
-    if (revisarModalBackdrop) revisarModalBackdrop.addEventListener('click', closeRevisarModal);
-    if (revisarModalCancelar) revisarModalCancelar.addEventListener('click', closeRevisarModal);
-
-    if (abrirSobranteButton) abrirSobranteButton.addEventListener('click', openSobranteModal);
-    if (sobranteModalBackdrop) sobranteModalBackdrop.addEventListener('click', closeSobranteModal);
-    if (sobranteModalCancelar) sobranteModalCancelar.addEventListener('click', closeSobranteModal);
-    
-    // Listener para marcar una foto existente para eliminar
-    existingFotosContainer.addEventListener('click', function(event) {
-        if (event.target.matches('.remove-image-btn')) {
-            const fotoId = event.target.dataset.fotoId;
-            const wrapper = document.getElementById(`foto-existente-${fotoId}`);
-            wrapper.style.display = 'none'; // Ocultar visualmente
-            // Añadir un input oculto para que el backend sepa cuál borrar
-            const hiddenInput = document.createElement('input');
-            hiddenInput.type = 'hidden';
-            hiddenInput.name = 'fotos_a_eliminar';
-            hiddenInput.value = fotoId;
-            fotosAEliminarContainer.appendChild(hiddenInput);
-        }
-    });
-
-    // ===================================================================
-    // 4. LÓGICA PARA PREVISUALIZACIÓN DE IMÁGENES NUEVAS
-    // ===================================================================
-    if (fotosInput) {
-        fotosInput.addEventListener('change', function(event) {
-            const files = event.target.files;
-            for (const file of files) {
-                if (![...fileStore.files].find(f => f.name === file.name && f.size === file.size)) {
-                    fileStore.items.add(file);
+                try {
+                    const res = await fetch(`/inventarios/detalle/actualizar/${detalleId}`, {
+                        method: 'POST',
+                        body: formData
+                    });
+                    if (res.ok) {
+                        window.location.reload();
+                    } else {
+                        alert("Error al guardar");
+                    }
+                } catch (e) {
+                    console.error(e);
+                    alert("Error de conexión");
                 }
             }
-            fotosInput.files = fileStore.files;
-            renderPreviews();
-        });
-    }
+        }
+    };
 
-    function renderPreviews() {
-        previewContainer.innerHTML = '';
-        [...fileStore.files].forEach((file, index) => {
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const wrapper = document.createElement('div');
-                wrapper.className = 'preview-image-wrapper';
-                wrapper.innerHTML = `
-                    <img src="${e.target.result}" class="preview-image" alt="Previsualización de ${file.name}">
-                    <button type="button" class="remove-image-btn" title="Quitar ${file.name}" data-index="${index}">×</button>
-                `;
-                wrapper.querySelector('.remove-image-btn').addEventListener('click', removeFile);
-                previewContainer.appendChild(wrapper);
+    document.addEventListener('DOMContentLoaded', () => {
+        App.tabs.init();
+        App.search.init();
+        
+        // Listener input fotos
+        const input = document.getElementById('rev-file-input');
+        if (input) input.addEventListener('change', App.inventory.handleFileSelect);
+
+        // Tecla Escape para cerrar modales
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                document.querySelectorAll('.modal-overlay:not(.hidden)').forEach(m => m.classList.add('hidden'));
+                document.body.style.overflow = 'auto';
             }
-            reader.readAsDataURL(file);
         });
-    }
+    });
     
-    function removeFile(event) {
-        const indexToRemove = parseInt(event.target.dataset.index, 10);
-        const newFiles = new DataTransfer();
-        [...fileStore.files].forEach((file, index) => {
-            if (index !== indexToRemove) {
-                newFiles.items.add(file);
-            }
-        });
-        fileStore = newFiles;
-        fotosInput.files = fileStore.files;
-        renderPreviews();
-    }
-
-    // ===================================================================
-    // 5. CERRAR MODALES CON LA TECLA ESCAPE
-    // ===================================================================
-    document.addEventListener('keydown', function(event) {
-        if (event.key === 'Escape') {
-            if (revisarModal && !revisarModal.classList.contains('hidden')) {
-                closeRevisarModal();
-            }
-            if (sobranteModal && !sobranteModal.classList.contains('hidden')) {
-                closeSobranteModal();
-            }
-        }
-    });
-});
-
-// ===================================================================
-    // NUEVA SECCIÓN: LÓGICA PARA MODAL "AÑADIR BRIGADA"
-    // ===================================================================
-
-    // --- Constantes para el Modal "Añadir Brigada" ---
-    const brigadaModal = document.getElementById('brigada-modal');
-    const brigadaModalBackdrop = document.getElementById('brigada-modal-backdrop');
-    const brigadaModalCancelar = document.getElementById('brigada-modal-cancelar');
-    const abrirBrigadaModalBtn = document.getElementById('abrir-modal-brigada');
-
-    // --- Funciones para el Modal "Añadir Brigada" ---
-    function openBrigadaModal() {
-        if (!brigadaModal) return;
-        brigadaModal.classList.remove('hidden');
-        document.body.style.overflow = 'hidden';
-    }
-
-    function closeBrigadaModal() {
-        if (!brigadaModal) return;
-        brigadaModal.classList.add('hidden');
-        document.body.style.overflow = 'auto';
-        // Opcional: resetear el formulario si es necesario
-        // document.querySelector('#brigada-modal form').reset();
-    }
-
-    // --- Asignación de Eventos (Listeners) ---
-    if (abrirBrigadaModalBtn) abrirBrigadaModalBtn.addEventListener('click', openBrigadaModal);
-    if (brigadaModalBackdrop) brigadaModalBackdrop.addEventListener('click', closeBrigadaModal);
-    if (brigadaModalCancelar) brigadaModalCancelar.addEventListener('click', closeBrigadaModal);
-
-
-    // ===================================================================
-    // 5. CERRAR MODALES CON LA TECLA ESCAPE (MODIFICADO)
-    // ===================================================================
-    document.addEventListener('keydown', function(event) {
-        if (event.key === 'Escape') {
-            if (revisarModal && !revisarModal.classList.contains('hidden')) {
-                closeRevisarModal();
-            }
-            if (sobranteModal && !sobranteModal.classList.contains('hidden')) {
-                closeSobranteModal();
-            }
-            // --- LÍNEA AÑADIDA ---
-            if (brigadaModal && !brigadaModal.classList.contains('hidden')) {
-                closeBrigadaModal();
-            }
-        }
-    });
-
-    // ===================================================================
-    // NUEVA SECCIÓN: LÓGICA PARA MODAL "REMOVER BRIGADA"
-    // ===================================================================
-
-    // --- Constantes para el Modal "Remover Brigada" ---
-    const removerBrigadaModal = document.getElementById('remover-brigada-modal');
-    const removerBrigadaModalBackdrop = document.getElementById('remover-brigada-modal-backdrop');
-    const removerBrigadaModalCancelar = document.getElementById('remover-brigada-modal-cancelar');
-    const abrirRemoverBrigadaBtn = document.getElementById('abrir-modal-remover-brigada');
-
-    // --- Funciones para el Modal "Remover Brigada" ---
-    function openRemoverBrigadaModal() {
-        if (!removerBrigadaModal) return;
-        removerBrigadaModal.classList.remove('hidden');
-        document.body.style.overflow = 'hidden';
-    }
-
-    function closeRemoverBrigadaModal() {
-        if (!removerBrigadaModal) return;
-        removerBrigadaModal.classList.add('hidden');
-        document.body.style.overflow = 'auto';
-    }
-
-    // --- Asignación de Eventos (Listeners) ---
-    if (abrirRemoverBrigadaBtn) abrirRemoverBrigadaBtn.addEventListener('click', openRemoverBrigadaModal);
-    if (removerBrigadaModalBackdrop) removerBrigadaModalBackdrop.addEventListener('click', closeRemoverBrigadaModal);
-    if (removerBrigadaModalCancelar) removerBrigadaModalCancelar.addEventListener('click', closeRemoverBrigadaModal);
-
-    // =CAL MODIFICACIÓN AL MANEJADOR DE LA TECLA 'ESCAPE' ==================
-    document.addEventListener('keydown', function(event) {
-        if (event.key === 'Escape') {
-            if (revisarModal && !revisarModal.classList.contains('hidden')) {
-                closeRevisarModal();
-            }
-            if (sobranteModal && !sobranteModal.classList.contains('hidden')) {
-                closeSobranteModal();
-            }
-            if (brigadaModal && !brigadaModal.classList.contains('hidden')) {
-                closeBrigadaModal();
-            }
-            // --- LÍNEA AÑADIDA ---
-            if (removerBrigadaModal && !removerBrigadaModal.classList.contains('hidden')) {
-                closeRemoverBrigadaModal();
-            }
-        }
-    });
-
-const sobranteFotosInput = document.getElementById('sobrante-fotos-input');
-    const sobrantePreviewContainer = document.getElementById('sobrante-fotos-preview-container');
-    let sobranteFileStore = new DataTransfer(); // Almacén de archivos exclusivo para este modal
-
-    if (sobranteFotosInput) {
-        sobranteFotosInput.addEventListener('change', function(event) {
-            const files = event.target.files;
-            for (const file of files) {
-                // Evita añadir duplicados
-                if (![...sobranteFileStore.files].find(f => f.name === file.name && f.size === file.size)) {
-                    sobranteFileStore.items.add(file);
-                }
-            }
-            sobranteFotosInput.files = sobranteFileStore.files;
-            renderSobrantePreviews();
-        });
-    }
-
-    function renderSobrantePreviews() {
-        sobrantePreviewContainer.innerHTML = ''; // Limpiar previsualizaciones
-        [...sobranteFileStore.files].forEach((file, index) => {
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const wrapper = document.createElement('div');
-                wrapper.className = 'preview-image-wrapper';
-                // Usamos innerHTML para construir el elemento de una vez
-                wrapper.innerHTML = `
-                    <img src="${e.target.result}" class="preview-image" alt="Previsualización de ${file.name}">
-                    <button type="button" class="remove-image-btn" title="Quitar ${file.name}" data-index="${index}">×</button>
-                `;
-                // Añadimos el listener al botón de eliminar recién creado
-                wrapper.querySelector('.remove-image-btn').addEventListener('click', removeSobranteFile);
-                sobrantePreviewContainer.appendChild(wrapper);
-            }
-            reader.readAsDataURL(file);
-        });
-    }
-    
-    function removeSobranteFile(event) {
-        const indexToRemove = parseInt(event.target.dataset.index, 10);
-        const newFiles = new DataTransfer();
-        // Reconstruimos la lista de archivos sin el que se eliminó
-        [...sobranteFileStore.files].forEach((file, index) => {
-            if (index !== indexToRemove) {
-                newFiles.items.add(file);
-            }
-        });
-        sobranteFileStore = newFiles;
-        sobranteFotosInput.files = sobranteFileStore.files;
-        renderSobrantePreviews(); // Re-dibujamos las miniaturas
-    }
-
-
+    // Exponer App globalmente para los onclick del HTML
+    window.App = App;
 </script>
 {% endblock %}

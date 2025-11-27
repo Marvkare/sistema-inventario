@@ -3,167 +3,130 @@
 {% block title %}Crear Nuevo Inventario{% endblock %}
 
 {% block content %}
-<div class="min-h-screen bg-gradient-to-br from-gray-50 to-beige-light/20 py-8 px-4">
-    <div class="max-w-4xl mx-auto">
+<div class="page-wrapper">
+    <div class="container-limit">
         
-        <!-- Encabezado -->
-        <div class="bg-white rounded-2xl shadow-xl border border-beige-light overflow-hidden mb-8">
-            <div class="bg-gradient-to-r from-burgundy to-burgundy-dark p-6 text-white">
-                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                    <div class="flex-1">
-                        <h1 class="text-2xl md:text-3xl font-bold">Crear Nuevo Inventario</h1>
-                        <p class="text-beige-light mt-2">Complete la información básica para iniciar un nuevo proceso de levantamiento</p>
-                    </div>
-                    <div class="flex items-center space-x-2">
-                        <div class="w-12 h-12 bg-beige rounded-full flex items-center justify-center shadow-lg">
-                            <i class="fas fa-clipboard-list text-burgundy text-xl"></i>
-                        </div>
-                    </div>
-                </div>
+        <div class="header-card">
+            <div class="header-text">
+                <h1>Crear Nuevo Inventario</h1>
+                <p>Complete la información básica para iniciar un nuevo proceso de levantamiento.</p>
+            </div>
+            <div class="header-icon-box">
+                <i class="fas fa-clipboard-list"></i>
             </div>
         </div>
 
         <form action="{{ url_for('inventarios.crear_inventario') }}" method="POST">
-            <div class="space-y-8">
+            
+            <div class="card mb-4">
+                <div class="card-header">
+                    <div class="icon-box"><i class="fas fa-info-circle"></i></div>
+                    <h2>Información Básica</h2>
+                </div>
                 
-                <!-- Información Básica -->
-                <div class="bg-white rounded-2xl shadow-lg border border-beige-light overflow-hidden">
-                    <div class="p-6">
-                        <h2 class="text-xl font-bold text-burgundy mb-4 flex items-center">
-                            <i class="fas fa-info-circle mr-3"></i>
-                            Información Básica
-                        </h2>
+                <div class="card-body">
+                    <div class="form-grid-2">
+                        <div class="form-group">
+                            <label for="nombre"><i class="fas fa-tag icon-label"></i> Nombre del Inventario *</label>
+                            <input type="text" name="nombre" id="nombre" required
+                                   placeholder="Ej: Inventario Anual 2025" value="{{ form_data.nombre }}">
+                        </div>
                         
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div>
-                                <label for="nombre" class="block text-sm font-semibold text-gray-700 mb-2 flex items-center">
-                                    <i class="fas fa-tag text-burgundy mr-2 text-xs"></i>
-                                    Nombre del Inventario <span class="text-red-600 ml-1">*</span>
-                                </label>
-                                <input type="text" name="nombre" id="nombre" required
-                                       class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-burgundy/50 focus:border-burgundy transition-all duration-200 bg-white"
-                                       placeholder="Ej: Inventario Anual 2025" value="{{ form_data.nombre }}">
-                            </div>
-                            
-                            <div>
-                                <label for="tipo" class="block text-sm font-semibold text-gray-700 mb-2 flex items-center">
-                                    <i class="fas fa-list-alt text-burgundy mr-2 text-xs"></i>
-                                    Tipo de Inventario
-                                </label>
-                                <select id="tipo" name="tipo"
-                                        class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-burgundy/50 focus:border-burgundy transition-all duration-200 bg-white">
-                                    <option {% if form_data.tipo == 'Físico-Contable' %}selected{% endif %}>Físico-Contable</option>
-                                    <option {% if form_data.tipo == 'Preventivo' %}selected{% endif %}>Preventivo</option>
-                                </select>
-                            </div>
-                            <div class="mt-6">
-                                <label for="Tipo_De_Resguardo" class="block text-sm font-semibold text-gray-700 mb-2 flex items-center">
-                                    <i class="fas fa-shield-alt text-burgundy mr-2 text-xs"></i>
-                                    Tipo de Bienes a Inventariar <span class="text-red-600 ml-1">*</span>
-                                </label>
-                                <select id="Tipo_De_Resguardo" name="Tipo_De_Resguardo" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-burgundy/50 focus:border-burgundy transition-all duration-200 bg-white">
-                                    <option value="0" {% if form_data.Tipo_De_Resguardo == '0' %}selected{% endif %}>Resguardo</option>
-                                    <option value="1" {% if form_data.Tipo_De_Resguardo == '1' %}selected{% endif %}>Sujeto a Control</option>
-                                </select>
-                            </div>
+                        <div class="form-group">
+                            <label for="tipo"><i class="fas fa-list-alt icon-label"></i> Tipo de Inventario</label>
+                            <select id="tipo" name="tipo">
+                                <option {% if form_data.tipo == 'Físico-Contable' %}selected{% endif %}>Físico-Contable</option>
+                                <option {% if form_data.tipo == 'Preventivo' %}selected{% endif %}>Preventivo</option>
+                            </select>
                         </div>
                     </div>
-                </div>
 
-                <!-- Alcance del Inventario -->
-                <div class="bg-white rounded-2xl shadow-lg border border-beige-light overflow-hidden">
-                    <div class="p-6">
-                        <h2 class="text-xl font-bold text-burgundy mb-4 flex items-center">
-                            <i class="fas fa-bullseye mr-3"></i>
-                            Alcance del Inventario
-                        </h2>
-                        <p class="text-gray-600 mb-6">Seleccione las áreas que serán incluidas en este levantamiento</p>
-                        
-<fieldset>
-    <legend class="sr-only">Áreas</legend>
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {% for area in areas %}
-        <div class="relative bg-beige-light/20 p-4 rounded-xl border-2 border-beige-light hover:border-burgundy/50 transition-all duration-200 cursor-pointer area-card"
-             data-bienes-normal="{{ area.num_bienes_normal }}"
-             data-bienes-control="{{ area.num_bienes_control }}">
-            
-            <div class="flex items-start space-x-3">
-                <div class="flex h-5 items-center mt-1">
-                    <input id="area-{{ area.id }}" name="area_ids" value="{{ area.id }}" type="checkbox"
-                           class="h-4 w-4 rounded border-gray-300 text-burgundy focus:ring-burgundy/50">
-                </div>
-                <div class="flex-1">
-                    <label for="area-{{ area.id }}" class="block font-bold text-gray-800 cursor-pointer text-sm">
-                        {{ area.nombre }}
-                    </label>
-                    <div class="mt-2 space-y-1 text-xs text-gray-600">
-                        <p class="flex items-center">
-                            <i class="fas fa-user-tie text-burgundy mr-2"></i>
-                            Jefe de Área: <span class="font-medium ml-1">{{ area.jefe_de_area or 'No asignado' }}</span>
-                        </p>
-                        <p class="flex items-center">
-                            <i class="fas fa-boxes text-burgundy mr-2"></i>
-                            Bienes a verificar: 
-                            <span class="font-bold text-burgundy ml-1 bienes-count">{{ area.num_bienes_normal }}</span>
-                        </p>
+                    <div class="form-group mt-3">
+                        <label for="Tipo_De_Resguardo"><i class="fas fa-shield-alt icon-label"></i> Tipo de Bienes a Inventariar *</label>
+                        <select id="Tipo_De_Resguardo" name="Tipo_De_Resguardo">
+                            <option value="0" {% if form_data.Tipo_De_Resguardo == '0' %}selected{% endif %}>Resguardo (Normal)</option>
+                            <option value="1" {% if form_data.Tipo_De_Resguardo == '1' %}selected{% endif %}>Sujeto a Control</option>
+                        </select>
+                        <p class="help-text">Esto actualizará automáticamente los contadores de bienes por área.</p>
                     </div>
                 </div>
             </div>
-        </div>
-        {% endfor %}
-    </div>
-</fieldset>
-                    </div>
+
+            <div class="card mb-4">
+                <div class="card-header">
+                    <div class="icon-box"><i class="fas fa-bullseye"></i></div>
+                    <h2>Alcance del Inventario</h2>
                 </div>
-                
-                <!-- Brigada de Trabajo -->
-                <div class="bg-white rounded-2xl shadow-lg border border-beige-light overflow-hidden">
-                    <div class="p-6">
-                        <h2 class="text-xl font-bold text-burgundy mb-4 flex items-center">
-                            <i class="fas fa-users mr-3"></i>
-                            Brigada de Trabajo
-                        </h2>
-                        <p class="text-gray-600 mb-6">Asigne al personal que realizará el trabajo de campo</p>
-                        
-                        <fieldset>
-                            <legend class="sr-only">Usuarios</legend>
-                            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                                {% for user in users %}
-                                <div class="relative bg-gray-50 p-4 rounded-xl border border-gray-200 hover:border-burgundy/50 transition-all duration-200 cursor-pointer">
-                                    <div class="flex items-center space-x-3">
-                                        <div class="flex h-5 items-center">
-                                            <input id="user-{{ user.id }}" name="user_ids" value="{{ user.id }}" type="checkbox"
-                                                   class="h-4 w-4 rounded border-gray-300 text-burgundy focus:ring-burgundy/50">
-                                        </div>
-                                        <div class="flex items-center">
-                                            <div class="w-8 h-8 bg-burgundy rounded-full flex items-center justify-center text-white text-sm font-bold mr-3">
-                                                {{ user.username[0]|upper }}
-                                            </div>
-                                            <label for="user-{{ user.id }}" class="font-medium text-gray-700 cursor-pointer text-sm">
-                                                {{ user.username }}
-                                            </label>
-                                        </div>
+                <div class="card-body">
+                    <p class="help-text mb-4">Seleccione las áreas que serán incluidas en este levantamiento:</p>
+                    
+                    <fieldset class="selection-fieldset">
+                        <div class="selection-grid">
+                            {% for area in areas %}
+                            <label class="selection-card area-card" 
+                                   for="area-{{ area.id }}"
+                                   data-bienes-normal="{{ area.num_bienes_normal }}"
+                                   data-bienes-control="{{ area.num_bienes_control }}">
+                                
+                                <div class="check-wrapper">
+                                    <input id="area-{{ area.id }}" name="area_ids" value="{{ area.id }}" type="checkbox">
+                                </div>
+                                
+                                <div class="card-content">
+                                    <span class="card-title">{{ area.nombre }}</span>
+                                    <div class="card-details">
+                                        <p><i class="fas fa-user-tie"></i> {{ area.jefe_de_area or 'No asignado' }}</p>
+                                        <p class="highlight">
+                                            <i class="fas fa-boxes"></i> 
+                                            Bienes: <span class="bienes-count">{{ area.num_bienes_normal }}</span>
+                                        </p>
                                     </div>
                                 </div>
-                                {% endfor %}
-                            </div>
-                        </fieldset>
-                    </div>
-                </div>
-                
-                <!-- Botones de Acción -->
-                <div class="flex flex-col sm:flex-row justify-end gap-4 pt-6">
-                    <a href="{{ url_for('inventarios.listar_inventarios') }}"
-                       class="inline-flex items-center justify-center px-6 py-3 border-2 border-gray-300 text-base font-semibold rounded-xl text-gray-700 bg-white hover:bg-gray-50 transition-all duration-200 order-2 sm:order-1">
-                        <i class="fas fa-times mr-2"></i> Cancelar
-                    </a>
-                    <button type="submit"
-                            class="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-semibold rounded-xl shadow-lg text-white bg-gradient-to-r from-burgundy to-burgundy-dark hover:from-burgundy-dark hover:to-burgundy transition-all duration-300 transform hover:scale-105 order-1 sm:order-2">
-                        <i class="fas fa-plus-circle mr-2"></i> 
-                        Crear Inventario
-                    </button>
+                            </label>
+                            {% endfor %}
+                        </div>
+                    </fieldset>
                 </div>
             </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <div class="icon-box"><i class="fas fa-users"></i></div>
+                    <h2>Brigada de Trabajo</h2>
+                </div>
+                <div class="card-body">
+                    <p class="help-text mb-4">Asigne al personal que realizará el trabajo de campo:</p>
+                    
+                    <fieldset class="selection-fieldset">
+                        <div class="selection-grid-small">
+                            {% for user in users %}
+                            <label class="selection-card user-card" for="user-{{ user.id }}">
+                                <div class="check-wrapper">
+                                    <input id="user-{{ user.id }}" name="user_ids" value="{{ user.id }}" type="checkbox">
+                                </div>
+                                
+                                <div class="user-content">
+                                    <div class="avatar-circle">
+                                        {{ user.username[0]|upper }}
+                                    </div>
+                                    <span class="card-title">{{ user.username }}</span>
+                                </div>
+                            </label>
+                            {% endfor %}
+                        </div>
+                    </fieldset>
+                </div>
+            </div>
+            
+            <div class="form-actions">
+                <a href="{{ url_for('inventarios.listar_inventarios') }}" class="btn btn-secondary">
+                    <i class="fas fa-times"></i> Cancelar
+                </a>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-plus-circle"></i> Crear Inventario
+                </button>
+            </div>
+
         </form>
     </div>
 </div>
@@ -171,65 +134,143 @@
 
 {% block styles %}
 <style>
-    .bg-burgundy { background-color: #6A2E4D; }
-    .bg-burgundy-dark { background-color: #551E3A; }
-    .text-burgundy { color: #6A2E4D; }
-    .border-burgundy { border-color: #6A2E4D; }
-    .focus\:ring-burgundy\/50:focus { --tw-ring-color: rgb(106 46 77 / 0.5); }
-    .focus\:border-burgundy:focus { border-color: #6A2E4D; }
+    /* VARIABLES */
+    :root {
+        --col-burgundy: #6A2E4D;
+        --col-burgundy-dark: #551E3A;
+        --col-beige: #BC9B6A;
+        --col-beige-light: #fdfbf7;
+        --col-white: #ffffff;
+        --col-bg: #f9fafb;
+        
+        --radius: 12px;
+        --shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+        --border-color: #e5e7eb;
+    }
+
+    /* Layout */
+    .page-wrapper { min-height: 100vh; background: var(--col-bg); padding: 2rem 1rem; }
+    .container-limit { max-width: 1000px; margin: 0 auto; }
+    .mb-4 { margin-bottom: 2rem; }
+    .mt-3 { margin-top: 1rem; }
+
+    /* Header */
+    .header-card {
+        background: linear-gradient(to right, var(--col-burgundy), var(--col-burgundy-dark));
+        border-radius: var(--radius); padding: 1.5rem 2rem; color: white;
+        display: flex; justify-content: space-between; align-items: center;
+        margin-bottom: 2rem; box-shadow: var(--shadow);
+    }
+    .header-text h1 { margin: 0; font-size: 1.5rem; }
+    .header-text p { margin: 0.5rem 0 0; color: #e2e8f0; font-size: 0.9rem; }
+    .header-icon-box {
+        width: 48px; height: 48px; background: var(--col-beige); border-radius: 50%;
+        display: flex; align-items: center; justify-content: center; color: var(--col-burgundy); font-size: 1.2rem;
+    }
+
+    /* Tarjetas y Formularios */
+    .card { background: var(--col-white); border-radius: var(--radius); box-shadow: var(--shadow); border: 1px solid var(--border-color); overflow: hidden; margin-bottom: 2rem; }
+    .card-header { padding: 1rem 1.5rem; border-bottom: 1px solid var(--border-color); background: rgba(106, 46, 77, 0.03); display: flex; align-items: center; gap: 0.8rem; }
+    .icon-box { width: 32px; height: 32px; background: var(--col-burgundy); border-radius: 50%; color: white; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; }
+    .card-header h2 { margin: 0; font-size: 1.1rem; color: var(--col-burgundy); }
+    .card-body { padding: 1.5rem; }
+
+    /* Grids de Formulario */
+    .form-grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; }
+    .form-group { margin-bottom: 1rem; }
+    .form-group label { display: block; font-weight: 600; color: #374151; font-size: 0.9rem; margin-bottom: 0.4rem; }
+    .icon-label { color: var(--col-burgundy); margin-right: 0.3rem; }
     
-    .bg-beige { background-color: #BC9B6A; }
-    .bg-beige-light { background-color: #D7C3A0; }
-    .text-beige-light { color: #D7C3A0; }
-    .border-beige { border-color: #BC9B6A; }
-    .border-beige-light { border-color: #D7C3A0; }
+    input[type="text"], select { width: 100%; padding: 0.75rem; border: 1px solid #d1d5db; border-radius: 8px; font-size: 0.95rem; }
+    input:focus, select:focus { outline: none; border-color: var(--col-burgundy); box-shadow: 0 0 0 3px rgba(106, 46, 77, 0.1); }
+    .help-text { font-size: 0.85rem; color: #6b7280; margin-top: 0.3rem; }
+
+    /* --- SELECCIÓN DE ÁREAS Y USUARIOS (Tarjetas Interactivas) --- */
+    .selection-fieldset { border: none; padding: 0; margin: 0; }
     
-    .from-burgundy { --tw-gradient-from: #6A2E4D; --tw-gradient-to: rgb(106 46 77 / 0); --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to); }
-    .to-burgundy-dark { --tw-gradient-to: #551E3A; }
+    .selection-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1rem; }
+    .selection-grid-small { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1rem; }
+
+    .selection-card {
+        display: flex; align-items: flex-start; gap: 0.8rem;
+        padding: 1rem; border: 1px solid var(--border-color); border-radius: 8px;
+        background: #fafafa; cursor: pointer; transition: all 0.2s;
+    }
+    /* Estilo cuando pasas el mouse o está seleccionado */
+    .selection-card:hover { border-color: var(--col-burgundy); background: rgba(188, 155, 106, 0.05); transform: translateY(-1px); }
+    
+    /* El checkbox en sí */
+    .check-wrapper { margin-top: 2px; }
+    .check-wrapper input { width: 1.1rem; height: 1.1rem; accent-color: var(--col-burgundy); cursor: pointer; }
+
+    /* Contenido de la tarjeta de área */
+    .card-content { flex: 1; }
+    .card-title { font-weight: 700; color: #1f2937; font-size: 0.95rem; display: block; margin-bottom: 0.3rem; }
+    
+    .card-details p { margin: 0; font-size: 0.8rem; color: #6b7280; display: flex; align-items: center; gap: 0.4rem; margin-bottom: 0.2rem; }
+    .card-details i { color: var(--col-burgundy); }
+    .card-details .highlight { color: var(--col-burgundy); font-weight: 600; }
+
+    /* Contenido de la tarjeta de usuario */
+    .user-content { display: flex; align-items: center; gap: 0.8rem; }
+    .avatar-circle {
+        width: 32px; height: 32px; background: var(--col-burgundy); color: white;
+        border-radius: 50%; display: flex; align-items: center; justify-content: center;
+        font-weight: bold; font-size: 0.85rem;
+    }
+
+    /* Botones */
+    .form-actions { display: flex; justify-content: flex-end; gap: 1rem; margin-top: 1rem; }
+    .btn { padding: 0.75rem 1.5rem; border-radius: 8px; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem; border: none; cursor: pointer; transition: all 0.2s; }
+    .btn-primary { background: linear-gradient(to right, var(--col-burgundy), var(--col-burgundy-dark)); color: white; }
+    .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
+    .btn-secondary { background: white; border: 1px solid #d1d5db; color: #374151; }
+    .btn-secondary:hover { background: #f3f4f6; }
+
+    /* Móvil */
+    @media (max-width: 768px) {
+        .header-card { flex-direction: column; text-align: center; gap: 1rem; }
+        .form-actions { flex-direction: column; }
+        .btn { width: 100%; justify-content: center; }
+    }
 </style>
 {% endblock %}
 
-
 {% block scripts %}
 <script>
-    // Esperamos a que todo el contenido de la página se haya cargado
     document.addEventListener('DOMContentLoaded', function () {
+        console.log("✅ Script de Inventario Cargado");
         
-        // 1. Seleccionamos los elementos con los que vamos a trabajar
+        // 1. Referencias
         const tipoResguardoSelect = document.getElementById('Tipo_De_Resguardo');
+        // Usamos querySelectorAll para buscar la clase que definimos en el HTML
         const areaCards = document.querySelectorAll('.area-card');
 
-        // 2. Creamos una función para actualizar los contadores
+        // 2. Función de actualización
         function actualizarContadores() {
-            // Obtenemos el valor seleccionado: '0' para Normal, '1' para Control
-            const seleccion = tipoResguardoSelect.value;
+            const seleccion = tipoResguardoSelect.value; // '0' = Normal, '1' = Control
 
-            // 3. Recorremos cada tarjeta de área
             areaCards.forEach(card => {
-                // Seleccionamos el <span> específico dentro de esta tarjeta
                 const contadorSpan = card.querySelector('.bienes-count');
                 let numeroBienes = 0;
 
-                // 4. Decidimos qué número mostrar basado en la selección
                 if (seleccion === '0') {
-                    // Si es 'Resguardo', tomamos el valor de data-bienes-normal
+                    // Dataset convierte data-bienes-normal a bienesNormal (camelCase)
                     numeroBienes = card.dataset.bienesNormal;
                 } else {
-                    // Si es 'Sujeto a Control', tomamos el valor de data-bienes-control
                     numeroBienes = card.dataset.bienesControl;
                 }
 
-                // 5. Actualizamos el texto del <span> con el número correcto
                 contadorSpan.textContent = numeroBienes;
             });
         }
 
-        // 6. Añadimos un "oyente" que llame a nuestra función cada vez que el select cambie
-        tipoResguardoSelect.addEventListener('change', actualizarContadores);
-
-        // Opcional pero recomendado: Llama a la función una vez al cargar la página
-        // para asegurar que el estado inicial es el correcto.
-        actualizarContadores();
+        // 3. Eventos
+        if (tipoResguardoSelect) {
+            tipoResguardoSelect.addEventListener('change', actualizarContadores);
+            // Ejecutar al inicio para sincronizar estado inicial
+            actualizarContadores();
+        }
     });
 </script>
 {% endblock %}

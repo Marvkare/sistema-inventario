@@ -3,248 +3,309 @@
 {% block title %}Bitácora de Actividad del Sistema{% endblock %}
 
 {% block content %}
-<div class="min-h-screen bg-gradient-to-br from-gray-50 to-beige-light/20 py-8 px-4">
-    <div class="max-w-7xl mx-auto">
+<div class="page-wrapper">
+    <div class="container-limit">
         
-        <!-- ENCABEZADO MEJORADO -->
-        <div class="bg-white rounded-2xl shadow-xl border border-beige-light overflow-hidden mb-8">
-            <div class="bg-gradient-to-r from-[#6A2E4D] to-[#551E3A] p-6 text-white">
-                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                    <div>
-                        <h1 class="text-2xl md:text-3xl font-bold">
-                            Bitácora de Actividad
-                        </h1>
-                        <p class="text-[#D7C3A0] mt-2">
-                            Revisa todas las acciones realizadas en el sistema
-                        </p>
-                    </div>
-                    <div class="flex items-center space-x-2">
-                        <div class="w-10 h-10 bg-[#BC9B6A] rounded-full flex items-center justify-center">
-                            <i class="fas fa-clipboard-list text-[#6A2E4D] text-lg"></i>
-                        </div>
-                    </div>
-                </div>
+        <div class="header-card">
+            <div class="header-text">
+                <h1>Bitácora de Actividad</h1>
+                <p>Revisa todas las acciones realizadas en el sistema.</p>
+            </div>
+            <div class="header-icon-box">
+                <i class="fas fa-clipboard-list"></i>
             </div>
         </div>
 
-        <!-- FILTROS -->
-        <div class="bg-white rounded-2xl shadow-lg border border-beige-light p-6 mb-8">
-            <div class="flex items-center mb-4">
-                <div class="w-8 h-8 bg-[#6A2E4D] rounded-full flex items-center justify-center mr-3">
-                    <i class="fas fa-filter text-white text-sm"></i>
-                </div>
-                <h2 class="text-xl font-bold text-gray-800">Filtros de Búsqueda</h2>
+        <div class="card mb-4">
+            <div class="card-header">
+                <div class="icon-box"><i class="fas fa-filter"></i></div>
+                <h2>Filtros de Búsqueda</h2>
             </div>
             
-            <form method="GET" action="{{ url_for('admin.view_activity_log') }}">
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                    <div>
-                        <label for="user_id" class="block text-sm font-semibold text-gray-700 mb-2">Usuario</label>
-                        <select id="user_id" name="user_id" 
-                                class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#6A2E4D]/50 focus:border-[#6A2E4D] transition-all duration-200">
-                            <option value="">Todos los usuarios</option>
-                            {% for user in users %}
-                            <option value="{{ user.id }}" {% if filters.get('user_id') == user.id|string %}selected{% endif %}>{{ user.username }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    <div>
-                        <label for="category" class="block text-sm font-semibold text-gray-700 mb-2">Categoría</label>
-                        <select id="category" name="category" 
-                                class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#6A2E4D]/50 focus:border-[#6A2E4D] transition-all duration-200">
-                            <option value="">Todas las categorías</option>
-                            {% for cat in categories %}
-                            <option value="{{ cat }}" {% if filters.get('category') == cat %}selected{% endif %}>{{ cat }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <label for="start_date" class="block text-sm font-semibold text-gray-700 mb-2">Desde</label>
-                            <input type="date" name="start_date" id="start_date" value="{{ filters.get('start_date', '') }}" 
-                                   class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#6A2E4D]/50 focus:border-[#6A2E4D] transition-all duration-200">
+            <div class="card-body">
+                <form method="GET" action="{{ url_for('admin.view_activity_log') }}">
+                    <div class="filters-grid">
+                        <div class="form-group">
+                            <label for="user_id">Usuario</label>
+                            <select id="user_id" name="user_id">
+                                <option value="">Todos los usuarios</option>
+                                {% for user in users %}
+                                <option value="{{ user.id }}" {% if filters.get('user_id') == user.id|string %}selected{% endif %}>{{ user.username }}</option>
+                                {% endfor %}
+                            </select>
                         </div>
-                        <div>
-                            <label for="end_date" class="block text-sm font-semibold text-gray-700 mb-2">Hasta</label>
-                            <input type="date" name="end_date" id="end_date" value="{{ filters.get('end_date', '') }}" 
-                                   class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#6A2E4D]/50 focus:border-[#6A2E4D] transition-all duration-200">
+                        
+                        <div class="form-group">
+                            <label for="category">Categoría</label>
+                            <select id="category" name="category">
+                                <option value="">Todas las categorías</option>
+                                {% for cat in categories %}
+                                <option value="{{ cat }}" {% if filters.get('category') == cat %}selected{% endif %}>{{ cat }}</option>
+                                {% endfor %}
+                            </select>
                         </div>
-                    </div>
-                    <div>
-                        <label for="search_term" class="block text-sm font-semibold text-gray-700 mb-2">Buscar</label>
-                        <input type="search" name="search_term" id="search_term" value="{{ filters.get('search_term', '') }}" 
-                               placeholder="Ej: 'Creación de Bien', '1913'" 
-                               class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#6A2E4D]/50 focus:border-[#6A2E4D] transition-all duration-200">
-                    </div>
-                </div>
-                <div class="mt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-                    <a href="{{ url_for('admin.view_activity_log') }}" 
-                       class="inline-flex items-center px-6 py-3 border-2 border-gray-300 text-base font-semibold rounded-xl text-gray-700 bg-white hover:bg-gray-50 transition-all duration-200 ease-in-out">
-                        <i class="fas fa-broom mr-2"></i> Limpiar Filtros
-                    </a>
-                    <button type="submit" 
-                            class="inline-flex items-center justify-center px-8 py-3 border border-transparent text-base font-semibold rounded-xl shadow-sm text-white bg-gradient-to-r from-[#6A2E4D] to-[#551E3A] hover:from-[#551E3A] hover:to-[#6A2E4D] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#6A2E4D] transition-all duration-200 ease-in-out">
-                        <i class="fas fa-filter mr-2"></i> Aplicar Filtros
-                    </button>
-                </div>
-            </form>
-        </div>
-
-        <!-- TABLA DE ACTIVIDAD -->
-        <div class="bg-white rounded-2xl shadow-lg border border-beige-light overflow-hidden">
-            <div class="p-6 border-b border-gray-200">
-                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                    <div class="flex items-center">
-                        <div class="w-8 h-8 bg-[#6A2E4D] rounded-full flex items-center justify-center mr-3">
-                            <i class="fas fa-list text-white text-sm"></i>
+                        
+                        <div class="form-group date-group">
+                            <div class="date-input">
+                                <label for="start_date">Desde</label>
+                                <input type="date" name="start_date" id="start_date" value="{{ filters.get('start_date', '') }}">
+                            </div>
+                            <div class="date-input">
+                                <label for="end_date">Hasta</label>
+                                <input type="date" name="end_date" id="end_date" value="{{ filters.get('end_date', '') }}">
+                            </div>
                         </div>
-                        <h2 class="text-xl font-bold text-gray-800">Registros de Actividad</h2>
-                    </div>
-                    <div class="text-sm text-gray-600 bg-gray-100 px-3 py-2 rounded-lg">
-                        <i class="fas fa-chart-bar mr-2 text-[#6A2E4D]"></i>
-                        {{ logs.total }} registro(s) encontrado(s)
-                    </div>
-                </div>
-            </div>
-
-            <div class="overflow-x-auto">
-                <table class="min-w-full divide-y divide-gray-200">
-                    <thead class="bg-gray-50">
-                        <tr>
-                            <th class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                                <i class="fas fa-calendar mr-1"></i>Fecha y Hora
-                            </th>
-                            <th class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                                <i class="fas fa-user mr-1"></i>Usuario
-                            </th>
-                            <th class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                                <i class="fas fa-tag mr-1"></i>Categoría
-                            </th>
-                            <th class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                                <i class="fas fa-bolt mr-1"></i>Acción
-                            </th>
-                            <th class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                                <i class="fas fa-hashtag mr-1"></i>ID Recurso
-                            </th>
-                            <th class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                                <i class="fas fa-info-circle mr-1"></i>Detalles
-                            </th>
-                        </tr>
-                    </thead>
-                    <tbody class="bg-white divide-y divide-gray-200">
-                        {% for log in logs.items %}
-                        <tr class="hover:bg-gray-50 transition-colors duration-150">
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="text-sm text-gray-900 font-medium">{{ log.timestamp.strftime('%d/%m/%Y') }}</div>
-                                <div class="text-xs text-gray-500">{{ log.timestamp.strftime('%H:%M:%S') }}</div>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="flex items-center">
-                                    <div class="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center mr-3">
-                                        <i class="fas fa-user text-gray-600 text-xs"></i>
-                                    </div>
-                                    <span class="text-sm font-medium text-gray-900">
-                                        {{ log.user.username if log.user else 'Sistema' }}
-                                    </span>
-                                </div>
-                            </td>
-                            
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                {% set category = log.category or 'N/A' %}
-                                {% set color_class = 'bg-gray-100 text-gray-800' %}
-                                
-                                {% if category == 'Usuarios' or category == 'Roles' or category == 'Role-permisos' %}
-                                    {% set color_class = 'bg-blue-100 text-blue-800' %}
-                                {% elif category == 'Bienes' %}
-                                    {% set color_class = 'bg-green-100 text-green-800' %}
-                                {% elif category == 'Inventarios' %}
-                                    {% set color_class = 'bg-yellow-100 text-yellow-800' %}
-                                {% elif category == 'IMPORTACION' %}
-                                    {% set color_class = 'bg-purple-100 text-purple-800' %}
-                                {% elif category == 'Bajas' or category == 'ERROR_FATAL_IMPORTACION' %}
-                                    {% set color_class = 'bg-red-100 text-red-800' %}
-                                {% elif category == 'Login' or category == 'Logout' %}
-                                    {% set color_class = 'bg-indigo-100 text-indigo-800' %}
-                                {% endif %}
-                                
-                                <span class="px-3 py-1 rounded-full text-xs font-semibold {{ color_class }}">
-                                    {{ category }}
-                                </span>
-                            </td>
-                            
-                            <td class="px-6 py-4">
-                                <span class="text-sm font-semibold text-gray-800">{{ log.action }}</span>
-                            </td>
-                            
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <span class="font-mono text-sm text-gray-600 bg-gray-100 px-2 py-1 rounded">
-                                    {{ log.resource_id or '-' }}
-                                </span>
-                            </td>
-
-                            <td class="px-6 py-4">
-                                <span class="text-sm text-gray-600 max-w-xs block overflow-hidden text-ellipsis whitespace-nowrap" 
-                                      title="{{ log.details or '' }}">
-                                    {{ log.details or 'N/A' }}
-                                </span>
-                            </td>
-                        </tr>
-                        {% else %}
-                        <tr>
-                            <td colspan="6" class="px-6 py-16 text-center">
-                                <div class="flex flex-col items-center justify-center text-gray-400">
-                                    <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-                                        <i class="fas fa-search text-2xl"></i>
-                                    </div>
-                                    <p class="text-lg font-semibold text-gray-500 mb-2">No se encontraron registros</p>
-                                    <p class="text-sm">No hay actividades que coincidan con los filtros aplicados</p>
-                                </div>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-
-            <!-- PAGINACIÓN -->
-            {% if logs.pages > 1 %}
-            <div class="bg-gray-50 px-6 py-4 border-t border-gray-200">
-                <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
-                    <div class="text-sm text-gray-700">
-                        <span class="font-semibold">{{ logs.first }}</span> - 
-                        <span class="font-semibold">{{ logs.last }}</span> de 
-                        <span class="font-semibold">{{ logs.total }}</span> registros
-                        (Página <span class="font-semibold">{{ logs.page }}</span> de <span class="font-semibold">{{ logs.pages }}</span>)
+                        
+                        <div class="form-group">
+                            <label for="search_term">Buscar</label>
+                            <input type="search" name="search_term" id="search_term" value="{{ filters.get('search_term', '') }}" 
+                                   placeholder="Ej: 'Creación de Bien', '1913'">
+                        </div>
                     </div>
                     
-                    <nav class="flex items-center space-x-2">
+                    <div class="form-actions spaced">
+                        <a href="{{ url_for('admin.view_activity_log') }}" class="btn btn-secondary">
+                            <i class="fas fa-broom"></i> Limpiar Filtros
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-filter"></i> Aplicar Filtros
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header header-between">
+                <div class="header-left">
+                    <div class="icon-box"><i class="fas fa-list"></i></div>
+                    <h2>Registros</h2>
+                </div>
+                <span class="badge badge-mono">Total: {{ logs.total }}</span>
+            </div>
+
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th><i class="fas fa-calendar"></i> Fecha</th>
+                                <th><i class="fas fa-user"></i> Usuario</th>
+                                <th><i class="fas fa-tag"></i> Categoría</th>
+                                <th><i class="fas fa-bolt"></i> Acción</th>
+                                <th><i class="fas fa-hashtag"></i> ID Recurso</th>
+                                <th><i class="fas fa-info-circle"></i> Detalles</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for log in logs.items %}
+                            <tr>
+                                <td>
+                                    <div class="date-cell">
+                                        <span class="date-main">{{ log.timestamp.strftime('%d/%m/%Y') }}</span>
+                                        <span class="date-sub">{{ log.timestamp.strftime('%H:%M:%S') }}</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="user-cell">
+                                        <div class="icon-circle-small"><i class="fas fa-user"></i></div>
+                                        <span>{{ log.user.username if log.user else 'Sistema' }}</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    {% set category = log.category or 'N/A' %}
+                                    {% set cat_class = 'cat-default' %}
+                                    
+                                    {% if category in ['Usuarios', 'Roles', 'Role-permisos'] %} {% set cat_class = 'cat-blue' %}
+                                    {% elif category == 'Bienes' %} {% set cat_class = 'cat-green' %}
+                                    {% elif category == 'Inventarios' %} {% set cat_class = 'cat-yellow' %}
+                                    {% elif category == 'IMPORTACION' %} {% set cat_class = 'cat-purple' %}
+                                    {% elif category in ['Bajas', 'ERROR_FATAL_IMPORTACION'] %} {% set cat_class = 'cat-red' %}
+                                    {% elif category in ['Login', 'Logout'] %} {% set cat_class = 'cat-indigo' %}
+                                    {% endif %}
+                                    
+                                    <span class="badge-category {{ cat_class }}">{{ category }}</span>
+                                </td>
+                                <td>
+                                    <span class="action-text">{{ log.action }}</span>
+                                </td>
+                                <td>
+                                    <span class="resource-id">{{ log.resource_id or '-' }}</span>
+                                </td>
+                                <td>
+                                    <div class="details-text" title="{{ log.details or '' }}">
+                                        {{ log.details or 'N/A' }}
+                                    </div>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="6" class="empty-state">
+                                    <div class="empty-content">
+                                        <i class="fas fa-search"></i>
+                                        <p>No se encontraron registros</p>
+                                        <small>Intenta ajustar los filtros de búsqueda.</small>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                {% if logs.pages > 1 %}
+                <div class="pagination-wrapper">
+                    <div class="pagination-info">
+                        <strong>{{ logs.first }} - {{ logs.last }}</strong> de {{ logs.total }}
+                        (Pág. {{ logs.page }} de {{ logs.pages }})
+                    </div>
+                    
+                    <div class="pagination-controls">
                         <a href="{{ url_for('admin.view_activity_log', page=logs.prev_num, **filters) if logs.has_prev else '#' }}" 
-                           class="inline-flex items-center px-3 py-2 border border-gray-300 text-sm font-medium rounded-xl text-gray-500 bg-white hover:bg-gray-50 {% if not logs.has_prev %}opacity-50 cursor-not-allowed{% endif %} transition-all duration-200">
-                            <i class="fas fa-chevron-left mr-1"></i> Anterior
+                           class="page-link {% if not logs.has_prev %}disabled{% endif %}">
+                            <i class="fas fa-chevron-left"></i> Anterior
                         </a>
                         
-                        <div class="flex space-x-1">
+                        <div class="page-numbers">
                             {% for p in logs.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
                                 {% if p %}
                                     <a href="{{ url_for('admin.view_activity_log', page=p, **filters) }}" 
-                                       class="inline-flex items-center px-4 py-2 border text-sm font-medium rounded-lg {% if p == logs.page %}bg-[#6A2E4D] text-white border-[#6A2E4D]{% else %}bg-white border-gray-300 text-gray-500 hover:bg-gray-50{% endif %} transition-all duration-200">
+                                       class="page-link number {% if p == logs.page %}active{% endif %}">
                                         {{ p }}
                                     </a>
                                 {% else %}
-                                    <span class="inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-400">...</span>
+                                    <span class="page-dots">...</span>
                                 {% endif %}
                             {% endfor %}
                         </div>
                         
                         <a href="{{ url_for('admin.view_activity_log', page=logs.next_num, **filters) if logs.has_next else '#' }}" 
-                           class="inline-flex items-center px-3 py-2 border border-gray-300 text-sm font-medium rounded-xl text-gray-500 bg-white hover:bg-gray-50 {% if not logs.has_next %}opacity-50 cursor-not-allowed{% endif %} transition-all duration-200">
-                            Siguiente <i class="fas fa-chevron-right ml-1"></i>
+                           class="page-link {% if not logs.has_next %}disabled{% endif %}">
+                            Siguiente <i class="fas fa-chevron-right"></i>
                         </a>
-                    </nav>
+                    </div>
                 </div>
+                {% endif %}
             </div>
-            {% endif %}
         </div>
+
     </div>
 </div>
+{% endblock %}
+
+{% block styles %}
+<style>
+    /* VARIABLES */
+    :root {
+        --col-burgundy: #6A2E4D; --col-burgundy-dark: #551E3A;
+        --col-beige: #BC9B6A; --col-beige-light: #fdfbf7;
+        --col-bg: #f9fafb; --col-white: #ffffff;
+        --radius: 12px; --shadow: 0 4px 6px rgba(0,0,0,0.1);
+        --border: #e5e7eb;
+        
+        /* Colores Categorías */
+        --cat-blue: #dbeafe; --cat-blue-text: #1e40af;
+        --cat-green: #dcfce7; --cat-green-text: #166534;
+        --cat-yellow: #fef9c3; --cat-yellow-text: #854d0e;
+        --cat-purple: #f3e8ff; --cat-purple-text: #6b21a8;
+        --cat-red: #fee2e2; --cat-red-text: #991b1b;
+        --cat-indigo: #e0e7ff; --cat-indigo-text: #3730a3;
+        --cat-gray: #f3f4f6; --cat-gray-text: #374151;
+    }
+
+    /* Layout */
+    .page-wrapper { min-height: 100vh; background: var(--col-bg); padding: 2rem 1rem; }
+    .container-limit { max-width: 1280px; margin: 0 auto; }
+    .mb-4 { margin-bottom: 2rem; }
+
+    /* Header */
+    .header-card { background: linear-gradient(to right, var(--col-burgundy), var(--col-burgundy-dark)); padding: 1.5rem; border-radius: var(--radius); color: white; display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; box-shadow: var(--shadow); }
+    .header-text h1 { margin: 0; font-size: 1.6rem; }
+    .header-text p { opacity: 0.9; margin: 0.3rem 0 0; font-size: 0.9rem; }
+    .header-icon-box { width: 48px; height: 48px; background: var(--col-beige); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--col-burgundy); font-size: 1.2rem; }
+
+    /* Card Filtros */
+    .card { background: white; border-radius: var(--radius); border: 1px solid var(--border); overflow: hidden; margin-bottom: 2rem; box-shadow: var(--shadow); }
+    .card-header { padding: 1rem 1.5rem; background: #fcfcfc; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 0.8rem; }
+    .header-between { justify-content: space-between; }
+    .header-left { display: flex; align-items: center; gap: 0.8rem; }
+    .icon-box { width: 32px; height: 32px; background: var(--col-burgundy); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; }
+    .card-header h2 { margin: 0; font-size: 1.1rem; color: var(--col-burgundy); }
+    .card-body { padding: 1.5rem; }
+
+    /* Grid Filtros */
+    .filters-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; }
+    .form-group { display: flex; flex-direction: column; gap: 0.4rem; }
+    .form-group label { font-size: 0.9rem; font-weight: 600; color: #374151; }
+    input, select { width: 100%; padding: 0.7rem; border: 1px solid #d1d5db; border-radius: 8px; outline: none; font-size: 0.95rem; background: white; }
+    input:focus, select:focus { border-color: var(--col-burgundy); box-shadow: 0 0 0 3px rgba(106, 46, 77, 0.1); }
+
+    .date-group { display: flex; gap: 1rem; }
+    .date-input { flex: 1; display: flex; flex-direction: column; gap: 0.4rem; }
+
+    .form-actions.spaced { display: flex; justify-content: space-between; margin-top: 2rem; align-items: center; flex-wrap: wrap; gap: 1rem; }
+
+    /* Botones */
+    .btn { padding: 0.7rem 1.5rem; border-radius: 8px; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem; border: none; cursor: pointer; transition: all 0.2s; }
+    .btn-primary { background: linear-gradient(to right, var(--col-burgundy), var(--col-burgundy-dark)); color: white; }
+    .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
+    .btn-secondary { background: white; border: 1px solid #d1d5db; color: #374151; }
+    .btn-secondary:hover { background: #f3f4f6; }
+
+    /* Tabla */
+    .table-responsive { overflow-x: auto; }
+    .data-table { width: 100%; border-collapse: collapse; min-width: 900px; }
+    .data-table th { text-align: left; padding: 0.8rem 1rem; background: #f9fafb; color: #666; border-bottom: 1px solid var(--border); font-size: 0.8rem; text-transform: uppercase; font-weight: 600; }
+    .data-table td { padding: 0.8rem 1rem; border-bottom: 1px solid var(--border); vertical-align: middle; font-size: 0.9rem; color: #333; }
+    .data-table tr:hover { background: #fdfbf7; }
+
+    /* Elementos Tabla */
+    .date-cell { display: flex; flex-direction: column; line-height: 1.2; }
+    .date-main { font-weight: 600; color: #1f2937; }
+    .date-sub { font-size: 0.75rem; color: #6b7280; }
+
+    .user-cell { display: flex; align-items: center; gap: 0.6rem; }
+    .icon-circle-small { width: 24px; height: 24px; background: #e5e7eb; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #6b7280; font-size: 0.7rem; }
+
+    /* Badges Categoría */
+    .badge-category { padding: 0.2rem 0.6rem; border-radius: 20px; font-size: 0.75rem; font-weight: 600; display: inline-block; }
+    .cat-default { background: var(--cat-gray); color: var(--cat-gray-text); }
+    .cat-blue { background: var(--cat-blue); color: var(--cat-blue-text); }
+    .cat-green { background: var(--cat-green); color: var(--cat-green-text); }
+    .cat-yellow { background: var(--cat-yellow); color: var(--cat-yellow-text); }
+    .cat-purple { background: var(--cat-purple); color: var(--cat-purple-text); }
+    .cat-red { background: var(--cat-red); color: var(--cat-red-text); }
+    .cat-indigo { background: var(--cat-indigo); color: var(--cat-indigo-text); }
+
+    .action-text { font-weight: 600; color: #374151; }
+    .resource-id { font-family: monospace; background: #f3f4f6; padding: 0.2rem 0.4rem; border-radius: 4px; color: #4b5563; font-size: 0.85rem; border: 1px solid #e5e7eb; }
+    
+    .details-text { max-width: 250px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #666; font-size: 0.85rem; }
+
+    /* Paginación */
+    .pagination-wrapper { display: flex; justify-content: space-between; align-items: center; padding-top: 1.5rem; border-top: 1px solid var(--border); flex-wrap: wrap; gap: 1rem; background: #fcfcfc; padding: 1rem; }
+    .pagination-info { font-size: 0.9rem; color: #6b7280; }
+    .pagination-controls { display: flex; align-items: center; gap: 0.5rem; }
+    
+    .page-link { padding: 0.5rem 0.8rem; border: 1px solid #d1d5db; background: white; border-radius: 6px; text-decoration: none; color: #4b5563; font-size: 0.85rem; display: flex; align-items: center; gap: 0.3rem; transition: all 0.2s; }
+    .page-link:hover:not(.disabled) { background: #f3f4f6; }
+    .page-link.active { background: var(--col-burgundy); color: white; border-color: var(--col-burgundy); }
+    .page-link.disabled { opacity: 0.5; cursor: not-allowed; background: #f9fafb; }
+    .page-numbers { display: flex; gap: 0.3rem; }
+    .page-dots { color: #9ca3af; padding: 0 0.5rem; }
+
+    .empty-state { text-align: center; padding: 3rem; color: #9ca3af; }
+    .empty-content i { font-size: 2rem; margin-bottom: 0.5rem; opacity: 0.5; }
+
+    .badge-mono { background: #f3f4f6; border: 1px solid #e5e7eb; color: #374151; padding: 0.3rem 0.8rem; border-radius: 20px; font-size: 0.8rem; font-weight: 600; }
+
+    /* Móvil */
+    @media (max-width: 768px) {
+        .header-card { flex-direction: column; text-align: center; }
+        .filters-grid { grid-template-columns: 1fr; }
+        .form-actions { flex-direction: column; }
+        .btn { width: 100%; justify-content: center; }
+        .pagination-wrapper { flex-direction: column; text-align: center; }
+    }
+</style>
 {% endblock %}

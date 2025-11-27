@@ -3,194 +3,136 @@
 {% block title %}Guía para Carga Masiva{% endblock %}
 
 {% block content %}
-<div class="min-h-screen bg-gradient-to-br from-gray-50 to-beige-light/20 py-8 px-4">
-    <div class="max-w-6xl mx-auto">
-        <div class="bg-white rounded-2xl shadow-xl border border-beige-light overflow-hidden mb-8">
-            <div class="bg-gradient-to-r from-burgundy to-burgundy-dark p-6 text-white">
-                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                    <div>
-                        <h1 class="text-2xl md:text-3xl font-bold">Guía para Carga Masiva con Excel</h1>
-                        <p class="text-beige-light mt-2">Sigue estas instrucciones para asegurar una importación de datos exitosa</p>
-                    </div>
-                    <div class="flex items-center space-x-2">
-                        <div class="w-10 h-10 bg-beige rounded-full flex items-center justify-center">
-                            <i class="fas fa-file-excel text-burgundy text-lg"></i>
-                        </div>
-                    </div>
-                </div>
+<div class="page-wrapper">
+    <div class="container-limit">
+        
+        <div class="header-card">
+            <div class="header-text">
+                <h1>Guía para Carga Masiva con Excel</h1>
+                <p>Sigue estas instrucciones para asegurar una importación de datos exitosa.</p>
+            </div>
+            <div class="header-icon-box">
+                <i class="fas fa-file-excel"></i>
             </div>
         </div>
 
-        <div class="bg-white rounded-2xl shadow-lg border border-beige-light overflow-hidden">
-            <div class="p-6 md:p-8 space-y-8">
-                <div class="mb-8">
-                    <div class="flex items-center mb-6">
-                        <div class="w-8 h-8 bg-burgundy rounded-full flex items-center justify-center mr-3">
-                            <i class="fas fa-info-circle text-white text-sm"></i>
-                        </div>
-                        <h2 class="text-xl font-bold text-burgundy">Instrucciones Generales</h2>
-                    </div>
-                    <div class="bg-beige-light/30 rounded-xl p-6 border-2 border-beige">
-                        <ul class="space-y-3">
-                            <li class="flex items-start">
-                                <i class="fas fa-check text-green-500 mt-1 mr-3"></i>
-                                <span class="text-gray-700">Sube un archivo en formato <strong>.xlsx</strong> o <strong>.xls</strong></span>
-                            </li>
-                            <li class="flex items-start">
-                                <i class="fas fa-check text-green-500 mt-1 mr-3"></i>
-                                <span class="text-gray-700">Asegúrate de que los nombres de las columnas en tu Excel coincidan <strong>exactamente</strong> con los nombres de la lista</span>
-                            </li>
-                            <li class="flex items-start">
-                                <i class="fas fa-check text-green-500 mt-1 mr-3"></i>
-                                <span class="text-gray-700">El sistema es sensible a mayúsculas, minúsculas y guiones bajos en los nombres de las columnas</span>
-                            </li>
-                            <li class="flex items-start">
-                                <i class="fas fa-exclamation-triangle text-amber-500 mt-1 mr-3"></i>
-                                <span class="text-gray-700">La columna <strong class="text-burgundy">"AREA"</strong> es obligatoria para cada fila</span>
-                            </li>
-                        </ul>
-                    </div>
+        <div class="card">
+            
+            <div class="section mb-4">
+                <div class="section-header">
+                    <div class="section-icon"><i class="fas fa-info-circle"></i></div>
+                    <h2>Instrucciones Generales</h2>
+                </div>
+                
+                <div class="info-box">
+                    <ul class="check-list">
+                        <li>
+                            <i class="fas fa-check"></i>
+                            <span>Sube un archivo en formato <strong>.xlsx</strong> o <strong>.xls</strong></span>
+                        </li>
+                        <li>
+                            <i class="fas fa-check"></i>
+                            <span>Los nombres de columnas deben coincidir <strong>exactamente</strong>.</span>
+                        </li>
+                        <li>
+                            <i class="fas fa-check"></i>
+                            <span>El sistema distingue mayúsculas, minúsculas y acentos.</span>
+                        </li>
+                        <li>
+                            <i class="fas fa-exclamation-triangle warning-icon"></i>
+                            <span>La columna <strong class="text-burgundy">"AREA"</strong> es obligatoria.</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="section mb-4">
+                <div class="section-header">
+                    <div class="section-icon"><i class="fas fa-list-alt"></i></div>
+                    <h2>Columnas Soportadas</h2>
                 </div>
 
-                <div class="mb-8">
-                    <div class="flex items-center mb-6">
-                        <div class="w-8 h-8 bg-burgundy rounded-full flex items-center justify-center mr-3">
-                            <i class="fas fa-list-alt text-white text-sm"></i>
-                        </div>
-                        <h2 class="text-xl font-bold text-burgundy">Columnas Soportadas</h2>
+                <div class="columns-wrapper">
+                    <div class="controls-bar">
+                        <p class="help-text"><i class="fas fa-check-square"></i> Selecciona para generar tu plantilla.</p>
+                        <label class="select-all-label">
+                            <input type="checkbox" id="select-all">
+                            <span>Seleccionar Todo</span>
+                        </label>
                     </div>
-                    <div class="bg-beige-light/30 rounded-xl p-6 border-2 border-beige">
-                        
-                        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-3">
-                            <p class="text-sm text-gray-600 flex items-center">
-                                <i class="fas fa-check-square text-burgundy mr-2"></i>
-                                Selecciona las columnas y genera una plantilla de Excel.
-                            </p>
-                            <div class="flex items-center self-end sm:self-center">
-                                <input type="checkbox" id="select-all" class="h-4 w-4 text-burgundy rounded border-gray-300 focus:ring-burgundy">
-                                <label for="select-all" class="ml-2 text-sm font-medium text-gray-700 cursor-pointer">Seleccionar Todo</label>
-                            </div>
-                        </div>
 
-                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                           {% for col in [
-    "NO. DE INVENTARIO",
-    "NO. FACTURA",
-    "NO. DE CUENTA",
-    "PROVEEDOR",
-    "DESCRIPCION DEL BIEN",
-    "DESCRIPCION CORTA DEL BIEN",
-    "RUBRO",
-    "NO.POLIZA",
-    "FECHA POLIZA",
-    "SUB-CTA. ARMONIZADORA",
-    "FECHA FACTURA",
-    "COSTO INICIAL",
-    "DEPRECIACION ACUMULADA",
-    "COSTO FINAL",
-    "CANTIDAD",
-    "ESTADO DEL BIEN",
-    "MARCA",
-    "MODELO",
-    "NUMERO DE SERIE",
-    "TIPO DE ALTA",
-    "CLASIFICACION LEGAL",
-    "AREA PRESUPUESTAL",
-    "DOCUMENTO PROPIEDAD",
-    "FECHA DOCUMENTO PROPIEDAD",
-    "VALOR EN LIBROS",
-    "FECHA ADQUISICION/ALTA",
-    "AREA",
-
-    "UBICACION",
-    "NO. DE RESGUARDO",
-    "TIPO DE RESGUARDO",
-    "FECHA DE RESGUARDO",
-    "NO. DE TRABAJADOR",
-    "PUESTO TRABAJADOR",
-    "RFC TRABAJADOR",
-    "NO. DE NOMINA TRABAJADOR",
-    "NOMBRE DEL RESGUARDANTE",
-    "NOMBRE DIRECTOR/JEFES DE AREA"
-] %} 
-                            <div class="copyable-item group relative bg-white rounded-lg border border-beige-light p-3 hover:border-burgundy hover:shadow-md transition-all duration-200">
-                                <div class="flex items-center justify-between">
-                                    <div class="flex items-center flex-1 min-w-0">
-                                        <input type="checkbox" 
-                                               id="col_{{ loop.index }}" 
-                                               name="selected_column" 
-                                               value="{{ col }}" 
-                                               class="h-4 w-4 text-burgundy rounded border-gray-300 focus:ring-burgundy column-checkbox">
-                                        <label for="col_{{ loop.index }}" 
-                                               class="font-mono text-sm text-gray-800 group-hover:text-burgundy ml-3 cursor-pointer truncate" 
-                                               title="{{ col }}">{{ col }}</label>
-                                    </div>
-                                    <i class="fas fa-copy text-gray-400 group-hover:text-burgundy text-xs copy-icon cursor-pointer p-2 ml-2 flex-shrink-0" 
-                                       title="Copiar nombre"></i>
-                                </div>
-                                <span class="copy-feedback absolute -top-2 -right-2 bg-green-500 text-white text-xs px-2 py-1 rounded-full font-semibold opacity-0 transition-opacity duration-300 pointer-events-none">
-                                    ¡Copiado!
-                                </span>
-                            </div>
-                            {% endfor %}
-                        </div>
-
-                        <div class="mt-6 text-right">
-                            <button id="generate-excel" 
-                                    class="inline-flex items-center justify-center px-5 py-2.5 border border-transparent text-sm font-semibold rounded-lg shadow-sm text-white bg-gradient-to-r from-burgundy to-burgundy-dark hover:from-burgundy-dark hover:to-burgundy focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-burgundy transition-all duration-200 ease-in-out">
-                                <i class="fas fa-file-download mr-2"></i> Generar Plantilla Excel
+                    <div class="column-grid">
+                        {% for col in [
+                            "NO. DE INVENTARIO", "NO. FACTURA", "NO. DE CUENTA", "PROVEEDOR",
+                            "DESCRIPCION DEL BIEN", "DESCRIPCION CORTA DEL BIEN", "RUBRO",
+                            "NO.POLIZA", "FECHA POLIZA", "SUB-CTA. ARMONIZADORA", "FECHA FACTURA",
+                            "COSTO INICIAL", "DEPRECIACION ACUMULADA", "COSTO FINAL", "CANTIDAD",
+                            "ESTADO DEL BIEN", "MARCA", "MODELO", "NUMERO DE SERIE", "TIPO DE ALTA",
+                            "CLASIFICACION LEGAL", "AREA PRESUPUESTAL", "DOCUMENTO PROPIEDAD",
+                            "FECHA DOCUMENTO PROPIEDAD", "VALOR EN LIBROS", "FECHA ADQUISICION/ALTA",
+                            "AREA", "UBICACION", "NO. DE RESGUARDO", "TIPO DE RESGUARDO",
+                            "FECHA DE RESGUARDO", "NO. DE TRABAJADOR", "PUESTO TRABAJADOR",
+                            "RFC TRABAJADOR", "NO. DE NOMINA TRABAJADOR", "NOMBRE DEL RESGUARDANTE",
+                            "NOMBRE DIRECTOR/JEFES DE AREA"
+                        ] %} 
+                        <div class="column-card">
+                            <label class="column-label" for="col_{{ loop.index }}">
+                                <input type="checkbox" 
+                                       id="col_{{ loop.index }}" 
+                                       value="{{ col }}" 
+                                       class="column-checkbox">
+                                <span class="col-name" title="{{ col }}">{{ col }}</span>
+                            </label>
+                            
+                            <button type="button" class="btn-copy" title="Copiar nombre">
+                                <i class="fas fa-copy"></i>
                             </button>
+                            
+                            <span class="tooltip">¡Copiado!</span>
                         </div>
+                        {% endfor %}
                     </div>
-                </div>
 
-                <div class="mb-8">
-                    <div class="flex items-center mb-6">
-                        <div class="w-8 h-8 bg-burgundy rounded-full flex items-center justify-center mr-3">
-                            <i class="fas fa-upload text-white text-sm"></i>
-                        </div>
-                        <h2 class="text-xl font-bold text-burgundy">Subir Archivo Excel</h2>
-                    </div>
-                    <div class="bg-beige-light/30 rounded-xl p-6 border-2 border-beige border-dashed">
-                        <p class="text-gray-600 mb-4 flex items-center">
-                            <i class="fas fa-lightbulb text-burgundy mr-2"></i>
-                            Una vez que tu archivo esté listo, súbelo aquí para iniciar el proceso de importación
-                        </p>
-                        <form action="{{ url_for('excel_import.upload_excel') }}" method="post" enctype="multipart/form-data" class="space-y-4">
-                            <div class="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
-                                <div class="flex-1">
-                                    <input type="file" 
-                                           name="excel_file" 
-                                           required 
-                                           accept=".xlsx,.xls"
-                                           class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-burgundy/50 focus:border-burgundy transition-all duration-200 bg-white/80 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-burgundy file:text-white hover:file:bg-burgundy-dark cursor-pointer">
-                                </div>
-                                <button type="submit" 
-                                        class="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-semibold rounded-xl shadow-sm text-white bg-gradient-to-r from-burgundy to-burgundy-dark hover:from-burgundy-dark hover:to-burgundy focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-burgundy transition-all duration-200 ease-in-out">
-                                    <i class="fas fa-upload mr-2"></i> Subir Excel
-                                </button>
-                            </div>
-                            <p class="text-xs text-gray-500 flex items-center">
-                                <i class="fas fa-info-circle text-burgundy mr-1"></i>
-                                Formatos aceptados: .xlsx, .xls
-                            </p>
-                        </form>
-                    </div>
-                </div>
-
-                <div class="flex flex-col sm:flex-row justify-between items-center gap-4 pt-6 border-t border-beige-light">
-                    <a href="{{ url_for('resguardos.crear_resguardo') }}" 
-                       class="inline-flex items-center justify-center px-6 py-3 border-2 border-beige text-base font-semibold rounded-xl text-burgundy bg-white hover:bg-beige-light/30 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-burgundy transition-all duration-200 ease-in-out order-2 sm:order-1">
-                        <i class="fas fa-arrow-left mr-2"></i> Volver al Formulario
-                    </a>
-                    <div class="text-center sm:text-right order-1 sm:order-2">
-                        <p class="text-sm text-gray-600 flex items-center justify-center sm:justify-end">
-                            <i class="fas fa-download text-burgundy mr-2"></i>
-                            ¿Necesitas una plantilla? <a href="#" class="text-burgundy hover:text-burgundy-dark font-semibold ml-1">Descargar ejemplo</a>
-                        </p>
+                    <div class="actions-right">
+                        <button id="generate-excel" class="btn btn-primary">
+                            <i class="fas fa-file-download"></i> Generar Plantilla Excel
+                        </button>
                     </div>
                 </div>
             </div>
+
+            <div class="section">
+                <div class="section-header">
+                    <div class="section-icon"><i class="fas fa-upload"></i></div>
+                    <h2>Subir Archivo Excel</h2>
+                </div>
+                
+                <div class="upload-zone">
+                    <p class="upload-instruction">
+                        <i class="fas fa-lightbulb"></i> Una vez listo tu archivo, súbelo aquí.
+                    </p>
+                    
+                    <form action="{{ url_for('excel_import.upload_excel') }}" method="post" enctype="multipart/form-data" class="upload-form">
+                        <input type="file" name="excel_file" required accept=".xlsx,.xls" class="file-input">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-upload"></i> Subir Excel
+                        </button>
+                    </form>
+                    
+                    <small class="file-types">Formatos aceptados: .xlsx, .xls</small>
+                </div>
+            </div>
+
+            <div class="footer-actions">
+                <a href="{{ url_for('resguardos.crear_resguardo') }}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Volver al Formulario
+                </a>
+                <div class="footer-link">
+                    <i class="fas fa-download"></i>
+                    ¿Necesitas ayuda? <a href="#">Descargar ejemplo completo</a>
+                </div>
+            </div>
+
         </div>
     </div>
 </div>
@@ -198,35 +140,125 @@
 
 {% block styles %}
 <style>
-    .bg-burgundy { background-color: #6A2E4D; }
-    .bg-burgundy-dark { background-color: #551E3A; }
-    .text-burgundy { color: #6A2E4D; }
-    .border-burgundy { border-color: #6A2E4D; }
-    .focus\:ring-burgundy\/50:focus { --tw-ring-color: rgb(106 46 77 / 0.5); }
-    .focus\:border-burgundy:focus { border-color: #6A2E4D; }
-    .focus\:ring-burgundy:focus { --tw-ring-color: #6A2E4D; }
-    .text-burgundy { color: #6A2E4D; }
+    /* --- VARIABLES (Coherencia Visual) --- */
+    :root {
+        --col-burgundy: #6A2E4D;
+        --col-burgundy-dark: #551E3A;
+        --col-beige: #BC9B6A;
+        --col-beige-light: #fdfbf7;
+        --col-bg: #f9fafb;
+        --radius: 12px;
+        --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Layout */
+    .page-wrapper { min-height: 100vh; background: var(--col-bg); padding: 2rem 1rem; }
+    .container-limit { max-width: 1100px; margin: 0 auto; }
+    .mb-4 { margin-bottom: 2rem; }
+    .text-burgundy { color: var(--col-burgundy); }
+
+    /* Header */
+    .header-card {
+        background: linear-gradient(to right, var(--col-burgundy), var(--col-burgundy-dark));
+        border-radius: var(--radius); padding: 1.5rem 2rem; color: white;
+        display: flex; justify-content: space-between; align-items: center;
+        margin-bottom: 2rem; box-shadow: var(--shadow);
+    }
+    .header-text h1 { margin: 0; font-size: 1.6rem; }
+    .header-text p { margin: 0.5rem 0 0; opacity: 0.9; }
+    .header-icon-box {
+        width: 48px; height: 48px; background: var(--col-beige); border-radius: 50%;
+        display: flex; align-items: center; justify-content: center; color: var(--col-burgundy); font-size: 1.2rem;
+    }
+
+    /* Tarjeta Principal */
+    .card { background: white; border-radius: var(--radius); box-shadow: var(--shadow); border: 1px solid #e5e7eb; padding: 2rem; }
     
-    .bg-beige { background-color: #BC9B6A; }
-    .bg-beige-light { background-color: #D7C3A0; }
-    .text-beige-light { color: #D7C3A0; }
-    .border-beige { border-color: #BC9B6A; }
-    .border-beige-light { border-color: #D7C3A0; }
+    /* Secciones */
+    .section-header { display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem; }
+    .section-icon { width: 32px; height: 32px; background: var(--col-burgundy); border-radius: 50%; color: white; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; }
+    .section-header h2 { color: var(--col-burgundy); font-size: 1.25rem; margin: 0; }
+
+    /* A. Caja de Instrucciones */
+    .info-box { background: rgba(188, 155, 106, 0.1); border: 2px solid var(--col-beige); border-radius: var(--radius); padding: 1.5rem; }
+    .check-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 0.8rem; }
+    .check-list li { display: flex; align-items: flex-start; gap: 0.8rem; font-size: 0.95rem; color: #4b5563; }
+    .check-list i.fa-check { color: #10b981; margin-top: 3px; }
+    .warning-icon { color: #f59e0b; margin-top: 3px; }
+
+    /* B. Selector de Columnas */
+    .columns-wrapper { background: #fafafa; border: 1px solid #e5e7eb; border-radius: var(--radius); padding: 1.5rem; }
     
-    .from-burgundy { --tw-gradient-from: #6A2E4D; --tw-gradient-to: rgb(106 46 77 / 0); --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to); }
-    .to-burgundy-dark { --tw-gradient-to: #551E3A; }
+    .controls-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 1rem; }
+    .help-text { margin: 0; font-size: 0.9rem; color: #6b7280; display: flex; align-items: center; gap: 0.5rem; }
+    .help-text i { color: var(--col-burgundy); }
     
-    input:focus, select:focus, textarea:focus {
-        outline: none;
-        box-shadow: 0 0 0 2px rgb(106 46 77 / 0.1);
+    .select-all-label { display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-weight: 600; font-size: 0.9rem; color: #374151; }
+    .select-all-label input { width: 1.1rem; height: 1.1rem; cursor: pointer; accent-color: var(--col-burgundy); }
+
+    /* GRID DE COLUMNAS */
+    .column-grid { 
+        display: grid; 
+        grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); 
+        gap: 0.8rem; 
     }
     
-    .copyable-item {
-        transition: all 0.3s ease;
+    .column-card {
+        background: white; border: 1px solid #e5e7eb; border-radius: 8px; padding: 0.75rem;
+        display: flex; justify-content: space-between; align-items: center; position: relative;
+        transition: all 0.2s;
     }
+    .column-card:hover { border-color: var(--col-burgundy); box-shadow: 0 2px 4px rgba(0,0,0,0.05); transform: translateY(-1px); }
     
-    .copyable-item:hover {
-        transform: translateY(-2px);
+    .column-label { display: flex; align-items: center; gap: 0.8rem; cursor: pointer; flex: 1; min-width: 0; }
+    .column-label input { width: 1rem; height: 1rem; cursor: pointer; accent-color: var(--col-burgundy); flex-shrink: 0; }
+    .col-name { font-family: monospace; font-size: 0.85rem; color: #374151; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .column-card:hover .col-name { color: var(--col-burgundy); font-weight: 600; }
+
+    .btn-copy { 
+        background: none; border: none; color: #9ca3af; cursor: pointer; padding: 0.25rem; 
+        transition: color 0.2s; flex-shrink: 0;
+    }
+    .btn-copy:hover { color: var(--col-burgundy); }
+
+    /* Tooltip "Copiado" */
+    .tooltip {
+        position: absolute; top: -10px; right: -5px; background: #10b981; color: white;
+        font-size: 0.7rem; padding: 2px 6px; border-radius: 4px; pointer-events: none;
+        opacity: 0; transition: opacity 0.3s; font-weight: 600;
+    }
+    .tooltip.show { opacity: 1; }
+
+    .actions-right { text-align: right; margin-top: 1.5rem; }
+
+    /* C. Zona de Carga */
+    .upload-zone { border: 2px dashed var(--col-beige); border-radius: var(--radius); padding: 2rem; background: rgba(188, 155, 106, 0.05); }
+    .upload-instruction { margin: 0 0 1.5rem 0; color: #4b5563; font-weight: 500; display: flex; align-items: center; gap: 0.5rem; }
+    .upload-instruction i { color: var(--col-burgundy); }
+    
+    .upload-form { display: flex; gap: 1rem; align-items: center; flex-wrap: wrap; }
+    .file-input { flex: 1; padding: 0.7rem; background: white; border: 1px solid #d1d5db; border-radius: 8px; }
+    .file-types { display: block; margin-top: 0.8rem; font-size: 0.85rem; color: #6b7280; }
+
+    /* D. Footer */
+    .footer-actions { margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid #e5e7eb; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; }
+    .footer-link { font-size: 0.9rem; color: #4b5563; }
+    .footer-link a { color: var(--col-burgundy); font-weight: 600; text-decoration: none; }
+    .footer-link a:hover { text-decoration: underline; }
+
+    /* Botones */
+    .btn { padding: 0.75rem 1.5rem; border-radius: 8px; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem; border: none; cursor: pointer; transition: all 0.2s; font-size: 0.95rem; }
+    .btn-primary { background: linear-gradient(to right, var(--col-burgundy), var(--col-burgundy-dark)); color: white; }
+    .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
+    .btn-secondary { background: white; border: 2px solid var(--col-beige); color: var(--col-burgundy); }
+    .btn-secondary:hover { background: rgba(188, 155, 106, 0.1); }
+
+    /* Móvil */
+    @media (max-width: 640px) {
+        .header-card { flex-direction: column; text-align: center; gap: 1rem; }
+        .upload-form { flex-direction: column; width: 100%; }
+        .file-input, .btn { width: 100%; justify-content: center; }
+        .footer-actions { justify-content: center; text-align: center; }
     }
 </style>
 {% endblock %}
@@ -236,47 +268,54 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
+    // --- Referencias ---
     const selectAllCheckbox = document.getElementById('select-all');
     const allColumnCheckboxes = document.querySelectorAll('.column-checkbox');
     const generateExcelBtn = document.getElementById('generate-excel');
 
-    // --- Lógica de Copiar (Refactorizada) ---
-    document.querySelectorAll('.copy-icon').forEach(icon => {
-        icon.addEventListener('click', (e) => {
-            e.stopPropagation(); // Previene que se active el checkbox al hacer clic en el ícono
+    // --- 1. Lógica de Copiar al Portapapeles ---
+    document.querySelectorAll('.btn-copy').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation(); // Evitar que marque el checkbox al dar click
             
-            // Encuentra el 'item' padre y luego la etiqueta 'label' para obtener el texto
-            const item = icon.closest('.copyable-item');
-            const textToCopy = item.querySelector('label').textContent.trim();
+            // Buscar el contenedor padre .column-card
+            const card = btn.closest('.column-card');
+            // Obtener el texto del span .col-name
+            const textToCopy = card.querySelector('.col-name').textContent.trim();
             
-            const textArea = document.createElement('textarea');
-            textArea.value = textToCopy;
-            textArea.style.position = 'fixed';
-            textArea.style.opacity = '0';
-            document.body.appendChild(textArea);
-            
-            textArea.select();
-            
-            try {
-                document.execCommand('copy');
-                
-                // Muestra el feedback visual
-                const feedback = item.querySelector('.copy-feedback');
-                if (feedback) {
-                    feedback.style.opacity = '1';
-                    setTimeout(() => {
-                        feedback.style.opacity = '0';
-                    }, 1500);
+            // Método moderno de copiado (fallback a execCommand si falla)
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(textToCopy).then(() => showFeedback(card));
+            } else {
+                // Fallback para navegadores viejos
+                const textArea = document.createElement('textarea');
+                textArea.value = textToCopy;
+                textArea.style.position = 'fixed'; // Evitar scroll
+                document.body.appendChild(textArea);
+                textArea.focus();
+                textArea.select();
+                try {
+                    document.execCommand('copy');
+                    showFeedback(card);
+                } catch (err) {
+                    console.error('Error al copiar', err);
                 }
-            } catch (err) {
-                console.error('No se pudo copiar el texto: ', err);
+                document.body.removeChild(textArea);
             }
-            
-            document.body.removeChild(textArea);
         });
     });
 
-    // --- Lógica de Selección ---
+    function showFeedback(card) {
+        const tooltip = card.querySelector('.tooltip');
+        if (tooltip) {
+            tooltip.classList.add('show');
+            setTimeout(() => {
+                tooltip.classList.remove('show');
+            }, 1500);
+        }
+    }
+
+    // --- 2. Lógica de "Seleccionar Todo" ---
     if (selectAllCheckbox) {
         selectAllCheckbox.addEventListener('change', () => {
             allColumnCheckboxes.forEach(checkbox => {
@@ -287,59 +326,38 @@ document.addEventListener('DOMContentLoaded', () => {
 
     allColumnCheckboxes.forEach(checkbox => {
         checkbox.addEventListener('change', () => {
-            // Si se desmarca uno, desmarca "Seleccionar Todo"
+            // Si desmarcan uno, quitamos el check de "Todos"
             if (!checkbox.checked) {
                 selectAllCheckbox.checked = false;
             } else {
-                // Comprueba si todos están marcados
+                // Si todos están marcados, activamos "Todos"
                 const allChecked = [...allColumnCheckboxes].every(cb => cb.checked);
                 selectAllCheckbox.checked = allChecked;
             }
         });
     });
 
-    // --- Lógica de Generar Excel ---
+    // --- 3. Generar Excel (Librería XLSX) ---
     if (generateExcelBtn) {
         generateExcelBtn.addEventListener('click', () => {
             const selectedColumns = [...allColumnCheckboxes]
                 .filter(cb => cb.checked)
-                .map(cb => cb.value); // El 'value' del checkbox tiene el nombre de la columna
+                .map(cb => cb.value);
 
             if (selectedColumns.length === 0) {
-                alert('Por favor, selecciona al menos una columna para generar la plantilla.');
+                alert('Por favor, selecciona al menos una columna.');
                 return;
             }
 
-            // 1. Crear un nuevo libro de trabajo (workbook)
+            // Crear libro y hoja
             const wb = XLSX.utils.book_new();
-
-            // 2. Crear los datos (solo la fila de encabezados)
-            const wsData = [ selectedColumns ];
-
-            // 3. Crear una hoja de cálculo (worksheet) a partir de los datos
+            const wsData = [ selectedColumns ]; // Primera fila son los encabezados
             const ws = XLSX.utils.aoa_to_sheet(wsData);
 
-            // 4. Añadir la hoja al libro
             XLSX.utils.book_append_sheet(wb, ws, 'Plantilla');
-
-            // 5. Escribir y descargar el archivo Excel
-            XLSX.writeFile(wb, 'Plantilla_Columnas_Seleccionadas.xlsx');
+            XLSX.writeFile(wb, 'Plantilla_Carga_Masiva.xlsx');
         });
     }
-
-
-    // Efecto visual adicional para los items (el mismo que tenías)
-    document.querySelectorAll('.copyable-item').forEach(item => {
-        item.addEventListener('mouseenter', () => {
-            item.style.borderColor = '#6A2E4D';
-        });
-        
-        item.addEventListener('mouseleave', () => {
-            if (!item.querySelector('.copy-feedback').style.opacity === '1') {
-                item.style.borderColor = '#D7C3A0';
-            }
-        });
-    });
 });
 </script>
 {% endblock %}

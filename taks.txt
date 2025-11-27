@@ -31,8 +31,12 @@
 
 10.- #Actualizar el login
 
+11.- imprimir oficios 
 
+12.- Poder ver los resguardos y el bien desde la informacion de traspaso 
 
-
+13.- Generar un reporte de usabilidad 
+14.- Revisar que al eliminar un bien se eliminen correctamente las imagenes y las rutas de la imagenes en la base de datos 
+15.- Al imprimir el resguardo tener la posibilidad de elegir si imprimir imagenes del bien y del resguardo 
 
 Analisar los motivos de baja y los procesos en cada uno que documentos se requieren en cada proceso y que estructura tendran estos documentos 

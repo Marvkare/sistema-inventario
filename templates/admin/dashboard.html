@@ -1,6 +1,164 @@
 {% extends "admin/base.html" %}
 
+{% block title %}Panel de Administración{% endblock %}
+
 {% block content %}
-    <h1>Panel de Administración</h1>
-    <p>Bienvenido, {{ current_user.username }}!</p>
-    {% endblock %}
+<div class="page-wrapper">
+    <div class="container-limit">
+        
+        <div class="header-card">
+            <div class="header-text">
+                <h1>Panel de Administración</h1>
+                <p>Bienvenido al sistema, <strong>{{ current_user.username }}</strong>.</p>
+            </div>
+            <div class="header-icon-box">
+                <i class="fas fa-tachometer-alt"></i>
+            </div>
+        </div>
+
+        <div class="dashboard-grid">
+            
+            <a href="{{ url_for('admin_users.list_users') }}" class="card dashboard-item">
+                <div class="dash-icon icon-blue">
+                    <i class="fas fa-users"></i>
+                </div>
+                <h3>Usuarios</h3>
+                <p>Gestionar cuentas y accesos del sistema.</p>
+                <span class="link-text">Ir a Usuarios &rarr;</span>
+            </a>
+
+            <a href="{{ url_for('admin_users.list_roles') }}" class="card dashboard-item">
+                <div class="dash-icon icon-purple">
+                    <i class="fas fa-user-tag"></i>
+                </div>
+                <h3>Roles y Permisos</h3>
+                <p>Configurar niveles de autorización.</p>
+                <span class="link-text">Ir a Roles &rarr;</span>
+            </a>
+
+            <a href="{{ url_for('resguardos.ver_resguardos') }}" class="card dashboard-item">
+                <div class="dash-icon icon-burgundy">
+                    <i class="fas fa-file-contract"></i>
+                </div>
+                <h3>Resguardos</h3>
+                <p>Administrar inventario y asignaciones.</p>
+                <span class="link-text">Ir a Resguardos &rarr;</span>
+            </a>
+
+            <a href="{{ url_for('admin.view_activity_log') }}" class="card dashboard-item">
+                <div class="dash-icon icon-yellow">
+                    <i class="fas fa-history"></i>
+                </div>
+                <h3>Bitácora</h3>
+                <p>Auditoría de movimientos y actividad.</p>
+                <span class="link-text">Ver Historial &rarr;</span>
+            </a>
+
+        </div>
+        
+        <div class="card mt-4">
+            <div class="card-header">
+                <div class="icon-box"><i class="fas fa-info-circle"></i></div>
+                <h2>Estado del Sistema</h2>
+            </div>
+            <div class="card-body">
+                <p class="text-muted">El sistema se encuentra operativo. Seleccione una opción del menú o de las tarjetas superiores para comenzar a trabajar.</p>
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}
+
+{% block styles %}
+<style>
+    /* VARIABLES */
+    :root {
+        --col-burgundy: #6A2E4D; --col-burgundy-dark: #551E3A;
+        --col-beige: #BC9B6A; --col-bg: #f9fafb;
+        --col-white: #ffffff;
+        --radius: 12px; --shadow: 0 4px 6px rgba(0,0,0,0.1);
+        --border: #e5e7eb;
+        
+        /* Colores Iconos */
+        --bg-blue: #eff6ff; --text-blue: #1e40af;
+        --bg-purple: #f3e8ff; --text-purple: #6b21a8;
+        --bg-yellow: #fefce8; --text-yellow: #854d0e;
+        --bg-burgundy-light: #fdf2f8;
+    }
+
+    /* Layout */
+    .page-wrapper { min-height: 100vh; background: var(--col-bg); padding: 2rem 1rem; }
+    .container-limit { max-width: 1200px; margin: 0 auto; }
+    .mt-4 { margin-top: 2rem; }
+
+    /* Header */
+    .header-card {
+        background: linear-gradient(to right, var(--col-burgundy), var(--col-burgundy-dark));
+        border-radius: var(--radius); padding: 2rem; color: white;
+        display: flex; justify-content: space-between; align-items: center;
+        margin-bottom: 2.5rem; box-shadow: var(--shadow);
+    }
+    .header-text h1 { margin: 0; font-size: 1.8rem; font-weight: 700; }
+    .header-text p { margin: 0.5rem 0 0; font-size: 1.1rem; opacity: 0.9; }
+    .header-icon-box {
+        width: 64px; height: 64px; background: var(--col-beige); border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+        color: var(--col-burgundy); font-size: 1.8rem;
+    }
+
+    /* Dashboard Grid */
+    .dashboard-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 1.5rem;
+    }
+
+    /* Items del Dashboard */
+    .dashboard-item {
+        display: flex; flex-direction: column; align-items: flex-start;
+        padding: 1.5rem; text-decoration: none; color: inherit;
+        background: white; border-radius: var(--radius); border: 1px solid var(--border);
+        box-shadow: var(--shadow); transition: all 0.3s ease;
+        height: 100%;
+    }
+    .dashboard-item:hover {
+        transform: translateY(-5px);
+        border-color: var(--col-beige);
+        box-shadow: 0 10px 15px rgba(0,0,0,0.1);
+    }
+
+    .dash-icon {
+        width: 50px; height: 50px; border-radius: 12px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 1.5rem; margin-bottom: 1rem;
+    }
+    
+    .icon-blue { background: var(--bg-blue); color: var(--text-blue); }
+    .icon-purple { background: var(--bg-purple); color: var(--text-purple); }
+    .icon-yellow { background: var(--bg-yellow); color: var(--text-yellow); }
+    .icon-burgundy { background: var(--bg-burgundy-light); color: var(--col-burgundy); }
+
+    .dashboard-item h3 { margin: 0 0 0.5rem 0; font-size: 1.1rem; color: #1f2937; }
+    .dashboard-item p { margin: 0 0 1.5rem 0; color: #6b7280; font-size: 0.9rem; flex-grow: 1; }
+    
+    .link-text {
+        font-size: 0.9rem; font-weight: 600; color: var(--col-burgundy);
+        display: flex; align-items: center; gap: 0.3rem;
+    }
+    .dashboard-item:hover .link-text { color: var(--col-burgundy-dark); text-decoration: underline; }
+
+    /* Card General */
+    .card { background: white; border-radius: var(--radius); border: 1px solid var(--border); overflow: hidden; }
+    .card-header { padding: 1rem 1.5rem; background: #f9fafb; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 0.8rem; }
+    .card-body { padding: 1.5rem; }
+    .icon-box { width: 32px; height: 32px; background: var(--col-burgundy); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 0.8rem; }
+    .card-header h2 { margin: 0; font-size: 1.1rem; color: var(--col-burgundy); }
+    .text-muted { color: #6b7280; }
+
+    @media (max-width: 768px) {
+        .header-card { flex-direction: column; text-align: center; padding: 1.5rem; }
+        .header-text h1 { font-size: 1.5rem; }
+    }
+</style>
+{% endblock %}

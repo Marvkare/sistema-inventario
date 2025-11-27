@@ -3,412 +3,307 @@
 {% block title %}Detalles del Proceso de Baja - #{{ proceso.id }}{% endblock %}
 
 {% block content %}
-<div class="min-h-screen bg-gradient-to-br from-gray-50 to-beige-light/20 py-8 px-4">
-    <div class="max-w-7xl mx-auto">
+<div class="page-wrapper">
+    <div class="container-limit">
         
-        <!-- Encabezado -->
-        <div class="bg-white rounded-2xl shadow-xl border border-beige-light overflow-hidden mb-8">
-            <div class="bg-gradient-to-r from-burgundy to-burgundy-dark p-6 text-white">
-                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                    <div class="flex-1">
-                        <a href="{{ url_for('bajas.gestionar_bajas') }}" class="text-beige-light hover:text-white text-sm mb-2 inline-block transition-colors duration-200">
-                            <i class="fas fa-arrow-left mr-1"></i> Volver a la lista
-                        </a>
-                        <h1 class="text-2xl md:text-3xl font-bold">
-                            Detalles del Proceso de Baja #{{ proceso.id }}
-                        </h1>
-                        <p class="text-beige-light mt-2">Seguimiento completo del proceso de desincorporación</p>
-                    </div>
-                    <div class="flex items-center space-x-4">
-                        <div class="text-right">
-                            <span class="text-sm font-medium text-beige-light">Estatus:</span>
-                            <span class="text-lg font-bold py-2 px-4 rounded-full border-2 
-                                {% if proceso.estatus == 'Solicitado' %} bg-blue-100 text-blue-800 border-blue-300
-                                {% elif proceso.estatus in ['En Dictamen Técnico', 'Pendiente de Comité'] %} bg-yellow-100 text-yellow-800 border-yellow-300
-                                {% elif proceso.estatus == 'Finalizado' %} bg-green-100 text-green-800 border-green-300
-                                {% elif proceso.estatus == 'Rechazado' %} bg-red-100 text-red-800 border-red-300
-                                {% else %} bg-gray-100 text-gray-800 border-gray-300 {% endif %}">
-                                {{ proceso.estatus }}
-                            </span>
-                        </div>
-                        <div class="w-12 h-12 bg-beige rounded-full flex items-center justify-center shadow-lg">
-                            <i class="fas fa-file-invoice text-burgundy text-xl"></i>
-                        </div>
-                    </div>
+        <div class="header-card">
+            <div class="header-content">
+                <div class="breadcrumbs">
+                    <a href="{{ url_for('bajas.gestionar_bajas') }}">
+                        <i class="fas fa-arrow-left"></i> Volver a la lista
+                    </a>
                 </div>
+                <h1>Detalles del Proceso de Baja #{{ proceso.id }}</h1>
+                <p>Seguimiento completo del proceso de desincorporación.</p>
+            </div>
+            
+            <div class="header-status">
+                <span class="status-label">Estatus:</span>
+                {% if proceso.estatus == 'Solicitado' %}
+                    <span class="badge badge-blue">Solicitado</span>
+                {% elif proceso.estatus in ['En Dictamen Técnico', 'Pendiente de Comité'] %}
+                    <span class="badge badge-yellow">{{ proceso.estatus }}</span>
+                {% elif proceso.estatus == 'Finalizado' %}
+                    <span class="badge badge-green">Finalizado</span>
+                {% elif proceso.estatus == 'Rechazado' %}
+                    <span class="badge badge-red">Rechazado</span>
+                {% else %}
+                    <span class="badge badge-gray">{{ proceso.estatus }}</span>
+                {% endif %}
             </div>
         </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <!-- Columna Principal -->
-            <div class="lg:col-span-2 space-y-8">
+        <div class="details-layout">
+            
+            <div class="main-column">
 
-                <!-- Línea de Proceso -->
-                <div class="bg-white rounded-2xl shadow-lg border border-beige-light overflow-hidden">
-                    <div class="p-6">
-                        <h3 class="text-xl font-bold text-burgundy mb-6 flex items-center">
-                            <i class="fas fa-project-diagram mr-3"></i>
-                            Línea de Proceso
-                        </h3>
+                <div class="card">
+                    <div class="card-header">
+                        <div class="icon-box"><i class="fas fa-project-diagram"></i></div>
+                        <h2>Línea de Proceso</h2>
+                    </div>
+                    <div class="card-body">
                         {% if workflow %}
-                            {% set statuses = workflow.timeline %}
-                            {% set current_status_index = statuses.index(proceso.estatus) if proceso.estatus in statuses else -1 %}
-                            <div class="relative">
-                                <div class="absolute left-4 top-0 bottom-0 w-0.5 bg-beige-light"></div>
-                                <div class="space-y-8">
-                                    {% for status in statuses %}
-                                        <div class="relative flex items-start">
-                                            <div class="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center z-10
-                                                {% if loop.index0 < current_status_index %} 
-                                                    bg-green-500 text-white shadow-lg
-                                                {% elif loop.index0 == current_status_index %}
-                                                    bg-burgundy text-white shadow-lg animate-pulse
-                                                {% else %}
-                                                    bg-gray-300 text-gray-600
-                                                {% endif %}">
-                                                {% if loop.index0 < current_status_index %}
-                                                    <i class="fas fa-check text-xs"></i>
-                                                {% elif loop.index0 == current_status_index %}
-                                                    <i class="fas fa-play text-xs"></i>
-                                                {% else %}
-                                                    <i class="fas fa-clock text-xs"></i>
-                                                {% endif %}
-                                            </div>
-                                            <div class="ml-4 flex-1">
-                                                <h4 class="font-semibold text-gray-800 {% if loop.index0 == current_status_index %}text-burgundy{% endif %}">
-                                                    {{ status }}
-                                                </h4>
-                                                {% if loop.index0 == current_status_index %}
-                                                    <p class="text-sm text-gray-600 mt-1">Estado actual del proceso</p>
-                                                {% endif %}
-                                            </div>
-                                        </div>
-                                    {% endfor %}
+                            <div class="timeline-stack">
+                                {% set statuses = workflow.timeline %}
+                                {% set current_index = statuses.index(proceso.estatus) if proceso.estatus in statuses else -1 %}
+                                
+                                {% for status in statuses %}
+                                <div class="timeline-item {% if loop.index0 <= current_index %}active{% endif %}">
+                                    <div class="timeline-marker">
+                                        {% if loop.index0 < current_index %}<i class="fas fa-check"></i>
+                                        {% elif loop.index0 == current_index %}<i class="fas fa-play"></i>
+                                        {% else %}<i class="fas fa-clock"></i>{% endif %}
+                                    </div>
+                                    <div class="timeline-content">
+                                        <h4>{{ status }}</h4>
+                                        {% if loop.index0 == current_index %}
+                                            <small>Estado actual del proceso</small>
+                                        {% endif %}
+                                    </div>
                                 </div>
+                                {% endfor %}
                             </div>
                         {% else %}
-                            <div class="text-center py-8">
-                                <i class="fas fa-exclamation-triangle text-4xl text-yellow-500 mb-4"></i>
-                                <p class="text-gray-600">No hay un flujo de trabajo definido para el motivo "{{ proceso.motivo }}".</p>
+                            <div class="empty-state-mini">
+                                <i class="fas fa-exclamation-triangle text-yellow"></i>
+                                <p>No hay flujo definido para "{{ proceso.motivo }}".</p>
                             </div>
                         {% endif %}
                     </div>
                 </div>
 
-                <!-- Información de la Solicitud -->
-                <div class="bg-white rounded-2xl shadow-lg border border-beige-light overflow-hidden">
-                    <div class="p-6">
-                        <h3 class="text-xl font-bold text-burgundy mb-6 flex items-center">
-                            <i class="fas fa-info-circle mr-3"></i>
-                            Información de la Solicitud
-                        </h3>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div class="space-y-4">
-                                <div class="bg-beige-light/20 p-4 rounded-xl border border-beige-light">
-                                    <p class="text-sm font-semibold text-gray-600 mb-1">Solicitante (Resguardante)</p>
-                                    <p class="text-lg font-bold text-burgundy">{{ proceso.nombre_solicitante }}</p>
-                                </div>
-                                <div class="bg-beige-light/20 p-4 rounded-xl border border-beige-light">
-                                    <p class="text-sm font-semibold text-gray-600 mb-1">Jefe de Área (Vo.Bo.)</p>
-                                    <p class="text-lg text-gray-900">{{ proceso.nombre_jefe_area or 'No especificado' }}</p>
-                                </div>
-                                <div class="bg-beige-light/20 p-4 rounded-xl border border-beige-light">
-                                    <p class="text-sm font-semibold text-gray-600 mb-1">Fecha de Inicio</p>
-                                    <p class="text-lg text-gray-900">{{ proceso.fecha_inicio.strftime('%d de %B de %Y') }}</p>
-                                </div>
+                <div class="card">
+                    <div class="card-header">
+                        <div class="icon-box"><i class="fas fa-info-circle"></i></div>
+                        <h2>Información de la Solicitud</h2>
+                    </div>
+                    <div class="card-body">
+                        <div class="info-grid">
+                            <div class="info-item">
+                                <label>Solicitante</label>
+                                <p class="highlight">{{ proceso.nombre_solicitante }}</p>
                             </div>
-                            <div class="space-y-4">
-                                <div class="bg-beige-light/20 p-4 rounded-xl border border-beige-light">
-                                    <p class="text-sm font-semibold text-gray-600 mb-1">Capturado por</p>
-                                    <p class="text-lg text-gray-900">{{ proceso.usuario_captura.username if proceso.usuario_captura else 'No disponible' }}</p>
-                                </div>
-                                <div class="bg-beige-light/20 p-4 rounded-xl border border-beige-light">
-                                    <p class="text-sm font-semibold text-gray-600 mb-1">Motivo de la Baja</p>
-                                    <p class="text-lg font-bold text-burgundy">{{ proceso.motivo }}</p>
-                                </div>
+                            <div class="info-item">
+                                <label>Jefe de Área (Vo.Bo.)</label>
+                                <p>{{ proceso.nombre_jefe_area or 'No especificado' }}</p>
                             </div>
-                            <div class="md:col-span-2">
-                                <div class="bg-beige-light/20 p-4 rounded-xl border border-beige-light">
-                                    <p class="text-sm font-semibold text-gray-600 mb-2">Justificación Detallada</p>
-                                    <p class="text-gray-800 whitespace-pre-wrap leading-relaxed">{{ proceso.justificacion_solicitud }}</p>
+                            <div class="info-item">
+                                <label>Fecha de Inicio</label>
+                                <p>{{ proceso.fecha_inicio.strftime('%d de %B de %Y') }}</p>
+                            </div>
+                            <div class="info-item">
+                                <label>Capturado por</label>
+                                <p>{{ proceso.usuario_captura.username if proceso.usuario_captura else 'No disponible' }}</p>
+                            </div>
+                            <div class="info-item">
+                                <label>Motivo</label>
+                                <p class="highlight">{{ proceso.motivo }}</p>
+                            </div>
+                            <div class="info-item full-width">
+                                <label>Justificación Detallada</label>
+                                <div class="text-box">
+                                    {{ proceso.justificacion_solicitud }}
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Expediente Digital -->
-                <div class="bg-white rounded-2xl shadow-lg border border-beige-light overflow-hidden">
-                    <div class="p-6">
-                        <h3 class="text-xl font-bold text-burgundy mb-6 flex items-center">
-                            <i class="fas fa-folder-open mr-3"></i>
-                            Expediente Digital
-                        </h3>
+                <div class="card">
+                    <div class="card-header">
+                        <div class="icon-box"><i class="fas fa-folder-open"></i></div>
+                        <h2>Expediente Digital</h2>
+                    </div>
+                    <div class="card-body">
                         
                         {% if workflow %}
                             {% set uploaded_docs = proceso.documentos|map(attribute='tipo_documento')|list %}
-                            <div class="mb-8">
-                                <h4 class="font-semibold text-gray-800 mb-4 flex items-center">
-                                    <i class="fas fa-clipboard-list mr-2"></i>
-                                    Checklist de Documentos Requeridos
-                                </h4>
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="checklist-section">
+                                <h3>Checklist de Documentos</h3>
+                                <div class="checklist-grid">
                                     {% for name, desc in workflow.documentos_requeridos.items() %}
-                                        <div class="bg-gray-50 p-4 rounded-xl border-2 {% if name in uploaded_docs %}border-green-200 bg-green-50{% else %}border-gray-200{% endif %}">
-                                            <div class="flex items-start space-x-3">
-                                                <div class="flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center {% if name in uploaded_docs %}bg-green-500 text-white{% else %}bg-gray-300 text-gray-600{% endif %}">
-                                                    {% if name in uploaded_docs %}
-                                                        <i class="fas fa-check text-xs"></i>
-                                                    {% else %}
-                                                        <i class="fas fa-clock text-xs"></i>
-                                                    {% endif %}
-                                                </div>
-                                                <div class="flex-1">
-                                                    <p class="font-semibold text-gray-800 {% if name in uploaded_docs %}text-green-700{% endif %}">
-                                                        {{ name }}
-                                                        <span class="text-xs font-normal {% if name in uploaded_docs %}text-green-600{% else %}text-red-600{% endif %}">
-                                                            ({% if name in uploaded_docs %}Entregado{% else %}Pendiente{% endif %})
-                                                        </span>
-                                                    </p>
-                                                    <p class="text-xs text-gray-500 mt-1">{{ desc }}</p>
-                                                </div>
-                                            </div>
+                                    <div class="checklist-item {% if name in uploaded_docs %}completed{% endif %}">
+                                        <div class="check-icon">
+                                            {% if name in uploaded_docs %}<i class="fas fa-check"></i>
+                                            {% else %}<i class="fas fa-clock"></i>{% endif %}
                                         </div>
+                                        <div class="check-info">
+                                            <p class="check-name">{{ name }}</p>
+                                            <p class="check-desc">{{ desc }}</p>
+                                        </div>
+                                    </div>
                                     {% endfor %}
                                 </div>
                             </div>
                         {% endif %}
 
-                        <div class="bg-gradient-to-r from-burgundy/5 to-burgundy/10 border-2 border-dashed border-burgundy/30 p-6 rounded-xl mb-6 text-center">
-                            <a href="{{ url_for('bajas.crear_documento_expediente', proceso_id=proceso.id) }}" 
-                               class="bg-gradient-to-r from-burgundy to-burgundy-dark hover:from-burgundy-dark hover:to-burgundy text-white font-bold py-3 px-6 rounded-xl shadow-lg transition-all duration-300 transform hover:scale-105 inline-flex items-center">
-                                <i class="fas fa-plus-circle mr-2"></i>
-                                Añadir Documento al Expediente
+                        <div class="upload-action-area">
+                            <a href="{{ url_for('bajas.crear_documento_expediente', proceso_id=proceso.id) }}" class="btn btn-primary btn-lg">
+                                <i class="fas fa-plus-circle"></i> Añadir Documento al Expediente
                             </a>
                         </div>
 
-                        <div>
-                            <h4 class="font-semibold text-gray-800 mb-4 flex items-center">
-                                <i class="fas fa-history mr-2"></i>
-                                Historial de Documentos Cargados
-                            </h4>
+                        <div class="files-history">
+                            <h3>Historial de Documentos</h3>
                             {% if proceso.documentos %}
-                                <div class="space-y-4">
+                                <div class="files-stack">
                                     {% for doc in proceso.documentos %}
-                                    <div class="bg-gray-50 p-4 rounded-xl border border-beige-light">
-                                        <div class="flex justify-between items-start mb-3">
-                                            <div>
-                                                <p class="font-semibold text-burgundy">{{ doc.tipo_documento }}</p>
-                                                <p class="text-xs text-gray-500">
-                                                    <i class="fas fa-user mr-1"></i>
-                                                    Subido por {{ doc.usuario_carga.username if doc.usuario_carga else 'N/A' }}
-                                                </p>
-                                            </div>
+                                    <div class="file-group">
+                                        <div class="file-group-header">
+                                            <span class="doc-type">{{ doc.tipo_documento }}</span>
+                                            <span class="doc-uploader">Subido por: {{ doc.usuario_carga.username if doc.usuario_carga else 'N/A' }}</span>
                                         </div>
-                                        <div class="space-y-2">
-                                           {% for adjunto in doc.archivos_adjuntos %}
-                                            <div class="flex items-center justify-between bg-white p-3 rounded-lg border">
-                                                <div class="flex items-center min-w-0"> {% if adjunto.tipo_mime and adjunto.tipo_mime.startswith('image/') %}
-                                                        <a href="{{ url_for('bajas.descargar_documento', adjunto_id=adjunto.id) }}" 
-                                                        title="Descargar {{ adjunto.nombre_archivo }}"
-                                                        class="flex-shrink-0">
-                                                            <img src="{{ url_for('serve_drive_image', file_id=adjunto.ruta_archivo) }}" 
-                                                                alt="Previsualización de {{ adjunto.nombre_archivo }}" 
-                                                                class="w-10 h-10 object-cover rounded-md border shadow-sm mr-3">
-                                                        </a>
+                                        <div class="file-list">
+                                            {% for adjunto in doc.archivos_adjuntos %}
+                                            <div class="file-item">
+                                                <div class="file-info">
+                                                    {% if adjunto.tipo_mime and adjunto.tipo_mime.startswith('image/') %}
+                                                        <img src="{{ url_for('serve_uploaded_file', filename=adjunto.ruta_archivo) }}" class="file-thumb">
                                                     {% else %}
-                                                        <div class="flex-shrink-0 w-10 h-10 flex items-center justify-center bg-gray-100 rounded-md border mr-3">
-                                                            <i class="fas 
-                                                                    {% if adjunto.tipo_mime == 'application/pdf' %} 
-                                                                        fa-file-pdf text-red-600
-                                                                    {% else %} 
-                                                                        fa-file-alt text-gray-500
-                                                                    {% endif %} 
-                                                                    text-xl"></i>
-                                                        </div>
+                                                        <div class="file-icon"><i class="fas fa-file-alt"></i></div>
                                                     {% endif %}
-                                                    
-                                                    <span class="text-sm text-gray-700 truncate" title="{{ adjunto.nombre_archivo }}">
-                                                        {{ adjunto.nombre_archivo }}
-                                                    </span>
+                                                    <span class="file-name">{{ adjunto.nombre_archivo }}</span>
                                                 </div>
-                                                
-                                                <a href="{{ url_for('bajas.descargar_documento', adjunto_id=adjunto.id) }}" 
-                                                class="text-burgundy hover:text-burgundy-dark transition-colors duration-200 ml-4 flex-shrink-0"
-                                                title="Descargar {{ adjunto.nombre_archivo }}">
+                                                <a href="{{ url_for('bajas.descargar_documento', adjunto_id=adjunto.id) }}" class="btn-icon-small" title="Descargar">
                                                     <i class="fas fa-download"></i>
                                                 </a>
                                             </div>
                                             {% else %}
-                                            <p class="text-xs text-gray-400 text-center py-2">Este expediente no tiene archivos adjuntos.</p>
-                                            {% endfor %} 
+                                                <p class="no-files">Sin archivos adjuntos.</p>
+                                            {% endfor %}
                                         </div>
                                     </div>
                                     {% endfor %}
                                 </div>
                             {% else %}
-                                <div class="text-center py-8">
-                                    <i class="fas fa-inbox text-4xl text-gray-300 mb-3"></i>
-                                    <p class="text-gray-500">Aún no se han cargado documentos para este proceso.</p>
+                                <div class="empty-state-mini">
+                                    <i class="fas fa-inbox"></i>
+                                    <p>Aún no se han cargado documentos.</p>
                                 </div>
                             {% endif %}
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <!-- Barra Lateral -->
-            <div class="lg:col-span-1 space-y-8">
-                <!-- Bien a Desincorporar -->
-                <div class="bg-white rounded-2xl shadow-lg border border-beige-light overflow-hidden">
-                    <div class="p-6">
-                        <h3 class="text-xl font-bold text-burgundy mb-6 flex items-center">
-                            <i class="fas fa-box mr-3"></i>
-                            Bien a Desincorporar
-                        </h3>
-                        <div class="space-y-4">
-                            <div class="bg-beige-light/20 p-4 rounded-xl border border-beige-light">
-                                <p class="text-sm font-semibold text-gray-600 mb-1">No. Inventario</p>
-                                <p class="text-lg font-bold text-burgundy">{{ proceso.bien.No_Inventario }}</p>
+            </div> <div class="sidebar-column">
+                
+                <div class="card">
+                    <div class="card-header">
+                        <div class="icon-box"><i class="fas fa-box"></i></div>
+                        <h2>Bien a Desincorporar</h2>
+                    </div>
+                    <div class="card-body">
+                        <div class="info-stack">
+                            <div class="info-item">
+                                <label>No. Inventario</label>
+                                <p class="highlight">{{ proceso.bien.No_Inventario }}</p>
                             </div>
-                            <div class="bg-beige-light/20 p-4 rounded-xl border border-beige-light">
-                                <p class="text-sm font-semibold text-gray-600 mb-1">Descripción</p>
-                                <p class="text-gray-900">{{ proceso.bien.Descripcion_Del_Bien }}</p>
+                            <div class="info-item">
+                                <label>Descripción</label>
+                                <p>{{ proceso.bien.Descripcion_Del_Bien }}</p>
                             </div>
-                            <div class="grid grid-cols-2 gap-4">
-                                <div class="bg-beige-light/20 p-3 rounded-xl border border-beige-light">
-                                    <p class="text-xs font-semibold text-gray-600 mb-1">Marca</p>
-                                    <p class="text-sm text-gray-900">{{ proceso.bien.Marca or 'N/A' }}</p>
+                            <div class="grid-2-mini">
+                                <div class="info-item">
+                                    <label>Marca</label>
+                                    <p>{{ proceso.bien.Marca or 'N/A' }}</p>
                                 </div>
-                                <div class="bg-beige-light/20 p-3 rounded-xl border border-beige-light">
-                                    <p class="text-xs font-semibold text-gray-600 mb-1">Modelo</p>
-                                    <p class="text-sm text-gray-900">{{ proceso.bien.Modelo or 'N/A' }}</p>
+                                <div class="info-item">
+                                    <label>Modelo</label>
+                                    <p>{{ proceso.bien.Modelo or 'N/A' }}</p>
                                 </div>
                             </div>
-                            <div class="bg-beige-light/20 p-4 rounded-xl border border-beige-light">
-                                <p class="text-sm font-semibold text-gray-600 mb-1">No. Serie</p>
-                                <p class="text-gray-900">{{ proceso.bien.Numero_De_Serie or 'N/A' }}</p>
+                            <div class="info-item">
+                                <label>No. Serie</label>
+                                <p>{{ proceso.bien.Numero_De_Serie or 'N/A' }}</p>
                             </div>
-                            <div class="bg-beige-light/20 p-4 rounded-xl border border-beige-light">
-                                <p class="text-sm font-semibold text-gray-600 mb-1">Costo de Adquisición</p>
-                                <p class="text-lg font-bold text-burgundy">${{ "%.2f"|format(proceso.bien.Costo_Inicial) }}</p>
-                            </div>
-                            <div class="bg-beige-light/20 p-4 rounded-xl border border-beige-light">
-                                <p class="text-sm font-semibold text-gray-600 mb-1">Fecha de Adquisición</p>
-                                <p class="text-gray-900">{{ proceso.bien.Fecha_Adquisicion_Alta.strftime('%d/%m/%Y') if proceso.bien.Fecha_Adquisicion_Alta else 'N/A' }}</p>
+                            <div class="info-item">
+                                <label>Costo</label>
+                                <p class="money">${{ "%.2f"|format(proceso.bien.Costo_Inicial) }}</p>
                             </div>
                         </div>
                     </div>
                 </div>
-                
-                <!-- Acciones del Proceso -->
-                <div class="bg-white rounded-2xl shadow-lg border border-beige-light overflow-hidden">
-                    <div class="p-6">
-                        <h3 class="text-xl font-bold text-burgundy mb-6 flex items-center">
-                            <i class="fas fa-play-circle mr-3"></i>
-                            Acciones del Proceso
-                        </h3>
-                        <div class="space-y-4">
+
+                <div class="card">
+                    <div class="card-header">
+                        <div class="icon-box"><i class="fas fa-play-circle"></i></div>
+                        <h2>Acciones</h2>
+                    </div>
+                    <div class="card-body">
+                        <div class="actions-stack">
                             {% if workflow %}
                                 {% set transicion = workflow.transiciones.get(proceso.estatus) %}
+                                
                                 {% if transicion %}
-                                    <div class="bg-blue-50 border border-blue-200 p-4 rounded-xl">
-                                        <p class="text-sm text-blue-800 mb-3">
-                                            <i class="fas fa-info-circle mr-1"></i>
-                                            Para avanzar, primero debe cargar el documento:
-                                        </p>
-                                        <p class="font-semibold text-blue-900 text-center">"{{ transicion.documento_necesario }}"</p>
-                                          
+                                    <div class="alert alert-info">
+                                        <i class="fas fa-info-circle"></i>
+                                        <p>Requerido: <strong>{{ transicion.documento_necesario }}</strong></p>
                                     </div>
+
                                     {% if proceso.estatus == 'Autorizado para Disposición' %}
-                                    <button id="openDisposicionBtn" type="button" class="w-full bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white font-bold py-3 px-4 rounded-xl shadow-lg transition-all duration-300 transform hover:scale-105">
-                                        <i class="fas fa-tasks mr-2"></i>
-                                        Registrar Disposición Final
-                                    </button>    
+                                        <button id="openDisposicionBtn" class="btn btn-yellow btn-block">
+                                            <i class="fas fa-tasks"></i> Registrar Disposición
+                                        </button>
                                     {% endif %}
+
                                     <form action="{{ url_for('bajas.actualizar_estatus', proceso_id=proceso.id) }}" method="POST">
                                         <input type="hidden" name="nuevo_estatus" value="{{ transicion.siguiente_estatus }}">
-                                        <button type="submit" 
-                                                class="w-full bg-gradient-to-r from-burgundy to-burgundy-dark hover:from-burgundy-dark hover:to-burgundy text-white font-bold py-3 px-4 rounded-xl shadow-lg transition-all duration-300 transform hover:scale-105"
-                                                onclick="return confirm('¿Estás seguro de que quieres continuar? Asegúrate de que el documento requerido ya esté cargado.')">
-                                            <i class="fas fa-arrow-right mr-2"></i>
-                                            {{ transicion.texto_accion }}
-                                        </button>
-                                    </form> 
-                                {% endif %}
-                                
-                                {% if proceso.estatus in ['Solicitado', 'Pendiente de Comité'] %}
-                                    <form action="{{ url_for('bajas.actualizar_estatus', proceso_id=proceso.id) }}" method="POST" class="w-full">
-                                        <input type="hidden" name="nuevo_estatus" value="Rechazado">
-                                        <button type="submit" 
-                                                class="w-full bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white font-bold py-3 px-4 rounded-xl shadow-lg transition-all duration-300 transform hover:scale-105"
-                                                onclick="return confirm('ADVERTENCIA: ¿Estás seguro de que quieres RECHAZAR esta solicitud de baja?')">
-                                            <i class="fas fa-times-circle mr-2"></i>
-                                            Rechazar Proceso
-                                        </button>
-                                    </form>
-                                {% endif %}
-                                
-                                {% if proceso.estatus == 'Finalizado' %}
-                                    <div class="bg-green-50 border border-green-200 p-4 rounded-xl">
-                                        <p class="text-sm text-green-800 text-center">
-                                            <i class="fas fa-check-circle mr-1"></i>
-                                            El proceso está autorizado. Procede a registrar la disposición final.
-                                        </p>
-                                    </div>
-                                    
-                                    <form action="{{ url_for('bajas.actualizar_estatus', proceso_id=proceso.id) }}" method="POST" class="w-full">
-                                        <input type="hidden" name="nuevo_estatus" value="Finalizado">
-                                        <button type="submit" 
-                                                class="w-full bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white font-bold py-3 px-4 rounded-xl shadow-lg transition-all duration-300 transform hover:scale-105"
-                                                onclick="return confirm('¿Estás seguro de que quieres FINALIZAR este proceso? Asegúrate de haber registrado la disposición final.')">
-                                            <i class="fas fa-flag-checkered mr-2"></i>
-                                            Finalizar Proceso
+                                        <button type="submit" class="btn btn-primary btn-block"
+                                                onclick="return confirm('¿Continuar? Verifique haber cargado el documento requerido.')">
+                                            <i class="fas fa-arrow-right"></i> {{ transicion.texto_accion }}
                                         </button>
                                     </form>
                                 {% endif %}
 
-                                {% if not transicion and proceso.estatus not in ['Solicitado', 'Pendiente de Comité', 'Autorizado para Disposición'] %}
-                                    <div class="text-center py-4">
-                                        <i class="fas fa-check-circle text-3xl text-green-500 mb-2"></i>
-                                        <p class="text-sm text-gray-500">Este proceso ha concluido y ya no tiene acciones disponibles.</p>
-                                    </div>
+                                {% if proceso.estatus in ['Solicitado', 'Pendiente de Comité'] %}
+                                    <form action="{{ url_for('bajas.actualizar_estatus', proceso_id=proceso.id) }}" method="POST">
+                                        <input type="hidden" name="nuevo_estatus" value="Rechazado">
+                                        <button type="submit" class="btn btn-red btn-block"
+                                                onclick="return confirm('ADVERTENCIA: ¿Rechazar solicitud?')">
+                                            <i class="fas fa-times-circle"></i> Rechazar
+                                        </button>
+                                    </form>
                                 {% endif %}
+
+                                {% if proceso.estatus == 'Finalizado' %}
+                                    <form action="{{ url_for('bajas.actualizar_estatus', proceso_id=proceso.id) }}" method="POST">
+                                        <input type="hidden" name="nuevo_estatus" value="Finalizado">
+                                        <button type="submit" class="btn btn-dark btn-block"
+                                                onclick="return confirm('¿FINALIZAR el proceso? Esta acción es irreversible.')">
+                                            <i class="fas fa-flag-checkered"></i> Finalizar Proceso
+                                        </button>
+                                    </form>
+                                {% endif %}
+
                             {% else %}
-                                <div class="text-center py-4">
-                                    <i class="fas fa-exclamation-triangle text-3xl text-yellow-500 mb-2"></i>
-                                    <p class="text-sm text-gray-500">No hay acciones definidas para este motivo de baja.</p>
+                                <div class="empty-state-mini">
+                                    <p>Sin acciones disponibles.</p>
                                 </div>
                             {% endif %}
                         </div>
                     </div>
                 </div>
 
-                <!-- Disposición Final -->
                 {% if proceso.disposicion_final %}
-                <div class="bg-white rounded-2xl shadow-lg border border-beige-light overflow-hidden">
-                    <div class="p-6">
-                        <h3 class="text-xl font-bold text-burgundy mb-6 flex items-center">
-                            <i class="fas fa-recycle mr-3"></i>
-                            Disposición Final
-                        </h3>
-                        <div class="space-y-4">
-                            <div class="bg-beige-light/20 p-4 rounded-xl border border-beige-light">
-                                <p class="text-sm font-semibold text-gray-600 mb-1">Tipo de Disposición</p>
-                                <p class="text-lg font-bold text-burgundy">{{ proceso.disposicion_final.tipo_disposicion }}</p>
+                <div class="card">
+                    <div class="card-header">
+                        <div class="icon-box"><i class="fas fa-recycle"></i></div>
+                        <h2>Disposición Final</h2>
+                    </div>
+                    <div class="card-body">
+                        <div class="info-stack">
+                            <div class="info-item">
+                                <label>Tipo</label>
+                                <p class="highlight">{{ proceso.disposicion_final.tipo_disposicion }}</p>
                             </div>
-                            <div class="bg-beige-light/20 p-4 rounded-xl border border-beige-light">
-                                <p class="text-sm font-semibold text-gray-600 mb-1">Fecha de Disposición</p>
-                                <p class="text-gray-900">{{ proceso.disposicion_final.fecha_disposicion.strftime('%d/%m/%Y') }}</p>
+                            <div class="info-item">
+                                <label>Fecha</label>
+                                <p>{{ proceso.disposicion_final.fecha_disposicion.strftime('%d/%m/%Y') }}</p>
                             </div>
-                            <div class="bg-beige-light/20 p-4 rounded-xl border border-beige-light">
-                                <p class="text-sm font-semibold text-gray-600 mb-1">Estatus</p>
-                                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-bold
-                                    {% if proceso.disposicion_final.estatus == 'Completado' %} 
-                                        bg-green-100 text-green-800 border border-green-300
-                                    {% else %} 
-                                        bg-yellow-100 text-yellow-800 border border-yellow-300
-                                    {% endif %}">
+                            <div class="info-item">
+                                <label>Estatus</label>
+                                <span class="badge {% if proceso.disposicion_final.estatus == 'Completado' %}badge-green{% else %}badge-yellow{% endif %}">
                                     {{ proceso.disposicion_final.estatus }}
                                 </span>
                             </div>
@@ -416,95 +311,56 @@
                     </div>
                 </div>
                 {% endif %}
-            </div>
-        </div>
+
+            </div> </div>
     </div>
 </div>
 
-<!-- Modal de Disposición Final (placeholder) -->
-<div id="disposicionModal" class="fixed inset-0 bg-gray-600/50 backdrop-blur-sm overflow-y-auto h-full w-full z-50 hidden flex items-center justify-center p-4">
-    <div class="relative w-full max-w-2xl mx-auto">
-        <div class="bg-white rounded-2xl shadow-xl border border-beige-light overflow-hidden">
-
-            <div class="bg-gradient-to-r from-burgundy to-burgundy-dark p-6 text-white flex justify-between items-center">
-                <div>
-                    <h2 class="text-2xl font-bold">Registrar Disposición Final</h2>
-                    <p class="text-beige-light mt-1 text-sm">Indique el método de desincorporación del bien.</p>
-                </div>
-                <button type="button" id="closeDisposicionModal" class="text-beige-light hover:text-white text-3xl font-light transition-colors duration-200" aria-label="Cerrar modal">
-                    &times;
-                </button>
-            </div>
-
+<div id="disposicionModal" class="modal-overlay hidden">
+    <div class="modal-container">
+        <div class="modal-header">
+            <h3>Registrar Disposición Final</h3>
+            <button type="button" id="closeDisposicionModal" class="btn-icon-close"><i class="fas fa-times"></i></button>
+        </div>
+        
+        <div class="modal-body">
             <form id="disposicionForm" action="{{ url_for('bajas.registrar_disposicion_final', proceso_id=proceso.id) }}" method="POST">
-
-                <div class="p-8 space-y-6 bg-white">
-
-                    <div>
-                        <label for="tipo_disposicion" class="block text-sm font-semibold text-gray-700 mb-2 flex items-center">
-                            <i class="fas fa-recycle text-burgundy mr-2"></i>
-                            Tipo de Disposición <span class="text-red-600 ml-1">*</span>
-                        </label>
-                        <select id="tipo_disposicion" name="tipo_disposicion" required
-                                class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-burgundy/50 focus:border-burgundy transition-all duration-200 bg-white">
-                            <option value="" disabled selected>Seleccione un método...</option>
-                            <option value="Enajenación">Enajenación (Venta)</option>
-                            <option value="Donación">Donación</option>
-                            <option value="Destrucción">Destrucción</option>
-                        </select>
-                    </div>
-
-                    <div>
-                        <label for="fecha_disposicion" class="block text-sm font-semibold text-gray-700 mb-2 flex items-center">
-                            <i class="fas fa-calendar-alt text-burgundy mr-2"></i>
-                            Fecha de Disposición <span class="text-red-600 ml-1">*</span>
-                        </label>
-                        <input type="date" id="fecha_disposicion" name="fecha_disposicion" required
-                               class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-burgundy/50 focus:border-burgundy transition-all duration-200">
-                    </div>
-
-                    <div class="space-y-4">
-                        <div id="campo_enajenacion" class="hidden space-y-2 bg-beige-light/20 p-4 rounded-xl border border-beige-light">
-                            <label for="valor_enajenacion" class="block text-sm font-semibold text-gray-700">
-                                <i class="fas fa-dollar-sign text-burgundy mr-2"></i>
-                                Valor de Enajenación (Venta) <span class="text-red-600 ml-1">*</span>
-                            </label>
-                            <input type="number" id="valor_enajenacion" name="valor_enajenacion" step="0.01" min="0" placeholder="0.00"
-                                   class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-burgundy/50 focus:border-burgundy transition-all duration-200">
-                        </div>
-
-                        <div id="campo_donacion" class="hidden space-y-2 bg-beige-light/20 p-4 rounded-xl border border-beige-light">
-                            <label for="nombre_donatario" class="block text-sm font-semibold text-gray-700">
-                                <i class="fas fa-gift text-burgundy mr-2"></i>
-                                Nombre del Donatario <span class="text-red-600 ml-1">*</span>
-                            </label>
-                            <input type="text" id="nombre_donatario" name="nombre_donatario" placeholder="Institución o persona receptora"
-                                   class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-burgundy/50 focus:border-burgundy transition-all duration-200">
-                        </div>
-
-                        <div id="campo_destruccion" class="hidden space-y-2 bg-beige-light/20 p-4 rounded-xl border border-beige-light">
-                            <label for="detalles_destruccion" class="block text-sm font-semibold text-gray-700">
-                                <i class="fas fa-burn text-burgundy mr-2"></i>
-                                Detalles de la Destrucción <span class="text-red-600 ml-1">*</span>
-                            </label>
-                            <textarea id="detalles_destruccion" name="detalles_destruccion" rows="3" placeholder="Describa el método de destrucción, lugar, y testigos si aplica."
-                                      class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-burgundy/50 focus:border-burgundy transition-all duration-200 resize-none"></textarea>
-                        </div>
-                    </div>
+                
+                <div class="form-group">
+                    <label for="tipo_disposicion">Tipo de Disposición *</label>
+                    <select id="tipo_disposicion" name="tipo_disposicion" required>
+                        <option value="" disabled selected>Seleccione...</option>
+                        <option value="Enajenación">Enajenación (Venta)</option>
+                        <option value="Donación">Donación</option>
+                        <option value="Destrucción">Destrucción</option>
+                    </select>
                 </div>
 
-                <div class="flex flex-col sm:flex-row justify-end gap-4 p-6 border-t border-beige-light bg-gray-50 rounded-b-2xl">
-                    <button type="button" id="cancelDisposicionBtn"
-                       class="inline-flex items-center justify-center px-6 py-3 border-2 border-gray-300 text-base font-semibold rounded-xl text-gray-700 bg-white hover:bg-gray-50 transition-all duration-200 order-2 sm:order-1">
-                        <i class="fas fa-times mr-2"></i> Cancelar
-                    </button>
-                    <button type="submit"
-                            class="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-semibold rounded-xl shadow-lg text-white bg-gradient-to-r from-burgundy to-burgundy-dark hover:from-burgundy-dark hover:to-burgundy transition-all duration-300 transform hover:scale-105 order-1 sm:order-2">
-                        <i class="fas fa-save mr-2"></i>
-                        Guardar Disposición
-                    </button>
+                <div class="form-group">
+                    <label for="fecha_disposicion">Fecha *</label>
+                    <input type="date" id="fecha_disposicion" name="fecha_disposicion" required>
+                </div>
+
+                <div id="campo_enajenacion" class="conditional-field hidden">
+                    <label for="valor_enajenacion">Valor de Venta *</label>
+                    <input type="number" id="valor_enajenacion" name="valor_enajenacion" step="0.01" min="0">
+                </div>
+
+                <div id="campo_donacion" class="conditional-field hidden">
+                    <label for="nombre_donatario">Nombre del Donatario *</label>
+                    <input type="text" id="nombre_donatario" name="nombre_donatario">
+                </div>
+
+                <div id="campo_destruccion" class="conditional-field hidden">
+                    <label for="detalles_destruccion">Detalles de Destrucción *</label>
+                    <textarea id="detalles_destruccion" name="detalles_destruccion" rows="3"></textarea>
                 </div>
             </form>
+        </div>
+
+        <div class="modal-footer">
+            <button type="button" id="cancelDisposicionBtn" class="btn btn-secondary">Cancelar</button>
+            <button type="submit" form="disposicionForm" class="btn btn-primary">Guardar</button>
         </div>
     </div>
 </div>
@@ -512,93 +368,198 @@
 
 {% block styles %}
 <style>
-    .bg-burgundy { background-color: #6A2E4D; }
-    .bg-burgundy-dark { background-color: #551E3A; }
-    .text-burgundy { color: #6A2E4D; }
-    .border-burgundy { border-color: #6A2E4D; }
+    /* VARIABLES */
+    :root {
+        --col-burgundy: #6A2E4D;
+        --col-burgundy-dark: #551E3A;
+        --col-beige: #BC9B6A;
+        --col-beige-light: #fdfbf7;
+        --radius: 12px;
+        --shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+        
+        --bg-blue: #eff6ff; --text-blue: #1e40af;
+        --bg-yellow: #fefce8; --text-yellow: #854d0e;
+        --bg-green: #f0fdf4; --text-green: #166534;
+        --bg-red: #fef2f2; --text-red: #991b1b;
+    }
+
+    /* Layout */
+    .page-wrapper { min-height: 100vh; background: #f9fafb; padding: 2rem 1rem; }
+    .container-limit { max-width: 1200px; margin: 0 auto; }
+    .details-layout { display: grid; grid-template-columns: 2fr 1fr; gap: 1.5rem; }
+
+    /* Header */
+    .header-card {
+        background: linear-gradient(to right, var(--col-burgundy), var(--col-burgundy-dark));
+        border-radius: var(--radius); padding: 1.5rem 2rem; color: white;
+        display: flex; justify-content: space-between; align-items: center;
+        margin-bottom: 2rem; box-shadow: var(--shadow);
+    }
+    .breadcrumbs a { color: rgba(255,255,255,0.8); text-decoration: none; font-size: 0.9rem; display: block; margin-bottom: 0.5rem; }
+    .breadcrumbs a:hover { color: white; text-decoration: underline; }
+    .header-content h1 { margin: 0; font-size: 1.5rem; }
     
-    .bg-beige { background-color: #BC9B6A; }
-    .bg-beige-light { background-color: #D7C3A0; }
-    .text-beige-light { color: #D7C3A0; }
-    .border-beige { border-color: #BC9B6A; }
-    .border-beige-light { border-color: #D7C3A0; }
+    /* Status Badge Header */
+    .header-status { text-align: right; }
+    .status-label { display: block; font-size: 0.8rem; opacity: 0.8; margin-bottom: 0.2rem; }
+    .badge { padding: 0.3rem 0.8rem; border-radius: 20px; font-weight: 600; font-size: 0.9rem; display: inline-block; }
+    .badge-blue { background: var(--bg-blue); color: var(--text-blue); }
+    .badge-yellow { background: var(--bg-yellow); color: var(--text-yellow); }
+    .badge-green { background: var(--bg-green); color: var(--text-green); }
+    .badge-red { background: var(--bg-red); color: var(--text-red); }
+    .badge-gray { background: #f3f4f6; color: #374151; }
+
+    /* Cards */
+    .card { background: white; border-radius: var(--radius); box-shadow: var(--shadow); border: 1px solid #e5e7eb; overflow: hidden; margin-bottom: 1.5rem; }
+    .card-header { padding: 1rem 1.5rem; border-bottom: 1px solid #f3f4f6; background: rgba(106, 46, 77, 0.03); display: flex; align-items: center; gap: 0.8rem; }
+    .icon-box { width: 32px; height: 32px; background: var(--col-burgundy); border-radius: 50%; color: white; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; }
+    .card-header h2 { margin: 0; font-size: 1.1rem; color: var(--col-burgundy); }
+    .card-body { padding: 1.5rem; }
+
+    /* Línea de Tiempo */
+    .timeline-stack { position: relative; padding-left: 1rem; }
+    .timeline-stack::before { content: ''; position: absolute; left: 1.9rem; top: 0; bottom: 0; width: 2px; background: #e5e7eb; }
+    .timeline-item { display: flex; gap: 1rem; align-items: flex-start; margin-bottom: 1.5rem; position: relative; z-index: 1; }
     
-    .from-burgundy { --tw-gradient-from: #6A2E4D; --tw-gradient-to: rgb(106 46 77 / 0); --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to); }
-    .to-burgundy-dark { --tw-gradient-to: #551E3A; }
+    .timeline-marker {
+        width: 30px; height: 30px; border-radius: 50%; background: #e5e7eb; color: #6b7280;
+        display: flex; align-items: center; justify-content: center; font-size: 0.8rem;
+        border: 2px solid white; box-shadow: 0 0 0 1px #e5e7eb;
+    }
+    .timeline-item.active .timeline-marker { background: var(--col-burgundy); color: white; box-shadow: 0 0 0 2px rgba(106, 46, 77, 0.2); }
+    .timeline-content h4 { margin: 0; font-size: 0.95rem; color: #374151; }
+    .timeline-item.active .timeline-content h4 { font-weight: 700; color: var(--col-burgundy); }
+    .timeline-content small { color: #6b7280; }
+
+    /* Info Grids */
+    .info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; }
+    .info-stack { display: flex; flex-direction: column; gap: 1rem; }
+    .info-item label { font-size: 0.8rem; font-weight: 600; color: #6b7280; text-transform: uppercase; display: block; margin-bottom: 0.2rem; }
+    .info-item p { margin: 0; color: #1f2937; }
+    .info-item.full-width { grid-column: 1 / -1; }
+    .highlight { font-weight: 700; color: var(--col-burgundy); }
+    .text-box { background: var(--col-beige-light); padding: 1rem; border-radius: 8px; border: 1px solid #e5e7eb; font-size: 0.9rem; }
+    .money { font-family: monospace; font-size: 1.1rem; }
+    .grid-2-mini { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+
+    /* Checklist */
+    .checklist-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
+    .checklist-item { display: flex; gap: 0.8rem; padding: 1rem; border: 1px solid #e5e7eb; border-radius: 8px; background: #fafafa; }
+    .checklist-item.completed { background: #f0fdf4; border-color: #bbf7d0; }
+    .check-icon { width: 24px; height: 24px; border-radius: 50%; background: #e5e7eb; color: #9ca3af; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; }
+    .checklist-item.completed .check-icon { background: #22c55e; color: white; }
+    .check-name { font-weight: 600; font-size: 0.9rem; margin: 0; color: #374151; }
+    .checklist-item.completed .check-name { color: #166534; }
+    .check-desc { font-size: 0.75rem; color: #6b7280; margin: 0; }
+
+    /* Upload Action */
+    .upload-action-area { text-align: center; padding: 1.5rem; background: rgba(106, 46, 77, 0.05); border: 2px dashed var(--col-burgundy); border-radius: 8px; margin-bottom: 1.5rem; }
+
+    /* Historial Archivos */
+    .files-stack { display: flex; flex-direction: column; gap: 1rem; }
+    .file-group { background: #fafafa; border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden; }
+    .file-group-header { padding: 0.8rem 1rem; background: #f3f4f6; display: flex; justify-content: space-between; align-items: center; }
+    .doc-type { font-weight: 700; color: var(--col-burgundy); font-size: 0.9rem; }
+    .doc-uploader { font-size: 0.75rem; color: #6b7280; }
+    
+    .file-list { padding: 0.5rem; }
+    .file-item { display: flex; justify-content: space-between; align-items: center; padding: 0.5rem; border-bottom: 1px solid #eee; }
+    .file-item:last-child { border-bottom: none; }
+    .file-info { display: flex; align-items: center; gap: 0.8rem; }
+    .file-thumb { width: 32px; height: 32px; object-fit: cover; border-radius: 4px; border: 1px solid #ddd; }
+    .file-icon { width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; background: #e5e7eb; border-radius: 4px; color: #6b7280; }
+    .file-name { font-size: 0.85rem; color: #374151; }
+    .no-files { padding: 1rem; text-align: center; font-size: 0.85rem; color: #9ca3af; font-style: italic; }
+
+    /* Acciones Sidebar */
+    .actions-stack { display: flex; flex-direction: column; gap: 1rem; }
+    .alert-info { background: #eff6ff; border-left: 4px solid #3b82f6; padding: 0.8rem; border-radius: 4px; font-size: 0.9rem; color: #1e40af; }
+    
+    .btn { padding: 0.7rem 1rem; border-radius: 8px; font-weight: 600; cursor: pointer; border: none; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; transition: all 0.2s; }
+    .btn-primary { background: var(--col-burgundy); color: white; }
+    .btn-primary:hover { opacity: 0.9; }
+    .btn-secondary { background: white; border: 1px solid #d1d5db; color: #374151; }
+    .btn-yellow { background: #eab308; color: white; }
+    .btn-red { background: #ef4444; color: white; }
+    .btn-dark { background: #374151; color: white; }
+    .btn-block { width: 100%; }
+    .btn-lg { font-size: 1rem; padding: 0.8rem 1.5rem; }
+    .btn-icon-small { color: var(--col-burgundy); font-size: 1rem; }
+
+    /* Modal */
+    .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; display: flex; align-items: center; justify-content: center; }
+    .modal-container { background: white; width: 90%; max-width: 500px; border-radius: var(--radius); overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
+    .modal-header { padding: 1rem 1.5rem; background: var(--col-burgundy); color: white; display: flex; justify-content: space-between; align-items: center; }
+    .modal-header h3 { margin: 0; font-size: 1.1rem; }
+    .btn-icon-close { background: none; border: none; color: white; font-size: 1.2rem; cursor: pointer; }
+    
+    .modal-body { padding: 1.5rem; max-height: 70vh; overflow-y: auto; }
+    .modal-footer { padding: 1rem 1.5rem; background: #f9fafb; border-top: 1px solid #e5e7eb; display: flex; justify-content: flex-end; gap: 1rem; }
+    
+    .form-group { margin-bottom: 1rem; }
+    .form-group label { display: block; font-weight: 600; font-size: 0.9rem; margin-bottom: 0.4rem; }
+    input, select, textarea { width: 100%; padding: 0.7rem; border: 1px solid #d1d5db; border-radius: 8px; }
+    .conditional-field { background: var(--col-beige-light); padding: 1rem; border-radius: 8px; border: 1px solid #e5e7eb; margin-top: 1rem; }
+    .hidden { display: none; }
+
+    /* Responsive */
+    @media (max-width: 900px) {
+        .details-layout { grid-template-columns: 1fr; }
+        .header-card { flex-direction: column; align-items: flex-start; gap: 1rem; }
+        .header-status { align-self: flex-start; }
+    }
 </style>
 {% endblock %}
 
 {% block scripts %}
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-    // --- LÓGICA DEL MODAL DE DISPOSICIÓN ---
-    const disposicionModal = document.getElementById('disposicionModal');
-    const openDisposicionBtn = document.getElementById('openDisposicionBtn');
-    const closeDisposicionBtn = document.getElementById('closeDisposicionModal');
-    const cancelDisposicionBtn = document.getElementById('cancelDisposicionBtn');
-    const disposicionForm = document.getElementById('disposicionForm');
-
-    // Función para abrir
-    if (openDisposicionBtn) {
-        openDisposicionBtn.addEventListener('click', () => {
-            disposicionModal.classList.remove('hidden');
-        });
-    }
-
-    // Función para cerrar (con el botón 'X' o 'Cancelar')
-    const closeModal = () => {
-        disposicionModal.classList.add('hidden');
-        // Opcional: resetear el formulario al cerrar
-        disposicionForm.reset();
-        // Disparar manualmente el evento 'change' para ocultar todos los campos condicionales
-        document.getElementById('tipo_disposicion').dispatchEvent(new Event('change'));
+    // --- Modal Disposición ---
+    const modal = document.getElementById('disposicionModal');
+    const openBtn = document.getElementById('openDisposicionBtn');
+    const closeBtn = document.getElementById('closeDisposicionModal');
+    const cancelBtn = document.getElementById('cancelDisposicionBtn');
+    
+    // Elementos condicionales
+    const tipoSelect = document.getElementById('tipo_disposicion');
+    const campos = {
+        'Enajenación': { div: document.getElementById('campo_enajenacion'), input: document.getElementById('valor_enajenacion') },
+        'Donación': { div: document.getElementById('campo_donacion'), input: document.getElementById('nombre_donatario') },
+        'Destrucción': { div: document.getElementById('campo_destruccion'), input: document.getElementById('detalles_destruccion') }
     };
 
-    closeDisposicionBtn.addEventListener('click', closeModal);
-    cancelDisposicionBtn.addEventListener('click', closeModal);
+    if(openBtn) {
+        openBtn.onclick = () => modal.classList.remove('hidden');
+    }
+    
+    const closeModal = () => {
+        modal.classList.add('hidden');
+        document.getElementById('disposicionForm').reset();
+        // Ocultar todos los condicionales
+        Object.values(campos).forEach(c => {
+            c.div.classList.add('hidden');
+            c.input.removeAttribute('required');
+        });
+    };
 
-    // Cerrar modal al hacer clic fuera del contenido
-    disposicionModal.addEventListener('click', (e) => {
-        if (e.target === disposicionModal) {
-            closeModal();
-        }
-    });
+    if(closeBtn) closeBtn.onclick = closeModal;
+    if(cancelBtn) cancelBtn.onclick = closeModal;
 
-    // --- LÓGICA DE CAMPOS CONDICIONALES ---
-    const tipoSelect = document.getElementById('tipo_disposicion');
-    const campoEnajenacion = document.getElementById('campo_enajenacion');
-    const campoDonacion = document.getElementById('campo_donacion');
-    const campoDestruccion = document.getElementById('campo_destruccion');
-
-    // Inputs dentro de los campos condicionales
-    const inputEnajenacion = document.getElementById('valor_enajenacion');
-    const inputDonacion = document.getElementById('nombre_donatario');
-    const inputDestruccion = document.getElementById('detalles_destruccion');
-
-    if (tipoSelect) {
+    // Lógica de cambio de tipo
+    if(tipoSelect) {
         tipoSelect.addEventListener('change', (e) => {
-            const tipo = e.target.value;
+            const val = e.target.value;
+            
+            // Resetear todo
+            Object.values(campos).forEach(c => {
+                c.div.classList.add('hidden');
+                c.input.removeAttribute('required');
+            });
 
-            // Ocultar todos y quitar 'required'
-            campoEnajenacion?.classList.add('hidden');
-            inputEnajenacion?.removeAttribute('required');
-
-            campoDonacion?.classList.add('hidden');
-            inputDonacion?.removeAttribute('required');
-
-            campoDestruccion?.classList.add('hidden');
-            inputDestruccion?.removeAttribute('required');
-
-            // Mostrar el campo relevante y añadir 'required'
-            if (tipo === 'Enajenación') {
-                campoEnajenacion?.classList.remove('hidden');
-                inputEnajenacion?.setAttribute('required', 'required');
-            } else if (tipo === 'Donación') {
-                campoDonacion?.classList.remove('hidden');
-                inputDonacion?.setAttribute('required', 'required');
-            } else if (tipo === 'Destrucción') {
-                campoDestruccion?.classList.remove('hidden');
-                inputDestruccion?.setAttribute('required', 'required');
+            // Mostrar seleccionado
+            if(campos[val]) {
+                campos[val].div.classList.remove('hidden');
+                campos[val].input.setAttribute('required', 'true');
             }
         });
     }

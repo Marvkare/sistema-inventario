@@ -3,138 +3,215 @@
 {% block title %}Añadir Documento al Expediente #{{ proceso.id }}{% endblock %}
 
 {% block content %}
-<div class="min-h-screen bg-gradient-to-br from-gray-50 to-beige-light/20 py-8 px-4">
-    <div class="max-w-4xl mx-auto">
+<div class="page-wrapper">
+    <div class="container-limit">
         
-        <!-- Encabezado -->
-        <div class="bg-white rounded-2xl shadow-xl border border-beige-light overflow-hidden mb-8">
-            <div class="bg-gradient-to-r from-burgundy to-burgundy-dark p-6 text-white">
-                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                    <div class="flex-1">
-                        <a href="{{ url_for('bajas.ver_proceso', proceso_id=proceso.id) }}" 
-                           class="text-beige-light hover:text-white text-sm mb-2 inline-block transition-colors duration-200">
-                            <i class="fas fa-arrow-left mr-2"></i> Volver al Proceso
-                        </a>
-                        <h1 class="text-2xl md:text-3xl font-bold">
-                            Añadir Documento al Expediente #{{ proceso.id }}
-                        </h1>
-                        <p class="text-beige-light mt-2">Complete la información del documento y adjunte los archivos correspondientes</p>
-                    </div>
-                    <div class="w-12 h-12 bg-beige rounded-full flex items-center justify-center shadow-lg">
-                        <i class="fas fa-file-upload text-burgundy text-xl"></i>
-                    </div>
+        <div class="header-card">
+            <div class="header-content">
+                <div class="breadcrumbs">
+                    <a href="{{ url_for('bajas.ver_proceso', proceso_id=proceso.id) }}">
+                        <i class="fas fa-arrow-left"></i> Volver al Proceso
+                    </a>
                 </div>
+                <h1>Añadir Documento</h1>
+                <p>Expediente de Baja #{{ proceso.id }}</p>
+            </div>
+            <div class="header-icon-box">
+                <i class="fas fa-file-upload"></i>
             </div>
         </div>
 
-        <!-- Formulario -->
-        <form id="documentoForm" 
-              action="{{ url_for('bajas.crear_documento_expediente', proceso_id=proceso.id) }}" 
-              method="POST" 
-              enctype="multipart/form-data" 
-              class="bg-white rounded-2xl shadow-lg border border-beige-light overflow-hidden">
-            
-            <div class="p-8 space-y-8">
-                <!-- Tipo de Documento -->
-                <div>
-                    <label for="tipo_documento" class="block text-sm font-semibold text-gray-700 mb-3 flex items-center">
-                        <i class="fas fa-file-alt text-burgundy mr-2"></i>
-                        Tipo de Documento <span class="text-red-600 ml-1">*</span>
-                    </label>
-                    <select id="tipo_documento" name="tipo_documento" required 
-                            class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-burgundy/50 focus:border-burgundy transition-all duration-200 bg-white">
-                        <option value="" disabled selected>Seleccione un tipo de documento...</option>
-                        <option value="Solicitud de Baja">Solicitud de Baja</option>
-                        <option value="Dictamen Técnico">Dictamen Técnico</option>
-                        <option value="Denuncia de Robo">Denuncia de Robo</option>
-                        <option value="Acta de Siniestro">Acta de Siniestro</option>
-                        <option value="Avalúo Comercial">Avalúo Comercial</option>
-                        <option value="Acta de Comité">Acta de Comité</option>
-                        <option value="Acta de Baja">Acta de Baja</option>
-                        <option value="Acta de Investigación">Acta de Investigación</option>
-                        <option value="Fotografías del bien">Fotografías del bien</option>
-                        <option value="Acta de echos">Acta de echos</option>
-                        <option value="Otro">Otro</option>
-                    </select>
-                </div>
+        <div class="card">
+            <form id="documentoForm" 
+                  action="{{ url_for('bajas.crear_documento_expediente', proceso_id=proceso.id) }}" 
+                  method="POST" 
+                  enctype="multipart/form-data">
                 
-                <!-- Metadatos -->
-                <div>
-                    <label for="metadatos" class="block text-sm font-semibold text-gray-700 mb-3 flex items-center">
-                        <i class="fas fa-code text-burgundy mr-2"></i>
-                        Metadatos <span class="text-gray-500 text-xs font-normal ml-1">(Opcional, formato JSON)</span>
-                    </label>
-                    <textarea id="metadatos" name="metadatos" rows="4" 
-                              class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-burgundy/50 focus:border-burgundy transition-all duration-200 bg-white resize-none font-mono text-sm"
-                              placeholder='Ejemplo: {"valor": 5000.00, "fecha_avaluo": "2025-10-10"}'></textarea>
-                    <p class="text-xs text-gray-500 mt-2 flex items-center">
-                        <i class="fas fa-info-circle text-burgundy mr-1"></i>
-                        Utilice formato JSON válido para información adicional del documento
-                    </p>
-                </div>
+                <div class="card-body">
+                    
+                    <div class="form-group">
+                        <label for="tipo_documento">
+                            <i class="fas fa-tag icon-label"></i> Tipo de Documento *
+                        </label>
+                        <select id="tipo_documento" name="tipo_documento" required>
+                            <option value="" disabled selected>Seleccione un tipo...</option>
+                            <option value="Solicitud de Baja">Solicitud de Baja</option>
+                            <option value="Dictamen Técnico">Dictamen Técnico</option>
+                            <option value="Denuncia de Robo">Denuncia de Robo</option>
+                            <option value="Acta de Siniestro">Acta de Siniestro</option>
+                            <option value="Avalúo Comercial">Avalúo Comercial</option>
+                            <option value="Acta de Comité">Acta de Comité</option>
+                            <option value="Acta de Baja">Acta de Baja</option>
+                            <option value="Acta de Investigación">Acta de Investigación</option>
+                            <option value="Fotografías del bien">Fotografías del bien</option>
+                            <option value="Acta de echos">Acta de Hechos</option>
+                            <option value="Otro">Otro</option>
+                        </select>
+                    </div>
 
-                <!-- Archivos Adjuntos -->
-                <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-3 flex items-center">
-                        <i class="fas fa-paperclip text-burgundy mr-2"></i>
-                        Archivos Adjuntos <span class="text-red-600 ml-1">*</span>
-                    </label>
-                    <div id="dropZone" class="mt-1 flex justify-center px-6 pt-8 pb-8 border-2 border-dashed border-beige-light rounded-xl bg-beige-light/10 hover:bg-beige-light/20 transition-all duration-300 cursor-pointer">
-                        <div class="space-y-3 text-center">
-                            <i class="fas fa-cloud-upload-alt text-4xl text-burgundy/60"></i>
-                            <div class="flex flex-col sm:flex-row text-sm text-gray-600 items-center justify-center space-y-2 sm:space-y-0 sm:space-x-1">
-                                <label for="archivos_adjuntos" class="relative cursor-pointer bg-white rounded-xl font-semibold text-burgundy hover:text-burgundy-dark transition-colors duration-200 px-4 py-2 border border-burgundy/20">
-                                    <span>Seleccionar archivos</span>
-                                    <input type="file" id="archivos_adjuntos" name="archivos_adjuntos_input" multiple class="sr-only"/>
+                    <div class="form-group">
+                        <label for="metadatos">
+                            <i class="fas fa-code icon-label"></i> Metadatos (Opcional)
+                        </label>
+                        <textarea id="metadatos" name="metadatos" rows="3" 
+                                  class="font-mono"
+                                  placeholder='Ej: {"valor": 5000.00, "fecha": "2025-10-10"}'></textarea>
+                        <p class="help-text">Formato JSON válido para información adicional.</p>
+                    </div>
+
+                    <div class="form-group">
+                        <label>
+                            <i class="fas fa-paperclip icon-label"></i> Archivos Adjuntos *
+                        </label>
+                        
+                        <div id="dropZone" class="drop-zone">
+                            <div class="drop-zone-content">
+                                <i class="fas fa-cloud-upload-alt"></i>
+                                <p class="drop-text">Arrastra archivos aquí o</p>
+                                <label for="archivos_adjuntos" class="btn btn-secondary btn-sm">
+                                    Seleccionar Archivos
+                                    <input type="file" id="archivos_adjuntos" name="archivos_adjuntos_input" multiple class="hidden"/>
                                 </label>
-                                <p class="text-gray-500">o arrástrelos aquí</p>
+                                <p class="drop-info">PDF, PNG, JPG - Máx 10MB</p>
                             </div>
-                            <p class="text-xs text-gray-500">
-                                <i class="fas fa-file text-burgundy mr-1"></i>
-                                Formatos: PDF, PNG, JPG - Máximo 10MB por archivo
-                            </p>
                         </div>
                     </div>
+
+                    <div id="file-preview-container" class="file-list-stack"></div>
+
                 </div>
 
-                <!-- Vista Previa de Archivos -->
-                <div id="file-preview-container" class="space-y-3"></div>
-            </div>
+                <div class="form-actions">
+                    <a href="{{ url_for('bajas.ver_proceso', proceso_id=proceso.id) }}" class="btn btn-secondary">
+                        <i class="fas fa-times"></i> Cancelar
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Guardar Documento
+                    </button>
+                </div>
 
-            <!-- Botones de Acción -->
-            <div class="flex flex-col sm:flex-row justify-end gap-4 p-6 border-t border-beige-light bg-gray-50 rounded-b-2xl">
-                <a href="{{ url_for('bajas.ver_proceso', proceso_id=proceso.id) }}" 
-                   class="inline-flex items-center justify-center px-6 py-3 border-2 border-gray-300 text-base font-semibold rounded-xl text-gray-700 bg-white hover:bg-gray-50 transition-all duration-200 order-2 sm:order-1">
-                    <i class="fas fa-times mr-2"></i> Cancelar
-                </a>
-                <button type="submit" 
-                        class="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-semibold rounded-xl shadow-lg text-white bg-gradient-to-r from-burgundy to-burgundy-dark hover:from-burgundy-dark hover:to-burgundy transition-all duration-300 transform hover:scale-105 order-1 sm:order-2">
-                    <i class="fas fa-save mr-2"></i> 
-                    Guardar Documento y Archivos
-                </button>
-            </div>
-        </form>
+            </form>
+        </div>
     </div>
 </div>
 {% endblock %}
 
 {% block styles %}
 <style>
-    .bg-burgundy { background-color: #6A2E4D; }
-    .bg-burgundy-dark { background-color: #551E3A; }
-    .text-burgundy { color: #6A2E4D; }
-    .border-burgundy { border-color: #6A2E4D; }
-    .focus\:ring-burgundy\/50:focus { --tw-ring-color: rgb(106 46 77 / 0.5); }
-    .focus\:border-burgundy:focus { border-color: #6A2E4D; }
+    /* VARIABLES */
+    :root {
+        --col-burgundy: #6A2E4D;
+        --col-burgundy-dark: #551E3A;
+        --col-beige: #BC9B6A;
+        --col-beige-light: #fdfbf7;
+        --col-bg: #f9fafb;
+        --radius: 12px;
+        --shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+        
+        --border-color: #e5e7eb;
+        --text-gray: #6b7280;
+        --text-dark: #1f2937;
+    }
+
+    /* Layout */
+    .page-wrapper { min-height: 100vh; background: var(--col-bg); padding: 2rem 1rem; }
+    .container-limit { max-width: 800px; margin: 0 auto; }
+
+    /* Header */
+    .header-card {
+        background: linear-gradient(to right, var(--col-burgundy), var(--col-burgundy-dark));
+        border-radius: var(--radius); padding: 1.5rem 2rem; color: white;
+        display: flex; justify-content: space-between; align-items: center;
+        margin-bottom: 2rem; box-shadow: var(--shadow);
+    }
+    .breadcrumbs a { color: rgba(255,255,255,0.8); text-decoration: none; font-size: 0.9rem; display: block; margin-bottom: 0.5rem; }
+    .breadcrumbs a:hover { color: white; text-decoration: underline; }
+    .header-content h1 { margin: 0; font-size: 1.5rem; }
+    .header-content p { margin: 0.5rem 0 0; opacity: 0.9; }
+    .header-icon-box {
+        width: 48px; height: 48px; background: var(--col-beige); border-radius: 50%;
+        display: flex; align-items: center; justify-content: center; color: var(--col-burgundy); font-size: 1.2rem;
+    }
+
+    /* Card */
+    .card { background: white; border-radius: var(--radius); box-shadow: var(--shadow); border: 1px solid var(--border-color); overflow: hidden; }
+    .card-body { padding: 2rem; }
+
+    /* Formulario */
+    .form-group { margin-bottom: 1.5rem; }
+    .form-group label { display: block; font-weight: 600; color: var(--text-dark); margin-bottom: 0.5rem; font-size: 0.95rem; }
+    .icon-label { color: var(--col-burgundy); margin-right: 0.4rem; }
     
-    .bg-beige { background-color: #BC9B6A; }
-    .bg-beige-light { background-color: #D7C3A0; }
-    .text-beige-light { color: #D7C3A0; }
-    .border-beige { border-color: #BC9B6A; }
-    .border-beige-light { border-color: #D7C3A0; }
+    select, textarea { width: 100%; padding: 0.8rem; border: 1px solid #d1d5db; border-radius: 8px; font-size: 0.95rem; background: white; transition: border 0.2s; }
+    select:focus, textarea:focus { outline: none; border-color: var(--col-burgundy); box-shadow: 0 0 0 3px rgba(106, 46, 77, 0.1); }
     
-    .from-burgundy { --tw-gradient-from: #6A2E4D; --tw-gradient-to: rgb(106 46 77 / 0); --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to); }
-    .to-burgundy-dark { --tw-gradient-to: #551E3A; }
+    .font-mono { font-family: monospace; font-size: 0.9rem; }
+    .help-text { font-size: 0.8rem; color: var(--text-gray); margin-top: 0.4rem; }
+
+    /* Validation States (JSON) */
+    textarea.valid-json { border-color: #10b981; background-color: #f0fdf4; }
+    textarea.invalid-json { border-color: #ef4444; background-color: #fef2f2; }
+
+    /* --- ZONA DE CARGA (DROP ZONE) --- */
+    .drop-zone {
+        border: 2px dashed var(--col-beige);
+        background: rgba(188, 155, 106, 0.05);
+        border-radius: var(--radius);
+        padding: 2rem;
+        text-align: center;
+        transition: all 0.2s;
+        cursor: pointer;
+    }
+    .drop-zone:hover { background: rgba(188, 155, 106, 0.1); border-color: var(--col-burgundy); }
+    .drop-zone.drag-over { background: rgba(106, 46, 77, 0.1); border-color: var(--col-burgundy); transform: scale(1.02); }
+
+    .drop-zone-content i { font-size: 2.5rem; color: var(--col-burgundy); opacity: 0.6; margin-bottom: 1rem; display: block; }
+    .drop-text { font-size: 1rem; color: var(--text-gray); margin-bottom: 1rem; }
+    .drop-info { font-size: 0.8rem; color: #9ca3af; margin-top: 1rem; }
+    
+    .hidden { display: none !important; }
+
+    /* LISTA DE ARCHIVOS */
+    .file-list-stack { margin-top: 1.5rem; display: flex; flex-direction: column; gap: 0.8rem; }
+    .list-title { font-weight: 600; color: var(--text-dark); font-size: 0.9rem; margin-bottom: 0.5rem; }
+    
+    .file-item {
+        display: flex; justify-content: space-between; align-items: center;
+        padding: 0.8rem; background: #fafafa; border: 1px solid var(--border-color); border-radius: 8px;
+        transition: background 0.2s;
+    }
+    .file-item:hover { background: #f3f4f6; }
+    
+    .file-info { display: flex; align-items: center; gap: 0.8rem; overflow: hidden; }
+    .file-icon { width: 36px; height: 36px; background: var(--col-beige-light); color: var(--col-burgundy); border-radius: 6px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    
+    .file-details { display: flex; flex-direction: column; min-width: 0; }
+    .file-name { font-weight: 600; font-size: 0.9rem; color: var(--text-dark); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .file-size { font-size: 0.75rem; color: var(--text-gray); }
+
+    .btn-remove-file {
+        width: 30px; height: 30px; border-radius: 50%; border: none; background: transparent;
+        color: #ef4444; cursor: pointer; display: flex; align-items: center; justify-content: center;
+        transition: background 0.2s; flex-shrink: 0;
+    }
+    .btn-remove-file:hover { background: #fee2e2; }
+
+    /* BOTONES ACCIÓN */
+    .form-actions { padding: 1.5rem 2rem; background: #f9fafb; border-top: 1px solid var(--border-color); display: flex; justify-content: flex-end; gap: 1rem; }
+    .btn { padding: 0.7rem 1.5rem; border-radius: 8px; font-weight: 600; cursor: pointer; border: none; text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem; transition: all 0.2s; font-size: 0.95rem; }
+    
+    .btn-primary { background: linear-gradient(to right, var(--col-burgundy), var(--col-burgundy-dark)); color: white; }
+    .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
+    
+    .btn-secondary { background: white; border: 1px solid #d1d5db; color: #374151; }
+    .btn-secondary:hover { background: #f3f4f6; }
+    .btn-sm { padding: 0.4rem 1rem; font-size: 0.85rem; }
+
+    @media (max-width: 640px) {
+        .header-card { flex-direction: column; text-align: center; }
+        .form-actions { flex-direction: column; }
+        .btn { width: 100%; justify-content: center; }
+    }
 </style>
 {% endblock %}
 
@@ -146,206 +223,155 @@ document.addEventListener('DOMContentLoaded', () => {
     const form = document.getElementById('documentoForm');
     const dropZone = document.getElementById('dropZone');
     
-    const fileLabel = document.querySelector('label[for="archivos_adjuntos"]');
-
     let selectedFiles = [];
 
-    // Manejar selección de archivos
-    fileInput.addEventListener('change', () => {
-        const newFiles = Array.from(fileInput.files);
+    // --- MANEJO DE ARCHIVOS ---
+    
+    const handleFiles = (files) => {
+        const newFiles = Array.from(files);
         selectedFiles = selectedFiles.concat(newFiles);
-        console.log(`Archivos añadidos. Total ahora: ${selectedFiles.length}`, selectedFiles);
-        
-        fileInput.value = '';
         renderPreviews();
+    };
+
+    fileInput.addEventListener('change', () => {
+        handleFiles(fileInput.files);
+        fileInput.value = ''; // Reset para permitir seleccionar el mismo archivo
     });
 
-    // Manejar drag and drop
+    // --- DRAG AND DROP ---
+    
     dropZone.addEventListener('dragover', (e) => {
         e.preventDefault();
-        dropZone.classList.add('border-burgundy', 'bg-burgundy/5', 'scale-105');
+        dropZone.classList.add('drag-over');
     });
 
     dropZone.addEventListener('dragleave', (e) => {
         e.preventDefault();
-        dropZone.classList.remove('border-burgundy', 'bg-burgundy/5', 'scale-105');
+        dropZone.classList.remove('drag-over');
     });
 
     dropZone.addEventListener('drop', (e) => {
         e.preventDefault();
-        dropZone.classList.remove('border-burgundy', 'bg-burgundy/5', 'scale-105');
-        
-        const newFiles = Array.from(e.dataTransfer.files);
-        selectedFiles = selectedFiles.concat(newFiles);
-        console.log(`Archivos añadidos por drag & drop. Total ahora: ${selectedFiles.length}`, selectedFiles);
-        
-        renderPreviews();
+        dropZone.classList.remove('drag-over');
+        handleFiles(e.dataTransfer.files);
     });
 
-    fileLabel.addEventListener('click', (e) => {
-        e.stopPropagation();
+    dropZone.addEventListener('click', (e) => {
+        // Evitar que el click en el input file dispare el click del dropzone
+        if (e.target.closest('label')) {
+            return;
+        }
+        
+        // Solo si el clic fue en el área vacía (fondo gris), forzamos la apertura
+        fileInput.click();
     });
 
+    // --- RENDERIZADO (HTML LIMPIO) ---
+    
     function renderPreviews() {
         previewContainer.innerHTML = '';
+        
         if (selectedFiles.length > 0) {
             const title = document.createElement('div');
-            title.className = 'flex items-center text-sm font-semibold text-gray-700 mb-3';
-            title.innerHTML = `
-                <i class="fas fa-list text-burgundy mr-2"></i>
-                Archivos seleccionados (${selectedFiles.length})
-            `;
+            title.className = 'list-title';
+            title.innerHTML = `<i class="fas fa-list"></i> Archivos seleccionados (${selectedFiles.length})`;
             previewContainer.appendChild(title);
         }
 
         selectedFiles.forEach((file, index) => {
             const fileElement = document.createElement('div');
-            fileElement.className = 'flex items-center justify-between bg-beige-light/20 p-4 rounded-xl border border-beige-light hover:bg-beige-light/30 transition-colors duration-200';
+            fileElement.className = 'file-item';
+            
+            const sizeMB = (file.size / 1024 / 1024).toFixed(2);
+            
             fileElement.innerHTML = `
-                <div class="flex items-center space-x-3 flex-1">
-                    <i class="fas fa-file text-burgundy text-lg"></i>
-                    <div class="flex-1 min-w-0">
-                        <p class="text-sm font-medium text-gray-800 truncate">${file.name}</p>
-                        <p class="text-xs text-gray-500">${(file.size / 1024 / 1024).toFixed(2)} MB</p>
+                <div class="file-info">
+                    <div class="file-icon"><i class="fas fa-file"></i></div>
+                    <div class="file-details">
+                        <span class="file-name" title="${file.name}">${file.name}</span>
+                        <span class="file-size">${sizeMB} MB</span>
                     </div>
                 </div>
-                <button type="button" data-index="${index}" 
-                        class="remove-file-btn text-red-500 hover:text-red-700 hover:bg-red-50 w-8 h-8 rounded-full flex items-center justify-center transition-colors duration-200">
-                    <i class="fas fa-times text-sm"></i>
+                <button type="button" class="btn-remove-file" data-index="${index}" title="Eliminar">
+                    <i class="fas fa-times"></i>
                 </button>
             `;
             previewContainer.appendChild(fileElement);
         });
     }
 
-    // Delegación de eventos para eliminar archivos
-    previewContainer.addEventListener('click', function(e) {
-        if (e.target.classList.contains('remove-file-btn') || e.target.closest('.remove-file-btn')) {
-            const button = e.target.classList.contains('remove-file-btn') ? e.target : e.target.closest('.remove-file-btn');
-            const indexToRemove = parseInt(button.dataset.index, 10);
-            removeFile(indexToRemove);
+    // Delegación de evento para eliminar
+    previewContainer.addEventListener('click', (e) => {
+        const btn = e.target.closest('.btn-remove-file');
+        if (btn) {
+            const index = parseInt(btn.dataset.index, 10);
+            selectedFiles.splice(index, 1);
+            renderPreviews();
         }
     });
 
-    function removeFile(index) {
-        selectedFiles.splice(index, 1);
-        console.log(`Archivo eliminado. Total ahora: ${selectedFiles.length}`, selectedFiles);
-        renderPreviews();
-    }
+    // --- VALIDACIÓN JSON ---
+    const metaInput = document.getElementById('metadatos');
+    metaInput.addEventListener('input', function() {
+        if (this.value.trim() === '') {
+            this.classList.remove('valid-json', 'invalid-json');
+            return;
+        }
+        try {
+            JSON.parse(this.value);
+            this.classList.remove('invalid-json');
+            this.classList.add('valid-json');
+        } catch (e) {
+            this.classList.remove('valid-json');
+            this.classList.add('invalid-json');
+        }
+    });
 
-    // Validación del formulario
+    // --- ENVÍO (AJAX) ---
     form.addEventListener('submit', function(e) {
         e.preventDefault();
-        console.log('Iniciando envío de formulario...');
         
-        // Validación
-        const tipoDocumento = document.getElementById('tipo_documento').value;
-        if (!tipoDocumento) {
-            alert('Debe seleccionar un tipo de documento.');
+        const tipo = document.getElementById('tipo_documento').value;
+        if (!tipo) { alert('Seleccione tipo de documento'); return; }
+        if (selectedFiles.length === 0) { alert('Adjunte al menos un archivo'); return; }
+
+        // Verificar tamaño (10MB)
+        const largeFiles = selectedFiles.filter(f => f.size > 10 * 1024 * 1024);
+        if (largeFiles.length > 0) {
+            alert(`Archivos muy pesados: ${largeFiles.map(f=>f.name).join(', ')}`);
             return;
         }
 
-        if (selectedFiles.length === 0) {
-            alert('Debe seleccionar al menos un archivo adjunto.');
-            console.error('Validación fallida: No hay archivos seleccionados.');
-            return;
-        }
+        const btn = form.querySelector('button[type="submit"]');
+        const originalText = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
 
-        // Validar tamaño de archivos
-        const maxSize = 10 * 1024 * 1024; // 10MB
-        const archivosDemasiadoGrandes = selectedFiles.filter(file => file.size > maxSize);
-        if (archivosDemasiadoGrandes.length > 0) {
-            alert(`Los siguientes archivos exceden el tamaño máximo de 10MB: ${archivosDemasiadoGrandes.map(f => f.name).join(', ')}`);
-            return;
-        }
-
-        const submitButton = form.querySelector('button[type="submit"]');
-        const originalText = submitButton.innerHTML;
-        submitButton.disabled = true;
-        submitButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Guardando...';
-
-        // Construcción del FormData
         const formData = new FormData();
-        formData.append('tipo_documento', tipoDocumento);
-        formData.append('metadatos', document.getElementById('metadatos').value);
-        
-        selectedFiles.forEach(file => {
-            formData.append('archivos_adjuntos', file);
-        });
+        formData.append('tipo_documento', tipo);
+        formData.append('metadatos', metaInput.value);
+        selectedFiles.forEach(f => formData.append('archivos_adjuntos', f));
 
-        console.log('FormData listo para enviar:');
-        for (let [key, value] of formData.entries()) {
-            console.log(key, value instanceof File ? value.name : value);
-        }
-
-        // Envío con Fetch
         fetch(form.action, {
             method: 'POST',
             body: formData,
-            headers: {
-                'Accept': 'application/json',
-            }
+            headers: { 'Accept': 'application/json' }
         })
-        .then(async (response) => {
-            // Verificar si la respuesta es JSON
-            const contentType = response.headers.get('content-type');
-            if (!contentType || !contentType.includes('application/json')) {
-                const text = await response.text();
-                console.error('Respuesta no JSON recibida:', text.substring(0, 200));
-                throw new Error('El servidor devolvió una respuesta no JSON');
-            }
-            
-            if (!response.ok) {
-                // Parsear el error como JSON
-                const errorData = await response.json();
-                throw new Error(errorData.error || `Error ${response.status}`);
-            }
-            return response.json();
+        .then(res => {
+            if (!res.ok) return res.json().then(err => { throw new Error(err.error || 'Error servidor') });
+            return res.json();
         })
         .then(data => {
-            console.log('Respuesta exitosa:', data);
-            alert(data.message || 'Documento guardado exitosamente.');
+            alert(data.message || 'Guardado con éxito');
+            // Redirigir usando la URL construida por Flask en el template, o la del JSON si el backend la envía
             window.location.href = "{{ url_for('bajas.ver_proceso', proceso_id=proceso.id) }}";
         })
-        .catch(error => {
-            console.error('Error al guardar el documento:', error);
-            
-            // Mostrar mensaje de error más específico
-            let errorMessage = 'Error al guardar el documento: ' + error.message;
-            if (error.message.includes('respuesta no JSON')) {
-                errorMessage = 'Error del servidor: Respuesta inesperada. Contacte al administrador.';
-            } else if (error.message.includes('Failed to fetch')) {
-                errorMessage = 'Error de conexión. Verifique su conexión a internet.';
-            }
-            
-            alert(errorMessage);
-            submitButton.disabled = false;
-            submitButton.innerHTML = originalText;
+        .catch(err => {
+            console.error(err);
+            alert(err.message);
+            btn.disabled = false;
+            btn.innerHTML = originalText;
         });
-    });
-
-    // Validación de JSON en tiempo real
-    const metadatosTextarea = document.getElementById('metadatos');
-    metadatosTextarea.addEventListener('input', function() {
-        const value = this.value.trim();
-        if (value === '') {
-            this.classList.remove('border-red-500', 'border-green-500');
-            return;
-        }
-
-        try {
-            JSON.parse(value);
-            this.classList.remove('border-red-500');
-            this.classList.add('border-green-500');
-        } catch (e) {
-            this.classList.remove('border-green-500');
-            this.classList.add('border-red-500');
-        }
-    });
-
-    // Efectos visuales para el drop zone
-    dropZone.addEventListener('click', () => {
-        fileInput.click();
     });
 });
 </script>

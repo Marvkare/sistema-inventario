@@ -1,799 +1,555 @@
 {% extends "base.html" %}
 
-{% block title %}Imprimir Etiquetas - Sistema de Resguardos{% endblock %}
-
-{% block styles %}
-<style>
-    /* ESTILOS ESPECÍFICOS PARA LA PÁGINA DE IMPRIMIR ETIQUETAS */
-    .preview-container {
-        width: 215.9mm;
-        min-height: 279.4mm;
-        margin: 10px auto;
-        background: white;
-        box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-        padding: 10mm;
-        box-sizing: border-box;
-        border-radius: 12px;
-    }
-    
-    .config-panel {
-        background-color: #fefefe;
-        border-radius: 12px;
-        padding: 1.5rem;
-        margin-top: 1rem;
-        border: 1px solid #D7C3A0;
-        box-shadow: 0 4px 6px rgba(106, 46, 77, 0.05);
-    }
-    
-    .search-results-container {
-        max-height: 300px;
-        overflow-y: auto;
-        border: 1px solid #D7C3A0;
-        border-radius: 8px;
-        margin-top: 0.5rem;
-        display: none;
-        background: white;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-    }
-    
-    .print-list-container {
-        min-height: 200px;
-        max-height: 300px;
-        overflow-y: auto;
-        border: 1px solid #D7C3A0;
-        border-radius: 8px;
-        background: #fefefe;
-    }
-    
-    .print-item:hover {
-        background-color: #f8f5f0;
-        transform: translateX(4px);
-        transition: all 0.2s ease;
-    }
-    
-    .margin-controls-grid {
-        display: grid;
-        grid-template-columns: repeat(2, 1fr);
-        gap: 1rem;
-    }
-    
-    @media (min-width: 768px) {
-        .margin-controls-grid {
-            grid-template-columns: repeat(4, 1fr);
-        }
-    }
-    
-    .calibration-box {
-        width: 100mm;
-        height: 50mm;
-        border: 2px solid #6A2E4D;
-        margin: 10px auto;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background: linear-gradient(135deg, #f8f5f0 0%, #e8e0d0 100%);
-        transition: all 0.3s ease;
-        border-radius: 8px;
-        box-shadow: 0 4px 8px rgba(106, 46, 77, 0.1);
-    }
-
-    /* Scrollbar personalizado solo para esta página */
-    .search-results-container::-webkit-scrollbar,
-    .print-list-container::-webkit-scrollbar {
-        width: 6px;
-    }
-    
-    .search-results-container::-webkit-scrollbar-track,
-    .print-list-container::-webkit-scrollbar-track {
-        background: #f1f1f1;
-        border-radius: 3px;
-    }
-    
-    .search-results-container::-webkit-scrollbar-thumb,
-    .print-list-container::-webkit-scrollbar-thumb {
-        background: #BC9B6A;
-        border-radius: 3px;
-    }
-    
-    .search-results-container::-webkit-scrollbar-thumb:hover,
-    .print-list-container::-webkit-scrollbar-thumb:hover {
-        background: #6A2E4D;
-    }
-
-    /* Estilos específicos para inputs de esta página */
-    input[type="text"], 
-    input[type="number"], 
-    select {
-        border: 1px solid #D7C3A0;
-        transition: all 0.3s ease;
-    }
-
-    input[type="text"]:focus, 
-    input[type="number"]:focus, 
-    select:focus {
-        outline: none;
-        border-color: #6A2E4D;
-        box-shadow: 0 0 0 3px rgba(106, 46, 77, 0.1);
-    }
-
-    /* Estilos específicos para sliders de esta página */
-    input[type="range"] {
-        -webkit-appearance: none;
-        height: 6px;
-        background: #D7C3A0;
-        border-radius: 3px;
-    }
-
-    input[type="range"]::-webkit-slider-thumb {
-        -webkit-appearance: none;
-        width: 18px;
-        height: 18px;
-        background: #6A2E4D;
-        border-radius: 50%;
-        cursor: pointer;
-        transition: all 0.2s ease;
-    }
-
-    input[type="range"]::-webkit-slider-thumb:hover {
-        background: #551E3A;
-        transform: scale(1.1);
-    }
-
-    /* Clase para ocultar elementos */
-    .hidden {
-        display: none !important;
-    }
-
-    /* Animaciones específicas para esta página */
-    @keyframes slide-in-right {
-        from {
-            opacity: 0;
-            transform: translateX(100%);
-        }
-        to {
-            opacity: 1;
-            transform: translateX(0);
-        }
-    }
-    
-    .animate-slide-in-right {
-        animation: slide-in-right 0.5s ease-out;
-    }
-
-    /* Estilos para la previsualización de impresión */
-    @media print {
-        .preview-container {
-            box-shadow: none;
-            border-radius: 0;
-            margin: 0;
-            padding: 0;
-        }
-        
-        .no-print {
-            display: none !important;
-        }
-    }
-
-    /* Responsive específico para esta página */
-    @media (max-width: 768px) {
-        .preview-container {
-            width: 100%;
-            min-height: auto;
-            padding: 5mm;
-        }
-        
-        .config-panel {
-            padding: 1rem;
-        }
-        
-        .margin-controls-grid {
-            grid-template-columns: 1fr;
-            gap: 0.5rem;
-        }
-    }
-
-    /* Estados hover específicos para botones de esta página */
-    #preview_button:hover,
-    #print_button:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 20px rgba(106, 46, 77, 0.3);
-    }
-
-    #back_button:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
-    }
-
-    /* Transiciones suaves para elementos interactivos */
-    .print-item,
-    .nav-link,
-    button {
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-
-    /* Estilos para el contenedor de resultados de búsqueda */
-    .search-results-container div:hover {
-        background-color: #f8f5f0;
-        border-left: 3px solid #6A2E4D;
-    }
-
-    /* Efectos de focus mejorados para accesibilidad */
-    button:focus-visible,
-    input:focus-visible,
-    select:focus-visible {
-        outline: 2px solid #6A2E4D;
-        outline-offset: 2px;
-    }
-    /* CLASES PERSONALIZADAS PARA LOS COLORES */
-    .bg-burgundy { background-color: #6A2E4D; }
-    .bg-burgundy-dark { background-color: #551E3A; }
-    .text-burgundy { color: #6A2E4D; }
-    .text-beige-light { color: #D7C3A0; }
-    .bg-beige { background-color: #BC9B6A; }
-    .border-beige-light { border-color: #D7C3A0; }
-    
-    /* Gradientes personalizados */
-    .from-burgundy { --tw-gradient-from: #6A2E4D; --tw-gradient-to: rgb(106 46 77 / 0); --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to); }
-    .to-burgundy-dark { --tw-gradient-to: #551E3A; }
-</style>
-</style>
-{% endblock %}
+{% block title %}Imprimir Etiquetas{% endblock %}
 
 {% block content %}
-<div class="min-h-screen bg-gradient-to-br from-gray-50 to-beige-light/20 py-8 px-4">
-    <div class="max-w-7xl mx-auto">
+<div class="page-wrapper">
+    <div class="container-limit">
         
-        <!-- ENCABEZADO MEJORADO -->
-        <div class="bg-white rounded-2xl shadow-xl border border-beige-light overflow-hidden mb-8">
-            <div class="bg-gradient-to-r from-burgundy to-burgundy-dark p-6 text-white">
-                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                    <div>
-                        <h1 class="text-2xl md:text-3xl font-bold">
-                            Impresión de Etiquetas de Resguardos
-                        </h1>
-                        <p class="text-beige-light mt-2">
-                            Genere e imprima etiquetas personalizadas para los resguardos del sistema
-                        </p>
-                    </div>
-                    <div class="flex items-center space-x-2">
-                        <div class="w-10 h-10 bg-beige rounded-full flex items-center justify-center">
-                            <i class="fas fa-tags text-burgundy text-lg"></i>
-                        </div>
-                    </div>
-                </div>
+        <div class="header-card">
+            <div class="header-text">
+                <h1>Impresión de Etiquetas</h1>
+                <p>Genere e imprima etiquetas personalizadas para los resguardos.</p>
+            </div>
+            <div class="header-icon-box">
+                <i class="fas fa-tags"></i>
             </div>
         </div>
 
-        <div class="space-y-8">
-            <!-- SECCIÓN DE CALIBRACIÓN MEJORADA -->
-            <div class="bg-white rounded-2xl shadow-lg border border-beige-light overflow-hidden">
-                <div class="p-6 md:p-8">
-                    <div class="flex items-center mb-6">
-                        <div class="w-8 h-8 bg-burgundy rounded-full flex items-center justify-center mr-3">
-                            <i class="fas fa-ruler text-white text-sm"></i>
-                        </div>
-                        <h2 class="text-xl font-bold text-burgundy">Calibración de Medidas</h2>
+        <div class="card calibration-card">
+            <div class="card-header">
+                <div class="icon-box"><i class="fas fa-ruler-combined"></i></div>
+                <h2>Calibración de Medidas</h2>
+            </div>
+            <div class="card-body">
+                <div class="calibration-wrapper">
+                    <div class="calibration-info">
+                        <i class="fas fa-info-circle"></i>
+                        <p>Mida el rectángulo en su pantalla con una regla. Debe medir <strong>100mm x 50mm</strong>. Ajuste el slider si no coincide.</p>
                     </div>
                     
-                    <div class="bg-yellow-50 p-6 rounded-xl border border-yellow-200">
-                        <p class="text-yellow-800 mb-4 flex items-center">
-                            <i class="fas fa-info-circle mr-2"></i>
-                            Mida el siguiente rectángulo con una regla. Debe medir 100mm x 50mm. Ajuste el factor de corrección si no coincide.
-                        </p>
-                        <div class="calibration-box" id="calibration-box">
-                            <span id="calibration-size" class="font-semibold text-burgundy">100mm × 50mm</span>
-                        </div>
-                        <div class="mt-4">
-                            <label for="calibration_factor" class="block text-sm font-semibold text-yellow-700 mb-2 flex items-center">
-                                <i class="fas fa-sliders-h mr-2"></i>
-                                Factor de corrección:
-                            </label>
-                            <input type="range" id="calibration_factor" min="80" max="120" value="100" class="w-full">
-                            <div class="flex justify-between text-xs text-yellow-600 mt-1">
-                                <span>80%</span>
-                                <span id="calibration_value" class="font-semibold">100% (sin corrección)</span>
-                                <span>120%</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- SECCIÓN DE BÚSQUEDA Y SELECCIÓN MEJORADA -->
-            <div class="bg-white rounded-2xl shadow-lg border border-beige-light overflow-hidden">
-                <div class="p-6 md:p-8">
-                    <div class="flex items-center mb-6">
-                        <div class="w-8 h-8 bg-burgundy rounded-full flex items-center justify-center mr-3">
-                            <i class="fas fa-search text-white text-sm"></i>
-                        </div>
-                        <h2 class="text-xl font-bold text-burgundy">Buscar y Seleccionar Resguardos</h2>
-                    </div>
-
-                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                        <!-- Búsqueda -->
-                        <div>
-                            <label for="search_input" class="block text-sm font-semibold text-gray-700 mb-2 flex items-center">
-                                <i class="fas fa-search text-burgundy mr-2 text-xs"></i>
-                                Buscar por No. de Inventario, Resguardo, etc.
-                            </label>
-                            <input type="text" 
-                                   id="search_input" 
-                                   class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-burgundy/50 focus:border-burgundy transition-all duration-200"
-                                   placeholder="Escribe para buscar... (mínimo 3 caracteres)">
-                            <div id="search_results" class="search-results-container"></div>
-                        </div>
-
-                        <!-- Lista para imprimir -->
-                        <div>
-                            <h3 class="text-lg font-semibold text-gray-700 mb-3 flex items-center">
-                                <i class="fas fa-list text-burgundy mr-2"></i>
-                                Resguardos para Imprimir
-                            </h3>
-                            <div id="print_list" class="print-list-container p-4">
-                                <p id="print_list_empty_message" class="text-gray-400 text-sm italic text-center py-8">
-                                    <i class="fas fa-inbox text-2xl mb-2 block"></i>
-                                    Selecciona un resguardo para agregarlo.
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- CONFIGURACIÓN DE IMPRESIÓN MEJORADA -->
-            <div class="bg-white rounded-2xl shadow-lg border border-beige-light overflow-hidden">
-                <div class="p-6 md:p-8">
-                    <div class="flex items-center mb-6">
-                        <div class="w-8 h-8 bg-burgundy rounded-full flex items-center justify-center mr-3">
-                            <i class="fas fa-cogs text-white text-sm"></i>
-                        </div>
-                        <h2 class="text-xl font-bold text-burgundy">Configuración de Impresión</h2>
-                    </div>
-
-                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-                        <div>
-                            <label for="template_select" class="block text-sm font-semibold text-gray-700 mb-2">Plantilla de Etiqueta</label>
-                            <select id="template_select" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-burgundy/50 focus:border-burgundy transition-all duration-200">
-                                <option value="Letter">Tamaño Carta (216 x 279 mm)</option>
-                                <option value="A4">Tamaño A4 (210 × 297 mm)</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label for="label_width_input" class="block text-sm font-semibold text-gray-700 mb-2">Ancho de Etiqueta (mm)</label>
-                            <input type="number" id="label_width_input" value="64" step="1" min="20" max="150" 
-                                   class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-burgundy/50 focus:border-burgundy transition-all duration-200">
-                        </div>
-                        <div>
-                            <label for="label_height_input" class="block text-sm font-semibold text-gray-700 mb-2">Alto de Etiqueta (mm)</label>
-                            <input type="number" id="label_height_input" value="32" step="1" min="20" max="150" 
-                                   class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-burgundy/50 focus:border-burgundy transition-all duration-200">
-                        </div>
-                        <div class="flex items-end">
-                            <button id="preview_button" 
-                                    class="w-full inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-semibold rounded-xl shadow-sm text-beige bg-gradient-to-r from-burgundy to-burgundy-dark hover:from-burgundy-dark hover:to-burgundy focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-burgundy transition-all duration-200 ease-in-out">
-                                <i class="fas fa-eye mr-2"></i> Previsualizar
-                            </button>
+                    <div class="calibration-visual">
+                        <div id="calibration-box" class="cal-box">
+                            <span id="calibration-size">100mm × 50mm</span>
                         </div>
                     </div>
 
-                    <!-- PANEL DE CONFIGURACIÓN MEJORADO -->
-                    <div class="config-panel">
-                        <h3 class="text-lg font-semibold text-burgundy mb-4 flex items-center">
-                            <i class="fas fa-sliders-h mr-2"></i>
-                            Ajustes de Contenido
-                        </h3>
-                        <div class="grid grid-cols-1 md:grid-cols-5 gap-6">
-                            <div>
-                                <label for="font_size_input" class="block text-sm font-semibold text-gray-700 mb-2">Tamaño de fuente</label>
-                                <input type="range" id="font_size_input" min="2" max="14" value="8" class="w-full">
-                                <span id="font_size_value" class="text-xs text-gray-500 block text-center mt-1">8pt</span>
-                            </div>
-                            <div>
-                                <label for="logo_size_input" class="block text-sm font-semibold text-gray-700 mb-2">Tamaño de logos</label>
-                                <input type="range" id="logo_size_input" min="15" max="50" value="25" class="w-full">
-                                <span id="logo_size_value" class="text-xs text-gray-500 block text-center mt-1">25px</span>
-                            </div>
-                            <div>
-                                <label for="horizontal_spacing_input" class="block text-sm font-semibold text-gray-700 mb-2">Esp. horizontal (mm)</label>
-                                <input type="range" id="horizontal_spacing_input" min="0" max="20" value="5" step="1" class="w-full">
-                                <span id="horizontal_spacing_value" class="text-xs text-gray-500 block text-center mt-1">5mm</span>
-                            </div>
-                            <div>
-                                <label for="vertical_spacing_input" class="block text-sm font-semibold text-gray-700 mb-2">Esp. vertical (mm)</label>
-                                <input type="range" id="vertical_spacing_input" min="0" max="20" value="6" step="1" class="w-full">
-                                <span id="vertical_spacing_value" class="text-xs text-gray-500 block text-center mt-1">6mm</span>
-                            </div>
-                            <div class="flex items-center justify-center">
-                                <label class="flex items-center space-x-2">
-                                    <input type="checkbox" id="truncate_text" class="rounded border-gray-300 text-burgundy focus:ring-burgundy/50" checked>
-                                    <span class="text-sm font-semibold text-gray-700">Ajustar texto</span>
-                                </label>
-                            </div>
-                        </div>
-                        
-                        <h3 class="text-lg font-semibold text-burgundy mt-8 mb-4 flex items-center">
-                            <i class="fas fa-arrows-alt mr-2"></i>
-                            Márgenes del Documento (mm)
-                        </h3>
-                        <div class="margin-controls-grid">
-                            <div>
-                                <label for="margin_top_input" class="block text-sm font-semibold text-gray-700 mb-2">Superior</label>
-                                <input type="range" id="margin_top_input" min="0" max="30" value="4" step="1" class="w-full">
-                                <span id="margin_top_value" class="text-xs text-gray-500 block text-center mt-1">4mm</span>
-                            </div>
-                            <div>
-                                <label for="margin_right_input" class="block text-sm font-semibold text-gray-700 mb-2">Derecho</label>
-                                <input type="range" id="margin_right_input" min="0" max="30" value="0" step="1" class="w-full">
-                                <span id="margin_right_value" class="text-xs text-gray-500 block text-center mt-1">0mm</span>
-                            </div>
-                            <div>
-                                <label for="margin_bottom_input" class="block text-sm font-semibold text-gray-700 mb-2">Inferior</label>
-                                <input type="range" id="margin_bottom_input" min="0" max="30" value="0" step="1" class="w-full">
-                                <span id="margin_bottom_value" class="text-xs text-gray-500 block text-center mt-1">0mm</span>
-                            </div>
-                            <div>
-                                <label for="margin_left_input" class="block text-sm font-semibold text-gray-700 mb-2">Izquierdo</label>
-                                <input type="range" id="margin_left_input" min="0" max="30" value="6" step="1" class="w-full">
-                                <span id="margin_left_value" class="text-xs text-gray-500 block text-center mt-1">6mm</span>
-                            </div>
+                    <div class="slider-group">
+                        <label>Factor de corrección: <span id="calibration_value" class="badge badge-mono">100%</span></label>
+                        <input type="range" id="calibration_factor" min="80" max="120" value="100">
+                        <div class="slider-labels">
+                            <span>80%</span>
+                            <span>120%</span>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- SECCIÓN DE PREVISUALIZACIÓN MEJORADA -->
-        <div id="preview-section" class="bg-white rounded-2xl shadow-lg border border-beige-light overflow-hidden hidden mt-8">
-            <div class="p-6 md:p-8">
-                <div class="flex items-center justify-between mb-6">
-                    <div class="flex items-center">
-                        <div class="w-8 h-8 bg-burgundy rounded-full flex items-center justify-center mr-3">
-                            <i class="fas fa-print text-white text-sm"></i>
+        <div class="grid-2">
+            <div class="card">
+                <div class="card-header">
+                    <div class="icon-box"><i class="fas fa-search"></i></div>
+                    <h2>Buscar Resguardos</h2>
+                </div>
+                <div class="card-body">
+                    <div class="form-group">
+                        <label>Buscar por No. de Inventario, Resguardo, etc.</label>
+                        <div class="input-with-icon">
+                            <i class="fas fa-search icon"></i>
+                            <input type="text" id="search_input" placeholder="Escribe mínimo 3 caracteres...">
                         </div>
-                        <h2 class="text-xl font-bold text-burgundy">Previsualización de Etiquetas</h2>
                     </div>
-                    <div class="flex space-x-4">
-                        <button id="print_button" 
-                                class="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-semibold rounded-xl shadow-sm text-white bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-all duration-200 ease-in-out">
-                            <i class="fas fa-print mr-2"></i> Imprimir
-                        </button>
-                        <button id="back_button" 
-                                class="inline-flex items-center justify-center px-6 py-3 border-2 border-gray-300 text-base font-semibold rounded-xl text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-all duration-200 ease-in-out">
-                            <i class="fas fa-arrow-left mr-2"></i> Volver a ajustar
+                    <div id="search_results" class="results-list hidden"></div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <div class="icon-box"><i class="fas fa-list-ol"></i></div>
+                    <h2>Lista para Imprimir</h2>
+                </div>
+                <div class="card-body">
+                    <div id="print_list" class="print-queue">
+                        <div id="print_list_empty_message" class="empty-queue">
+                            <i class="fas fa-inbox"></i>
+                            <p>Selecciona un resguardo para agregarlo.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <div class="icon-box"><i class="fas fa-cogs"></i></div>
+                <h2>Configuración de Impresión</h2>
+            </div>
+            <div class="card-body">
+                
+                <div class="grid-4 mb-4">
+                    <div class="form-group">
+                        <label>Plantilla Papel</label>
+                        <select id="template_select">
+                            <option value="Letter">Carta (216 x 279 mm)</option>
+                            <option value="A4">A4 (210 × 297 mm)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Ancho Etiqueta (mm)</label>
+                        <input type="number" id="label_width_input" value="64" min="20">
+                    </div>
+                    <div class="form-group">
+                        <label>Alto Etiqueta (mm)</label>
+                        <input type="number" id="label_height_input" value="32" min="20">
+                    </div>
+                    <div class="form-group flex-end">
+                        <button id="preview_button" class="btn btn-primary btn-block">
+                            <i class="fas fa-eye"></i> Previsualizar
                         </button>
                     </div>
                 </div>
-                <div class="preview-container" id="print_container"></div>
+
+                <hr class="separator">
+
+                <div class="grid-4 mt-4">
+                    <div class="slider-group">
+                        <label>Fuente: <span id="font_size_value">8pt</span></label>
+                        <input type="range" id="font_size_input" min="4" max="14" value="8">
+                    </div>
+                    <div class="slider-group">
+                        <label>Logos: <span id="logo_size_value">25px</span></label>
+                        <input type="range" id="logo_size_input" min="15" max="50" value="25">
+                    </div>
+                    <div class="slider-group">
+                        <label>Esp. Horiz: <span id="horizontal_spacing_value">5mm</span></label>
+                        <input type="range" id="horizontal_spacing_input" min="0" max="20" value="5">
+                    </div>
+                    <div class="slider-group">
+                        <label>Esp. Vert: <span id="vertical_spacing_value">6mm</span></label>
+                        <input type="range" id="vertical_spacing_input" min="0" max="20" value="6">
+                    </div>
+                </div>
+
+                <div class="checkbox-row mt-4">
+                    <label class="checkbox-card full-width">
+                        <input type="checkbox" id="truncate_text" checked>
+                        <span>Ajustar texto largo automáticamente (Truncar)</span>
+                    </label>
+                </div>
+
+                <h3 class="subsection-title mt-4"><i class="fas fa-arrows-alt"></i> Márgenes de Página (mm)</h3>
+                <div class="grid-4">
+                    <div class="slider-group">
+                        <label>Superior: <span id="margin_top_value">4mm</span></label>
+                        <input type="range" id="margin_top_input" min="0" max="50" value="4">
+                    </div>
+                    <div class="slider-group">
+                        <label>Derecho: <span id="margin_right_value">0mm</span></label>
+                        <input type="range" id="margin_right_input" min="0" max="50" value="0">
+                    </div>
+                    <div class="slider-group">
+                        <label>Inferior: <span id="margin_bottom_value">0mm</span></label>
+                        <input type="range" id="margin_bottom_input" min="0" max="50" value="0">
+                    </div>
+                    <div class="slider-group">
+                        <label>Izquierdo: <span id="margin_left_value">6mm</span></label>
+                        <input type="range" id="margin_left_input" min="0" max="50" value="6">
+                    </div>
+                </div>
+
             </div>
         </div>
+
+        <div id="preview-section" class="card hidden mt-4">
+            <div class="card-header header-between">
+                <div class="header-left">
+                    <div class="icon-box"><i class="fas fa-print"></i></div>
+                    <h2>Previsualización</h2>
+                </div>
+                <div class="header-actions">
+                    <button id="back_button" class="btn btn-secondary">
+                        <i class="fas fa-times"></i> Cerrar
+                    </button>
+                    <button id="print_button" class="btn btn-green">
+                        <i class="fas fa-print"></i> Imprimir Ahora
+                    </button>
+                </div>
+            </div>
+            <div class="card-body preview-body">
+                <div class="paper-sheet" id="print_container"></div>
+            </div>
+        </div>
+
     </div>
 </div>
 {% endblock %}
 
-{% block scripts %}
-<script>
-    document.addEventListener('DOMContentLoaded', () => {
-        console.log("✅ Script cargado - Impresión de Etiquetas");
+{% block styles %}
+<style>
+    /* VARIABLES */
+    :root {
+        --col-burgundy: #6A2E4D;
+        --col-beige: #BC9B6A;
+        --col-bg: #f9fafb;
+        --radius: 12px;
+        --shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+    }
 
-        // --- Declaraciones de variables ---
-        const searchInput = document.getElementById('search_input');
-        const searchResults = document.getElementById('search_results');
-        const printList = document.getElementById('print_list');
-        const previewButton = document.getElementById('preview_button');
-        const printButton = document.getElementById('print_button');
-        const backButton = document.getElementById('back_button');
-        const printListEmptyMessage = document.getElementById('print_list_empty_message');
-        const printContainer = document.getElementById('print_container');
-        const previewSection = document.getElementById('preview-section');
-        const labelWidthInput = document.getElementById('label_width_input');
-        const labelHeightInput = document.getElementById('label_height_input');
-        const fontSizeInput = document.getElementById('font_size_input');
-        const fontSizeValue = document.getElementById('font_size_value');
-        const logoSizeInput = document.getElementById('logo_size_input');
-        const logoSizeValue = document.getElementById('logo_size_value');
-        const horizontalSpacingInput = document.getElementById('horizontal_spacing_input');
-        const horizontalSpacingValue = document.getElementById('horizontal_spacing_value');
-        const verticalSpacingInput = document.getElementById('vertical_spacing_input');
-        const verticalSpacingValue = document.getElementById('vertical_spacing_value');
-        const truncateTextCheckbox = document.getElementById('truncate_text');
-        const marginTopInput = document.getElementById('margin_top_input');
-        const marginTopValue = document.getElementById('margin_top_value');
-        const marginRightInput = document.getElementById('margin_right_input');
-        const marginRightValue = document.getElementById('margin_right_value');
-        const marginBottomInput = document.getElementById('margin_bottom_input');
-        const marginBottomValue = document.getElementById('margin_bottom_value');
-        const marginLeftInput = document.getElementById('margin_left_input');
-        const marginLeftValue = document.getElementById('margin_left_value');
-        const calibrationFactorInput = document.getElementById('calibration_factor');
-        const calibrationValue = document.getElementById('calibration_value');
-        const calibrationBox = document.getElementById('calibration-box');
-        const calibrationSize = document.getElementById('calibration-size');
+    /* Layout */
+    .page-wrapper { min-height: 100vh; background: var(--col-bg); padding: 2rem 1rem; }
+    .container-limit { max-width: 1200px; margin: 0 auto; }
+    .mb-4 { margin-bottom: 2rem; }
+    .mt-4 { margin-top: 2rem; }
+    .hidden { display: none !important; }
 
-        let selectedItems = {};
-        let searchTimeout = null;
-        
-        const getConfig = () => ({
-            baseFontSize: parseInt(fontSizeInput.value),
-            logoSize: parseInt(logoSizeInput.value),
-            horizontalSpacing: parseInt(horizontalSpacingInput.value),
-            verticalSpacing: parseInt(verticalSpacingInput.value),
-            truncateLongText: truncateTextCheckbox.checked,
-            marginTop: parseInt(marginTopInput.value),
-            marginRight: parseInt(marginRightInput.value),
-            marginBottom: parseInt(marginBottomInput.value),
-            marginLeft: parseInt(marginLeftInput.value),
-            calibrationFactor: parseInt(calibrationFactorInput.value) / 100,
-            labelWidth: parseFloat(labelWidthInput.value),
-            labelHeight: parseFloat(labelHeightInput.value)
-        });
+    /* Header */
+    .header-card {
+        background: linear-gradient(to right, var(--col-burgundy), #551E3A);
+        border-radius: var(--radius); padding: 1.5rem 2rem; color: white;
+        display: flex; justify-content: space-between; align-items: center;
+        margin-bottom: 2rem; box-shadow: var(--shadow);
+    }
+    .header-text h1 { margin: 0; font-size: 1.5rem; }
+    .header-text p { margin: 0.5rem 0 0; opacity: 0.9; }
+    .header-icon-box {
+        width: 48px; height: 48px; background: var(--col-beige); border-radius: 50%;
+        display: flex; align-items: center; justify-content: center; color: var(--col-burgundy); font-size: 1.2rem;
+    }
 
-        const applyCalibration = (measurement, factor) => measurement * factor;
+    /* Cards */
+    .card { background: white; border-radius: var(--radius); box-shadow: var(--shadow); border: 1px solid #e5e7eb; overflow: hidden; margin-bottom: 2rem; }
+    .card-header { padding: 1rem 1.5rem; border-bottom: 1px solid #f3f4f6; background: rgba(106, 46, 77, 0.03); display: flex; align-items: center; gap: 0.8rem; }
+    .header-between { justify-content: space-between; }
+    .header-left { display: flex; align-items: center; gap: 0.8rem; }
+    .icon-box { width: 32px; height: 32px; background: var(--col-burgundy); border-radius: 50%; color: white; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; }
+    .card-header h2 { margin: 0; font-size: 1.1rem; color: var(--col-burgundy); }
+    .card-body { padding: 1.5rem; }
 
-        const updateCalibrationBox = () => {
-            const factor = parseInt(calibrationFactorInput.value) / 100;
-            const width = 100 * factor;
-            const height = 50 * factor;
-            calibrationBox.style.width = `${width}mm`;
-            calibrationBox.style.height = `${height}mm`;
-            calibrationSize.textContent = `${width.toFixed(1)}mm × ${height.toFixed(1)}mm`;
-        };
+    /* Grids */
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+    .grid-4 { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; }
 
-        const updateUI = () => {
-            fontSizeValue.textContent = `${fontSizeInput.value}pt`;
-            logoSizeValue.textContent = `${logoSizeInput.value}px`;
-            horizontalSpacingValue.textContent = `${horizontalSpacingInput.value}mm`;
-            verticalSpacingValue.textContent = `${verticalSpacingInput.value}mm`;
-            marginTopValue.textContent = `${marginTopInput.value}mm`;
-            marginRightValue.textContent = `${marginRightInput.value}mm`;
-            marginBottomValue.textContent = `${marginBottomInput.value}mm`;
-            marginLeftValue.textContent = `${marginLeftInput.value}mm`;
-            calibrationValue.textContent = `${calibrationFactorInput.value}%`;
-            updateCalibrationBox();
-            
-            // CORRECCIÓN: Verificar correctamente si la sección de previsualización está visible
-            if (!previewSection.classList.contains('hidden') && Object.keys(selectedItems).length > 0) {
-                renderLabelsForPreview();
-            }
-        };
-        
-        // Centralizar los event listeners
-        [fontSizeInput, logoSizeInput, horizontalSpacingInput, verticalSpacingInput, marginTopInput, marginRightInput, marginBottomInput, marginLeftInput, calibrationFactorInput, truncateTextCheckbox, labelWidthInput, labelHeightInput].forEach(el => {
-            el.addEventListener('input', updateUI);
-            el.addEventListener('change', updateUI);
-        });
-        
-        // --- Funciones de búsqueda y selección ---
-        const truncateText = (text, maxLength, shouldTruncate) => {
-            if (!shouldTruncate || !text || text.length <= maxLength) return text;
-            return text.substring(0, maxLength) + '...';
-        };
+    /* Calibración */
+    .calibration-card { border-left: 5px solid #f59e0b; }
+    .calibration-info { display: flex; gap: 0.5rem; color: #b45309; font-size: 0.9rem; margin-bottom: 1rem; }
+    .calibration-visual { display: flex; justify-content: center; background: #fffbeb; padding: 1rem; border-radius: 8px; margin-bottom: 1rem; }
+    .cal-box {
+        width: 100mm; height: 50mm; border: 2px solid var(--col-burgundy);
+        background: white; display: flex; align-items: center; justify-content: center;
+        font-weight: 700; color: var(--col-burgundy); transition: all 0.2s; box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
 
-        const renderSearchResults = (items) => {
-            searchResults.innerHTML = '';
-            if (items.length === 0) {
-                searchResults.innerHTML = '<p class="text-gray-500 p-2 text-sm italic">No se encontraron coincidencias.</p>';
-                searchResults.style.display = 'block';
-                return;
-            }
-            items.forEach(item => {
-                const desc = item.Descripcion_Corta_Del_Bien && item.Descripcion_Corta_Del_Bien !== 'null' ? item.Descripcion_Corta_Del_Bien : 'Sin descripción';
-                const resultItem = document.createElement('div');
-                resultItem.classList.add('p-2', 'border-b', 'border-gray-200', 'flex', 'items-center', 'justify-between', 'hover:bg-gray-100', 'cursor-pointer');
-                resultItem.dataset.itemData = JSON.stringify(item);
-                resultItem.innerHTML = `
-                    <div class="flex-1">
-                        <p class="text-sm font-medium text-gray-900">${item.No_Inventario} - ${desc}</p>
-                        <p class="text-xs text-gray-500">Área: ${item.Area_Nombre || 'N/A'} | Resguardo: ${item.No_Resguardo || 'N/A'}</p>
-                    </div>
-                    <button class="add-to-print-list bg-green-500 hover:bg-green-600 text-white text-xs font-bold py-1 px-3 rounded-full transition-colors duration-200">Seleccionar</button>`;
-                searchResults.appendChild(resultItem);
-            });
-            searchResults.style.display = 'block';
-        };
+    /* Búsqueda */
+    .input-with-icon { position: relative; }
+    .input-with-icon input { width: 100%; padding: 0.7rem 1rem 0.7rem 2.5rem; border: 1px solid #d1d5db; border-radius: 8px; }
+    .input-with-icon input:focus { outline: none; border-color: var(--col-burgundy); box-shadow: 0 0 0 3px rgba(106, 46, 77, 0.1); }
+    .input-with-icon .icon { position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: #9ca3af; }
+    
+    .results-list { max-height: 200px; overflow-y: auto; border: 1px solid #e5e7eb; margin-top: 0.5rem; border-radius: 8px; }
+    .result-item { padding: 0.5rem; border-bottom: 1px solid #f3f4f6; display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
+    .result-item:hover { background: #fdfbf7; }
+    
+    /* Cola de Impresión */
+    .print-queue { min-height: 100px; max-height: 300px; overflow-y: auto; background: #fafafa; border: 1px dashed #d1d5db; border-radius: 8px; padding: 0.5rem; }
+    .print-item { background: white; padding: 0.5rem; border-radius: 6px; border: 1px solid #e5e7eb; margin-bottom: 0.5rem; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+    .empty-queue { text-align: center; padding: 2rem; color: #9ca3af; }
+    .empty-queue i { font-size: 2rem; margin-bottom: 0.5rem; }
 
-        const addItemToPrintList = (item) => {
-            if (selectedItems[item.id_resguardo]) return;
-            selectedItems[item.id_resguardo] = item;
-            const desc = item.Descripcion_Corta_Del_Bien && item.Descripcion_Corta_Del_Bien !== 'null' ? item.Descripcion_Corta_Del_Bien : 'Sin descripción';
-            const listItem = document.createElement('div');
-            listItem.className = 'p-2 bg-gray-100 rounded-md mb-2 flex items-center justify-between print-item';
-            listItem.id = `print-item-${item.id_resguardo}`;
-            listItem.innerHTML = `
-                <p class="text-sm text-gray-800 flex-1">${item.No_Inventario} - ${desc}</p>
-                <a href="/editar_resguardo/${item.id_resguardo}" target="_blank" class="mr-2 text-blue-600 hover:underline text-xs">Editar</a>
-                <button class="remove-from-print-list bg-red-500 hover:bg-red-600 text-white text-xs font-bold py-1 px-3 rounded-full transition-colors duration-200" data-id="${item.id_resguardo}">Quitar</button>`;
-            printList.appendChild(listItem);
-            printListEmptyMessage.style.display = 'none';
-        };
+    /* Inputs Configuración */
+    .form-group label { display: block; font-size: 0.85rem; font-weight: 600; color: #374151; margin-bottom: 0.3rem; }
+    input[type="number"], select { width: 100%; padding: 0.6rem; border: 1px solid #d1d5db; border-radius: 6px; }
+    .form-group.flex-end { display: flex; align-items: flex-end; }
 
-        searchInput.addEventListener('input', () => {
-            clearTimeout(searchTimeout);
-            const query = searchInput.value.trim();
-            if (query.length < 3) {
-                searchResults.style.display = 'none';
-                return;
-            }
-            searchTimeout = setTimeout(async () => {
-                try {
-                    const response = await fetch('/buscar_bienes', {
-                        method: 'POST',
-                        headers: {'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest'},
-                        body: JSON.stringify({ query })
-                    });
-                    if (response.ok) {
-                        renderSearchResults(await response.json());
-                    } else {
-                        searchResults.innerHTML = '<p class="text-red-500 p-2 text-sm">Error al buscar.</p>';
-                        searchResults.style.display = 'block';
-                    }
-                } catch (error) {
-                    searchResults.innerHTML = '<p class="text-red-500 p-2 text-sm">Error de conexión.</p>';
-                    searchResults.style.display = 'block';
-                }
-            }, 300);
-        });
+    /* Sliders Personalizados */
+    .slider-group label { display: flex; justify-content: space-between; font-size: 0.85rem; font-weight: 600; color: #4b5563; margin-bottom: 0.3rem; }
+    input[type="range"] { -webkit-appearance: none; width: 100%; height: 6px; background: #e5e7eb; border-radius: 3px; outline: none; }
+    input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 18px; height: 18px; border-radius: 50%; background: var(--col-burgundy); cursor: pointer; transition: transform 0.1s; }
+    input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.2); }
+    .slider-labels { display: flex; justify-content: space-between; font-size: 0.7rem; color: #9ca3af; margin-top: 2px; }
 
-        document.addEventListener('click', (e) => {
-            if (e.target.closest('.add-to-print-list')) {
-                const itemData = JSON.parse(e.target.closest('[data-item-data]').dataset.itemData);
-                addItemToPrintList(itemData);
-            }
-            if (e.target.classList.contains('remove-from-print-list')) {
-                const itemId = e.target.dataset.id;
-                delete selectedItems[itemId];
-                document.getElementById(`print-item-${itemId}`).remove();
-                if(Object.keys(selectedItems).length === 0) printListEmptyMessage.style.display = 'block';
-            }
-            if (!searchResults.contains(e.target) && e.target !== searchInput) {
-                searchResults.style.display = 'none';
-            }
-        });
+    .separator { margin: 1.5rem 0; border: 0; border-top: 1px dashed #e5e7eb; }
+    .subsection-title { font-size: 1rem; font-weight: 700; color: var(--col-burgundy); margin-bottom: 1rem; }
 
-        // --- GENERACIÓN DE ETIQUETAS ---
-        const generateLabelsHTML = (items, config) => {
-            let labelsHtml = '';
-            const itemsArray = Object.values(items);
-            
-            // Aplicar calibración a las dimensiones y espaciados
-            const labelWidth = applyCalibration(config.labelWidth, config.calibrationFactor);
-            const labelHeight = applyCalibration(config.labelHeight, config.calibrationFactor);
-            const hSpacing = applyCalibration(config.horizontalSpacing, config.calibrationFactor);
-            const vSpacing = applyCalibration(config.verticalSpacing, config.calibrationFactor);
-            
-            // Conversión de unidades más directa y predecible
-            const fontSizePt = config.baseFontSize;
-            const logoHeightMm = (config.logoSize * 0.264583);
-            const titleFontSizePt = fontSizePt * 1.5;
-            const paddingMm = 2;
+    /* Checkbox Card */
+    .checkbox-card { display: flex; align-items: center; gap: 0.5rem; padding: 0.8rem; background: #fdfbf7; border: 1px solid var(--col-beige); border-radius: 8px; cursor: pointer; }
+    .checkbox-card input { width: 1.2rem; height: 1.2rem; accent-color: var(--col-burgundy); }
 
-            itemsArray.forEach(item => {
-                const descripcion = truncateText(
-                    item.Descripcion_Corta_Del_Bien && item.Descripcion_Corta_Del_Bien !== 'null' ? item.Descripcion_Corta_Del_Bien : 'Sin descripción',
-                    35, 
-                    config.truncateLongText
-                );
-                const areaNombre = truncateText(item.Area_Nombre, 25, config.truncateLongText);
-                const noResguardo = item.No_Resguardo || 'N/A';
-                
-                labelsHtml += `
-                    <div style="
-                        width: ${labelWidth}mm; 
-                        height: ${labelHeight}mm; 
-                        display: inline-flex; 
-                        flex-direction: column;
-                        margin-right: ${hSpacing}mm; 
-                        margin-bottom: ${vSpacing}mm; 
-                        border: 0.25mm solid #5A2E44; 
-                        padding: ${paddingMm}mm;
-                        box-sizing: border-box; 
-                        page-break-inside: avoid; 
-                        overflow: hidden;
-                        font-size: ${fontSizePt}pt;
-                        color: #1f2937;
-                        justify-content: space-between;
-                    ">
-                        <div style="display: flex; justify-content: space-between; align-items: center; flex-shrink: 0;">
-                            <img src="/static/images/image_e8aecf.jpg" alt="Logo 1" style="height: ${logoHeightMm}mm; max-width: 35%;">
-                            <p style="font-weight: bold; color: #5A2E44; font-size: ${titleFontSizePt}pt; margin: 0 1mm;">${noResguardo}</p>
-                            <img src="/static/images/image_e8b1f6.png" alt="Logo 2" style="height: ${logoHeightMm}mm; max-width: 35%;">
-                        </div>
-                        <div style="flex-grow: 1; display: flex; flex-direction: column; justify-content: center; line-height: 1.2;">
-                            <div style="display: flex; justify-content: space-between;">
-                                <span style="font-weight: bold; padding-right: 5px;">Desc:</span>
-                                <span style="text-align: right;">${descripcion}</span>
-                            </div>
-                            <div style="display: flex; justify-content: space-between;">
-                                <span style="font-weight: bold; padding-right: 5px;">Área:</span>
-                                <span style="text-align: right;">${areaNombre}</span>
-                            </div>
-                        </div>
-                    </div>`;
-            });
-            return labelsHtml;
-        };
+    /* Botones */
+    .btn { padding: 0.6rem 1.2rem; border-radius: 8px; font-weight: 600; border: none; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem; transition: all 0.2s; }
+    .btn-primary { background: var(--col-burgundy); color: white; }
+    .btn-primary:hover { background: #551E3A; transform: translateY(-1px); }
+    .btn-secondary { background: white; border: 1px solid #d1d5db; color: #374151; }
+    .btn-secondary:hover { background: #f3f4f6; }
+    .btn-green { background: #16a34a; color: white; }
+    .btn-green:hover { background: #15803d; }
+    .btn-danger { background: #ef4444; color: white; font-size: 0.75rem; padding: 0.3rem 0.6rem; border-radius: 4px; }
+    .btn-select { background: #16a34a; color: white; font-size: 0.75rem; padding: 0.3rem 0.6rem; border-radius: 20px; }
+    .btn-block { width: 100%; justify-content: center; }
 
-        const renderLabelsForPreview = () => {
-            if (Object.keys(selectedItems).length === 0) {
-                alert('Por favor, selecciona al menos un resguardo.');
-                return;
-            }
-            
-            const config = getConfig();
-            
-            // Aplicar calibración a los márgenes
-            const marginTop = applyCalibration(config.marginTop, config.calibrationFactor);
-            const marginRight = applyCalibration(config.marginRight, config.calibrationFactor);
-            const marginBottom = applyCalibration(config.marginBottom, config.calibrationFactor);
-            const marginLeft = applyCalibration(config.marginLeft, config.calibrationFactor);
-            
-            printContainer.style.padding = `${marginTop}mm ${marginRight}mm ${marginBottom}mm ${marginLeft}mm`;
-            printContainer.innerHTML = generateLabelsHTML(selectedItems, config);
-            
-            // CORRECCIÓN: Mostrar la sección de previsualización correctamente
-            previewSection.classList.remove('hidden');
-            previewSection.scrollIntoView({ behavior: 'smooth' });
-        };
+    /* Hoja de Papel (Preview) */
+    .preview-body { background: #555; padding: 2rem; display: flex; justify-content: center; overflow: auto; }
+    .paper-sheet {
+        background: white; box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+        /* Dimensiones iniciales, JS las ajustará */
+        width: 215.9mm; min-height: 279.4mm; padding: 5mm;
+    }
 
-        const generateAndPrintLabels = () => {
-            if (Object.keys(selectedItems).length === 0) {
-                alert('Por favor, selecciona al menos un resguardo.');
-                return;
-            }
-            
-            const config = getConfig();
-            const paperSize = document.getElementById('template_select').value.toLowerCase();
-            const paperWidth = paperSize === 'letter' ? '215.9mm' : '210mm';
-            const paperHeight = paperSize === 'letter' ? '279.4mm' : '297mm';
-
-            // Aplicar calibración a los márgenes
-            const marginTop = applyCalibration(config.marginTop, config.calibrationFactor);
-            const marginRight = applyCalibration(config.marginRight, config.calibrationFactor);
-            const marginBottom = applyCalibration(config.marginBottom, config.calibrationFactor);
-            const marginLeft = applyCalibration(config.marginLeft, config.calibrationFactor);
-
-            const printContent = `
-                <!DOCTYPE html><html><head><title>Imprimir Etiquetas</title>
-                <style>
-                    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-                    @page {
-                        size: ${paperSize};
-                        margin: 0;
-                    }
-                    body { 
-                        margin: 0; 
-                        font-family: 'Inter', sans-serif;
-                        width: ${paperWidth};
-                    }
-                    .container {
-                        padding: ${marginTop}mm ${marginRight}mm ${marginBottom}mm ${marginLeft}mm;
-                        box-sizing: border-box;
-                    }
-                </style>
-                </head><body>
-                <div class="container">
-                    ${generateLabelsHTML(selectedItems, config)}
-                </div>
-                <script>
-                    window.onload = () => { window.print(); setTimeout(() => window.close(), 100); };
-                <\/script>
-                </body></html>`;
-            
-            const printWindow = window.open('', '_blank');
-            printWindow.document.open();
-            printWindow.document.write(printContent);
-            printWindow.document.close();
-        };
-
-        // CORRECCIÓN: Event listeners corregidos
-        previewButton.addEventListener('click', renderLabelsForPreview);
-        printButton.addEventListener('click', generateAndPrintLabels);
-        backButton.addEventListener('click', () => {
-            previewSection.classList.add('hidden');
-        });
-
-        // Inicialización
-        updateUI();
-    });
-</script>
+    /* Responsive */
+    @media (max-width: 768px) {
+        .grid-2 { grid-template-columns: 1fr; }
+        .header-card { flex-direction: column; text-align: center; }
+        .form-group.flex-end { margin-top: 1rem; }
+        .header-actions { flex-direction: column; width: 100%; }
+        .header-actions .btn { width: 100%; }
+    }
+    
+    @media print {
+        body * { visibility: hidden; }
+        #print_container, #print_container * { visibility: visible; }
+        #print_container { position: absolute; left: 0; top: 0; margin: 0; padding: 0; box-shadow: none; width: 100% !important; }
+        @page { margin: 0; }
+    }
+</style>
 {% endblock %}
 
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    console.log("✅ Script Etiquetas Cargado");
+
+    // --- Variables ---
+    const searchInput = document.getElementById('search_input');
+    const searchResults = document.getElementById('search_results');
+    const printList = document.getElementById('print_list');
+    const printListEmptyMessage = document.getElementById('print_list_empty_message');
+    const printContainer = document.getElementById('print_container');
+    const previewSection = document.getElementById('preview-section');
+    
+    // Inputs Config
+    const labelWidthInput = document.getElementById('label_width_input');
+    const labelHeightInput = document.getElementById('label_height_input');
+    const fontSizeInput = document.getElementById('font_size_input');
+    const logoSizeInput = document.getElementById('logo_size_input');
+    const horizontalSpacingInput = document.getElementById('horizontal_spacing_input');
+    const verticalSpacingInput = document.getElementById('vertical_spacing_input');
+    const truncateTextCheckbox = document.getElementById('truncate_text');
+    
+    // Márgenes
+    const marginTopInput = document.getElementById('margin_top_input');
+    const marginRightInput = document.getElementById('margin_right_input');
+    const marginBottomInput = document.getElementById('margin_bottom_input');
+    const marginLeftInput = document.getElementById('margin_left_input');
+    
+    // Calibración
+    const calibrationFactorInput = document.getElementById('calibration_factor');
+    const calibrationBox = document.getElementById('calibration-box');
+    const calibrationSize = document.getElementById('calibration-size');
+
+    let selectedItems = {};
+    let searchTimeout = null;
+
+    // --- UI Updates ---
+    const updateLabels = () => {
+        document.getElementById('font_size_value').textContent = `${fontSizeInput.value}pt`;
+        document.getElementById('logo_size_value').textContent = `${logoSizeInput.value}px`;
+        document.getElementById('horizontal_spacing_value').textContent = `${horizontalSpacingInput.value}mm`;
+        document.getElementById('vertical_spacing_value').textContent = `${verticalSpacingInput.value}mm`;
+        document.getElementById('margin_top_value').textContent = `${marginTopInput.value}mm`;
+        document.getElementById('margin_right_value').textContent = `${marginRightInput.value}mm`;
+        document.getElementById('margin_bottom_value').textContent = `${marginBottomInput.value}mm`;
+        document.getElementById('margin_left_value').textContent = `${marginLeftInput.value}mm`;
+        document.getElementById('calibration_value').textContent = `${calibrationFactorInput.value}%`;
+        
+        // Actualizar Caja Calibración
+        const factor = parseInt(calibrationFactorInput.value) / 100;
+        const w = 100 * factor;
+        const h = 50 * factor;
+        calibrationBox.style.width = `${w}mm`;
+        calibrationBox.style.height = `${h}mm`;
+        calibrationSize.textContent = `${w.toFixed(1)}mm × ${h.toFixed(1)}mm`;
+
+        // Si el preview está visible, refrescar
+        if (!previewSection.classList.contains('hidden') && Object.keys(selectedItems).length > 0) {
+            renderLabelsForPreview();
+        }
+    };
+
+    // Bind Events
+    const inputs = [fontSizeInput, logoSizeInput, horizontalSpacingInput, verticalSpacingInput, 
+                   marginTopInput, marginRightInput, marginBottomInput, marginLeftInput, 
+                   calibrationFactorInput, truncateTextCheckbox, labelWidthInput, labelHeightInput];
+    inputs.forEach(el => {
+        el.addEventListener('input', updateLabels);
+        el.addEventListener('change', updateLabels);
+    });
+
+    // --- Búsqueda ---
+    const truncate = (text, len) => {
+        if (!text) return '';
+        return text.length > len ? text.substring(0, len) + '...' : text;
+    };
+
+    searchInput.addEventListener('input', () => {
+        clearTimeout(searchTimeout);
+        const q = searchInput.value.trim();
+        if (q.length < 3) {
+            searchResults.classList.add('hidden');
+            return;
+        }
+        
+        searchTimeout = setTimeout(async () => {
+            try {
+                const res = await fetch('/buscar_bienes', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ query: q })
+                });
+                if (res.ok) {
+                    const items = await res.json();
+                    searchResults.innerHTML = '';
+                    if (items.length === 0) {
+                        searchResults.innerHTML = '<div class="p-2 text-gray-500">Sin resultados</div>';
+                    } else {
+                        items.forEach(item => {
+                            const div = document.createElement('div');
+                            div.className = 'result-item';
+                            div.innerHTML = `
+                                <div>
+                                    <strong>${item.No_Inventario}</strong> - <small>${truncate(item.Descripcion_Corta_Del_Bien, 30)}</small>
+                                    <div style="font-size:0.8rem; color:#666;">${item.No_Resguardo || 'Sin Resg.'} | ${item.Area_Nombre || '-'}</div>
+                                </div>
+                                <button class="btn-select">Agregar</button>
+                            `;
+                            div.querySelector('button').onclick = () => addItem(item);
+                            searchResults.appendChild(div);
+                        });
+                    }
+                    searchResults.classList.remove('hidden');
+                }
+            } catch (e) { console.error(e); }
+        }, 300);
+    });
+
+    // --- Gestión de Lista ---
+    const addItem = (item) => {
+        if (selectedItems[item.id_resguardo]) return;
+        selectedItems[item.id_resguardo] = item;
+        
+        const div = document.createElement('div');
+        div.className = 'print-item';
+        div.id = `item-${item.id_resguardo}`;
+        div.innerHTML = `
+            <span><strong>${item.No_Inventario}</strong> - ${truncate(item.Descripcion_Corta_Del_Bien, 25)}</span>
+            <button class="btn-danger" onclick="removeItem('${item.id_resguardo}')">Quitar</button>
+        `;
+        printList.appendChild(div);
+        printListEmptyMessage.classList.add('hidden');
+        searchResults.classList.add('hidden');
+        searchInput.value = '';
+    };
+
+    window.removeItem = (id) => {
+        delete selectedItems[id];
+        document.getElementById(`item-${id}`).remove();
+        if (Object.keys(selectedItems).length === 0) {
+            printListEmptyMessage.classList.remove('hidden');
+        }
+    };
+
+    // --- Generación HTML ---
+    const generateHTML = () => {
+        let html = '';
+        const config = {
+            w: parseFloat(labelWidthInput.value),
+            h: parseFloat(labelHeightInput.value),
+            font: parseInt(fontSizeInput.value),
+            logo: parseInt(logoSizeInput.value) * 0.264583, // px to mm approx
+            hGap: parseInt(horizontalSpacingInput.value),
+            vGap: parseInt(verticalSpacingInput.value),
+            factor: parseInt(calibrationFactorInput.value) / 100,
+            truncate: truncateTextCheckbox.checked
+        };
+
+        // Aplicar factor
+        const finalW = config.w * config.factor;
+        const finalH = config.h * config.factor;
+        const finalHGap = config.hGap * config.factor;
+        const finalVGap = config.vGap * config.factor;
+
+        Object.values(selectedItems).forEach(item => {
+            const desc = config.truncate ? truncate(item.Descripcion_Corta_Del_Bien, 35) : item.Descripcion_Corta_Del_Bien;
+            const area = config.truncate ? truncate(item.Area_Nombre, 25) : item.Area_Nombre;
+            
+            html += `
+                <div style="
+                    width: ${finalW}mm; height: ${finalH}mm;
+                    display: inline-flex; flex-direction: column;
+                    margin-right: ${finalHGap}mm; margin-bottom: ${finalVGap}mm;
+                    border: 0.25mm solid #5A2E44; padding: 2mm;
+                    box-sizing: border-box; overflow: hidden;
+                    font-family: sans-serif; font-size: ${config.font}pt;
+                    color: #000; justify-content: space-between;
+                    page-break-inside: avoid;
+                ">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <img src="/static/images/image_e8aecf.jpg" style="height: ${config.logo}mm;">
+                        <strong style="color: #5A2E44; font-size: 1.2em;">${item.No_Resguardo || 'S/N'}</strong>
+                        <img src="/static/images/image_e8b1f6.png" style="height: ${config.logo}mm;">
+                    </div>
+                    <div style="flex-grow: 1; display: flex; flex-direction: column; justify-content: center; line-height: 1.2;">
+                        <div style="display:flex; justify-content:space-between;">
+                            <b>Inv:</b> <span>${item.No_Inventario}</span>
+                        </div>
+                        <div style="display:flex; justify-content:space-between;">
+                            <b>Desc:</b> <span>${desc}</span>
+                        </div>
+                        <div style="display:flex; justify-content:space-between;">
+                            <b>Área:</b> <span>${area}</span>
+                        </div>
+                    </div>
+                </div>`;
+        });
+        return html;
+    };
+
+    const renderLabelsForPreview = () => {
+        if (Object.keys(selectedItems).length === 0) {
+            alert("Seleccione al menos un resguardo");
+            return;
+        }
+        
+        // Configurar márgenes del contenedor
+        const factor = parseInt(calibrationFactorInput.value) / 100;
+        const mt = parseInt(marginTopInput.value) * factor;
+        const mr = parseInt(marginRightInput.value) * factor;
+        const mb = parseInt(marginBottomInput.value) * factor;
+        const ml = parseInt(marginLeftInput.value) * factor;
+        
+        printContainer.style.padding = `${mt}mm ${mr}mm ${mb}mm ${ml}mm`;
+        
+        // Tamaño de papel visual
+        const paperSize = document.getElementById('template_select').value;
+        printContainer.style.width = paperSize === 'Letter' ? '215.9mm' : '210mm';
+        printContainer.style.minHeight = paperSize === 'Letter' ? '279.4mm' : '297mm';
+
+        printContainer.innerHTML = generateHTML();
+        previewSection.classList.remove('hidden');
+        previewSection.scrollIntoView({behavior: 'smooth'});
+    };
+
+    // Botones
+    document.getElementById('preview_button').onclick = renderLabelsForPreview;
+    
+    document.getElementById('print_button').onclick = () => {
+        window.print();
+    };
+    
+    document.getElementById('back_button').onclick = () => {
+        previewSection.classList.add('hidden');
+    };
+
+    updateLabels();
+});
+</script>
+{% endblock %}

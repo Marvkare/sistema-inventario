@@ -30,7 +30,8 @@ parent_dir = os.path.dirname(project_dir)
 UPLOAD_FOLDER = os.path.join(parent_dir, 'uploads')
 print(UPLOAD_FOLDER)
 # --- Extensiones Permitidas para Subidas ---
-ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'pdf'}
+
 
 SERVICE_ACCOUNT_FILE = 'inventario-379322-8fbb7f3f5f7e.json'
 SCOPES = ['https://www.googleapis.com/auth/drive']

@@ -1,0 +1,29 @@
+/* Fuentes locales para Flask */
+@font-face {
+    font-family: 'Inter';
+    font-style: normal;
+    font-weight: 400;
+    src: url('/static/fonts/inter/Inter-Regular.woff2') format('woff2');
+}
+@font-face {
+    font-family: 'Inter';
+    font-style: normal;
+    font-weight: 500;
+    src: url('/static/fonts/inter/Inter-Medium.woff2') format('woff2');
+}
+@font-face {
+    font-family: 'Inter';
+    font-style: normal;
+    font-weight: 600;
+    src: url('/static/fonts/inter/Inter-SemiBold.woff2') format('woff2');
+}
+@font-face {
+    font-family: 'Inter';
+    font-style: normal;
+    font-weight: 700;
+    src: url('/static/fonts/inter/Inter-Bold.woff2') format('woff2');
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+}

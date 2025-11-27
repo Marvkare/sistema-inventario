@@ -1,0 +1,167 @@
+{% extends "base.html" %}
+
+{% block title %}Selección de Lote de Errores{% endblock %}
+
+{% block content %}
+<div class="page-wrapper">
+    <div class="container-limit">
+        
+        <div class="header-card">
+            <div class="header-text">
+                <h1>Bandeja de Errores de Importación</h1>
+                <p>Selecciona un archivo (lote) para revisar y corregir sus filas pendientes.</p>
+            </div>
+            <div class="header-icon-box">
+                <i class="fas fa-folder-open"></i>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-body">
+                
+                {% if batches %}
+                <div class="table-responsive">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>
+                                    <div class="th-content"><i class="fas fa-calendar-alt"></i> Fecha de Carga</div>
+                                </th>
+                                <th>
+                                    <div class="th-content"><i class="fas fa-fingerprint"></i> ID de Lote</div>
+                                </th>
+                                <th class="text-center">
+                                    <div class="th-content center"><i class="fas fa-exclamation-circle text-red"></i> Pendientes</div>
+                                </th>
+                                <th class="text-right">Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for batch in batches %}
+                            <tr>
+                                <td>
+                                    <span class="font-bold text-dark">{{ batch.fecha_carga }}</span>
+                                </td>
+                                <td>
+                                    <span class="badge badge-mono">{{ batch.upload_id }}</span>
+                                </td>
+                                <td class="text-center">
+                                    <span class="badge badge-red">{{ batch.total_errors }}</span>
+                                </td>
+                                <td class="text-right">
+                                    <a href="{{ url_for('errors.handle_errors', target_upload_id=batch.upload_id) }}" 
+                                       class="btn btn-primary btn-sm">
+                                        <i class="fas fa-wrench"></i> Corregir
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                
+                {% else %}
+                <div class="empty-state-success">
+                    <div class="icon-wrapper">
+                        <i class="fas fa-check-double"></i>
+                    </div>
+                    <h3>¡Excelente!</h3>
+                    <p>No hay lotes con errores pendientes en este momento. Todas las importaciones se han procesado correctamente.</p>
+                    
+                    <a href="{{ url_for('resguardos.crear_resguardo') }}" class="btn-link">
+                        <i class="fas fa-plus-circle"></i> Importar nuevo archivo
+                    </a>
+                </div>
+                {% endif %}
+
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block styles %}
+<style>
+    /* VARIABLES */
+    :root {
+        --col-burgundy: #6A2E4D;
+        --col-burgundy-dark: #551E3A;
+        --col-beige: #BC9B6A;
+        --col-beige-light: #fdfbf7;
+        --radius: 12px;
+        --shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+        --col-white: #ffffff;
+        --col-bg: #f9fafb;
+        --text-red: #ef4444;
+    }
+
+    /* Layout Base */
+    .page-wrapper { min-height: 100vh; background: #f9fafb; padding: 2rem 1rem; }
+    .container-limit { max-width: 1000px; margin: 0 auto; }
+
+    /* Header */
+    .header-card {
+        background: linear-gradient(to right, var(--col-burgundy), var(--col-burgundy-dark));
+        border-radius: var(--radius); padding: 1.5rem 2rem; color: white;
+        display: flex; justify-content: space-between; align-items: center;
+        margin-bottom: 2rem; box-shadow: var(--shadow);
+    }
+    .header-text h1 { margin: 0; font-size: 1.5rem; }
+    .header-text p { margin: 0.5rem 0 0; color: #e2e8f0; font-size: 0.95rem; }
+    .header-icon-box {
+        width: 48px; height: 48px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
+        border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.2rem;
+    }
+
+    /* Tarjeta Principal */
+    .card { background: var(--col-white); border-radius: var(--radius); box-shadow: var(--shadow); border: 1px solid #e5e7eb; overflow: hidden; }
+    .card-body { padding: 2rem; }
+
+    /* Tabla */
+    .table-responsive { overflow-x: auto; }
+    .data-table { width: 100%; border-collapse: collapse; min-width: 600px; }
+    .data-table thead tr { background: #f8f9fa; color: #4b5563; }
+    .data-table th { text-align: left; padding: 1rem; font-size: 0.85rem; text-transform: uppercase; font-weight: 700; border-bottom: 2px solid #e5e7eb; }
+    .data-table td { padding: 1rem; border-bottom: 1px solid #f3f4f6; vertical-align: middle; color: #4b5563; }
+    .data-table tr:hover { background-color: #fdfbf7; }
+    
+    /* Utilidades de Tabla */
+    .th-content { display: flex; align-items: center; gap: 0.5rem; }
+    .th-content i { color: var(--col-burgundy); }
+    .th-content.center { justify-content: center; }
+    .text-center { text-align: center; }
+    .text-right { text-align: right; }
+    .font-bold { font-weight: 600; }
+    .text-dark { color: #1f2937; }
+    .text-red { color: var(--text-red); }
+
+    /* Badges */
+    .badge { padding: 0.25rem 0.75rem; border-radius: 20px; font-size: 0.8rem; font-weight: 600; display: inline-block; }
+    .badge-mono { background: #f3f4f6; color: #374151; font-family: monospace; border: 1px solid #e5e7eb; }
+    .badge-red { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
+
+    /* Botones */
+    .btn { padding: 0.5rem 1rem; border-radius: 8px; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem; border: none; cursor: pointer; transition: all 0.2s; font-size: 0.9rem; }
+    .btn-primary { background: var(--col-burgundy); color: white; }
+    .btn-primary:hover { background: var(--col-burgundy-dark); transform: translateY(-1px); }
+    .btn-sm { padding: 0.4rem 0.8rem; font-size: 0.85rem; }
+
+    /* Estado Vacío (Success) */
+    .empty-state-success { text-align: center; padding: 3rem 1rem; border: 2px dashed #e5e7eb; border-radius: var(--radius); background: #fafafa; }
+    .icon-wrapper { 
+        width: 80px; height: 80px; background: #dcfce7; color: #16a34a; 
+        border-radius: 50%; display: flex; align-items: center; justify-content: center; 
+        font-size: 2rem; margin: 0 auto 1.5rem auto; 
+    }
+    .empty-state-success h3 { margin: 0 0 0.5rem 0; color: #1f2937; font-size: 1.25rem; }
+    .empty-state-success p { color: #6b7280; margin: 0 auto 1.5rem auto; max-width: 400px; }
+    
+    .btn-link { color: var(--col-burgundy); font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem; }
+    .btn-link:hover { color: var(--col-burgundy-dark); text-decoration: underline; }
+
+    /* Móvil */
+    @media (max-width: 640px) {
+        .header-card { flex-direction: column; text-align: center; }
+    }
+</style>
+{% endblock %}

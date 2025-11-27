@@ -1,128 +1,115 @@
-{% extends 'base.html' %} 
+{% extends 'base.html' %}
+
 {% block content %}
-<div class="min-h-screen bg-gradient-to-br from-gray-50 to-beige-light/20 py-8 px-4">
-    <div class="max-w-7xl mx-auto">
-        <!-- Encabezado -->
-        <div class="bg-white rounded-2xl shadow-xl border border-beige-light overflow-hidden mb-8">
-            <div class="bg-gradient-to-r from-burgundy to-burgundy-dark p-6 text-white">
-                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                    <div>
-                        <h1 class="text-2xl md:text-3xl font-bold">📦 Inventario de Bienes</h1>
-                        <p class="text-beige-light mt-2">Gestión y administración del inventario de bienes</p>
-                    </div>
-                    <div class="flex items-center space-x-2">
-                        <a href="{{ url_for('bienes.agregar_bien') }}" 
-                           class="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-semibold rounded-xl shadow-sm text-white bg-gradient-to-r from-burgundy to-burgundy-dark hover:from-burgundy-dark hover:to-burgundy focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-burgundy transition-all duration-200 ease-in-out">
-                            <i class="fas fa-plus-circle mr-2"></i> Agregar Nuevo Bien
-                        </a>
-                    </div>
-                </div>
+<div class="page-wrapper">
+    <div class="container-limit">
+        
+        <div class="header-card">
+            <div class="header-text">
+                <h1>📦 Inventario de Bienes</h1>
+                <p>Gestión y administración del inventario de bienes</p>
+            </div>
+            <div class="header-actions">
+                <a href="{{ url_for('bienes.agregar_bien') }}" class="btn btn-primary">
+                    <i class="fas fa-plus-circle"></i> Agregar Nuevo Bien
+                </a>
             </div>
         </div>
 
-        <!-- Mensajes Flash -->
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
+                <div class="flash-wrapper">
                 {% for category, message in messages %}
-                    <div class="mb-6 p-4 rounded-lg border-l-4 {% if category == 'success' %}bg-green-100 border-green-500 text-green-700{% elif category == 'danger' %}bg-red-100 border-red-500 text-red-700{% else %}bg-blue-100 border-blue-500 text-blue-700{% endif %}">
-                        <div class="flex items-center">
-                            <i class="fas {% if category == 'success' %}fa-check-circle{% elif category == 'danger' %}fa-exclamation-triangle{% else %}fa-info-circle{% endif %} mr-3"></i>
-                            <span>{{ message }}</span>
-                        </div>
+                    <div class="alert alert-{{ category }}">
+                        <i class="fas {% if category == 'success' %}fa-check-circle{% elif category == 'danger' %}fa-exclamation-triangle{% else %}fa-info-circle{% endif %}"></i>
+                        <span>{{ message }}</span>
                     </div>
                 {% endfor %}
+                </div>
             {% endif %}
         {% endwith %}
 
-        <!-- Búsqueda -->
-        <div class="bg-white rounded-2xl shadow-lg border border-beige-light overflow-hidden mb-6">
-            <div class="flex items-center bg-gradient-to-r from-burgundy/10 to-burgundy/5 p-4 border-b border-beige-light">
-                <div class="w-8 h-8 bg-burgundy rounded-full flex items-center justify-center mr-3">
-                    <i class="fas fa-search text-white text-sm"></i>
-                </div>
-                <h2 class="text-xl font-bold text-burgundy">Buscar Bien</h2>
+        <div class="card search-card">
+            <div class="card-header-simple">
+                <div class="icon-box-small"><i class="fas fa-search"></i></div>
+                <h2>Buscar Bien</h2>
             </div>
-            <div class="p-6">
-                <div class="relative">
+            <div class="card-body">
+                <div class="search-wrapper">
+                    <i class="fas fa-search search-icon"></i>
                     <input type="text" 
-                           class="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-burgundy/50 focus:border-burgundy transition-all duration-200 bg-white/80" 
+                           class="search-input" 
                            id="searchInput" 
                            value="{{ search_query }}" 
                            placeholder="Buscar por No. de Inventario, Descripción o Resguardante...">
-                    <span class="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400">
-                        <i class="fas fa-search"></i>
-                    </span>
                 </div>
             </div>
         </div>
 
-        <!-- Tabla de Bienes -->
-        <div class="bg-white rounded-2xl shadow-lg border border-beige-light overflow-hidden">
-            <div class="overflow-x-auto">
-                <table class="min-w-full" id="bienesTable">
+        <div class="card table-card">
+            <div class="table-responsive">
+                <table class="data-table" id="bienesTable">
                     <thead>
-                        <tr class="bg-gradient-to-r from-burgundy to-burgundy-dark text-white">
-                            <th class="py-4 px-6 text-left font-semibold uppercase text-sm">No. de Inventario</th>
-                            <th class="py-4 px-6 text-left font-semibold uppercase text-sm">Descripción Corta</th>
-                            <th class="py-4 px-6 text-left font-semibold uppercase text-sm">Ubicación (Área)</th>
-                            <th class="py-4 px-6 text-center font-semibold uppercase text-sm">Acciones</th>
+                        <tr>
+                            <th>No. de Inventario</th>
+                            <th>Descripción Corta</th>
+                            <th>Ubicación (Área)</th>
+                            <th class="text-center">Acciones</th>
                         </tr>
                     </thead>
-                    <tbody class="text-gray-600">
+                    <tbody>
                         {% for bien in bienes %}
-                        <tr class="border-b border-beige-light hover:bg-beige-light/20 transition-colors duration-200">
-                            <td class="py-4 px-6">
-                                <span class="font-mono text-sm bg-gray-100 px-3 py-1 rounded" title="{{ bien.No_Inventario }}">
+                        <tr>
+                            <td>
+                                <span class="badge badge-mono" title="{{ bien.No_Inventario }}">
                                     {{ bien.No_Inventario }}
                                 </span>
                             </td>
-                            <td class="py-4 px-6">
-                                <div class="max-w-xs truncate" title="{{ bien.Descripcion_Corta_Del_Bien }}">
+                            <td>
+                                <div class="text-truncate" title="{{ bien.Descripcion_Corta_Del_Bien }}">
                                     {{ bien.Descripcion_Corta_Del_Bien }}
                                 </div>
                             </td>
-                            <td class="py-4 px-6">
+                            <td>
                                 {% if bien.Area_Nombre %}
-                                    <span class="bg-burgundy/10 text-burgundy px-3 py-1 rounded-full text-sm font-medium">
+                                    <span class="badge badge-burgundy">
                                         {{ bien.Area_Nombre }}
                                     </span>
                                 {% else %}
-                                    <span class="bg-gray-100 text-gray-500 px-3 py-1 rounded-full text-sm font-medium">
+                                    <span class="badge badge-gray">
                                         Sin Resguardo Activo
                                     </span>
                                 {% endif %}
                             </td>
-                            <td class="py-4 px-6">
-                                <div class="flex justify-center space-x-2">
+                            <td>
+                                <div class="action-buttons">
                                     <a href="{{ url_for('bienes.ver_detalles_bien', bien_id=bien.id) }}" 
-                                       class="inline-flex items-center justify-center w-10 h-10 bg-blue-500 hover:bg-blue-600 text-white rounded-xl transition-all duration-200 hover:scale-105"
-                                       title="Ver Detalles">
-                                        <i class="fas fa-eye text-sm"></i>
+                                       class="btn-icon btn-blue" title="Ver Detalles">
+                                        <i class="fas fa-eye"></i>
                                     </a>
                                     <a href="{{ url_for('bienes.editar_bien', bien_id=bien.id) }}" 
-                                       class="inline-flex items-center justify-center w-10 h-10 bg-yellow-500 hover:bg-yellow-600 text-white rounded-xl transition-all duration-200 hover:scale-105"
-                                       title="Editar">
-                                        <i class="fas fa-edit text-sm"></i>
+                                       class="btn-icon btn-yellow" title="Editar">
+                                        <i class="fas fa-edit"></i>
                                     </a>
-                                    <form action="{{ url_for('bienes.eliminar_bien', bien_id=bien.id) }}" method="POST" class="inline">
+                                    
+                                    <form action="{{ url_for('bienes.eliminar_bien', bien_id=bien.id) }}" method="POST" class="inline-form">
                                         <button type="submit" 
-                                                class="inline-flex items-center justify-center w-10 h-10 bg-red-500 hover:bg-red-600 text-white rounded-xl transition-all duration-200 hover:scale-105"
+                                                class="btn-icon btn-red"
                                                 onclick="return confirm('¿Estás seguro de que quieres eliminar este bien?');" 
                                                 title="Eliminar">
-                                            <i class="fas fa-trash-alt text-sm"></i>
+                                            <i class="fas fa-trash-alt"></i>
                                         </button>
                                     </form>
+
                                     {% if bien.tiene_resguardo %}
                                         <a href="{{ url_for('resguardos.ver_resguardo', id_resguardo=bien.resguardo_id) }}" 
-                                           class="inline-flex items-center justify-center w-10 h-10 bg-green-500 hover:bg-green-600 text-white rounded-xl transition-all duration-200 hover:scale-105"
-                                           title="Ver Resguardo">
-                                            <i class="fas fa-file-invoice text-sm"></i>
+                                           class="btn-icon btn-green" title="Ver Resguardo">
+                                            <i class="fas fa-file-invoice"></i>
                                         </a>
                                     {% else %}
                                         <a href="{{ url_for('resguardos.crear_resguardo_de_bien', id_bien=bien.id) }}" 
-                                           class="inline-flex items-center justify-center w-10 h-10 bg-gray-400 hover:bg-gray-500 text-white rounded-xl transition-all duration-200 hover:scale-105"
-                                           title="Generar Resguardo">
-                                            <i class="fas fa-file-alt text-sm"></i>
+                                           class="btn-icon btn-gray" title="Generar Resguardo">
+                                            <i class="fas fa-file-alt"></i>
                                         </a>
                                     {% endif %}
                                 </div>
@@ -130,12 +117,10 @@
                         </tr>
                         {% else %}
                         <tr>
-                            <td colspan="4" class="py-8 text-center">
-                                <div class="flex flex-col items-center justify-center text-gray-500">
-                                    <i class="fas fa-inbox text-4xl mb-4 opacity-50"></i>
-                                    <p class="text-lg font-semibold">No hay bienes registrados</p>
-                                    <p class="text-sm mt-2">Comienza agregando un nuevo bien al inventario</p>
-                                </div>
+                            <td colspan="4" class="empty-state">
+                                <i class="fas fa-inbox"></i>
+                                <p>No hay bienes registrados</p>
+                                <small>Comienza agregando un nuevo bien al inventario</small>
                             </td>
                         </tr>
                         {% endfor %}
@@ -144,83 +129,55 @@
             </div>
         </div>
 
-        <!-- Paginación -->
         {% if total_pages > 1 %}
-        <div class="flex flex-col sm:flex-row justify-between items-center gap-4 mt-6 pt-6 border-t border-beige-light">
-            <div class="text-sm text-gray-600">
+        <div class="pagination-wrapper">
+            <div class="pagination-info">
                 Mostrando página {{ page }} de {{ total_pages }}
             </div>
-            <div class="flex justify-center space-x-2 flex-wrap">
+            <div class="pagination-controls">
                 {% if page > 1 %}
-                    <a href="{{ url_for('bienes.listar_bienes', page=page-1, search_query=search_query) }}" 
-                       class="inline-flex items-center justify-center px-4 py-2 border-2 border-beige text-sm font-semibold rounded-xl text-burgundy bg-white hover:bg-beige-light/30 transition-all duration-200">
-                        <i class="fas fa-chevron-left mr-2"></i> Anterior
+                    <a href="{{ url_for('bienes.listar_bienes', page=page-1, search_query=search_query) }}" class="page-link">
+                        <i class="fas fa-chevron-left"></i> Anterior
                     </a>
                 {% else %}
-                    <span class="inline-flex items-center justify-center px-4 py-2 border-2 border-gray-300 text-sm font-semibold rounded-xl text-gray-400 bg-gray-100 cursor-not-allowed">
-                        <i class="fas fa-chevron-left mr-2"></i> Anterior
-                    </span>
+                    <span class="page-link disabled"><i class="fas fa-chevron-left"></i> Anterior</span>
                 {% endif %}
 
                 {% set pages_to_show = 5 %}
                 {% set start_page = (page - (pages_to_show // 2))|int %}
                 {% set end_page = (page + (pages_to_show // 2))|int %}
 
-                {% if start_page < 1 %}
-                    {% set start_page = 1 %}
-                    {% set end_page = (pages_to_show)|int %}
-                {% endif %}
-
+                {% if start_page < 1 %}{% set start_page = 1 %}{% set end_page = (pages_to_show)|int %}{% endif %}
                 {% if end_page > total_pages %}
                     {% set end_page = total_pages %}
                     {% set start_page = (total_pages - pages_to_show + 1)|int %}
-                    {% if start_page < 1 %}
-                        {% set start_page = 1 %}
-                    {% endif %}
+                    {% if start_page < 1 %}{% set start_page = 1 %}{% endif %}
                 {% endif %}
 
                 {% if start_page > 1 %}
-                    <a href="{{ url_for('bienes.listar_bienes', page=1, search_query=search_query) }}" 
-                       class="inline-flex items-center justify-center w-10 h-10 border-2 border-beige text-sm font-semibold rounded-xl text-burgundy bg-white hover:bg-beige-light/30 transition-all duration-200">
-                        1
-                    </a>
-                    {% if start_page > 2 %}
-                        <span class="inline-flex items-center justify-center w-10 h-10 text-sm font-semibold text-gray-400">...</span>
-                    {% endif %}
+                    <a href="{{ url_for('bienes.listar_bienes', page=1, search_query=search_query) }}" class="page-link number">1</a>
+                    {% if start_page > 2 %}<span class="page-dots">...</span>{% endif %}
                 {% endif %}
 
                 {% for p in range(start_page, end_page + 1) %}
                     {% if p == page %}
-                        <span class="inline-flex items-center justify-center w-10 h-10 text-sm font-semibold text-white bg-burgundy rounded-xl shadow-md cursor-default">
-                            {{ p }}
-                        </span>
+                        <span class="page-link number active">{{ p }}</span>
                     {% else %}
-                        <a href="{{ url_for('bienes.listar_bienes', page=p, search_query=search_query) }}" 
-                           class="inline-flex items-center justify-center w-10 h-10 border-2 border-beige text-sm font-semibold rounded-xl text-burgundy bg-white hover:bg-beige-light/30 transition-all duration-200">
-                            {{ p }}
-                        </a>
+                        <a href="{{ url_for('bienes.listar_bienes', page=p, search_query=search_query) }}" class="page-link number">{{ p }}</a>
                     {% endif %}
                 {% endfor %}
 
                 {% if end_page < total_pages %}
-                    {% if end_page < total_pages - 1 %}
-                        <span class="inline-flex items-center justify-center w-10 h-10 text-sm font-semibold text-gray-400">...</span>
-                    {% endif %}
-                    <a href="{{ url_for('bienes.listar_bienes', page=total_pages, search_query=search_query) }}" 
-                       class="inline-flex items-center justify-center w-10 h-10 border-2 border-beige text-sm font-semibold rounded-xl text-burgundy bg-white hover:bg-beige-light/30 transition-all duration-200">
-                        {{ total_pages }}
-                    </a>
+                    {% if end_page < total_pages - 1 %}<span class="page-dots">...</span>{% endif %}
+                    <a href="{{ url_for('bienes.listar_bienes', page=total_pages, search_query=search_query) }}" class="page-link number">{{ total_pages }}</a>
                 {% endif %}
 
                 {% if page < total_pages %}
-                    <a href="{{ url_for('bienes.listar_bienes', page=page+1, search_query=search_query) }}" 
-                       class="inline-flex items-center justify-center px-4 py-2 border-2 border-beige text-sm font-semibold rounded-xl text-burgundy bg-white hover:bg-beige-light/30 transition-all duration-200">
-                        Siguiente <i class="fas fa-chevron-right ml-2"></i>
+                    <a href="{{ url_for('bienes.listar_bienes', page=page+1, search_query=search_query) }}" class="page-link">
+                        Siguiente <i class="fas fa-chevron-right"></i>
                     </a>
                 {% else %}
-                    <span class="inline-flex items-center justify-center px-4 py-2 border-2 border-gray-300 text-sm font-semibold rounded-xl text-gray-400 bg-gray-100 cursor-not-allowed">
-                        Siguiente <i class="fas fa-chevron-right ml-2"></i>
-                    </span>
+                    <span class="page-link disabled">Siguiente <i class="fas fa-chevron-right"></i></span>
                 {% endif %}
             </div>
         </div>
@@ -229,12 +186,10 @@
 </div>
 
 <script>
-    // CORRECCIÓN: Este script ahora realiza una búsqueda del lado del servidor.
+    // Lógica de búsqueda (Mantenida)
     document.getElementById('searchInput').addEventListener('keypress', function(event) {
-        // Se activa cuando el usuario presiona "Enter" en la barra de búsqueda.
         if (event.key === 'Enter') {
             const query = this.value;
-            // Construye la URL con el parámetro de búsqueda y redirige.
             window.location.href = "{{ url_for('bienes.listar_bienes') }}?search_query=" + encodeURIComponent(query);
         }
     });
@@ -243,31 +198,174 @@
 
 {% block styles %}
 <style>
-    .bg-burgundy { background-color: #6A2E4D; }
-    .bg-burgundy-dark { background-color: #551E3A; }
-    .text-burgundy { color: #6A2E4D; }
-    .border-burgundy { border-color: #6A2E4D; }
-    .focus\:ring-burgundy\/50:focus { --tw-ring-color: rgb(106 46 77 / 0.5); }
-    .focus\:border-burgundy:focus { border-color: #6A2E4D; }
-    
-    .bg-beige { background-color: #BC9B6A; }
-    .bg-beige-light { background-color: #D7C3A0; }
-    .text-beige-light { color: #D7C3A0; }
-    .border-beige { border-color: #BC9B6A; }
-    .border-beige-light { border-color: #D7C3A0; }
-    
-    .from-burgundy { --tw-gradient-from: #6A2E4D; --tw-gradient-to: rgb(106 46 77 / 0); --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to); }
-    .to-burgundy-dark { --tw-gradient-to: #551E3A; }
-    
-    input:focus, select:focus, textarea:focus {
-        outline: none;
-        box-shadow: 0 0 0 2px rgb(106 46 77 / 0.1);
+    /* --- VARIABLES & UTILIDADES --- */
+    :root {
+        --col-burgundy: #6A2E4D;
+        --col-burgundy-dark: #551E3A;
+        --col-beige: #BC9B6A;
+        --col-beige-light: #D7C3A0;
+        --col-bg: #f8f9fa;
+        --col-white: #ffffff;
+        --radius: 12px;
+        --shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
     }
+
+    .page-wrapper {
+        min-height: 100vh;
+        background: linear-gradient(to bottom right, #f9fafb, rgba(188, 155, 106, 0.1));
+        padding: 2rem 1rem;
+    }
+    .container-limit { max-width: 1280px; margin: 0 auto; }
+
+    /* --- ENCABEZADO --- */
+    .header-card {
+        background: linear-gradient(to right, var(--col-burgundy), var(--col-burgundy-dark));
+        border-radius: var(--radius);
+        padding: 1.5rem 2rem;
+        color: white;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+        box-shadow: var(--shadow);
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+    .header-text h1 { margin: 0; font-size: 1.5rem; }
+    .header-text p { margin: 0.5rem 0 0; color: var(--col-beige-light); font-size: 0.9rem; }
     
-    .truncate {
+    .btn {
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        text-decoration: none;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: transform 0.2s;
+    }
+    .btn-primary {
+        background: rgba(255,255,255,0.1);
+        color: white;
+        border: 1px solid rgba(255,255,255,0.2);
+    }
+    .btn-primary:hover { background: rgba(255,255,255,0.2); transform: translateY(-2px); }
+
+    /* --- ALERTAS FLASH --- */
+    .flash-wrapper { margin-bottom: 1.5rem; }
+    .alert {
+        padding: 1rem; border-radius: 8px; margin-bottom: 0.5rem;
+        display: flex; align-items: center; gap: 0.75rem; border-left: 4px solid;
+    }
+    .alert-success { background: #ecfdf5; border-color: #10b981; color: #065f46; }
+    .alert-danger { background: #fef2f2; border-color: #ef4444; color: #991b1b; }
+    .alert-info { background: #eff6ff; border-color: #3b82f6; color: #1e40af; }
+
+    /* --- TARJETAS COMUNES --- */
+    .card {
+        background: var(--col-white);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
+        border: 1px solid #e5e7eb;
         overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
+        margin-bottom: 1.5rem;
+    }
+    .card-header-simple {
+        padding: 1rem 1.5rem;
+        background: rgba(106, 46, 77, 0.05);
+        border-bottom: 1px solid var(--col-beige-light);
+        display: flex; align-items: center; gap: 0.75rem;
+    }
+    .card-header-simple h2 { margin: 0; color: var(--col-burgundy); font-size: 1.1rem; }
+    .icon-box-small {
+        width: 32px; height: 32px; background: var(--col-burgundy);
+        border-radius: 50%; color: white; display: flex; align-items: center; justify-content: center; font-size: 0.8rem;
+    }
+    .card-body { padding: 1.5rem; }
+
+    /* --- BUSCADOR --- */
+    .search-wrapper { position: relative; }
+    .search-input {
+        width: 100%; padding: 0.8rem 1rem 0.8rem 2.8rem;
+        border: 1px solid #d1d5db; border-radius: 8px; outline: none;
+    }
+    .search-input:focus { border-color: var(--col-burgundy); box-shadow: 0 0 0 3px rgba(106,46,77,0.1); }
+    .search-icon { position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: #9ca3af; }
+
+    /* --- TABLA --- */
+    .table-responsive { overflow-x: auto; }
+    .data-table { width: 100%; border-collapse: collapse; min-width: 800px; }
+    
+    .data-table thead tr {
+        background: linear-gradient(to right, var(--col-burgundy), var(--col-burgundy-dark));
+        color: white;
+    }
+    .data-table th {
+        text-align: left; padding: 1rem; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em;
+    }
+    .data-table td {
+        padding: 1rem; border-bottom: 1px solid #f3f4f6; color: #4b5563; vertical-align: middle;
+    }
+    .data-table tr:hover { background-color: #f9fafb; }
+    .text-truncate { max-width: 250px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .text-center { text-align: center !important; }
+
+    /* --- BADGES (Etiquetas) --- */
+    .badge {
+        padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; display: inline-block;
+    }
+    .badge-mono { background: #f3f4f6; color: #374151; font-family: monospace; }
+    .badge-burgundy { background: rgba(106, 46, 77, 0.1); color: var(--col-burgundy); }
+    .badge-gray { background: #f3f4f6; color: #6b7280; }
+
+    /* --- BOTONES DE ACCIÓN --- */
+    .action-buttons { display: flex; justify-content: center; gap: 0.5rem; }
+    .inline-form { display: inline; }
+    
+    .btn-icon {
+        width: 36px; height: 36px; border-radius: 8px; display: inline-flex;
+        align-items: center; justify-content: center; text-decoration: none;
+        border: none; cursor: pointer; color: white; transition: transform 0.2s;
+    }
+    .btn-icon:hover { transform: scale(1.1); }
+    
+    .btn-blue { background-color: #3b82f6; }
+    .btn-yellow { background-color: #eab308; }
+    .btn-red { background-color: #ef4444; }
+    .btn-green { background-color: #22c55e; }
+    .btn-gray { background-color: #9ca3af; }
+
+    /* --- ESTADO VACÍO --- */
+    .empty-state { text-align: center; padding: 3rem 1rem !important; color: #9ca3af; }
+    .empty-state i { font-size: 2.5rem; opacity: 0.5; margin-bottom: 1rem; }
+    .empty-state p { margin: 0; font-size: 1.1rem; font-weight: 600; color: #6b7280; }
+
+    /* --- PAGINACIÓN --- */
+    .pagination-wrapper {
+        display: flex; justify-content: space-between; align-items: center;
+        padding-top: 1.5rem; border-top: 1px solid var(--col-beige-light); flex-wrap: wrap; gap: 1rem;
+    }
+    .pagination-info { font-size: 0.9rem; color: #6b7280; }
+    .pagination-controls { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+    
+    .page-link {
+        padding: 0.5rem 1rem; border: 1px solid var(--col-beige);
+        background: white; color: var(--col-burgundy); border-radius: 8px;
+        text-decoration: none; font-size: 0.9rem; display: flex; align-items: center; gap: 0.5rem;
+        transition: all 0.2s;
+    }
+    .page-link:hover:not(.disabled) { background: rgba(188, 155, 106, 0.1); }
+    .page-link.disabled { background: #f3f4f6; border-color: #d1d5db; color: #9ca3af; pointer-events: none; }
+    
+    .page-link.number { width: 36px; height: 36px; padding: 0; justify-content: center; }
+    .page-link.active { background: var(--col-burgundy); color: white; border-color: var(--col-burgundy); }
+    .page-dots { display: flex; align-items: center; color: #9ca3af; }
+
+    /* --- MÓVIL --- */
+    @media (max-width: 640px) {
+        .header-card { text-align: center; justify-content: center; }
+        .pagination-wrapper { justify-content: center; }
+        .pagination-info { width: 100%; text-align: center; }
     }
 </style>
 {% endblock %}

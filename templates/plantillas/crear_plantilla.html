@@ -1,148 +1,100 @@
 {% extends "base.html" %}
 
+{% block title %}Crear Plantilla de Consulta{% endblock %}
+
 {% block content %}
-<div class="min-h-screen bg-gradient-to-br from-gray-50 to-beige-light/20 py-8 px-4">
-    <div class="max-w-6xl mx-auto">
-        <!-- Encabezado -->
-        <div class="bg-white rounded-2xl shadow-xl border border-beige-light overflow-hidden mb-8">
-            <div class="bg-gradient-to-r from-burgundy to-burgundy-dark p-6 text-white">
-                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                    <div>
-                        <h1 class="text-2xl md:text-3xl font-bold">
-                            Crear Plantilla de Consulta
-                        </h1>
-                        <p class="text-beige-light mt-2">
-                            Configure columnas y filtros para crear una plantilla de consulta personalizada
-                        </p>
-                    </div>
-                    <div class="flex items-center space-x-2">
-                        <div class="w-10 h-10 bg-beige rounded-full flex items-center justify-center">
-                            <i class="fas fa-filter text-burgundy text-lg"></i>
-                        </div>
-                    </div>
-                </div>
+<div class="page-wrapper">
+    <div class="container-limit">
+        
+        <div class="header-card">
+            <div class="header-text">
+                <h1>Crear Plantilla de Consulta</h1>
+                <p>Configure columnas y filtros para crear una plantilla personalizada.</p>
+            </div>
+            <div class="header-icon-box">
+                <i class="fas fa-filter"></i>
             </div>
         </div>
 
-        <!-- Formulario -->
-        <div class="bg-white rounded-2xl shadow-lg border border-beige-light overflow-hidden">
-            <form id="template-form" action="{{ url_for('plantillas.crear_plantilla') }}" method="post" class="p-6 md:p-8">
+        <div class="card">
+            <form id="template-form" action="{{ url_for('plantillas.crear_plantilla') }}" method="post">
                 
-                <!-- Sección: Información de la Plantilla -->
-                <div class="mb-8">
-                    <div class="flex items-center mb-6">
-                        <div class="w-8 h-8 bg-burgundy rounded-full flex items-center justify-center mr-3">
-                            <i class="fas fa-info text-white text-sm"></i>
-                        </div>
-                        <h2 class="text-xl font-bold text-burgundy">Información de la Plantilla</h2>
+                <div class="form-section">
+                    <div class="section-header">
+                        <div class="section-icon"><i class="fas fa-info"></i></div>
+                        <h2>Información de la Plantilla</h2>
                     </div>
-                    <div class="grid grid-cols-1 gap-6">
-                        <div>
-                            <label for="template_name" class="block text-sm font-semibold text-gray-700 mb-2 flex items-center">
-                                <i class="fas fa-tag text-burgundy mr-2 text-xs"></i>
-                                Nombre de la Plantilla *
-                            </label>
-                            <input type="text" 
-                                   name="template_name" 
-                                   id="template_name" 
-                                   required
-                                   class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-burgundy/50 focus:border-burgundy transition-all duration-200 bg-white/80"
-                                   placeholder="Ingrese un nombre descriptivo para la plantilla">
+                    <div class="form-grid-1">
+                        <div class="form-group">
+                            <label for="template_name"><i class="fas fa-tag icon-label"></i> Nombre de la Plantilla *</label>
+                            <input type="text" name="template_name" id="template_name" required 
+                                   placeholder="Ej: Bienes de cómputo activos">
                         </div>
-                        <div>
-                            <label for="template_description" class="block text-sm font-semibold text-gray-700 mb-2 flex items-center">
-                                <i class="fas fa-align-left text-burgundy mr-2 text-xs"></i>
-                                Descripción
-                            </label>
-                            <textarea name="template_description" 
-                                      id="template_description" 
-                                      rows="3"
-                                      class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-burgundy/50 focus:border-burgundy transition-all duration-200 bg-white/80 resize-none"
-                                      placeholder="Describa el propósito de esta plantilla de consulta"></textarea>
+                        <div class="form-group">
+                            <label for="template_description"><i class="fas fa-align-left icon-label"></i> Descripción</label>
+                            <textarea name="template_description" id="template_description" rows="2" 
+                                      placeholder="Describe el propósito de esta consulta"></textarea>
                         </div>
                     </div>
                 </div>
 
-                <!-- Sección: Selección de Columnas -->
-                <div class="mb-8">
-                    <div class="flex items-center mb-6">
-                        <div class="w-8 h-8 bg-burgundy rounded-full flex items-center justify-center mr-3">
-                            <i class="fas fa-columns text-white text-sm"></i>
-                        </div>
-                        <h2 class="text-xl font-bold text-burgundy">Seleccionar Columnas</h2>
+                <div class="form-section">
+                    <div class="section-header">
+                        <div class="section-icon"><i class="fas fa-columns"></i></div>
+                        <h2>Seleccionar Columnas</h2>
                     </div>
-                    <div class="bg-beige-light/30 rounded-xl p-6 border border-beige-light">
-                        <p class="text-sm text-gray-600 mb-4">Seleccione las columnas que desea incluir en la consulta:</p>
-                        <div id="columns-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 max-h-80 overflow-y-auto p-4 bg-white rounded-lg border border-gray-200">
+                    <div class="checkbox-wrapper">
+                        <p class="help-text">Marque las columnas que desea ver en el reporte:</p>
+                        <div id="columns-container" class="checkbox-grid">
                             {% for column in columns %}
-                            <div class="flex items-center p-3 hover:bg-beige-light/20 rounded-lg transition-colors duration-200">
-                                <input id="column-{{ column }}" 
-                                       name="columns" 
-                                       type="checkbox" 
-                                       value="{{ column }}"
-                                       class="h-5 w-5 text-burgundy border-gray-300 rounded focus:ring-burgundy/50">
-                                <label for="column-{{ column }}" class="ml-3 block text-sm font-medium text-gray-700 cursor-pointer">
-                                    {{ column.replace('_', ' ').title() }}
-                                </label>
-                            </div>
+                            <label class="checkbox-card" for="column-{{ column }}">
+                                <input id="column-{{ column }}" name="columns" type="checkbox" value="{{ column }}">
+                                <span class="checkbox-label">{{ column.replace('_', ' ').title() }}</span>
+                            </label>
                             {% endfor %}
                         </div>
                     </div>
                 </div>
 
-                <!-- Sección: Filtros Dinámicos -->
-                <div class="mb-8">
-                    <div class="flex items-center mb-6">
-                        <div class="w-8 h-8 bg-burgundy rounded-full flex items-center justify-center mr-3">
-                            <i class="fas fa-sliders-h text-white text-sm"></i>
-                        </div>
-                        <h2 class="text-xl font-bold text-burgundy">Definir Filtros</h2>
+                <div class="form-section">
+                    <div class="section-header">
+                        <div class="section-icon"><i class="fas fa-sliders-h"></i></div>
+                        <h2>Definir Filtros</h2>
                     </div>
-                    <div class="bg-beige-light/30 rounded-xl p-6 border border-beige-light">
-                        <p class="text-sm text-gray-600 mb-4">Configure los filtros para su consulta personalizada:</p>
-                        <div id="filters-container" class="space-y-4 mb-4">
-                            <!-- Los filtros se agregarán aquí dinámicamente con JavaScript -->
-                        </div>
-                        <button type="button" 
-                                id="add-filter-btn"
-                                class="inline-flex items-center px-5 py-2.5 border border-burgundy text-sm font-semibold rounded-xl text-burgundy bg-white hover:bg-burgundy hover:text-white transition-all duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-burgundy">
-                            <i class="fas fa-plus mr-2"></i> Añadir Filtro
+                    <div class="filters-wrapper">
+                        <div id="filters-container">
+                            </div>
+                        
+                        <button type="button" id="add-filter-btn" class="btn btn-dashed full-width">
+                            <i class="fas fa-plus"></i> Añadir Nueva Regla de Filtro
                         </button>
                     </div>
                 </div>
                 
-                <!-- Sección: Vista Previa -->
-                <div class="mb-8">
-                    <div class="flex items-center mb-6">
-                        <div class="w-8 h-8 bg-burgundy rounded-full flex items-center justify-center mr-3">
-                            <i class="fas fa-eye text-white text-sm"></i>
-                        </div>
-                        <h2 class="text-xl font-bold text-burgundy">Vista Previa de la Consulta</h2>
+                <div class="form-section mb-0">
+                    <div class="section-header">
+                        <div class="section-icon"><i class="fas fa-eye"></i></div>
+                        <h2>Vista Previa</h2>
                     </div>
-                    <div class="bg-beige-light/30 rounded-xl p-6 border border-beige-light">
-                        <div id="preview-table-container" class="w-full overflow-x-auto bg-white rounded-lg border border-gray-200 shadow-sm">
-                            <div class="flex items-center justify-center min-h-32 text-gray-500">
-                                <div class="text-center">
-                                    <i class="fas fa-table text-3xl mb-2 text-gray-300"></i>
-                                    <p>Selecciona columnas y añade filtros para ver la vista previa.</p>
-                                </div>
+                    <div class="preview-wrapper">
+                        <div id="preview-table-container" class="table-responsive">
+                            <div class="empty-preview">
+                                <i class="fas fa-table"></i>
+                                <p>Selecciona columnas y añade filtros para ver la vista previa.</p>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Botones de Acción -->
-                <div class="flex flex-col sm:flex-row justify-end gap-4 pt-6 border-t border-gray-200">
-                    <a href="{{ url_for('index') }}" 
-                       class="inline-flex items-center justify-center px-6 py-3 border-2 border-gray-300 text-base font-semibold rounded-xl text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-all duration-200 ease-in-out order-2 sm:order-1">
-                        <i class="fas fa-times mr-2"></i> Cancelar
+                <div class="form-actions">
+                    <a href="{{ url_for('index') }}" class="btn btn-secondary">
+                        <i class="fas fa-times"></i> Cancelar
                     </a>
-                    <button type="submit" 
-                            class="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-semibold rounded-xl shadow-sm text-white bg-gradient-to-r from-burgundy to-burgundy-dark hover:from-burgundy-dark hover:to-burgundy focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-burgundy transition-all duration-200 ease-in-out order-1 sm:order-2">
-                        <i class="fas fa-save mr-2"></i> 
-                        Guardar Plantilla
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Guardar Plantilla
                     </button>
                 </div>
+
             </form>
         </div>
     </div>
@@ -151,40 +103,123 @@
 
 {% block styles %}
 <style>
-    .bg-burgundy { background-color: #6A2E4D; }
-    .bg-burgundy-dark { background-color: #551E3A; }
-    .text-burgundy { color: #6A2E4D; }
-    .border-burgundy { border-color: #6A2E4D; }
-    .focus\:ring-burgundy\/50:focus { --tw-ring-color: rgb(106 46 77 / 0.5); }
-    .focus\:border-burgundy:focus { border-color: #6A2E4D; }
-    
-    .bg-beige { background-color: #BC9B6A; }
-    .bg-beige-light { background-color: #D7C3A0; }
-    .text-beige-light { color: #D7C3A0; }
-    .border-beige { border-color: #BC9B6A; }
-    .border-beige-light { border-color: #D7C3A0; }
-    
-    .from-burgundy { --tw-gradient-from: #6A2E4D; --tw-gradient-to: rgb(106 46 77 / 0); --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to); }
-    .to-burgundy-dark { --tw-gradient-to: #551E3A; }
-    
-    input:focus, select:focus, textarea:focus {
-        outline: none;
-        box-shadow: 0 0 0 2px rgb(106 46 77 / 0.1);
+    /* VARIABLES */
+    :root {
+        --col-burgundy: #6A2E4D;
+        --col-burgundy-dark: #551E3A;
+        --col-beige: #BC9B6A;
+        --col-beige-light: #fdfbf7;
+        --radius: 12px;
+        --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        --col-bg: #f9fafb;
     }
-    
-    /* Estilos para la tabla de vista previa */
-    #preview-table-container table {
-        border-collapse: separate;
-        border-spacing: 0;
+
+    /* Layout */
+    .page-wrapper { min-height: 100vh; background: var(--col-bg); padding: 2rem 1rem; }
+    .container-limit { max-width: 1100px; margin: 0 auto; }
+
+    /* Header */
+    .header-card {
+        background: linear-gradient(to right, var(--col-burgundy), var(--col-burgundy-dark));
+        border-radius: var(--radius); padding: 1.5rem 2rem; color: white;
+        display: flex; justify-content: space-between; align-items: center;
+        margin-bottom: 2rem; box-shadow: var(--shadow);
     }
-    
-    #preview-table-container th {
-        background: linear-gradient(to bottom, #f9fafb, #f3f4f6);
-        border-bottom: 2px solid #e5e7eb;
+    .header-text h1 { margin: 0; font-size: 1.5rem; }
+    .header-text p { margin: 0.5rem 0 0; opacity: 0.9; font-size: 0.9rem; }
+    .header-icon-box {
+        width: 48px; height: 48px; background: var(--col-beige); border-radius: 50%;
+        display: flex; align-items: center; justify-content: center; color: var(--col-burgundy); font-size: 1.2rem;
     }
+
+    /* Form Structure */
+    .card { background: white; border-radius: var(--radius); box-shadow: var(--shadow); padding: 2rem; border: 1px solid #e5e7eb; }
+    .form-section { margin-bottom: 2.5rem; }
+    .mb-0 { margin-bottom: 0; }
     
-    #preview-table-container tr:hover {
-        background-color: #fef7f5;
+    .section-header { display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem; border-bottom: 2px solid #f3f4f6; padding-bottom: 0.5rem; }
+    .section-icon { width: 32px; height: 32px; background: var(--col-burgundy); border-radius: 50%; color: white; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; }
+    .section-header h2 { color: var(--col-burgundy); font-size: 1.2rem; margin: 0; }
+
+    /* Inputs */
+    .form-group { margin-bottom: 1rem; }
+    .form-group label { display: block; font-weight: 600; color: #374151; font-size: 0.9rem; margin-bottom: 0.4rem; }
+    .icon-label { color: var(--col-burgundy); margin-right: 0.3rem; }
+    
+    input[type="text"], textarea, select {
+        width: 100%; padding: 0.75rem; border: 1px solid #d1d5db; border-radius: 8px; font-size: 0.95rem; transition: all 0.2s;
+    }
+    input:focus, textarea:focus, select:focus { outline: none; border-color: var(--col-burgundy); box-shadow: 0 0 0 3px rgba(106, 46, 77, 0.1); }
+
+    /* Checkbox Grid (Columnas) */
+    .checkbox-wrapper { background: #fafafa; border: 1px solid #e5e7eb; padding: 1.5rem; border-radius: 8px; }
+    .help-text { margin: 0 0 1rem 0; color: #6b7280; font-size: 0.9rem; }
+    
+    .checkbox-grid {
+        display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 0.8rem;
+        max-height: 300px; overflow-y: auto; padding-right: 5px;
+    }
+    .checkbox-card {
+        display: flex; align-items: center; padding: 0.6rem; background: white; border: 1px solid #e5e7eb;
+        border-radius: 6px; cursor: pointer; transition: all 0.2s;
+    }
+    .checkbox-card:hover { border-color: var(--col-burgundy); background: #fdfbf7; }
+    .checkbox-card input { margin-right: 0.6rem; accent-color: var(--col-burgundy); width: 1.1rem; height: 1.1rem; }
+    .checkbox-label { font-size: 0.9rem; color: #374151; }
+
+    /* Dynamic Filters */
+    .filters-wrapper { background: #fafafa; border: 1px solid #e5e7eb; padding: 1.5rem; border-radius: 8px; }
+    
+    /* Estilos inyectados por JS para las filas */
+    .filter-row { 
+        background: white; padding: 1rem; border-radius: 8px; border: 1px solid #e5e7eb; 
+        box-shadow: 0 1px 2px rgba(0,0,0,0.05); margin-bottom: 1rem; display: flex; gap: 1rem; align-items: flex-end; flex-wrap: wrap;
+    }
+    .filter-col { flex: 1; min-width: 150px; }
+    .filter-actions { padding-bottom: 2px; }
+
+    .btn-icon-remove { 
+        width: 38px; height: 38px; border-radius: 8px; background: #fee2e2; color: #ef4444; 
+        border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s;
+    }
+    .btn-icon-remove:hover { background: #ef4444; color: white; }
+
+    /* Botones */
+    .btn { padding: 0.75rem 1.5rem; border-radius: 8px; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; border: none; cursor: pointer; transition: all 0.2s; font-size: 0.95rem; }
+    .btn-primary { background: linear-gradient(to right, var(--col-burgundy), var(--col-burgundy-dark)); color: white; }
+    .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
+    .btn-secondary { background: white; border: 1px solid #d1d5db; color: #374151; }
+    .btn-secondary:hover { background: #f3f4f6; }
+    
+    .btn-dashed { background: white; border: 2px dashed var(--col-burgundy); color: var(--col-burgundy); width: 100%; }
+    .btn-dashed:hover { background: rgba(106, 46, 77, 0.05); }
+
+    .form-actions { margin-top: 2rem; padding-top: 2rem; border-top: 1px solid #e5e7eb; display: flex; justify-content: flex-end; gap: 1rem; }
+
+    /* Preview Table */
+    .preview-wrapper { background: white; border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden; }
+    .table-responsive { overflow-x: auto; width: 100%; }
+    
+    .data-table { width: 100%; border-collapse: collapse; min-width: 800px; }
+    .data-table th { background: #f9fafb; padding: 0.8rem 1rem; text-align: left; font-size: 0.85rem; font-weight: 600; color: #4b5563; border-bottom: 2px solid #e5e7eb; }
+    .data-table td { padding: 0.8rem 1rem; border-bottom: 1px solid #f3f4f6; color: #1f2937; font-size: 0.9rem; vertical-align: middle; }
+    .data-table tr:hover { background: #fdfbf7; }
+
+    .empty-preview { padding: 4rem 1rem; text-align: center; color: #9ca3af; }
+    .empty-preview i { font-size: 3rem; margin-bottom: 1rem; opacity: 0.3; }
+    .empty-preview p { font-size: 1rem; }
+
+    /* Loader State */
+    .loading-state { text-align: center; padding: 3rem; color: var(--col-burgundy); }
+    .error-state { text-align: center; padding: 3rem; color: #ef4444; }
+
+    /* Móvil */
+    @media (max-width: 768px) {
+        .header-card { flex-direction: column; text-align: center; gap: 1rem; }
+        .form-actions { flex-direction: column; }
+        .btn { width: 100%; }
+        .filter-row { flex-direction: column; align-items: stretch; }
+        .filter-actions { align-self: flex-end; }
     }
 </style>
 {% endblock %}
@@ -199,80 +234,72 @@
         const availableColumns = {{ columns | tojson | safe }};
         let availableAreas = [];
 
-        // Function to fetch areas from the server
+        // Fetch inicial
         const fetchAreas = async () => {
             try {
                 const response = await fetch('{{ url_for("areas.get_areas") }}');
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
-                }
-                const data = await response.json();
-                availableAreas = data;
+                if (!response.ok) throw new Error('Error');
+                availableAreas = await response.json();
             } catch (error) {
-                console.error('Error fetching areas:', error);
+                console.error('Error áreas:', error);
                 availableAreas = []; 
             }
         };
         
-        // Función para crear un nuevo grupo de filtro con diseño mejorado
+        // --- CREAR FILTRO (Refactorizado para usar clases limpias) ---
         function createFilterGroup() {
             const filterGroup = document.createElement('div');
-            filterGroup.className = 'bg-white p-4 rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200';
+            // Usamos la clase .filter-row definida en el CSS
+            filterGroup.className = 'filter-row';
             
             const columnOptions = availableColumns.map(col => 
                 `<option value="${col}">${col.replace('_', ' ').charAt(0).toUpperCase() + col.replace('_', ' ').slice(1)}</option>`
             ).join('');
 
             filterGroup.innerHTML = `
-                <div class="flex flex-col md:flex-row gap-4 items-start md:items-end">
-                    <div class="flex-1">
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">Campo</label>
-                        <select name="filter_field[]" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-burgundy/50 focus:border-burgundy transition-all duration-200 bg-white/80">
-                            <option value="">Seleccionar campo...</option>
-                            ${columnOptions}
-                        </select>
-                    </div>
-                    <div class="flex-1">
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">Operador</label>
-                        <select name="filter_operator[]" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-burgundy/50 focus:border-burgundy transition-all duration-200 bg-white/80">
-                            <option value="==">Igual a</option>
-                            <option value="!=">Diferente de</option>
-                            <option value=">">Mayor que</option>
-                            <option value="<">Menor que</option>
-                            <option value=">=">Mayor o igual que</option>
-                            <option value="<=">Menor o igual que</option>
-                            <option value="contains">Contiene</option>
-                            <option value="starts_with">Comienza con</option>
-                            <option value="ends_with">Termina con</option>
-                        </select>
-                    </div>
-                    <div class="flex-1 filter-value-container">
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">Valor</label>
-                        <input type="text" name="filter_value[]" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-burgundy/50 focus:border-burgundy transition-all duration-200 bg-white/80" placeholder="Valor del filtro">
-                    </div>
-                    <div class="flex items-end h-12">
-                        <button type="button" class="remove-filter-btn text-red-500 hover:text-red-700 transition-colors duration-200 p-2 rounded-lg hover:bg-red-50">
-                            <i class="fas fa-trash-alt"></i>
-                        </button>
-                    </div>
+                <div class="filter-col">
+                    <label>Campo</label>
+                    <select name="filter_field[]">
+                        <option value="">Seleccionar campo...</option>
+                        ${columnOptions}
+                    </select>
+                </div>
+                <div class="filter-col">
+                    <label>Operador</label>
+                    <select name="filter_operator[]">
+                        <option value="==">Igual a</option>
+                        <option value="!=">Diferente de</option>
+                        <option value=">">Mayor que</option>
+                        <option value="<">Menor que</option>
+                        <option value=">=">Mayor o igual</option>
+                        <option value="<=">Menor o igual</option>
+                        <option value="contains">Contiene</option>
+                        <option value="starts_with">Inicia con</option>
+                        <option value="ends_with">Termina con</option>
+                    </select>
+                </div>
+                <div class="filter-col filter-value-container">
+                    <label>Valor</label>
+                    <input type="text" name="filter_value[]" placeholder="Valor del filtro">
+                </div>
+                <div class="filter-actions">
+                    <button type="button" class="btn-icon-remove" title="Eliminar filtro">
+                        <i class="fas fa-trash-alt"></i>
+                    </button>
                 </div>
             `;
 
-            // Agregar listener para el botón de eliminar
-            filterGroup.querySelector('.remove-filter-btn').addEventListener('click', () => {
-                filterGroup.style.opacity = '0';
-                filterGroup.style.transform = 'translateX(-10px)';
-                setTimeout(() => {
-                    filterGroup.remove();
-                    updatePreviewTable();
-                }, 300);
+            // Lógica de eliminar
+            filterGroup.querySelector('.btn-icon-remove').addEventListener('click', () => {
+                filterGroup.remove();
+                updatePreviewTable();
             });
 
             const fieldSelect = filterGroup.querySelector('[name="filter_field[]"]');
             const valueContainer = filterGroup.querySelector('.filter-value-container');
             let valueInput = filterGroup.querySelector('[name="filter_value[]"]');
 
-            // Función para actualizar el tipo de input de valor
+            // Lógica para cambiar input a select si es Área
             const updateValueInputType = () => {
                 const selectedField = fieldSelect.value;
                 let newValueInput;
@@ -281,13 +308,11 @@
                     const areaOptions = availableAreas.map(area => `<option value="${area.id}">${area.nombre}</option>`).join('');
                     newValueInput = document.createElement('select');
                     newValueInput.name = 'filter_value[]';
-                    newValueInput.className = 'w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-burgundy/50 focus:border-burgundy transition-all duration-200 bg-white/80';
                     newValueInput.innerHTML = `<option value="">Seleccionar área...</option>${areaOptions}`;
                 } else {
                     newValueInput = document.createElement('input');
                     newValueInput.type = 'text';
                     newValueInput.name = 'filter_value[]';
-                    newValueInput.className = 'w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-burgundy/50 focus:border-burgundy transition-all duration-200 bg-white/80';
                     newValueInput.placeholder = 'Valor del filtro';
                 }
 
@@ -295,9 +320,7 @@
                 valueInput = newValueInput;
                 
                 valueInput.addEventListener('change', updatePreviewTable);
-                if (selectedField !== 'Area') {
-                    valueInput.addEventListener('keyup', updatePreviewTable);
-                }
+                if (selectedField !== 'Area') valueInput.addEventListener('keyup', updatePreviewTable);
             };
 
             fieldSelect.addEventListener('change', () => {
@@ -311,9 +334,11 @@
             return filterGroup;
         }
 
-        // Función para actualizar la tabla de vista previa con datos reales
+        // --- ACTUALIZAR TABLA (Refactorizado HTML) ---
         async function updatePreviewTable() {
             const selectedColumns = Array.from(document.querySelectorAll('input[name="columns"]:checked')).map(el => el.value);
+            
+            // Recopilar filtros
             const filterGroups = Array.from(document.querySelectorAll('#filters-container > div'));
             const filters = filterGroups.map(group => {
                 const fieldSelect = group.querySelector('[name="filter_field[]"]');
@@ -327,189 +352,112 @@
                 };
             }).filter(filter => filter.field && filter.value);
 
+            // Estado vacío
             if (selectedColumns.length === 0) {
                 previewTableContainer.innerHTML = `
-                    <div class="flex items-center justify-center min-h-32 text-gray-500">
-                        <div class="text-center">
-                            <i class="fas fa-columns text-3xl mb-2 text-gray-300"></i>
-                            <p>Selecciona columnas para ver la vista previa.</p>
-                        </div>
-                    </div>
-                `;
+                    <div class="empty-preview">
+                        <i class="fas fa-columns"></i>
+                        <p>Selecciona columnas para ver la vista previa.</p>
+                    </div>`;
                 return;
             }
 
+            // Estado cargando
             previewTableContainer.innerHTML = `
-                <div class="flex items-center justify-center min-h-32 text-burgundy">
-                    <div class="text-center">
-                        <i class="fas fa-spinner fa-spin text-2xl mb-2"></i>
-                        <p>Cargando datos...</p>
-                    </div>
-                </div>
-            `;
+                <div class="loading-state">
+                    <i class="fas fa-spinner fa-spin fa-2x"></i>
+                    <p>Cargando datos...</p>
+                </div>`;
 
             try {
                 const response = await fetch('{{ url_for("plantillas.preview_query") }}', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        columns: selectedColumns,
-                        filters: filters
-                    })
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ columns: selectedColumns, filters: filters })
                 });
                 
                 if (!response.ok) {
                     const error = await response.json();
-                    previewTableContainer.innerHTML = `
-                        <div class="flex items-center justify-center min-h-32 text-red-500">
-                            <div class="text-center">
-                                <i class="fas fa-exclamation-triangle text-2xl mb-2"></i>
-                                <p>Error: ${error.error}</p>
-                            </div>
-                        </div>
-                    `;
-                    return;
+                    throw new Error(error.error);
                 }
 
                 const filteredData = await response.json();
 
-                // Construir la tabla
-                let tableHTML = `
-                    <table class="min-w-full divide-y divide-gray-200">
-                        <thead class="bg-gradient-to-r from-gray-50 to-gray-100">
-                            <tr>
-                                ${selectedColumns.map(col => 
-                                    `<th class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider border-b border-gray-200">${formatColumnName(col)}</th>`
-                                ).join('')}
-                            </tr>
-                        </thead>
-                        <tbody class="bg-white divide-y divide-gray-200">
-                `;
+                // Generar HTML de Tabla Limpia
+                let tableHTML = `<table class="data-table"><thead><tr>`;
+                
+                // Headers
+                selectedColumns.forEach(col => {
+                    tableHTML += `<th>${formatColumnName(col)}</th>`;
+                });
+                tableHTML += `</tr></thead><tbody>`;
 
                 if (filteredData.length === 0) {
-                    tableHTML += `
-                        <tr>
-                            <td colspan="${selectedColumns.length}" class="px-6 py-8 text-center text-sm text-gray-500">
-                                <i class="fas fa-search text-2xl mb-2 text-gray-300 block"></i>
-                                No se encontraron resultados con los filtros aplicados.
-                            </td>
-                        </tr>
-                    `;
+                    tableHTML += `<tr><td colspan="${selectedColumns.length}" style="text-align:center; padding: 2rem;">No se encontraron resultados.</td></tr>`;
                 } else {
-                    tableHTML += filteredData.map(item => `
-                        <tr class="hover:bg-beige-light/10 transition-colors duration-150">
-                            ${selectedColumns.map(col => {
-                                if (col === 'imagenPath_bien' || col === 'imagenPath_resguardo') {
-                                    const images = item[col] || [];
-                                    return `
-                                        <td class="px-6 py-4 whitespace-nowrap">
-                                            <div class="flex flex-wrap gap-1">
-                                                ${images.length > 0 ? 
-                                                    images.map(img => {
-                                                        const filename = img.split('/').pop();
-                                                        return `
-                                                            <img src="/static/uploads/${filename}" 
-                                                                 alt="Imagen" 
-                                                                 class="h-12 w-12 object-cover rounded-lg border-2 border-beige-light shadow-sm hover:shadow-md transition-shadow duration-200"
-                                                                 onerror="this.style.display='none'">
-                                                        `;
-                                                    }).join('') : 
-                                                    '<span class="text-gray-400 text-sm">Sin imágenes</span>'
-                                                }
-                                            </div>
-                                        </td>
-                                    `;
-                                } else {
-                                    const value = item[col];
-                                    return `
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                            ${value !== null && value !== undefined ? escapeHtml(value.toString()) : '<span class="text-gray-400">-</span>'}
-                                        </td>
-                                    `;
-                                }
-                            }).join('')}
-                        </tr>
-                    `).join('');
+                    filteredData.forEach(item => {
+                        tableHTML += `<tr>`;
+                        selectedColumns.forEach(col => {
+                            const value = item[col];
+                            let displayVal = (value !== null && value !== undefined) ? escapeHtml(value.toString()) : '<span style="color:#ccc">-</span>';
+                            
+                            // Lógica especial para imágenes
+                            if (col.includes('imagenPath')) {
+                                // Simplificado para el ejemplo
+                                displayVal = value ? '<i class="fas fa-image text-burgundy"></i>' : '-';
+                            }
+                            
+                            tableHTML += `<td>${displayVal}</td>`;
+                        });
+                        tableHTML += `</tr>`;
+                    });
                 }
-
-                tableHTML += `
-                        </tbody>
-                    </table>
-                `;
-
+                tableHTML += `</tbody></table>`;
+                
                 previewTableContainer.innerHTML = tableHTML;
 
             } catch (error) {
-                console.error('Error fetching data:', error);
+                console.error('Error:', error);
                 previewTableContainer.innerHTML = `
-                    <div class="flex items-center justify-center min-h-32 text-red-500">
-                        <div class="text-center">
-                            <i class="fas fa-exclamation-circle text-2xl mb-2"></i>
-                            <p>Error al obtener los datos.</p>
-                            <p class="text-sm mt-1">Por favor, revisa la consola para más detalles.</p>
-                        </div>
-                    </div>
-                `;
+                    <div class="error-state">
+                        <i class="fas fa-exclamation-triangle fa-2x"></i>
+                        <p>Error: ${error.message || 'Error al obtener datos'}</p>
+                    </div>`;
             }
         }
 
-        // Función auxiliar para formatear nombres de columnas
+        // Helpers
         function formatColumnName(column) {
-            return column.replace(/_/g, ' ')
-                        .split(' ')
-                        .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-                        .join(' ');
+            return column.replace(/_/g, ' ').split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
         }
-
-        // Función auxiliar para escapar HTML (seguridad)
         function escapeHtml(unsafe) {
-            return unsafe
-                .replace(/&/g, "&amp;")
-                .replace(/</g, "&lt;")
-                .replace(/>/g, "&gt;")
-                .replace(/"/g, "&quot;")
-                .replace(/'/g, "&#039;");
+            return unsafe.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
         }
 
-        // Fetch areas and then proceed with creating the initial filter
+        // Init
         fetchAreas().then(() => {
-            // Agregar un filtro al hacer clic en el botón
             addFilterBtn.addEventListener('click', () => {
-                const newFilter = createFilterGroup();
-                filtersContainer.appendChild(newFilter);
+                filtersContainer.appendChild(createFilterGroup());
                 updatePreviewTable();
             });
         
-            // Agregar listeners a todos los checkboxes de columnas
             columnsContainer.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
                 checkbox.addEventListener('change', updatePreviewTable);
             });
             
-            // Añadir un filtro por defecto y actualizar la tabla al cargar la página
             if (filtersContainer.children.length === 0) {
                 filtersContainer.appendChild(createFilterGroup());
             }
             updatePreviewTable();
         });
 
-        // Validación del formulario
+        // Validación Submit
         document.getElementById('template-form').addEventListener('submit', function(e) {
-            const templateName = document.getElementById('template_name').value.trim();
-            const selectedColumns = Array.from(document.querySelectorAll('input[name="columns"]:checked')).length;
+            const name = document.getElementById('template_name').value.trim();
+            const cols = document.querySelectorAll('input[name="columns"]:checked').length;
             
-            if (!templateName) {
-                e.preventDefault();
-                alert('Por favor, ingrese un nombre para la plantilla.');
-                return;
-            }
-            
-            if (selectedColumns === 0) {
-                e.preventDefault();
-                alert('Por favor, seleccione al menos una columna para la plantilla.');
-                return;
-            }
+            if (!name) { e.preventDefault(); alert('Ingrese nombre de plantilla'); return; }
+            if (cols === 0) { e.preventDefault(); alert('Seleccione al menos una columna'); return; }
         });
     });
 </script>

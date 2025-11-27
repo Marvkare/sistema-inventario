@@ -1,91 +1,86 @@
 {% extends "base.html" %}
 
+{% block title %}Revisión de Errores{% endblock %}
+
 {% block content %}
-<div class="min-h-screen bg-gradient-to-br from-gray-50 to-beige-light/20 py-8 px-4">
-    <div class="max-w-7xl mx-auto">
-        <!-- Encabezado -->
-        <div class="bg-white rounded-2xl shadow-xl border border-beige-light overflow-hidden mb-8">
-            <div class="bg-gradient-to-r from-burgundy to-burgundy-dark p-6 text-white">
-                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                    <div>
-                        <h1 class="text-2xl md:text-3xl font-bold">Revisión de Errores de Importación</h1>
-                        <p class="text-beige-light mt-2">
-                            Se encontraron <span class="font-bold">{{ errors|length }}</span> filas con errores en el archivo
-                        </p>
-                    </div>
-                    <div class="flex items-center space-x-2">
-                        <div class="w-10 h-10 bg-beige rounded-full flex items-center justify-center">
-                            <i class="fas fa-exclamation-triangle text-burgundy text-lg"></i>
-                        </div>
+<div class="page-wrapper">
+    <div class="container-limit">
+        
+        <div class="header-card">
+            <div class="header-content">
+                <div class="title-group">
+                    <h1>Revisión de Errores</h1>
+                    <div class="subtitle-info">
+                        <span>Viendo lote: <strong class="batch-id">{{ upload_id }}</strong></span>
+                        <span class="separator">•</span>
+                        <span>Total de errores: <strong>{{ total_skipped }}</strong></span>
                     </div>
                 </div>
             </div>
+            
+            <div class="header-actions">
+                <a href="{{ url_for('errors.select_error_batch') }}" class="btn btn-glass">
+                    <i class="fas fa-arrow-left"></i> Cambiar de Lote
+                </a>
+            </div>
         </div>
 
-        <!-- Contenido Principal -->
-        <div class="bg-white rounded-2xl shadow-lg border border-beige-light overflow-hidden">
-            <div class="p-6">
-                <!-- Información General -->
-                <div class="bg-beige-light/30 rounded-xl p-4 mb-6 border border-beige">
-                    <div class="flex items-center">
-                        <i class="fas fa-info-circle text-burgundy mr-3"></i>
-                        <p class="text-gray-700">
-                            Revisa los detalles, edita las filas para corregirlas o elimínalas si no son necesarias.
-                        </p>
+        <div class="card">
+            <div class="card-body">
+                
+                {% if error_rows %}
+                
+                <div class="alert alert-warning mb-4">
+                    <div class="alert-icon"><i class="fas fa-info-circle"></i></div>
+                    <div class="alert-text">
+                        Estas filas no pudieron importarse automáticamente. Haz clic en <strong>"Corregir"</strong> para editar los datos y reintentar la importación.
                     </div>
                 </div>
 
-                <!-- Tabla de Errores -->
-                <div class="overflow-x-auto rounded-lg border border-beige-light">
-                    <table class="min-w-full">
+                <div class="table-responsive">
+                    <table class="data-table">
                         <thead>
-                            <tr class="bg-gradient-to-r from-burgundy to-burgundy-dark text-white">
-                                <th class="py-4 px-6 text-left font-semibold uppercase text-sm">No. Inventario</th>
-                                <th class="py-4 px-6 text-left font-semibold uppercase text-sm">No. Resguardo</th>
-                                <th class="py-4 px-6 text-left font-semibold uppercase text-sm">Descripción del Error</th>
-                                <th class="py-4 px-6 text-center font-semibold uppercase text-sm">Acciones</th>
+                            <tr>
+                                <th style="width: 100px;">Acción</th>
+                                <th>Identificadores</th>
+                                <th>Motivo del Error</th>
+                                <th>Datos Clave</th>
                             </tr>
                         </thead>
-                        <tbody class="text-gray-600">
-                            {% for error in errors %}
-                            <tr class="border-b border-beige-light hover:bg-red-50 transition-colors duration-200">
-                                <td class="py-4 px-6">
-                                    <span class="font-mono text-sm bg-gray-100 px-3 py-1 rounded" title="{{ error.get('No_Inventario', 'N/A') }}">
-                                        {{ error.get('No_Inventario', 'N/A') }}
-                                    </span>
+                        <tbody>
+                            {% for row in error_rows %}
+                            <tr>
+                                <td>
+                                    <a href="{{ url_for('errors.edit_error_row', error_id=row.id) }}" 
+                                       class="btn btn-primary btn-sm">
+                                        <i class="fas fa-wrench"></i> Corregir
+                                    </a>
                                 </td>
-                                <td class="py-4 px-6">
-                                    <span class="font-mono text-sm bg-gray-100 px-3 py-1 rounded" title="{{ error.get('No_Resguardo', 'N/A') }}">
-                                        {{ error.get('No_Resguardo', 'N/A') }}
-                                    </span>
-                                </td>
-                                <td class="py-4 px-6">
-                                    <div class="flex items-start">
-                                        <i class="fas fa-exclamation-circle text-red-500 mt-1 mr-3"></i>
-                                        <span class="text-red-600 font-medium" title="{{ error.error_message }}">
-                                            {{ error.error_message }}
+
+                                <td>
+                                    <div class="badges-stack">
+                                        <span class="badge badge-blue">
+                                            Inv: {{ row.original_row.No_Inventario or 'N/A' }}
+                                        </span>
+                                        <span class="badge badge-purple">
+                                            Res: {{ row.original_row.No_Resguardo or 'N/A' }}
                                         </span>
                                     </div>
                                 </td>
-                                <td class="py-4 px-6">
-                                    <div class="flex justify-center">
-                                        <a href="{{ url_for('excel_import.edit_error_row', error_id=error.id) }}" 
-                                           class="inline-flex items-center justify-center px-4 py-2 bg-burgundy hover:bg-burgundy-dark text-white rounded-xl font-semibold transition-all duration-200 hover:scale-105"
-                                           title="Editar esta fila">
-                                            <i class="fas fa-edit mr-2"></i>
-                                            Editar
-                                        </a>
+
+                                <td>
+                                    <div class="error-text">
+                                        <i class="fas fa-exclamation-triangle"></i>
+                                        {{ row.error }}
                                     </div>
                                 </td>
-                            </tr>
-                            {% else %}
-                            <tr>
-                                <td colspan="4" class="py-8 text-center">
-                                    <div class="flex flex-col items-center justify-center text-gray-500">
-                                        <i class="fas fa-check-circle text-4xl mb-4 text-green-500"></i>
-                                        <p class="text-lg font-semibold">No se encontraron errores</p>
-                                        <p class="text-sm mt-2">Todas las filas se importaron correctamente</p>
-                                    </div>
+
+                                <td>
+                                    <ul class="compact-list">
+                                        <li><strong>Área:</strong> {{ row.original_row.Area or '---' }}</li>
+                                        <li><strong>Desc:</strong> {{ (row.original_row.Descripcion_Corta_Del_Bien or '')[:20] }}...</li>
+                                        <li><strong>Resg:</strong> {{ (row.original_row.Nombre_Del_Resguardante or '')[:20] }}...</li>
+                                    </ul>
                                 </td>
                             </tr>
                             {% endfor %}
@@ -93,20 +88,29 @@
                     </table>
                 </div>
 
-                <!-- Botones de Acción -->
-                <div class="flex flex-col sm:flex-row justify-between items-center gap-4 mt-6 pt-6 border-t border-beige-light">
-                    <a href="{{ url_for('resguardos.crear_resguardo') }}" 
-                       class="inline-flex items-center justify-center px-6 py-3 border-2 border-beige text-base font-semibold rounded-xl text-burgundy bg-white hover:bg-beige-light/30 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-burgundy transition-all duration-200 ease-in-out">
-                        <i class="fas fa-arrow-left mr-2"></i> Volver al Formulario de Carga
-                    </a>
-                    
-                    {% if errors %}
-                    <div class="text-sm text-gray-600 bg-beige-light/30 px-4 py-2 rounded-lg">
-                        <i class="fas fa-info-circle text-burgundy mr-2"></i>
-                        {{ errors|length }} error(es) por corregir
-                    </div>
-                    {% endif %}
+                {% if has_more %}
+                <div class="pagination-info">
+                    <p>Mostrando las primeras 50 filas.</p>
+                    <span class="info-pill">Corrige estas filas para ver las siguientes.</span>
                 </div>
+                {% endif %}
+
+                {% else %}
+                
+                <div class="empty-state-success">
+                    <div class="icon-wrapper">
+                        <i class="fas fa-check"></i>
+                    </div>
+                    <h3>¡Todo limpio!</h3>
+                    <p>No hay errores pendientes en este lote. Todos los registros han sido procesados correctamente.</p>
+                    
+                    <a href="{{ url_for('errors.select_error_batch') }}" class="btn-link-back">
+                        <i class="fas fa-arrow-left"></i> Volver a lista de lotes
+                    </a>
+                </div>
+                
+                {% endif %}
+
             </div>
         </div>
     </div>
@@ -115,18 +119,108 @@
 
 {% block styles %}
 <style>
-    .bg-burgundy { background-color: #6A2E4D; }
-    .bg-burgundy-dark { background-color: #551E3A; }
-    .text-burgundy { color: #6A2E4D; }
-    .border-burgundy { border-color: #6A2E4D; }
+    /* VARIABLES */
+    :root {
+        --col-burgundy: #6A2E4D;
+        --col-burgundy-dark: #551E3A;
+        --col-beige: #BC9B6A;
+        --col-beige-light: #fdfbf7;
+        --col-white: #ffffff;
+        --col-bg: #f9fafb;
+        --radius: 12px;
+        --shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+        
+        --bg-blue: #eff6ff; --text-blue: #1e40af;
+        --bg-purple: #f3e8ff; --text-purple: #6b21a8;
+        --text-red: #dc2626;
+    }
+
+    /* Layout */
+    .page-wrapper { min-height: 100vh; background: #f9fafb; padding: 2rem 1rem; }
+    .container-limit { max-width: 1200px; margin: 0 auto; }
+    .mb-4 { margin-bottom: 1.5rem; }
+
+    /* Header */
+    .header-card {
+        background: linear-gradient(to right, var(--col-burgundy), var(--col-burgundy-dark));
+        border-radius: var(--radius); padding: 1.5rem 2rem; color: white;
+        display: flex; justify-content: space-between; align-items: center;
+        margin-bottom: 2rem; box-shadow: var(--shadow); gap: 1rem; flex-wrap: wrap;
+    }
+    .header-content h1 { margin: 0 0 0.5rem 0; font-size: 1.5rem; }
+    .subtitle-info { font-size: 0.9rem; color: rgba(255,255,255,0.9); display: flex; align-items: center; gap: 0.5rem; }
+    .batch-id { background: rgba(255,255,255,0.2); padding: 0.1rem 0.4rem; border-radius: 4px; font-family: monospace; }
+    .separator { opacity: 0.5; }
+
+    /* Botón Glass (Header) */
+    .btn-glass {
+        background: rgba(255,255,255,0.15); color: white; border: 1px solid rgba(255,255,255,0.3);
+        padding: 0.6rem 1.2rem; border-radius: 8px; text-decoration: none; font-weight: 600;
+        display: inline-flex; align-items: center; gap: 0.5rem; transition: all 0.2s;
+    }
+    .btn-glass:hover { background: rgba(255,255,255,0.25); transform: translateY(-1px); }
+
+    /* Card Principal */
+    .card { background: var(--col-white); border-radius: var(--radius); box-shadow: var(--shadow); border: 1px solid #e5e7eb; overflow: hidden; }
+    .card-body { padding: 2rem; }
+
+    /* Alerta */
+    .alert-warning {
+        background: #fefce8; border-left: 4px solid #facc15; padding: 1rem; border-radius: 4px;
+        display: flex; gap: 1rem; align-items: flex-start; color: #854d0e; font-size: 0.95rem;
+    }
+    .alert-icon { color: #facc15; font-size: 1.1rem; margin-top: 2px; }
+
+    /* Tabla */
+    .table-responsive { overflow-x: auto; }
+    .data-table { width: 100%; border-collapse: collapse; min-width: 800px; }
+    .data-table thead tr { background: #f9fafb; border-bottom: 2px solid #e5e7eb; }
+    .data-table th { text-align: left; padding: 1rem; font-size: 0.85rem; font-weight: 700; color: #6b7280; text-transform: uppercase; }
+    .data-table td { padding: 1rem; border-bottom: 1px solid #f3f4f6; vertical-align: top; color: #374151; }
+    .data-table tr:hover { background-color: #fef2f2; } /* Hover rojo muy suave para errores */
+
+    /* Botón Corregir */
+    .btn-primary { background: var(--col-burgundy); color: white; border: none; padding: 0.5rem 1rem; border-radius: 6px; text-decoration: none; font-weight: 600; font-size: 0.85rem; display: inline-flex; align-items: center; gap: 0.4rem; transition: all 0.2s; }
+    .btn-primary:hover { background: var(--col-burgundy-dark); transform: scale(1.05); }
+
+    /* Badges Stack */
+    .badges-stack { display: flex; flex-direction: column; gap: 0.4rem; align-items: flex-start; }
+    .badge { padding: 0.2rem 0.6rem; border-radius: 20px; font-size: 0.75rem; font-weight: 600; white-space: nowrap; }
+    .badge-blue { background: var(--bg-blue); color: var(--text-blue); }
+    .badge-purple { background: var(--bg-purple); color: var(--text-purple); }
+
+    /* Texto de Error */
+    .error-text { color: var(--text-red); font-weight: 500; font-size: 0.9rem; display: flex; gap: 0.5rem; align-items: flex-start; line-height: 1.4; }
+    .error-text i { margin-top: 3px; flex-shrink: 0; }
+
+    /* Lista Compacta */
+    .compact-list { list-style: none; padding: 0; margin: 0; font-size: 0.85rem; color: #6b7280; }
+    .compact-list li { margin-bottom: 0.2rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 200px; }
+    .compact-list strong { color: #374151; }
+
+    /* Paginación Info */
+    .pagination-info { text-align: center; margin-top: 2rem; }
+    .pagination-info p { margin: 0 0 0.5rem 0; color: #6b7280; font-size: 0.9rem; }
+    .info-pill { background: #f3f4f6; padding: 0.3rem 0.8rem; border-radius: 6px; font-size: 0.85rem; color: #4b5563; }
+
+    /* Empty State (Success) */
+    .empty-state-success { text-align: center; padding: 4rem 1rem; }
+    .icon-wrapper { 
+        width: 80px; height: 80px; background: #dcfce7; color: #16a34a; 
+        border-radius: 50%; display: flex; align-items: center; justify-content: center; 
+        font-size: 2rem; margin: 0 auto 1.5rem auto; 
+    }
+    .empty-state-success h3 { margin: 0 0 0.5rem 0; color: #1f2937; font-size: 1.5rem; }
+    .empty-state-success p { color: #6b7280; margin: 0 auto 1.5rem auto; max-width: 400px; }
     
-    .bg-beige { background-color: #BC9B6A; }
-    .bg-beige-light { background-color: #D7C3A0; }
-    .text-beige-light { color: #D7C3A0; }
-    .border-beige { border-color: #BC9B6A; }
-    .border-beige-light { border-color: #D7C3A0; }
-    
-    .from-burgundy { --tw-gradient-from: #6A2E4D; --tw-gradient-to: rgb(106 46 77 / 0); --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to); }
-    .to-burgundy-dark { --tw-gradient-to: #551E3A; }
+    .btn-link-back { color: var(--col-burgundy); font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem; transition: color 0.2s; }
+    .btn-link-back:hover { color: var(--col-burgundy-dark); }
+
+    /* Móvil */
+    @media (max-width: 768px) {
+        .header-card { justify-content: center; text-align: center; }
+        .header-actions { width: 100%; justify-content: center; }
+        .data-table { display: block; } /* Permitir scroll horizontal en tabla */
+    }
 </style>
 {% endblock %}

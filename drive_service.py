@@ -12,9 +12,19 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
 from googleapiclient.errors import HttpError
 from flask import Response
+from google.oauth2 import service_account
 
-CLIENT_SECRET_FILE = './client_secret_361461075253-ovq8pfn283gcp600al9gl2a89k17pqu9.apps.googleusercontent.com.json'
-TOKEN_FILE = 'token.json'
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+# Construye las rutas completas y absolutas a tus archivos
+CLIENT_SECRET_FILE = os.path.join(
+    BASE_DIR, 
+    'client_secret_361461075253-ovq8pfn283gcp600al9gl2a89k17pqu9.apps.googleusercontent.com.json'
+)
+TOKEN_FILE = os.path.join(
+    BASE_DIR, 
+    'token.json'
+)
 SCOPES = ['https://www.googleapis.com/auth/drive']
 BIENES_FOLDER_ID = '12U5ba-ggUtTTbiY60FRrz7TR6owfVq8V'
 RESGUARDOS_FOLDER_ID = '1IZ12Y4G7y7IkjzSJHK0QEPmOB6FTz4Jp'
@@ -43,43 +53,34 @@ class DriveImageService:
 
     def _get_drive_service(self):
         """
-        Construye el servicio de Drive usando credenciales OAuth2.
+        Construye el servicio de Drive usando una Cuenta de Servicio.
         """
-        self.creds = None
-        
-        if os.path.exists(self.token_file):
-            self.creds = Credentials.from_authorized_user_file(self.token_file, SCOPES)
-        
-        if not self.creds or not self.creds.valid:
-            if self.creds and self.creds.expired and self.creds.refresh_token:
-                try:
-                    self.creds.refresh(Request())
-                except Exception as e:
-                    print(f"Error al refrescar token, pidiendo nuevo: {e}")
-                    self.creds = self._run_local_auth_flow()
-            else:
-                print("No hay token.json, iniciando autorización por navegador...")
-                self.creds = self._run_local_auth_flow()
-            
-            with open(self.token_file, 'w') as token:
-                token.write(self.creds.to_json())
+        # self.client_secret_file ahora será el path a tu 'service_account.json'
+        SERVICE_ACCOUNT_FILE = self.client_secret_file 
         
         try:
-            # Construir el servicio directamente con las credenciales
+            # Construye las credenciales desde el archivo JSON
+            creds = service_account.Credentials.from_service_account_file(
+                SERVICE_ACCOUNT_FILE, scopes=SCOPES)
+            
             service = build(
                 'drive', 
                 'v3', 
-                credentials=self.creds,
+                credentials=creds,
                 cache_discovery=False
             )
             
-            print("Servicio de Google Drive inicializado correctamente.")
+            print("Servicio de Google Drive (Cuenta de Servicio) inicializado.")
             return service
             
-        except Exception as error:
-            print(f'Error inesperado al construir el servicio: {error}')
+        except FileNotFoundError:
+            print(f"Error: No se encontró el archivo de cuenta de servicio: {SERVICE_ACCOUNT_FILE}")
+            print("Asegúrate de haber subido 'service_account.json' a PythonAnywhere.")
             return None
-
+        except Exception as error:
+            print(f'Error inesperado al construir el servicio con cuenta de servicio: {error}')
+            return None
+        
     def _run_local_auth_flow(self):
         flow = InstalledAppFlow.from_client_secrets_file(
             self.client_secret_file, SCOPES)
@@ -237,7 +238,7 @@ class DriveImageService:
 
 # --- Instancia global ---
 try:
-    drive_service = DriveImageService(CLIENT_SECRET_FILE, TOKEN_FILE)
+    drive_service = DriveImageService(SERVICE_ACCOUNT_KEY_FILE, TOKEN_FILE)
     if drive_service and drive_service.service:
         print("✅ Servicio Drive inicializado correctamente")
         if drive_service.test_connection():

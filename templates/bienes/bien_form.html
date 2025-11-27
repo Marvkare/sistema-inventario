@@ -1,422 +1,247 @@
 {% extends 'base.html' %}
+
+{% block title %}
+    {% if is_edit %}Editar Bien{% else %}Registrar Nuevo Bien{% endif %}
+{% endblock %}
+
 {% block content %}
-<div class="min-h-screen bg-gradient-to-br from-gray-50 to-beige-light/20 py-8 px-4">
-    <div class="max-w-6xl mx-auto">
-        <!-- Encabezado -->
-        <div class="bg-white rounded-2xl shadow-xl border border-beige-light overflow-hidden mb-8">
-            <div class="bg-gradient-to-r from-burgundy to-burgundy-dark p-6 text-white">
-                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                    <div>
-                        <h1 class="text-2xl md:text-3xl font-bold">
-                            {% if is_edit %}
-                                Editar Bien
-                            {% else %}
-                                Registrar Nuevo Bien
-                            {% endif %}
-                        </h1>
-                        <p class="text-beige-light mt-2">
-                            {% if is_edit %}
-                                Modifique la información del bien
-                            {% else %}
-                                Complete la información requerida para el registro
-                            {% endif %}
-                        </p>
-                    </div>
-                    <div class="flex items-center space-x-2">
-                        <div class="w-10 h-10 bg-beige rounded-full flex items-center justify-center">
-                            <i class="fas fa-box text-burgundy text-lg"></i>
-                        </div>
-                    </div>
-                </div>
+<div class="page-wrapper">
+    <div class="container-limit">
+        
+        <div class="header-card">
+            <div class="header-text">
+                <h1>
+                    {% if is_edit %}Editar Bien{% else %}Registrar Nuevo Bien{% endif %}
+                </h1>
+                <p>
+                    {% if is_edit %}Modifique la información del bien{% else %}Complete la información requerida para el registro{% endif %}
+                </p>
+            </div>
+            <div class="header-icon-box">
+                <i class="fas fa-box"></i>
             </div>
         </div>
 
-        <!-- Formulario -->
-        <div class="bg-white rounded-2xl shadow-lg border border-beige-light overflow-hidden">
-            <form method="POST" enctype="multipart/form-data" class="p-6 md:p-8">
+        <div class="form-card">
+            <form method="POST" enctype="multipart/form-data">
                 {% if is_edit %}
                     <input type="hidden" name="bien_id" value="{{ bien.id }}">
                 {% endif %}
                 
-                <!-- Sección: Información General -->
-                <div class="mb-8">
-                    <div class="flex items-center mb-6">
-                        <div class="w-8 h-8 bg-burgundy rounded-full flex items-center justify-center mr-3">
-                            <i class="fas fa-info text-white text-sm"></i>
-                        </div>
-                        <h2 class="text-xl font-bold text-burgundy">Información General</h2>
+                <div class="form-section">
+                    <div class="section-header">
+                        <div class="section-icon"><i class="fas fa-info"></i></div>
+                        <h2>Información General</h2>
                     </div>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                            <label for="No_Inventario" class="block text-sm font-semibold text-gray-700 mb-2 flex items-center">
-                                <i class="fas fa-hashtag text-burgundy mr-2 text-xs"></i>
-                                No. de Inventario *
-                            </label>
-                            <input type="text" 
-                                   class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-burgundy/50 focus:border-burgundy transition-all duration-200 bg-white/80" 
-                                   id="No_Inventario" 
-                                   name="No_Inventario" 
-                                   value="{{ bien.No_Inventario if is_edit else '' }}"
-                                   required
+                    
+                    <div class="form-grid-2">
+                        <div class="form-group">
+                            <label for="No_Inventario"><i class="fas fa-hashtag icon-label"></i> No. de Inventario *</label>
+                            <input type="text" id="No_Inventario" name="No_Inventario" 
+                                   value="{{ bien.No_Inventario if is_edit else '' }}" required
                                    placeholder="Ingrese el número de inventario">
                         </div>
-                        <div>
-                            <label for="Cantidad" class="block text-sm font-semibold text-gray-700 mb-2 flex items-center">
-                                <i class="fas fa-cubes text-burgundy mr-2 text-xs"></i>
-                                Cantidad *
-                            </label>
-                            <input type="number" 
-                                   class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-burgundy/50 focus:border-burgundy transition-all duration-200 bg-white/80" 
-                                   id="Cantidad" 
-                                   name="Cantidad" 
-                                   value="{{ bien.Cantidad if is_edit else '1' }}"
-                                   min="1" 
-                                   required
-                                   placeholder="Cantidad de unidades">
+                        <div class="form-group">
+                            <label for="Cantidad"><i class="fas fa-cubes icon-label"></i> Cantidad *</label>
+                            <input type="number" id="Cantidad" name="Cantidad" 
+                                   value="{{ bien.Cantidad if is_edit else '1' }}" min="1" required>
                         </div>
                     </div>
                 </div>
 
-                <!-- Sección: Datos Financieros -->
-                <div class="mb-8">
-                    <div class="flex items-center mb-6">
-                        <div class="w-8 h-8 bg-burgundy rounded-full flex items-center justify-center mr-3">
-                            <i class="fas fa-dollar-sign text-white text-sm"></i>
-                        </div>
-                        <h2 class="text-xl font-bold text-burgundy">Datos Financieros</h2>
+                <div class="form-section">
+                    <div class="section-header">
+                        <div class="section-icon"><i class="fas fa-dollar-sign"></i></div>
+                        <h2>Datos Financieros</h2>
                     </div>
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        <div>
-                            <label for="No_Factura" class="block text-sm font-semibold text-gray-700 mb-2">No. de Factura</label>
-                            <input type="text" 
-                                   class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-burgundy/50 focus:border-burgundy transition-all duration-200 bg-white/80" 
-                                   id="No_Factura" 
-                                   name="No_Factura"
-                                   value="{{ bien.No_Factura if is_edit else '' }}"
-                                   placeholder="Número de factura">
+                    
+                    <div class="form-grid-3">
+                        <div class="form-group">
+                            <label for="No_Factura">No. de Factura</label>
+                            <input type="text" id="No_Factura" name="No_Factura" value="{{ bien.No_Factura if is_edit else '' }}">
                         </div>
-                        <div>
-                            <label for="Fecha_Factura" class="block text-sm font-semibold text-gray-700 mb-2">Fecha de Factura</label>
-                            <input type="date" 
-                                   class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-burgundy/50 focus:border-burgundy transition-all duration-200 bg-white/80" 
-                                   id="Fecha_Factura" 
-                                   name="Fecha_Factura"
-                                   value="{{ bien.Fecha_Factura if is_edit else '' }}">
+                        <div class="form-group">
+                            <label for="Fecha_Factura">Fecha de Factura</label>
+                            <input type="date" id="Fecha_Factura" name="Fecha_Factura" value="{{ bien.Fecha_Factura if is_edit else '' }}">
                         </div>
-                        <div>
-                            <label for="Costo_Inicial" class="block text-sm font-semibold text-gray-700 mb-2">Costo Inicial</label>
-                            <input type="number" 
-                                   step="0.01" 
-                                   class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-burgundy/50 focus:border-burgundy transition-all duration-200 bg-white/80" 
-                                   id="Costo_Inicial" 
-                                   name="Costo_Inicial" 
-                                   value="{{ bien.Costo_Inicial if is_edit else '' }}"
-                                   min="0"
-                                   placeholder="0.00">
+                        <div class="form-group">
+                            <label for="Costo_Inicial">Costo Inicial</label>
+                            <input type="number" step="0.01" id="Costo_Inicial" name="Costo_Inicial" value="{{ bien.Costo_Inicial if is_edit else '' }}" placeholder="0.00">
                         </div>
-                        <div>
-                            <label for="Poliza" class="block text-sm font-semibold text-gray-700 mb-2">Póliza</label>
-                            <input type="text" 
-                                   class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-burgundy/50 focus:border-burgundy transition-all duration-200 bg-white/80" 
-                                   id="Poliza" 
-                                   name="Poliza"
-                                   value="{{ bien.Poliza if is_edit else '' }}"
-                                   placeholder="Número de póliza">
+                        <div class="form-group">
+                            <label for="Poliza">Póliza</label>
+                            <input type="text" id="Poliza" name="Poliza" value="{{ bien.Poliza if is_edit else '' }}">
                         </div>
-                        <div>
-                            <label for="Fecha_Poliza" class="block text-sm font-semibold text-gray-700 mb-2">Fecha de Póliza</label>
-                            <input type="date" 
-                                   class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-burgundy/50 focus:border-burgundy transition-all duration-200 bg-white/80" 
-                                   id="Fecha_Poliza" 
-                                   name="Fecha_Poliza"
-                                   value="{{ bien.Fecha_Poliza if is_edit else '' }}">
+                        <div class="form-group">
+                            <label for="Fecha_Poliza">Fecha de Póliza</label>
+                            <input type="date" id="Fecha_Poliza" name="Fecha_Poliza" value="{{ bien.Fecha_Poliza if is_edit else '' }}">
                         </div>
-                        <div>
-                            <label for="Depreciacion_Acumulada" class="block text-sm font-semibold text-gray-700 mb-2">Depreciación Acumulada</label>
-                            <input type="number" 
-                                   step="0.01" 
-                                   class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-burgundy/50 focus:border-burgundy transition-all duration-200 bg-white/80" 
-                                   id="Depreciacion_Acumulada" 
-                                   name="Depreciacion_Acumulada" 
-                                   value="{{ bien.Depreciacion_Acumulada if is_edit else '' }}"
-                                   min="0"
-                                   placeholder="0.00">
+                        <div class="form-group">
+                            <label for="Depreciacion_Acumulada">Depreciación Acum.</label>
+                            <input type="number" step="0.01" id="Depreciacion_Acumulada" name="Depreciacion_Acumulada" value="{{ bien.Depreciacion_Acumulada if is_edit else '' }}" placeholder="0.00">
                         </div>
-                        <div>
-                            <label for="Costo_Final" class="block text-sm font-semibold text-gray-700 mb-2">Costo Final</label>
-                            <input type="number" 
-                                   step="0.01" 
-                                   class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-burgundy/50 focus:border-burgundy transition-all duration-200 bg-white/80" 
-                                   id="Costo_Final" 
-                                   name="Costo_Final" 
-                                   value="{{ bien.Costo_Final if is_edit else '' }}"
-                                   min="0"
-                                   placeholder="0.00">
+                        <div class="form-group">
+                            <label for="Costo_Final">Costo Final</label>
+                            <input type="number" step="0.01" id="Costo_Final" name="Costo_Final" value="{{ bien.Costo_Final if is_edit else '' }}" placeholder="0.00">
                         </div>
-                        <div>
-                            <label for="Valor_En_Libros" class="block text-sm font-semibold text-gray-700 mb-2">Valor en Libros</label>
-                            <input type="number" 
-                                   step="0.01" 
-                                   class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-burgundy/50 focus:border-burgundy transition-all duration-200 bg-white/80" 
-                                   id="Valor_En_Libros" 
-                                   name="Valor_En_Libros" 
-                                   value="{{ bien.Valor_En_Libros if is_edit else '' }}"
-                                   min="0"
-                                   placeholder="0.00">
+                        <div class="form-group">
+                            <label for="Valor_En_Libros">Valor en Libros</label>
+                            <input type="number" step="0.01" id="Valor_En_Libros" name="Valor_En_Libros" value="{{ bien.Valor_En_Libros if is_edit else '' }}" placeholder="0.00">
                         </div>
                     </div>
                 </div>
 
-                <!-- Sección: Detalles Técnicos -->
-                <div class="mb-8">
-                    <div class="flex items-center mb-6">
-                        <div class="w-8 h-8 bg-burgundy rounded-full flex items-center justify-center mr-3">
-                            <i class="fas fa-cogs text-white text-sm"></i>
-                        </div>
-                        <h2 class="text-xl font-bold text-burgundy">Detalles Técnicos y Descripción</h2>
+                <div class="form-section">
+                    <div class="section-header">
+                        <div class="section-icon"><i class="fas fa-cogs"></i></div>
+                        <h2>Detalles Técnicos</h2>
                     </div>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                        <div>
-                            <label for="Estado_Del_Bien" class="block text-sm font-semibold text-gray-700 mb-2">Estado del Bien</label>
-                            <select class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-burgundy/50 focus:border-burgundy transition-all duration-200 bg-white/80" 
-                                    id="Estado_Del_Bien" 
-                                    name="Estado_Del_Bien">
-                                <option value="" disabled selected>Seleccione el estado...</option>
+                    
+                    <div class="form-grid-2">
+                        <div class="form-group">
+                            <label for="Estado_Del_Bien">Estado del Bien</label>
+                            <select id="Estado_Del_Bien" name="Estado_Del_Bien">
+                                <option value="" disabled selected>Seleccione...</option>
                                 <option value="Nuevo" {% if is_edit and bien.Estado_Del_Bien == 'Nuevo' %}selected{% endif %}>Nuevo</option>
                                 <option value="Bueno" {% if is_edit and bien.Estado_Del_Bien == 'Bueno' %}selected{% endif %}>Bueno</option>
                                 <option value="Regular" {% if is_edit and bien.Estado_Del_Bien == 'Regular' %}selected{% endif %}>Regular</option>
                                 <option value="Malo" {% if is_edit and bien.Estado_Del_Bien == 'Malo' %}selected{% endif %}>Malo</option>
                             </select>
                         </div>
-                        <div>
-                            <label for="Tipo_De_Alta" class="block text-sm font-semibold text-gray-700 mb-2">Tipo de Alta *</label>
-                            <select class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-burgundy/50 focus:border-burgundy transition-all duration-200 bg-white/80" 
-                                    id="Tipo_De_Alta" 
-                                    name="Tipo_De_Alta" 
-                                    required>
-                                <option value="" disabled selected>Seleccione el tipo...</option>
+                        <div class="form-group">
+                            <label for="Tipo_De_Alta">Tipo de Alta *</label>
+                            <select id="Tipo_De_Alta" name="Tipo_De_Alta" required>
+                                <option value="" disabled selected>Seleccione...</option>
                                 <option value="Compra" {% if is_edit and bien.Tipo_De_Alta == 'Compra' %}selected{% endif %}>Compra</option>
                                 <option value="Comodato" {% if is_edit and bien.Tipo_De_Alta == 'Comodato' %}selected{% endif %}>Comodato</option>
                                 <option value="Donacion" {% if is_edit and bien.Tipo_De_Alta == 'Donacion' %}selected{% endif %}>Donacion</option>
                             </select>
                         </div>
-                        <div>
-                            <label for="Marca" class="block text-sm font-semibold text-gray-700 mb-2">Marca</label>
-                            <input type="text" 
-                                   class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-burgundy/50 focus:border-burgundy transition-all duration-200 bg-white/80" 
-                                   id="Marca" 
-                                   name="Marca"
-                                   value="{{ bien.Marca if is_edit else '' }}"
-                                   placeholder="Marca del bien">
+                        <div class="form-group">
+                            <label for="Marca">Marca</label>
+                            <input type="text" id="Marca" name="Marca" value="{{ bien.Marca if is_edit else '' }}">
                         </div>
-                        <div>
-                            <label for="Modelo" class="block text-sm font-semibold text-gray-700 mb-2">Modelo</label>
-                            <input type="text" 
-                                   class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-burgundy/50 focus:border-burgundy transition-all duration-200 bg-white/80" 
-                                   id="Modelo" 
-                                   name="Modelo"
-                                   value="{{ bien.Modelo if is_edit else '' }}"
-                                   placeholder="Modelo del bien">
+                        <div class="form-group">
+                            <label for="Modelo">Modelo</label>
+                            <input type="text" id="Modelo" name="Modelo" value="{{ bien.Modelo if is_edit else '' }}">
                         </div>
-                        <div>
-                            <label for="Numero_De_Serie" class="block text-sm font-semibold text-gray-700 mb-2">Número de Serie</label>
-                            <input type="text" 
-                                   class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-burgundy/50 focus:border-burgundy transition-all duration-200 bg-white/80" 
-                                   id="Numero_De_Serie" 
-                                   name="Numero_De_Serie"
-                                   value="{{ bien.Numero_De_Serie if is_edit else '' }}"
-                                   placeholder="Número de serie">
+                        <div class="form-group full-width">
+                            <label for="Numero_De_Serie">Número de Serie</label>
+                            <input type="text" id="Numero_De_Serie" name="Numero_De_Serie" value="{{ bien.Numero_De_Serie if is_edit else '' }}">
                         </div>
                     </div>
-                    <div class="grid grid-cols-1 gap-6">
-                        <div>
-                            <label for="Descripcion_Corta_Del_Bien" class="block text-sm font-semibold text-gray-700 mb-2">Descripción Corta</label>
-                            <textarea class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-burgundy/50 focus:border-burgundy transition-all duration-200 bg-white/80 resize-none" 
-                                      id="Descripcion_Corta_Del_Bien" 
-                                      name="Descripcion_Corta_Del_Bien" 
-                                      rows="2"
-                                      placeholder="Descripción breve del bien">{{ bien.Descripcion_Corta_Del_Bien if is_edit else '' }}</textarea>
+
+                    <div class="form-group mt-3">
+                        <label for="Descripcion_Corta_Del_Bien">Descripción Corta</label>
+                        <textarea id="Descripcion_Corta_Del_Bien" name="Descripcion_Corta_Del_Bien" rows="2">{{ bien.Descripcion_Corta_Del_Bien if is_edit else '' }}</textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="Descripcion_Del_Bien">Descripción Completa</label>
+                        <textarea id="Descripcion_Del_Bien" name="Descripcion_Del_Bien" rows="4">{{ bien.Descripcion_Del_Bien if is_edit else '' }}</textarea>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <div class="section-header">
+                        <div class="section-icon"><i class="fas fa-calculator"></i></div>
+                        <h2>Información Contable</h2>
+                    </div>
+                    <div class="form-grid-2">
+                        <div class="form-group">
+                            <label for="No_Cuenta">No. de Cuenta</label>
+                            <input type="text" id="No_Cuenta" name="No_Cuenta" value="{{ bien.No_Cuenta if is_edit else '' }}">
                         </div>
-                        <div>
-                            <label for="Descripcion_Del_Bien" class="block text-sm font-semibold text-gray-700 mb-2">Descripción Completa</label>
-                            <textarea class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-burgundy/50 focus:border-burgundy transition-all duration-200 bg-white/80 resize-none" 
-                                      id="Descripcion_Del_Bien" 
-                                      name="Descripcion_Del_Bien" 
-                                      rows="4"
-                                      placeholder="Descripción detallada del bien">{{ bien.Descripcion_Del_Bien if is_edit else '' }}</textarea>
+                        <div class="form-group">
+                            <label for="Sub_Cuenta_Armonizadora">Subcuenta Armonizadora</label>
+                            <input type="text" id="Sub_Cuenta_Armonizadora" name="Sub_Cuenta_Armonizadora" value="{{ bien.Sub_Cuenta_Armonizadora if is_edit else '' }}">
+                        </div>
+                        <div class="form-group">
+                            <label for="Proveedor">Proveedor</label>
+                            <input type="text" id="Proveedor" name="Proveedor" value="{{ bien.Proveedor if is_edit else '' }}">
+                        </div>
+                        <div class="form-group">
+                            <label for="Rubro">Rubro</label>
+                            <input type="text" id="Rubro" name="Rubro" value="{{ bien.Rubro if is_edit else '' }}">
                         </div>
                     </div>
                 </div>
 
-                <!-- Sección: Información Contable -->
-                <div class="mb-8">
-                    <div class="flex items-center mb-6">
-                        <div class="w-8 h-8 bg-burgundy rounded-full flex items-center justify-center mr-3">
-                            <i class="fas fa-calculator text-white text-sm"></i>
-                        </div>
-                        <h2 class="text-xl font-bold text-burgundy">Información Contable</h2>
+                <div class="form-section">
+                    <div class="section-header">
+                        <div class="section-icon"><i class="fas fa-file-alt"></i></div>
+                        <h2>Información Adicional</h2>
                     </div>
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        <div>
-                            <label for="No_Cuenta" class="block text-sm font-semibold text-gray-700 mb-2">No. de Cuenta</label>
-                            <input type="text" 
-                                   class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-burgundy/50 focus:border-burgundy transition-all duration-200 bg-white/80" 
-                                   id="No_Cuenta" 
-                                   name="No_Cuenta"
-                                   value="{{ bien.No_Cuenta if is_edit else '' }}"
-                                   placeholder="Número de cuenta">
-                        </div>
-                        <div>
-                            <label for="Sub_Cuenta_Armonizadora" class="block text-sm font-semibold text-gray-700 mb-2">Subcuenta Armonizadora</label>
-                            <input type="text" 
-                                   class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-burgundy/50 focus:border-burgundy transition-all duration-200 bg-white/80" 
-                                   id="Sub_Cuenta_Armonizadora" 
-                                   name="Sub_Cuenta_Armonizadora"
-                                   value="{{ bien.Sub_Cuenta_Armonizadora if is_edit else '' }}"
-                                   placeholder="Subcuenta armonizadora">
-                        </div>
-                        <div>
-                            <label for="Proveedor" class="block text-sm font-semibold text-gray-700 mb-2">Proveedor</label>
-                            <input type="text" 
-                                   class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-burgundy/50 focus:border-burgundy transition-all duration-200 bg-white/80" 
-                                   id="Proveedor" 
-                                   name="Proveedor"
-                                   value="{{ bien.Proveedor if is_edit else '' }}"
-                                   placeholder="Nombre del proveedor">
-                        </div>
-                        <div>
-                            <label for="Rubro" class="block text-sm font-semibold text-gray-700 mb-2">Rubro</label>
-                            <input type="text" 
-                                   class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-burgundy/50 focus:border-burgundy transition-all duration-200 bg-white/80" 
-                                   id="Rubro" 
-                                   name="Rubro"
-                                   value="{{ bien.Rubro if is_edit else '' }}"
-                                   placeholder="Rubro contable">
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Sección: Información Adicional -->
-                <div class="mb-8">
-                    <div class="flex items-center mb-6">
-                        <div class="w-8 h-8 bg-burgundy rounded-full flex items-center justify-center mr-3">
-                            <i class="fas fa-file-alt text-white text-sm"></i>
-                        </div>
-                        <h2 class="text-xl font-bold text-burgundy">Información Adicional</h2>
-                    </div>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                            <label for="Clasificacion_Legal" class="block text-sm font-semibold text-gray-700 mb-2">Clasificación Legal *</label>
-                            <select class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-burgundy/50 focus:border-burgundy transition-all duration-200 bg-white/80" 
-                                    id="Clasificacion_Legal" 
-                                    name="Clasificacion_Legal" 
-                                    required>
+                    <div class="form-grid-2">
+                        <div class="form-group">
+                            <label for="Clasificacion_Legal">Clasificación Legal *</label>
+                            <select id="Clasificacion_Legal" name="Clasificacion_Legal" required>
                                 <option value="" disabled selected>Seleccione...</option>
                                 <option value="Dominio Público" {% if is_edit and bien.Clasificacion_Legal == 'Dominio Público' %}selected{% endif %}>Dominio Público</option>
                                 <option value="Dominio Privado" {% if is_edit and bien.Clasificacion_Legal == 'Dominio Privado' %}selected{% endif %}>Dominio Privado</option>
                             </select>
                         </div>
-                        <div>
-                            <label for="Area_Presupuestal" class="block text-sm font-semibold text-gray-700 mb-2">Área Presupuestal</label>
-                            <input type="text" 
-                                   class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-burgundy/50 focus:border-burgundy transition-all duration-200 bg-white/80" 
-                                   id="Area_Presupuestal" 
-                                   name="Area_Presupuestal"
-                                   value="{{ bien.Area_Presupuestal if is_edit else '' }}"
-                                   placeholder="Área presupuestal">
+                        <div class="form-group">
+                            <label for="Area_Presupuestal">Área Presupuestal</label>
+                            <input type="text" id="Area_Presupuestal" name="Area_Presupuestal" value="{{ bien.Area_Presupuestal if is_edit else '' }}">
                         </div>
-                        <div>
-                            <label for="Fecha_Adquisicion_Alta" class="block text-sm font-semibold text-gray-700 mb-2">Fecha de Adquisición/Alta</label>
-                            <input type="date" 
-                                   class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-burgundy/50 focus:border-burgundy transition-all duration-200 bg-white/80" 
-                                   id="Fecha_Adquisicion_Alta" 
-                                   name="Fecha_Adquisicion_Alta"
-                                   value="{{ bien.Fecha_Adquisicion_Alta if is_edit else '' }}">
+                        <div class="form-group">
+                            <label for="Fecha_Adquisicion_Alta">Fecha de Adquisición/Alta</label>
+                            <input type="date" id="Fecha_Adquisicion_Alta" name="Fecha_Adquisicion_Alta" value="{{ bien.Fecha_Adquisicion_Alta if is_edit else '' }}">
                         </div>
-                        <div>
-                            <label for="Documento_Propiedad" class="block text-sm font-semibold text-gray-700 mb-2">Documento de Propiedad</label>
-                            <input type="text" 
-                                   class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-burgundy/50 focus:border-burgundy transition-all duration-200 bg-white/80" 
-                                   id="Documento_Propiedad" 
-                                   name="Documento_Propiedad"
-                                   value="{{ bien.Documento_Propiedad if is_edit else '' }}"
-                                   placeholder="Documento de propiedad">
+                        <div class="form-group">
+                            <label for="Documento_Propiedad">Documento de Propiedad</label>
+                            <input type="text" id="Documento_Propiedad" name="Documento_Propiedad" value="{{ bien.Documento_Propiedad if is_edit else '' }}">
                         </div>
-                        <div>
-                            <label for="Fecha_Documento_Propiedad" class="block text-sm font-semibold text-gray-700 mb-2">Fecha del Documento</label>
-                            <input type="date" 
-                                   class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-burgundy/50 focus:border-burgundy transition-all duration-200 bg-white/80" 
-                                   id="Fecha_Documento_Propiedad" 
-                                   name="Fecha_Documento_Propiedad"
-                                   value="{{ bien.Fecha_Documento_Propiedad if is_edit else '' }}">
+                        <div class="form-group">
+                            <label for="Fecha_Documento_Propiedad">Fecha del Documento</label>
+                            <input type="date" id="Fecha_Documento_Propiedad" name="Fecha_Documento_Propiedad" value="{{ bien.Fecha_Documento_Propiedad if is_edit else '' }}">
                         </div>
                     </div>
                 </div>
-                
-                <!-- Sección: Imágenes -->
-                <!-- Sección: Imágenes -->
-<div class="mb-8">
-    <div class="flex items-center mb-6">
-        <div class="w-8 h-8 bg-burgundy rounded-full flex items-center justify-center mr-3">
-            <i class="fas fa-images text-white text-sm"></i>
-        </div>
-        <h2 class="text-xl font-bold text-burgundy">Imágenes del Bien</h2>
-    </div>
-    <div class="bg-beige-light/30 rounded-xl p-6 border-2 border-dashed border-beige">
-        <label for="imagenes_bien" class="block text-sm font-semibold text-gray-700 mb-3 flex items-center">
-            <i class="fas fa-cloud-upload-alt text-burgundy mr-2"></i>
-            Seleccionar Imágenes
-        </label>
-        <input 
-            type="file" 
-            id="imagenes_bien" 
-            name="imagenes_bien" 
-            class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-burgundy/50 focus:border-burgundy transition-all duration-200 bg-white/80 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-burgundy file:text-white hover:file:bg-burgundy-dark"
-            accept="image/*" 
-            multiple
-        >
-        <p class="text-xs text-gray-500 mt-2">Puede seleccionar múltiples imágenes (JPEG, PNG, GIF)</p>
-        
-        <!-- Preview de imágenes existentes -->
-        {% if is_edit and bien.imagenes %}
-        <div class="mt-4">
-            <h4 class="text-sm font-semibold text-gray-700 mb-3">Imágenes existentes:</h4>
-            <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4" id="imagenes_existentes">
-                {% for imagen in bien.imagenes %}
-                <div class="relative group" id="imagen_container_{{ imagen.id }}">
-                    <img src="{{ url_for('serve_drive_image', file_id=imagen.ruta_imagen) }}" 
-                         class="w-full h-24 object-cover rounded-lg border-2 border-beige-light shadow-sm">
-                    <button type="button" 
-                            class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center shadow-lg hover:bg-red-700 transition-colors duration-200"
-                            onclick="marcarEliminarImagen({{ imagen.id }}, this)">
-                        <i class="fas fa-times text-xs"></i>
-                    </button>
-                </div>
-                {% endfor %}
-            </div>
-        </div>
-        {% endif %}
-        
-        <!-- Preview de nuevas imágenes -->
-        <div id="preview_imagenes" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 mt-4"></div>
-    </div>
-</div>
-                <!-- Botones de Acción -->
-                <div class="flex flex-col sm:flex-row justify-end gap-4 pt-6 border-t border-gray-200">
-                    <a href="{{ url_for('bienes.listar_bienes') }}" 
-                       class="inline-flex items-center justify-center px-6 py-3 border-2 border-gray-300 text-base font-semibold rounded-xl text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-all duration-200 ease-in-out order-2 sm:order-1">
-                        <i class="fas fa-times mr-2"></i> Cancelar
-                    </a>
-                    <button type="submit" 
-                            class="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-semibold rounded-xl shadow-sm text-white bg-gradient-to-r from-burgundy to-burgundy-dark hover:from-burgundy-dark hover:to-burgundy focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-burgundy transition-all duration-200 ease-in-out order-1 sm:order-2">
-                        <i class="fas fa-save mr-2"></i> 
-                        {% if is_edit %}
-                            Actualizar Bien
-                        {% else %}
-                            Guardar Bien
+
+                <div class="form-section">
+                    <div class="section-header">
+                        <div class="section-icon"><i class="fas fa-images"></i></div>
+                        <h2>Imágenes del Bien</h2>
+                    </div>
+                    
+                    <div class="upload-container">
+                        <label for="imagenes_bien" class="upload-label">
+                            <i class="fas fa-cloud-upload-alt"></i> Seleccionar Imágenes
+                        </label>
+                        <input type="file" id="imagenes_bien" name="imagenes_bien" accept="image/*" multiple>
+                        <p class="help-text">Puede seleccionar múltiples imágenes (JPEG, PNG, GIF)</p>
+
+                        {% if is_edit and bien.imagenes %}
+                        <div class="preview-area">
+                            <h4>Imágenes existentes:</h4>
+                            <div class="preview-grid" id="imagenes_existentes">
+                                {% for imagen in bien.imagenes %}
+                                <div class="preview-item">
+                                    <img src="{{ url_for('serve_uploaded_file', filename=imagen.ruta_imagen) }}">
+                                    <button type="button" class="btn-delete-img" onclick="marcarEliminarImagen({{ imagen.id }}, this)">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
                         {% endif %}
+
+                        <div id="preview_imagenes" class="preview-grid"></div>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <a href="{{ url_for('bienes.listar_bienes') }}" class="btn btn-secondary">
+                        <i class="fas fa-times"></i> Cancelar
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> 
+                        {% if is_edit %}Actualizar Bien{% else %}Guardar Bien{% endif %}
                     </button>
                 </div>
+
             </form>
         </div>
     </div>
@@ -425,33 +250,170 @@
 
 {% block styles %}
 <style>
-    .bg-burgundy { background-color: #6A2E4D; }
-    .bg-burgundy-dark { background-color: #551E3A; }
-    .text-burgundy { color: #6A2E4D; }
-    .border-burgundy { border-color: #6A2E4D; }
-    .focus\:ring-burgundy\/50:focus { --tw-ring-color: rgb(106 46 77 / 0.5); }
-    .focus\:border-burgundy:focus { border-color: #6A2E4D; }
+    /* --- VARIABLES LOCALES (Estilo Atitalaquia) --- */
+    :root {
+        --color-burgundy: #6A2E4D;
+        --color-burgundy-dark: #551E3A;
+        --color-beige: #BC9B6A;
+        --color-beige-light: #fdfbf7; 
+        --color-white: #ffffff;
+        --color-gray: #e5e7eb;
+        --radius: 12px;
+        --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Layout General */
+    .page-wrapper {
+        min-height: 100vh;
+        background: linear-gradient(to bottom right, #f9fafb, var(--color-beige-light));
+        padding: 2rem 1rem;
+    }
+    .container-limit {
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+    .mt-3 { margin-top: 1rem; }
+
+    /* Encabezado */
+    .header-card {
+        background: linear-gradient(to right, var(--color-burgundy), var(--color-burgundy-dark));
+        border-radius: var(--radius);
+        padding: 1.5rem 2rem;
+        color: white;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+        box-shadow: var(--shadow);
+    }
+    .header-text h1 { margin: 0; font-size: 1.5rem; font-weight: 700; }
+    .header-text p { margin: 0.5rem 0 0; color: #e2e8f0; font-size: 0.9rem; }
+    .header-icon-box {
+        width: 48px; height: 48px;
+        background: var(--color-beige);
+        border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+        color: var(--color-burgundy);
+        font-size: 1.2rem;
+    }
+
+    /* Formulario Container */
+    .form-card {
+        background: white;
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
+        border: 1px solid var(--color-gray);
+        overflow: hidden;
+        padding: 2rem;
+    }
+
+    /* Secciones */
+    .form-section { margin-bottom: 2.5rem; }
+    .section-header {
+        display: flex; align-items: center; gap: 1rem;
+        margin-bottom: 1.5rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 2px solid #f3f4f6;
+    }
+    .section-icon {
+        width: 32px; height: 32px;
+        background: var(--color-burgundy);
+        border-radius: 50%;
+        color: white;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 0.8rem;
+    }
+    .section-header h2 {
+        color: var(--color-burgundy);
+        font-size: 1.2rem; margin: 0; font-weight: 600;
+    }
+
+    /* Grids Responsive */
+    .form-grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; }
+    .form-grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; }
+
+    /* Inputs y Labels */
+    .form-group { display: flex; flex-direction: column; gap: 0.5rem; }
+    .form-group label {
+        font-size: 0.9rem; font-weight: 600; color: #374151;
+        display: flex; align-items: center; gap: 0.5rem;
+    }
+    .icon-label { color: var(--color-burgundy); font-size: 0.8rem; }
     
-    .bg-beige { background-color: #BC9B6A; }
-    .bg-beige-light { background-color: #D7C3A0; }
-    .text-beige-light { color: #D7C3A0; }
-    .border-beige { border-color: #BC9B6A; }
-    .border-beige-light { border-color: #D7C3A0; }
-    
-    .from-burgundy { --tw-gradient-from: #6A2E4D; --tw-gradient-to: rgb(106 46 77 / 0); --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to); }
-    .to-burgundy-dark { --tw-gradient-to: #551E3A; }
-    
+    input, select, textarea {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        border: 1px solid #d1d5db;
+        border-radius: 8px;
+        font-size: 0.95rem;
+        transition: border-color 0.2s;
+        background-color: #fdfdfd;
+    }
     input:focus, select:focus, textarea:focus {
         outline: none;
-        box-shadow: 0 0 0 2px rgb(106 46 77 / 0.1);
+        border-color: var(--color-burgundy);
+        box-shadow: 0 0 0 3px rgba(106, 46, 77, 0.1);
     }
-    
-    #preview_imagenes .relative {
-        transition: all 0.3s ease;
+    .border-error { border-color: #ef4444 !important; }
+
+    /* Área de Carga */
+    .upload-container {
+        border: 2px dashed var(--color-beige);
+        background-color: #fafafa;
+        border-radius: 12px;
+        padding: 2rem;
+        text-align: center;
     }
+    .upload-label { cursor: pointer; font-weight: bold; color: var(--color-burgundy); }
+    input[type="file"] { margin-top: 1rem; border: none; padding: 0.5rem; }
+    .help-text { font-size: 0.8rem; color: #6b7280; margin-top: 0.5rem; }
+
+    /* Previews */
+    .preview-grid {
+        display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+        gap: 1rem; margin-top: 1.5rem;
+    }
+    .preview-item { position: relative; width: 100%; height: 100px; }
+    .preview-item img {
+        width: 100%; height: 100%; object-fit: cover;
+        border-radius: 8px; border: 1px solid var(--color-beige);
+    }
+    .btn-delete-img {
+        position: absolute; top: -5px; right: -5px;
+        background: #ef4444; color: white; border: none;
+        width: 24px; height: 24px; border-radius: 50%;
+        cursor: pointer; display: flex; align-items: center; justify-content: center;
+        font-size: 0.7rem; box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+
+    /* Botones Finales */
+    .form-actions {
+        margin-top: 2rem; padding-top: 1.5rem;
+        border-top: 1px solid #e5e7eb;
+        display: flex; gap: 1rem; justify-content: flex-end;
+    }
+    .btn {
+        padding: 0.75rem 1.5rem; border-radius: 8px; font-weight: 600;
+        text-decoration: none; cursor: pointer; display: inline-flex;
+        align-items: center; gap: 0.5rem; border: none; font-size: 1rem;
+        transition: all 0.2s;
+    }
+    .btn-primary {
+        background: linear-gradient(to right, var(--color-burgundy), var(--color-burgundy-dark));
+        color: white;
+    }
+    .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
     
-    #preview_imagenes .relative:hover {
-        transform: scale(1.05);
+    .btn-secondary {
+        background: white; border: 1px solid #d1d5db; color: #374151;
+    }
+    .btn-secondary:hover { background: #f3f4f6; }
+
+    /* Móvil */
+    @media (max-width: 640px) {
+        .header-card { flex-direction: column; text-align: center; gap: 1rem; }
+        .form-actions { flex-direction: column; }
+        .btn { width: 100%; justify-content: center; }
     }
 </style>
 {% endblock %}
@@ -465,19 +427,14 @@ let fileStore = [];
 // Función para marcar imágenes existentes para eliminar
 function marcarEliminarImagen(imagenId, buttonElement) {
     if (confirm('¿Está seguro de que desea eliminar esta imagen?')) {
-        // Crear input hidden para marcar la imagen a eliminar
         const hiddenInput = document.createElement('input');
         hiddenInput.type = 'hidden';
         hiddenInput.name = 'eliminar_imagen_bien[]';
         hiddenInput.value = imagenId;
-        
-        // Agregar el input al formulario
         document.querySelector('form').appendChild(hiddenInput);
         
-        // Ocultar la imagen
-        buttonElement.closest('.relative').style.display = 'none';
-        
-        console.log('Imagen marcada para eliminar:', imagenId);
+        // Ocultar el item completo (padre del botón)
+        buttonElement.closest('.preview-item').style.display = 'none';
     }
 }
 
@@ -494,18 +451,20 @@ function mostrarPreview() {
         if (file.type.startsWith('image/')) {
             const reader = new FileReader();
             reader.onload = function(e) {
+                // Crear contenedor
                 const contenedor = document.createElement('div');
-                contenedor.className = "relative group";
+                contenedor.className = "preview-item"; // Usamos la clase CSS nueva
+                
+                // Crear imagen
                 const img = document.createElement('img');
                 img.src = e.target.result;
-                img.className = "w-full h-24 object-cover rounded-lg border-2 border-beige-light shadow-sm group-hover:shadow-md transition-all duration-200";
                 img.alt = "Vista previa";
                 
+                // Crear botón eliminar
                 const btn = document.createElement('button');
                 btn.type = "button";
-                btn.innerHTML = '<i class="fas fa-times text-xs"></i>';
-                btn.className = "absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center shadow-lg hover:bg-red-700 transition-colors duration-200";
-                btn.title = "Eliminar imagen";
+                btn.className = "btn-delete-img"; // Usamos la clase CSS nueva
+                btn.innerHTML = '<i class="fas fa-times"></i>';
                 btn.onclick = function() {
                     fileStore.splice(idx, 1);
                     sincronizarInput();
@@ -525,35 +484,22 @@ function sincronizarInput() {
     const dataTransfer = new DataTransfer();
     fileStore.forEach(file => dataTransfer.items.add(file));
     inputImagenes.files = dataTransfer.files;
-    // ELIMINA ESTA LÍNEA: inputImagenes.value = '';
 }
 
-// Validación adicional para campos requeridos
+// Validación de campos requeridos
 document.addEventListener('DOMContentLoaded', function() {
     const form = document.querySelector('form');
     
-    // Debug: mostrar información del formulario al enviar
     form.addEventListener('submit', function(e) {
-        console.log('Formulario enviado');
-        console.log('Files en imagenes_bien:', document.getElementById('imagenes_bien').files);
-        console.log('Número de archivos:', document.getElementById('imagenes_bien').files.length);
-        console.log('Inputs eliminación:', document.querySelectorAll('input[name="eliminar_imagen_bien[]"]'));
-        
-        // Verificar cada archivo individualmente
-        const files = document.getElementById('imagenes_bien').files;
-        for (let i = 0; i < files.length; i++) {
-            console.log('Archivo', i, ':', files[i].name, files[i].size);
-        }
-        
         const requiredFields = form.querySelectorAll('[required]');
         let isValid = true;
         
         requiredFields.forEach(field => {
             if (!field.value.trim()) {
                 isValid = false;
-                field.classList.add('border-red-500');
+                field.classList.add('border-error'); // Clase CSS simple
             } else {
-                field.classList.remove('border-red-500');
+                field.classList.remove('border-error');
             }
         });
         
@@ -564,4 +510,4 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 </script>
-{% endblock %}
+{% endblock %}  
