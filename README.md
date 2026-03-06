@@ -77,66 +77,83 @@ Una herramienta fundamental para el control y la fiscalización. Permite generar
 
 ## 🚀 Instalación y Puesta en Marcha
 
-Sigue estos pasos para configurar el entorno de desarrollo local:
+Sigue estos pasos para configurar el entorno de desarrollo local en tu máquina.
+
+### 1. Requisitos Previos
+
+Antes de comenzar, asegúrate de tener instaladas las siguientes herramientas:
+
+#### **A. Python**
+* **Descarga:** [python.org](https://www.python.org/downloads/)
+* **Instalación:** Durante el proceso, marca la casilla **"Add Python to PATH"**.
+* **Comprobación:** Abre una terminal y ejecuta:
+    ```bash
+    python --version
+    ```
+* *Guía en video:* [Cómo instalar Python en Windows](https://www.youtube.com/watch?v=xd_0RN2SyfI)
+
+#### **B. MySQL & MySQL Workbench**
+* **Descarga:** [MySQL Installer for Windows](https://dev.mysql.com/downloads/installer/)
+* **Instalación:** Se recomienda la instalación **"Custom"** incluyendo `MySQL Server` y `MySQL Workbench`. Define una contraseña para el usuario `root` y mantén el puerto `3306`.
+* **Comprobación:** Abre MySQL Workbench y realiza una conexión local. Si puedes acceder al panel de administración, está listo.
+* *Guía en video:* [Instalar MySQL y Workbench](https://www.youtube.com/watch?v=GQj0XpjQK4E)
+
+#### **C. GTK3 (Solo Windows)**
+* Requerido para la generación de reportes y dependencias gráficas.
+* **Descarga:** [GTK for Windows Runtime Installer](https://github.com/tschoonj/GTK-for-Windows-Runtime-Environment-Installer/releases)
+
+---
+
+### 2. Configuración del Entorno
 
 1.  **Clonar el repositorio:**
-
     ```bash
-    git clone https://github.com/Marvkare/sistema-inventario.git
+    git clone [https://github.com/Marvkare/sistema-inventario.git](https://github.com/Marvkare/sistema-inventario.git)
     cd sistema-inventario
     ```
 
 2.  **Crear y activar un entorno virtual:**
-
     ```bash
-    # Para Windows
-    python3.12 -m venv venv
+    # En Windows
+    python -m venv venv
     .\venv\Scripts\activate
 
-    # Para macOS/Linux
-    python3.12 -m venv venv
+    # En macOS/Linux
+    python3 -m venv venv
     source venv/bin/activate
     ```
 
 3.  **Instalar las dependencias:**
-
     ```bash
     pip install -r requirements_python312.txt
     ```
 
-4.  **Configurar las variables de entorno:**
-    Crea un archivo llamado `.env` en la raíz del proyecto y añade las siguientes variables. Este archivo es ignorado por Git para proteger tus credenciales.
-
+4.  **Configurar variables de entorno:**
+    Crea un archivo `.env` en la raíz del proyecto y configura tus credenciales de base de datos:
     ```ini
-    # Clave secreta para la seguridad de la sesión de Flask
     SECRET_KEY='tu_clave_secreta_aqui'
-
-    # Configuración de la base de datos MySQL
     DB_HOST='localhost'
-    DB_USER='tu_usuario_db'
-    DB_PASSWORD='tu_contraseña_db'
+    DB_USER='root'
+    DB_PASSWORD='tu_contraseña_de_mysql'
     DB_NAME='nombre_de_tu_db'
     ```
 
-5.  **Inicializar y migrar la base de datos:**
-    Asegúrate de haber creado la base de datos en MySQL. Luego, ejecuta los comandos de Flask-Migrate.
+### 3. Base de Datos y Ejecución
 
+1.  **Inicializar la base de datos:**
+    Asegúrate de que el servidor MySQL esté corriendo y de haber creado la base de datos con el nombre definido en el `.env`.
     ```bash
-    # Estos comandos deben ser ejecutados una vez para crear las tablas
-    flask db init  # Solo la primera vez
+    flask db init
     flask db migrate -m "Migración inicial"
     flask db upgrade
     ```
 
-6.  **Ejecutar la aplicación:**
-
+2.  **Lanzar la aplicación:**
     ```bash
     flask run
     ```
 
-    La aplicación estará disponible en `http://127.0.0.1:5000`.
-
------
+La aplicación estará disponible en: [http://127.0.0.1:5000](http://127.0.0.1:5000)
 
 ## 🗺️ Roadmap y Futuras Funcionalidades
 
