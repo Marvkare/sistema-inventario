@@ -17,7 +17,6 @@ from log_activity import log_activity
 from flask import send_from_directory, abort, send_file
 import json
 from .workflows import WORKFLOWS, DEFAULT_WORKFLOW
-from drive_service import drive_service, BAJAS_FOLDER_ID, get_cached_image, save_to_cache
 import io
 import uuid
 

@@ -22,7 +22,6 @@ from log_activity import log_activity
 from flask import jsonify
 import pymysql
 import pymysql.cursors
-from drive_service import drive_service, INVENTARIOS_FOLDER_ID, get_cached_image, save_to_cache
 
 
 inventarios_bp = Blueprint('inventarios', __name__, url_prefix='/inventarios')

@@ -14,7 +14,7 @@ from log_activity import log_activity # Asegúrate de que este archivo exista
 from decorators import permission_required # Asume que este decorador existe
 import pymysql
 import io
-from drive_service import drive_service, get_cached_image, save_to_cache
+
 plantillas_bp = Blueprint('plantillas', __name__)
 import urllib.parse
 

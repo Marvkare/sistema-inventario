@@ -1,11 +1,13 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, send_from_directory
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from sqlalchemy.exc import OperationalError, ProgrammingError
-from sqlalchemy import inspect
+from sqlalchemy import inspect create_engine, text
 import os
+
+from flask import send_from_directory, abort, current_app
 from flask_migrate import Migrate  # <--- 1. Importa la clase
 from flask import Response, abort  # <-- Asegúrate de importar esto
-from drive_service import drive_service, get_cached_image, save_to_cache, serve_default_image # <-- Importa el servicio
+
 # --- INICIALIZACIÓN Y CONFIGURACIÓN ---
 app = Flask(__name__)
 # Importar la configuración de la base de datos y otras configuraciones
@@ -17,18 +19,40 @@ import time
 # Configuración de la aplicación
 app.config['SECRET_KEY'] = 'tu_clave_secreta_aqui'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-app.config['SQLALCHEMY_DATABASE_URI'] = f"mysql+pymysql://{DB_CONFIG['user']}:{DB_CONFIG['password']}@{DB_CONFIG['host']}/{DB_CONFIG['database']}"
+app.config['SQLALCHEMY_DATABASE_URI'] = (
+    f"mysql+pymysql://{DB_CONFIG['user']}:{DB_CONFIG['password']}@"
+    f"{DB_CONFIG['host']}:{DB_CONFIG['port']}/{DB_CONFIG['database']}"
+)
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 # Inicializar la base de datos con la app
 db.init_app(app)
 migrate = Migrate(app, db)
 # --- LÓGICA DE INICIALIZACIÓN DE TABLAS (PARA PRODUCCIÓN) ---
-def init_tables():
+# --- LÓGICA DE INICIALIZACIÓN DE BASE DE DATOS Y TABLAS (PARA PRODUCCIÓN) ---
+def init_database_and_tables():
     """
-    Verifica si las tablas existen y las crea si es necesario.
-    Asume que la base de datos ya ha sido creada manualmente.
+    Verifica si la base de datos existe en el servidor y la crea si es necesario.
+    Luego verifica si las tablas existen y las crea.
     """
+    # 1. Crear la Base de Datos si no existe
+    # Nos conectamos al servidor MySQL directamente, omitiendo el nombre de la BD al final de la URI
+    server_uri = f"mysql+pymysql://{DB_CONFIG['user']}:{DB_CONFIG['password']}@{DB_CONFIG['host']}:{DB_CONFIG['port']}/"
+    engine_server = create_engine(server_uri)
+    
+    try:
+        # Usamos AUTOCOMMIT porque CREATE DATABASE es una operación DDL que no requiere transacción
+        with engine_server.connect().execution_options(isolation_level="AUTOCOMMIT") as conn:
+            conn.execute(text(f"CREATE DATABASE IF NOT EXISTS `{DB_CONFIG['database']}`"))
+            print(f"✅ Base de datos '{DB_CONFIG['database']}' verificada/creada exitosamente.")
+    except Exception as e:
+        print(f"--- ERROR: No se pudo conectar al servidor MySQL en {DB_CONFIG['host']}:{DB_CONFIG['port']} ---")
+        print("Asegúrate de que el servidor MySQL esté corriendo y las credenciales sean correctas.")
+        print(f"Detalle del error: {e}")
+        raise e
+
+    # 2. Crear las Tablas
+    # Ahora usamos el contexto de la aplicación, el cual ya usa la URI completa (con la BD incluida)
     with app.app_context():
         try:
             inspector = inspect(db.engine)
@@ -40,11 +64,10 @@ def init_tables():
                 print("ℹ️ Las tablas de la base de datos ya existen.")
         
         except (OperationalError, ProgrammingError) as e:
-            print(f"--- ERROR: No se pudo conectar a la base de datos '{DB_CONFIG['database']}'. Asegúrate de que exista y que las credenciales sean correctas. ---")
+            print(f"--- ERROR: Problema al interactuar con las tablas en la base de datos '{DB_CONFIG['database']}'. ---")
             print(f"Detalle del error: {e}")
-            # En un entorno de producción, es mejor que la app no inicie si no puede conectar a la BD.
-            # Podrías optar por salir o simplemente registrar el error.
             raise e
+
 
 # --- IMPORTACIÓN DE MODELOS Y BLUEPRINTS ---
 from models import User, Role
@@ -61,8 +84,8 @@ from routes.etiquetas import etiquetas_bp
 from routes.bajas import bajas_bp
 from routes.inventarios import inventarios_bp  # Asegúrate de importar el blueprint de inventarios
 from routes.manual import manual_bp  # Importar el blueprint del manual
-# Ejecutar la inicialización de las tablas
-init_tables()
+# Ejecutar la inicialización de la base de datos y las tablas
+init_database_and_tables()
 
 # --- CONFIGURACIÓN DE FLASK-LOGIN ---
 login_manager = LoginManager()
@@ -172,61 +195,11 @@ def index():
 
 # Cache local para imágenes
 
-@app.route('/images/<string:file_id>')
-@login_required 
-def serve_drive_image(file_id):
-    """
-    Ruta GLOBAL para servir TODAS las imágenes desde Google Drive con cache.
-    """
-    # Verificar que el servicio Drive esté disponible
-    if not drive_service:
-        print("Servicio Drive no disponible")
-        return serve_default_image()
-    
-    try:
-        # 1. Intentar desde cache local primero
-        cached_content = get_cached_image(file_id)
-        if cached_content:
-            print(f"Sirviendo imagen {file_id} desde cache local")
-            return Response(cached_content, mimetype='image/jpeg')
-        
-        # 2. Si no está en cache, obtener de Drive
-        print(f"Descargando imagen {file_id} desde Drive...")
-        
-        # Usar el método download_file mejorado
-        file_content = drive_service.download_file(file_id)
-        
-        if not file_content:
-            return serve_default_image()
-            
-        # 3. Intentar obtener el mimetype
-        try:
-            metadata = drive_service.get_file_metadata(file_id)
-            mimetype = metadata.get('mimeType', 'image/jpeg')
-        except:
-            mimetype = 'image/jpeg'
-        
-        # 4. Guardar en cache para futuras peticiones
-        save_to_cache(file_id, file_content)
-        
-        # 5. Servir la imagen
-        print(f"Imagen {file_id} servida exitosamente")
-        return Response(file_content, mimetype=mimetype)
-        
-    except Exception as e:
-        print(f"Error al servir archivo {file_id} desde Drive: {e}")
-        return serve_default_image()
+
 
 @app.route('/uploads/<path:filename>')
 @login_required
 def serve_uploaded_file(filename):
-    """
-    Sirve archivos desde cualquier subcarpeta dentro de UPLOAD_FOLDER.
-    Ejemplos de filename: 
-      - 'bienes/foto-123.jpg'
-      - 'resguardos/evidencia-456.jpg'
-      - 'usuarios/perfil-789.png'
-    """
     upload_dir = app.config.get('UPLOAD_FOLDER')
     
     if not upload_dir:
@@ -234,13 +207,18 @@ def serve_uploaded_file(filename):
         abort(404)
         
     try:
-        return send_from_directory(upload_dir, filename)
-    except FileNotFoundError:
+        # CORRECCIÓN VITAL: Reemplazar las barras invertidas de Windows 
+        # por barras normales que Flask necesita para navegar subcarpetas.
+        safe_filename = filename.replace('\\', '/')
+        
+        return send_from_directory(upload_dir, safe_filename)
+        
+    except NotFound:
+        # Esto evita que un 404 normal se convierta en un error 500
         abort(404)
     except Exception as e:
-        app.logger.error(f"Error al servir archivo {filename}: {e}")
+        app.logger.error(f"Error interno al servir archivo {filename}: {e}")
         abort(500)
-
 
 if __name__ == '__main__':
     os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)

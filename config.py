@@ -16,8 +16,9 @@ DB_CONFIG_ = {
 DB_CONFIG = {
     'host': 'localhost',
     'user': 'root',
-    'password': 'Pescadoroot',
-    'database': 'inventario'
+    'password': 'Pescado1',
+    'database': 'inventario',
+    'port': 3307
 }
 
 
@@ -33,7 +34,6 @@ print(UPLOAD_FOLDER)
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'pdf'}
 
 
-SERVICE_ACCOUNT_FILE = 'inventario-379322-8fbb7f3f5f7e.json'
 SCOPES = ['https://www.googleapis.com/auth/drive']
 
 def upload_to_google_drive(file_path, file_name):

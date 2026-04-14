@@ -10,7 +10,6 @@ import math
 from pymysql.err import MySQLError
 import pymysql
 import pymysql.cursors
-from drive_service import drive_service, BIENES_FOLDER_ID, RESGUARDOS_FOLDER_ID
 import traceback
 from werkzeug.utils import secure_filename
 import uuid

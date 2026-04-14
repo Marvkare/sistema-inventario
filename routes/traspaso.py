@@ -11,7 +11,7 @@ import os
 from config import UPLOAD_FOLDER
 import traceback 
 import pymysql
-from drive_service import (drive_service, BIENES_FOLDER_ID, TRASPASOS_FOLDER_ID, RESGUARDOS_FOLDER_ID)
+
 from pymysql.err import MySQLError
 
 traspaso_bp = Blueprint('traspaso', __name__)

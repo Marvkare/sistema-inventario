@@ -13,10 +13,7 @@ from database import get_db_connection
 from config import UPLOAD_FOLDER, ALLOWED_EXTENSIONS
 from decorators import permission_required
 from log_activity import log_activity
-from drive_service import (
-    drive_service, 
-    BIENES_FOLDER_ID, 
-)
+
 
 bienes_bp = Blueprint('bienes', __name__)
 
@@ -52,9 +49,11 @@ def listar_bienes():
             SELECT 
                 b.id, b.No_Inventario, b.Descripcion_Corta_Del_Bien, b.Estado_Del_Bien,
                 b.Marca, b.Modelo, b.Clasificacion_Legal, b.Valor_En_Libros,
-                r.id AS resguardo_id, a.nombre AS Area_Nombre, r.Nombre_Del_Resguardante,
-                (CASE WHEN r.id IS NOT NULL THEN TRUE ELSE FALSE END) AS tiene_resguardo
-        """
+                MAX(r.id) AS resguardo_id, 
+                MAX(a.nombre) AS Area_Nombre, 
+                MAX(r.Nombre_Del_Resguardante) AS Nombre_Del_Resguardante,
+                MAX(CASE WHEN r.id IS NOT NULL THEN 1 ELSE 0 END) AS tiene_resguardo
+        """ 
         from_base = "FROM bienes b LEFT JOIN resguardos r ON b.id = r.id_bien AND r.Activo = 1 LEFT JOIN areas a ON r.id_area = a.id"
         
         where_clause = ""
