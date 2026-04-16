@@ -1,7 +1,8 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, send_from_directory
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from sqlalchemy.exc import OperationalError, ProgrammingError
-from sqlalchemy import inspect create_engine, text
+from sqlalchemy import inspect, create_engine, text
+
 import os
 
 from flask import send_from_directory, abort, current_app

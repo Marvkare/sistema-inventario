@@ -291,42 +291,6 @@ def edit_user(user_id):
     finally:
         if conn : conn.close()
 
-@admin_users_bp.route('/delete/<int:user_id>')
-@login_required
-@admin_required
-def delete_user(user_id):
-    if user_id == current_user.id:
-        flash('No puedes eliminar tu propia cuenta.', 'danger')
-        return redirect(url_for('admin_users.list_users'))
-    
-    conn = None
-    try:
-        conn = get_db_connection()
-        cursor = conn.cursor(pymysql.cursors.DictCursor)
-        
-        # Guardar el nombre de usuario antes de borrarlo para el log
-        cursor.execute("SELECT username FROM user WHERE id = %s", (user_id,))
-        user = cursor.fetchone()
-        if not user:
-            flash("Usuario no encontrado", 'danger')
-            return redirect(url_for('admin_users.list_users'))
-        
-        username_deleted = user['username']
-
-        # El ON DELETE CASCADE en la BD se encargará de las tablas relacionadas
-        cursor.execute("DELETE FROM user WHERE id = %s", (user_id,))
-        conn.commit()
-        
-        # CORRECCIÓN: Se usa 'category' en lugar de 'resource'
-        log_activity(action="Eliminación de Usuario", category="Usuarios", resource_id=user_id, details=f"Se eliminó el usuario: {username_deleted}")
-        flash('Usuario eliminado exitosamente.', 'success')
-    except Exception as e:
-        if conn: conn.rollback()
-        flash(f"Error al eliminar usuario: {e}", 'danger')
-    finally:
-        if conn : conn.close()
-
-    return redirect(url_for('admin_users.list_users'))
 
 
 @admin_users_bp.route('/permissions/manage', methods=['GET', 'POST'])
@@ -440,7 +404,8 @@ def reset_password_request(user_id):
         flash(f"Error al generar el enlace de reseteo: {e}", 'danger')
         traceback.print_exc()
     finally:
-        if conn and conn.is_connected(): conn.close()
+        if conn and conn.open: 
+            conn.close()
         
     return redirect(url_for('admin_users.list_users'))
 

@@ -22,6 +22,7 @@ def buscar_bienes():
     """
     Ruta para buscar bienes y resguardos en la base de datos
     y devolver los resultados en formato JSON.
+    Solo muestra resultados de resguardos ACTIVOS.
     """
     conn = None
     cursor = None
@@ -33,8 +34,9 @@ def buscar_bienes():
         if not query_text:
             return jsonify([])
 
-        # Prepara la consulta para buscar en varias columnas
         search_pattern = f"%{query_text}%"
+        
+        # Se añade r.Activo = 1 en el WHERE y se agrupan las condiciones del LIKE con paréntesis
         sql_query = """
             SELECT
                 b.id AS id_bien,
@@ -52,11 +54,13 @@ def buscar_bienes():
             JOIN
                 areas a ON r.id_area = a.id
             WHERE
-                
-                b.No_Inventario LIKE %s OR
-                b.Descripcion_Corta_Del_Bien LIKE %s OR
-                r.No_Resguardo LIKE %s OR
-                r.Nombre_Del_Resguardante LIKE %s
+                r.Activo = 1 
+                AND (
+                    b.No_Inventario LIKE %s OR
+                    b.Descripcion_Corta_Del_Bien LIKE %s OR
+                    r.No_Resguardo LIKE %s OR
+                    r.Nombre_Del_Resguardante LIKE %s
+                )
             LIMIT 10
         """
         
@@ -65,10 +69,9 @@ def buscar_bienes():
         
         return jsonify(results)
 
-    except MySQLError as err:
+    except pymysql.MySQLError as err: # Corregido a pymysql.MySQLError por si acaso
         print(f"Error de base de datos: {err}")
         return jsonify({"error": "Error de base de datos"}), 500
     finally:
-        if conn :
-            cursor.close()
-            conn.close()
+        if cursor: cursor.close() # Es más seguro comprobar si el cursor existe antes de cerrarlo
+        if conn: conn.close()

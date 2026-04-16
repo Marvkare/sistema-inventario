@@ -14,7 +14,7 @@
             <div class="header-card">
                 <div class="header-text">
                     <h1>Administrar Usuarios</h1>
-                    <p>Crea, edita o elimina usuarios y gestiona sus roles.</p>
+                    <p>Crea, edita usuarios y gestiona sus roles.</p>
                 </div>
                 <div class="header-actions">
                     <a href="{{ url_for('admin_users.list_roles') }}" class="btn btn-secondary">
@@ -77,10 +77,7 @@
                                                 </button>
                                             </form>
 
-                                            <button onclick="confirmDelete('{{ u.id }}')" 
-                                                    class="btn-icon-text text-red" title="Eliminar">
-                                                <i class="fas fa-trash"></i>
-                                            </button>
+                                            
                                         {% endif %}
                                     </div>
                                 </td>
@@ -179,7 +176,6 @@
     </div>
 </div>
 
-<form id="delete-form" method="POST" style="display: none;"></form>
 
 {% endblock %}
 
@@ -289,20 +285,6 @@
 {% block scripts %}
 <script>
     // Función para confirmar eliminación (usa POST para seguridad)
-    function confirmDelete(userId) {
-        if (confirm('¿Estás seguro de que deseas eliminar este usuario? Esta acción no se puede deshacer.')) {
-            const form = document.getElementById('delete-form');
-            // Construir la URL dinámicamente. 
-            // NOTA: En Jinja esto es complejo si está fuera del loop. 
-            // Lo ideal es tener el form dentro del loop o usar JS para reemplazar el ID en la URL base.
-            // Como solución simple y robusta, usaremos window.location para GET con confirmación o un form dentro del loop (ya implementado arriba con botones individuales).
-            
-            // Si prefieres la función global, necesitas pasar la URL completa o el patrón.
-            // Aquí asumiremos que el botón dentro del loop ya maneja su propia lógica si fuera un form.
-            
-            // Si usas el botón suelto con onclick:
-            window.location.href = "{{ url_for('admin_users.delete_user', user_id=0) }}".replace('0', userId);
-        }
-    }
+    
 </script>
 {% endblock %}
